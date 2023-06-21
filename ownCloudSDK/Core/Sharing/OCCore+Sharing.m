@@ -25,6 +25,9 @@
 #import "NSURL+OCPrivateLink.h"
 #import "NSProgress+OCExtensions.h"
 #import "OCLogger.h"
+#import "NSError+OCHTTPStatus.h"
+#import "NSArray+OCFiltering.h"
+#import "OCMacros.h"
 
 @implementation OCCore (Sharing)
 
@@ -155,36 +158,35 @@
 
 		if (core != nil)
 		{
-			if (error == nil)
+			if (error != nil)
 			{
-				[core beginActivity:@"Updating retrieved shares"];
-
-				[core queueBlock:^{
-					OCCore *core = weakCore;
-
-					if (core != nil)
-					{
-						for (OCShareQuery *query in core->_shareQueries)
-						{
-							[query _updateWithRetrievedShares:shares forItem:item scope:scope];
-						}
-					}
-
-					if (completionHandler != nil)
-					{
-						completionHandler();
-					}
-
-					[core endActivity:@"Updating retrieved shares"];
-				}];
+				// Output error only if not due to status 404
+				if (![error isHTTPStatusErrorWithCode:OCHTTPStatusCodeNOT_FOUND])
+				{
+					OCLogError(@"Error retrieving shares of scope %ld for %@: %@", scope, item, error);
+				}
 			}
-			else
-			{
+
+			[core beginActivity:@"Updating retrieved shares"];
+
+			[core queueBlock:^{
+				OCCore *core = weakCore;
+
+				if (core != nil)
+				{
+					for (OCShareQuery *query in core->_shareQueries)
+					{
+						[query _updateWithRetrievedShares:((error == nil) ? shares : @[]) forItem:item scope:scope];
+					}
+				}
+
 				if (completionHandler != nil)
 				{
 					completionHandler();
 				}
-			}
+
+				[core endActivity:@"Updating retrieved shares"];
+			}];
 		}
 		else
 		{
@@ -211,25 +213,25 @@
 		if (removedShare != nil)
 		{
 			// Update parent path of removed items to quickly bring the item back in sync
-			if (removedShare.itemPath.parentPath != nil)
+			if (removedShare.itemLocation.parentLocation != nil)
 			{
-				[self scheduleItemListTaskForPath:removedShare.itemPath.parentPath forDirectoryUpdateJob:nil withMeasurement:nil];
+				[self scheduleItemListTaskForLocation:removedShare.itemLocation.parentLocation forDirectoryUpdateJob:nil withMeasurement:nil];
 			}
 		}
 		else if (updatedShare != nil)
 		{
-			if ([updatedShare.state isEqual:OCShareStateRejected])
+			if ([updatedShare.state isEqual:OCShareStateDeclined])
 			{
 				// Update parent path of removed items to quickly bring the item back in sync
-				if (updatedShare.itemPath.parentPath != nil)
+				if (updatedShare.itemLocation.parentLocation != nil)
 				{
-					[self scheduleItemListTaskForPath:updatedShare.itemPath.parentPath forDirectoryUpdateJob:nil withMeasurement:nil];
+					[self scheduleItemListTaskForLocation:updatedShare.itemLocation.parentLocation forDirectoryUpdateJob:nil withMeasurement:nil];
 				}
 			}
 			else
 			{
 				// Update item metadata to quickly bring the item up-to-date
-				[self scheduleItemListTaskForPath:updatedShare.itemPath forDirectoryUpdateJob:nil withMeasurement:nil];
+				[self scheduleItemListTaskForLocation:updatedShare.itemLocation forDirectoryUpdateJob:nil withMeasurement:nil];
 			}
 		}
 		else if (addedShare != nil)
@@ -238,12 +240,12 @@
 			if ([addedShare.owner isEqual:self->_connection.loggedInUser])
 			{
 				// Shared by user
-				[self scheduleItemListTaskForPath:addedShare.itemPath forDirectoryUpdateJob:nil withMeasurement:nil];
+				[self scheduleItemListTaskForLocation:addedShare.itemLocation forDirectoryUpdateJob:nil withMeasurement:nil];
 			}
 			else
 			{
 				// Shared with user (typically added to root dir. Should it ever not, will still trigger retrieval of updates.)
-				[self scheduleItemListTaskForPath:@"/" forDirectoryUpdateJob:nil withMeasurement:nil];
+				[self scheduleItemListTaskForLocation:[[OCLocation alloc] initWithDriveID:addedShare.itemLocation.driveID path:@"/"] forDirectoryUpdateJob:nil withMeasurement:nil];
 			}
 		}
 	}];
@@ -302,6 +304,7 @@
 {
 	OCProgress *progress;
 
+
 	progress = [self.connection makeDecisionOnShare:share accept:accept resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 		if (event.error == nil)
 		{
@@ -309,11 +312,11 @@
 			{
 				case OCShareTypeUserShare:
 				case OCShareTypeGroupShare:
-					share.state = accept ? OCShareStateAccepted : OCShareStateRejected;
+					share.state = accept ? OCShareStateAccepted : OCShareStateDeclined;
 					[self _updateShareQueriesWithAddedShare:nil updatedShare:share removedShare:nil limitScope:@(OCShareScopeSharedWithUser)];
 				break;
 
-				case OCShareTypeRemote:
+				case OCShareTypeRemote: {
 					share.accepted = @(accept);
 
 					if (accept)
@@ -326,6 +329,23 @@
 						[self _updateShareQueriesWithAddedShare:nil updatedShare:nil removedShare:share limitScope:@(OCShareScopeAcceptedCloudShares)];
 						[self _updateShareQueriesWithAddedShare:nil updatedShare:nil removedShare:share limitScope:@(OCShareScopePendingCloudShares)];
 					}
+
+					// Accepting a share can change a share's path (f.ex. if an item with the same name already exists in the target folder), so directly perform a refresh
+					if (accept)
+					{
+						OCShareQuery *acceptedCloudSharesQuery = self->_acceptedCloudSharesQuery;
+						if (acceptedCloudSharesQuery != nil)
+						{
+							[self reloadQuery:acceptedCloudSharesQuery];
+						}
+
+						OCShareQuery *pendingCloudSharesQuery = self->_pendingCloudSharesQuery;
+						if (pendingCloudSharesQuery != nil)
+						{
+							[self reloadQuery:pendingCloudSharesQuery];
+						}
+					}
+				}
 				break;
 
 				default: break;
@@ -336,6 +356,236 @@
 	} userInfo:nil ephermalUserInfo:nil]];
 
 	return (progress.progress);
+}
+
+#pragma mark - Roles
+- (nullable NSArray<OCShareRole *> *)availableShareRolesForType:(OCShareType)shareType location:(OCLocation *)location
+{
+	NSArray<OCShareRole *> *roles = nil;
+	OCLocationType locationType = location.type;
+	OCShareTypesMask shareTypeMask = [OCShare maskForType:shareType];
+
+	if (locationType == OCLocationTypeUnknown)
+	{
+		return(nil);
+	}
+
+	@synchronized(_shareRoles)
+	{
+		if (_shareRoles.count == 0)
+		{
+			// Roles as described in
+			// - https://github.com/owncloud/ocis/issues/4848#issuecomment-1283678879
+			// - https://github.com/owncloud/web/blob/master/packages/web-client/src/helpers/share/role.ts
+			[_shareRoles addObjectsFromArray:@[
+				// # USERS & GROUPS
+				// ## Viewer
+				// - files, folders
+				[[OCShareRole alloc] initWithType:OCShareRoleTypeViewer
+						       shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
+						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskShare
+					 customizablePermissions:OCSharePermissionsMaskNone
+						       locations:OCLocationTypeFile|OCLocationTypeFolder
+						      symbolName:@"eye.fill"
+						   localizedName:OCLocalized(@"Viewer")
+					    localizedDescription:OCLocalized(@"Download, preview and share")],
+
+				// - drives
+				[[OCShareRole alloc] initWithType:OCShareRoleTypeViewer
+						       shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
+						     permissions:OCSharePermissionsMaskRead
+					 customizablePermissions:OCSharePermissionsMaskNone
+						       locations:OCLocationTypeDrive
+						      symbolName:@"eye.fill"
+						   localizedName:OCLocalized(@"Viewer")
+					    localizedDescription:OCLocalized(@"Download and preview")],
+
+				// ## Editor
+				// - files
+				[[OCShareRole alloc] initWithType:OCShareRoleTypeEditor
+						       shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
+						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskShare
+					 customizablePermissions:OCSharePermissionsMaskNone
+						       locations:OCLocationTypeFile
+						      symbolName:@"pencil"
+						   localizedName:OCLocalized(@"Editor")
+					    localizedDescription:OCLocalized(@"Edit, download, preview and share")],
+
+				// - folders
+				[[OCShareRole alloc] initWithType:OCShareRoleTypeEditor
+						       shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
+						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete|OCSharePermissionsMaskShare
+					 customizablePermissions:OCSharePermissionsMaskNone
+						       locations:OCLocationTypeFolder
+						      symbolName:@"pencil"
+						   localizedName:OCLocalized(@"Editor")
+					    localizedDescription:OCLocalized(@"Upload, edit, delete, download, preview and share")],
+
+				// - drives
+				[[OCShareRole alloc] initWithType:OCShareRoleTypeEditor
+						       shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
+						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete
+					 customizablePermissions:OCSharePermissionsMaskNone
+						       locations:OCLocationTypeDrive
+						      symbolName:@"pencil"
+						   localizedName:OCLocalized(@"Editor")
+					    localizedDescription:OCLocalized(@"Upload, edit, delete, download and preview")],
+
+				// ## Manager
+				// - drives
+				[[OCShareRole alloc] initWithType:OCShareRoleTypeManager
+						       shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
+						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete|OCSharePermissionsMaskShare
+					 customizablePermissions:OCSharePermissionsMaskNone
+						       locations:OCLocationTypeDrive
+						      symbolName:@"person.fill"
+						   localizedName:OCLocalized(@"Manager")
+					    localizedDescription:OCLocalized(@"Upload, edit, delete, download, preview and share")],
+
+				// ## Custom
+				// - files
+				[[OCShareRole alloc] initWithType:OCShareRoleTypeCustom
+						       shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
+						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskShare
+					 customizablePermissions:OCSharePermissionsMaskUpdate|OCSharePermissionsMaskShare
+						       locations:OCLocationTypeFile
+						      symbolName:@"gearshape.fill"
+						   localizedName:OCLocalized(@"Custom")
+					    localizedDescription:OCLocalized(@"Set detailed permissions")],
+
+				// - folders, drives
+				[[OCShareRole alloc] initWithType:OCShareRoleTypeCustom
+						       shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
+						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete|OCSharePermissionsMaskShare
+					 customizablePermissions:OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete|OCSharePermissionsMaskShare
+						       locations:OCLocationTypeFolder|OCLocationTypeDrive
+						      symbolName:@"gearshape.fill"
+						   localizedName:OCLocalized(@"Custom")
+					    localizedDescription:OCLocalized(@"Set detailed permissions")],
+			]];
+
+			// # LINKS
+			if (self.useDrives)
+			{
+				// ## Internal
+				// - files, folders
+				[_shareRoles addObjectsFromArray:@[
+					[[OCShareRole alloc] initWithType:OCShareRoleTypeInternal
+							       shareTypes:OCShareTypesMaskLink
+							     permissions:OCSharePermissionsMaskInternal
+						 customizablePermissions:OCSharePermissionsMaskNone
+							       locations:OCLocationTypeFile|OCLocationTypeFolder
+							      symbolName:@"person.fill"
+							   localizedName:OCLocalized(@"Invited persons")
+						    localizedDescription:OCLocalized(@"Only invited persons have access. Login required.")]
+				]];
+			}
+
+			[_shareRoles addObjectsFromArray:@[
+				// ## Viewer
+				// - files, folders
+				[[OCShareRole alloc] initWithType:OCShareRoleTypeViewer
+						       shareTypes:OCShareTypesMaskLink
+						     permissions:OCSharePermissionsMaskRead
+					 customizablePermissions:OCSharePermissionsMaskNone
+						       locations:OCLocationTypeFile|OCLocationTypeFolder
+						      symbolName:@"eye.fill"
+						   localizedName:OCLocalized(@"Viewer")
+					    localizedDescription:OCLocalized(@"Recipients can view and download contents.")],
+
+				// ## Uploader
+				// - folders
+				[[OCShareRole alloc] initWithType:OCShareRoleTypeUploader
+						       shareTypes:OCShareTypesMaskLink
+						     permissions:OCSharePermissionsMaskCreate
+					 customizablePermissions:OCSharePermissionsMaskNone
+						       locations:OCLocationTypeFolder
+						      symbolName:@"arrow.up.circle.fill"
+						   localizedName:OCLocalized(@"Uploader")
+					    localizedDescription:OCLocalized(@"Recipients can upload but existing contents are not revealed.")],
+
+				// ## Contributor
+				// - folders
+				[[OCShareRole alloc] initWithType:OCShareRoleTypeContributor
+						       shareTypes:OCShareTypesMaskLink
+						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskCreate
+					 customizablePermissions:OCSharePermissionsMaskNone
+						       locations:OCLocationTypeFolder
+						      symbolName:@"person.2"
+						   localizedName:OCLocalized(@"Contributor")
+					    localizedDescription:OCLocalized(@"Recipients can view, download and upload contents.")],
+
+				// ## Editor
+				// - files
+				[[OCShareRole alloc] initWithType:OCShareRoleTypeEditor
+						       shareTypes:OCShareTypesMaskLink
+						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate
+					 customizablePermissions:OCSharePermissionsMaskNone
+						       locations:OCLocationTypeFile
+						      symbolName:@"pencil"
+						   localizedName:OCLocalized(@"Editor")
+					    localizedDescription:OCLocalized(@"Recipients can view, download and edit contents.")],
+
+				// - folders
+				[[OCShareRole alloc] initWithType:OCShareRoleTypeEditor
+						       shareTypes:OCShareTypesMaskLink
+						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete
+					 customizablePermissions:OCSharePermissionsMaskNone
+						       locations:OCLocationTypeFolder
+						      symbolName:@"pencil"
+						   localizedName:OCLocalized(@"Editor")
+					    localizedDescription:OCLocalized(@"Recipients can view, download, edit, delete and upload contents.")]
+			]];
+		}
+
+		roles = [_shareRoles filteredArrayUsingBlock:^BOOL(OCShareRole * _Nonnull role, BOOL * _Nonnull stop) {
+			return (
+				// Role supports location
+				((role.locations & locationType) != 0) &&
+
+				// Role supports share type
+			        ((role.shareTypes & shareTypeMask) == shareTypeMask)
+			);
+		}];
+	}
+
+	return (roles);
+}
+
+- (nullable OCShareRole *)matchingShareRoleForShare:(OCShare *)share
+{
+	NSArray<OCShareRole *> *roles = [self availableShareRolesForType:share.type location:share.itemLocation];
+	OCShareRole *customRole = nil;
+	OCShareRole *exactMatchingRole = nil;
+
+	for (OCShareRole *role in roles)
+	{
+		if (exactMatchingRole == nil)
+		{
+			if (role.permissions == share.permissions)
+			{
+				exactMatchingRole = role;
+			}
+		}
+
+		if (customRole == nil)
+		{
+			if ((share.permissions & role.permissions) == share.permissions)
+			{
+				if ([role.type isEqual:OCShareRoleTypeCustom])
+				{
+					customRole = role;
+				}
+			}
+		}
+	}
+
+	if (exactMatchingRole == nil)
+	{
+		return (customRole);
+	}
+
+	return (exactMatchingRole);
 }
 
 #pragma mark - Recipient access
@@ -400,7 +650,7 @@
 			__block BOOL trackingCompleted = NO;
 			OCCoreItemTracking tracking;
 
-			if ((tracking = [self trackItemAtPath:path trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial) {
+			if ((tracking = [self trackItemAtLocation:[OCLocation legacyRootPath:path] trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial) {
 				BOOL endTracking = NO;
 
 				if (trackingCompleted)

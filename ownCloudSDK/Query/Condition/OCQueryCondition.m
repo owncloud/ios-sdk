@@ -124,6 +124,8 @@
 		_sortAscending = [decoder decodeBoolForKey:@"sortAscending"];
 
 		_maxResultCount = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"maxResultCount"];
+
+		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 	}
 
 	return (self);
@@ -140,6 +142,8 @@
 	[coder encodeBool:_sortAscending forKey:@"sortAscending"];
 
 	[coder encodeObject:_maxResultCount forKey:@"maxResultCount"];
+
+	[coder encodeObject:_userInfo forKey:@"userInfo"];
 }
 
 #pragma mark - Description

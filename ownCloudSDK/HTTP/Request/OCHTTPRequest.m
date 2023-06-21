@@ -22,6 +22,7 @@
 #import "NSProgress+OCExtensions.h"
 #import "OCMacros.h"
 #import "OCConnection.h"
+#import "NSDictionary+OCFormEncoding.h"
 
 @implementation OCHTTPRequest
 
@@ -58,10 +59,6 @@
 	}
 	
 	return(self);
-}
-
-- (void)dealloc
-{
 }
 
 + (instancetype)requestWithURL:(NSURL *)url
@@ -178,7 +175,7 @@
 	}
 }
 
-- (void)addHeaderFields:(NSDictionary<NSString*,NSString*> *)headerFields
+- (void)addHeaderFields:(OCHTTPStaticHeaderFields)headerFields
 {
 	if (headerFields != nil)
 	{
@@ -238,6 +235,18 @@
 	return (_redirectPolicy);
 }
 
+- (NSString *)hostname
+{
+	NSString *hostname = self.effectiveURL.host;
+
+	if (hostname == nil)
+	{
+		hostname = self.url.host;
+	}
+
+	return (hostname);
+}
+
 #pragma mark - Queue scheduling support
 - (void)prepareForScheduling
 {
@@ -247,18 +256,7 @@
 		if ([_method isEqual:OCHTTPMethodPOST] || [_method isEqual:OCHTTPMethodPUT])
 		{
 			// POST and PUT methods: generate body from parameters
-			NSMutableArray <NSURLQueryItem *> *queryItems = [NSMutableArray array];
-			NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
-			
-			[_parameters enumerateKeysAndObjectsUsingBlock:^(NSString *name, NSString *value, BOOL * _Nonnull stop) {
-				[queryItems addObject:[NSURLQueryItem queryItemWithName:name value:value]];
-			}];
-			
-			urlComponents.queryItems = queryItems;
-
-			// NSURLComponents.percentEncodedQuery will NOT escape "+" as "%2B" because Apple argues that's not what's in the standard and causes issues with normalization
-			// (source: http://www.openradar.me/24076063)
-			self.bodyData = [[[urlComponents percentEncodedQuery] stringByReplacingOccurrencesOfString:@"+" withString:@"%2B"] dataUsingEncoding:NSUTF8StringEncoding];
+			self.bodyData = [_parameters urlFormEncodedData];
 
 			if (_headerFields[OCHTTPHeaderFieldNameContentType] == nil)
 			{
@@ -405,6 +403,13 @@
 		if (readableContent)
 		{
 			return (FormatReadableData([NSData dataWithContentsOfURL:url]));
+		}
+
+		NSNumber *fileSize = nil;
+
+		if ([url getResourceValue:&fileSize forKey:NSURLFileSizeKey error:NULL])
+		{
+			return ([NSString stringWithFormat:@"%@[Contents from %@ (%ld bytes)]", (prefixed ? @"[body] " : @""), url.path, fileSize.integerValue]);
 		}
 
 		return ([NSString stringWithFormat:@"%@[Contents from %@]", (prefixed ? @"[body] " : @""), url.path]);
@@ -694,8 +699,10 @@ OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOriginalRequestID = @"Original-Reques
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentType = @"Content-Type";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameContentLength = @"Content-Length";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDepth = @"Depth";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameETag = @"ETag";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameDestination = @"Destination";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOverwrite = @"Overwrite";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNamePrefer = @"Prefer";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameIfMatch = @"If-Match";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameIfNoneMatch = @"If-None-Match";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameUserAgent = @"User-Agent";

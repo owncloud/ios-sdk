@@ -25,116 +25,6 @@
 
 @synthesize specID = _specID;
 
-- (BOOL)requestImageForSize:(CGSize)requestedMaximumSizeInPoints scale:(CGFloat)scale withCompletionHandler:(void(^)(OCItemThumbnail *thumbnail, NSError *error, CGSize maximumSizeInPoints, UIImage *image))completionHandler
-{
-	CGSize requestedMaximumSizeInPixels;
-	NSValue *requestedMaximumSizeInPixelsValue;
-	UIImage *existingImage = nil;
-
-	if (scale==0)
-	{
-		scale = UIScreen.mainScreen.scale;
-	}
-
-	requestedMaximumSizeInPixels = CGSizeMake(requestedMaximumSizeInPoints.width * scale, requestedMaximumSizeInPoints.height * scale);
-	requestedMaximumSizeInPixelsValue = [NSValue valueWithCGSize:requestedMaximumSizeInPixels];
-
-	@synchronized(self)
-	{
-		if (_imageByRequestedMaximumSize == nil)
-		{
-			_imageByRequestedMaximumSize = [NSMutableDictionary new];
-		}
-
-		existingImage = [_imageByRequestedMaximumSize objectForKey:requestedMaximumSizeInPixelsValue];
-	}
-
-	if (existingImage == nil)
-	{
-		// No existing image, compute async
-		dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-			UIImage *returnImage = nil;
-
-			[self->_processingLock lock]; // Lock to make any subsequent (possibly identical) computations wait until this one is done, in order not to do the same computations twice
-
-			{
-				UIImage *sourceImage = nil;
-
-				// Check if, by now, what is being requested is already there
-				@synchronized(self)
-				{
-					returnImage = [self->_imageByRequestedMaximumSize objectForKey:requestedMaximumSizeInPixelsValue];
-
-					if (returnImage == nil)
-					{
-						// Check if an existing image can be used. If so, go for the smallest, existing image that's still bigger than what was requested, so computation is fastest.
-						CGFloat sourceImagePixelCount = 0;
-
-						for (NSValue *otherMaximumSizeValue in self->_imageByRequestedMaximumSize)
-						{
-							CGSize otherMaximumSize = otherMaximumSizeValue.CGSizeValue;
-
-							if ((otherMaximumSize.width < requestedMaximumSizeInPixels.width) || (otherMaximumSize.height < requestedMaximumSizeInPixels.height))
-							{
-								CGFloat pixelCount = otherMaximumSize.width * otherMaximumSize.height;
-
-								if ((pixelCount < sourceImagePixelCount) || (sourceImagePixelCount == 0))
-								{
-									sourceImage = self->_imageByRequestedMaximumSize[otherMaximumSizeValue];
-									sourceImagePixelCount = pixelCount;
-								}
-							}
-						}
-					}
-				}
-
-				if (returnImage == nil)
-				{
-					// Compute a new image
-					if (sourceImage == nil)
-					{
-						sourceImage = [self decodeImage]; // Don't cache the decoded image to save memory
-					}
-
-					if (sourceImage != nil)
-					{
-						if ((returnImage = [sourceImage scaledImageFittingInSize:requestedMaximumSizeInPoints scale:scale]) != nil)
-						{
-							@synchronized(self)
-							{
-								[self->_imageByRequestedMaximumSize removeAllObjects];
-								[self->_imageByRequestedMaximumSize setObject:returnImage forKey:requestedMaximumSizeInPixelsValue];
-							}
-						}
-					}
-				}
-			}
-
-			[self->_processingLock unlock]; // Done! Unlock!
-
-			if (completionHandler != nil)
-			{
-				completionHandler(self, nil, requestedMaximumSizeInPoints, returnImage);
-			}
-		});
-
-		return (NO);
-	}
-
-	// Image exists already
-	if (completionHandler != nil)
-	{
-		completionHandler(self, nil, requestedMaximumSizeInPoints, existingImage);
-	}
-
-	return (YES);
-}
-
-- (BOOL)canProvideForMaximumSizeInPixels:(CGSize)maximumSizeInPixels
-{
-	return ((maximumSizeInPixels.width <= _maximumSizeInPixels.width) && (maximumSizeInPixels.height <= _maximumSizeInPixels.height));
-}
-
 #pragma mark - Secure Coding
 + (BOOL)supportsSecureCoding
 {
@@ -145,7 +35,6 @@
 {
 	[super encodeWithCoder:coder];
 
-	[coder encodeCGSize:_maximumSizeInPixels 	forKey:@"maximumSizeInPixels"];
 	[coder encodeObject:_itemVersionIdentifier    	forKey:@"itemVersionIdentifier"];
 	[coder encodeObject:_specID   			forKey:@"specID"];
 }
@@ -154,7 +43,6 @@
 {
 	if ((self = [super initWithCoder:decoder]) != nil)
 	{
-		_maximumSizeInPixels = [decoder decodeCGSizeForKey:@"maximumSizeInPixels"];
 		_itemVersionIdentifier = [decoder decodeObjectOfClass:[OCItemVersionIdentifier class] forKey:@"itemVersionIdentifier"];
 		_specID = [decoder decodeObjectOfClass:[NSString class] forKey:@"specID"];
 	}

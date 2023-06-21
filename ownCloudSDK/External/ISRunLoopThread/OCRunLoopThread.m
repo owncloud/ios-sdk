@@ -147,6 +147,7 @@ static NSString *kISRunLoopThreadUUIDKey = @"_runLoopThreadUUID";
 
 		runLoop = nil;
 		thread = [[NSThread alloc] initWithTarget:self selector:@selector(_threadMain:) object:nil];
+		thread.qualityOfService = NSQualityOfServiceUserInitiated;
 
 		[thread start];
 

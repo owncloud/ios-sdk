@@ -36,10 +36,15 @@
 #pragma mark - Init
 - (instancetype)init
 {
+	return ([self initWithQueue:dispatch_get_main_queue()]);
+}
+
+- (instancetype)initWithQueue:(dispatch_queue_t)dispatchQueue
+{
 	if ((self = [super init]) != nil)
 	{
 		self.executor = ^(OCAsyncSequentialQueueJob  _Nonnull job, dispatch_block_t  _Nonnull completionHandler) {
-			dispatch_async(dispatch_get_main_queue(), ^{
+			dispatch_async(dispatchQueue, ^{
 				job(completionHandler);
 			});
 		};

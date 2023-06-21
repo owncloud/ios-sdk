@@ -37,6 +37,9 @@
 #import "OCCoreUpdateScheduleRecord.h"
 #import "OCLockManager.h"
 #import "OCLockRequest.h"
+#import "OCConnection+GraphAPI.h"
+#import "GADrive.h"
+#import "GADriveItem.h"
 #import <objc/runtime.h>
 
 static OCHTTPRequestGroupID OCCoreItemListTaskGroupQueryTasks = @"queryItemListTasks";
@@ -60,15 +63,15 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 }
 
 #pragma mark - Item List Tasks
-- (void)scheduleItemListTaskForPath:(OCPath)path forDirectoryUpdateJob:(nullable OCCoreDirectoryUpdateJob *)directoryUpdateJob withMeasurement:(nullable OCMeasurement *)measurement
+- (void)scheduleItemListTaskForLocation:(OCLocation *)location forDirectoryUpdateJob:(nullable OCCoreDirectoryUpdateJob *)directoryUpdateJob withMeasurement:(nullable OCMeasurement *)measurement
 {
 	BOOL putInQueue = YES;
 
-	if (path != nil)
+	if (location != nil)
 	{
 		if (directoryUpdateJob == nil)
 		{
-			directoryUpdateJob = [OCCoreDirectoryUpdateJob withPath:path];
+			directoryUpdateJob = [OCCoreDirectoryUpdateJob withLocation:location];
 			[directoryUpdateJob attachMeasurement:measurement];
 		}
 
@@ -81,9 +84,9 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			{
 				putInQueue = NO;
 
-				@synchronized(_itemListTasksByPath)
+				@synchronized(_itemListTasksByLocationString)
 				{
-					if ((existingQueryTask = _itemListTasksByPath[path]) != nil)
+					if ((existingQueryTask = _itemListTasksByLocationString[location.string]) != nil)
 					{
 						putInQueue = YES;
 					}
@@ -183,7 +186,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 						}
 						else
 						{
-							if ([updateJob.path isEqual:nextUpdateJob.path])
+							if ([updateJob.location isEqual:nextUpdateJob.location])
 							{
 								// Add to represented array, so the database can be cleaned up properly
 								[nextUpdateJob addRepresentedJobID:updateJob.identifier];
@@ -213,7 +216,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 {
 	OCCoreItemListTask *task = nil;
 	OCHTTPRequestGroupID groupID = nil;
-	OCPath path = updateJob.path;
+	OCLocationString locationString = updateJob.location.string;
 
 	if (updateJob.identifier != nil)
 	{
@@ -224,11 +227,11 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 		 groupID = OCCoreItemListTaskGroupQueryTasks;
 	}
 
-	if (path!=nil)
+	if (updateJob.location.path != nil)
 	{
-		@synchronized(_itemListTasksByPath)
+		@synchronized(_itemListTasksByLocationString)
 		{
-			task = _itemListTasksByPath[path];
+			task = _itemListTasksByLocationString[locationString];
 		}
 
 		if (task != nil)
@@ -247,15 +250,15 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			return (nil);
 		}
 
-		if ((task = [[OCCoreItemListTask alloc] initWithCore:self path:path updateJob:updateJob]) != nil)
+		if ((task = [[OCCoreItemListTask alloc] initWithCore:self location:updateJob.location updateJob:updateJob]) != nil)
 		{
 			task.groupID = groupID;
 
 			[task attachMeasurement:updateJob.extractedMeasurement];
 
-			@synchronized(_itemListTasksByPath)
+			@synchronized(_itemListTasksByLocationString)
 			{
-				_itemListTasksByPath[task.path] = task;
+				_itemListTasksByLocationString[task.location.string] = task;
 			}
 
 			if (updateJob.isForQuery)
@@ -264,7 +267,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			}
 			else
 			{
-				[self _updateBackgroundScanActivityWithIncrement:NO currentPathChange:path];
+				[self _updateBackgroundScanActivityWithIncrement:NO currentLocationChange:updateJob.location];
 			}
 
 			// Start item list task
@@ -310,7 +313,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			if ((!finishedTask.updateJob.isForQuery) && (finishedTask.retrievedSet.error != nil))
 			{
 				// Task is not for query (=> background scan) and terminated due to an error
-				OCLog(@"Removing update job for %@ with cacheError=%@, retrieveError=%@", finishedTask.path, finishedTask.cachedSet.error, finishedTask.retrievedSet.error);
+				OCLog(@"Removing update job for %@ with cacheError=%@, retrieveError=%@", finishedTask.location, finishedTask.cachedSet.error, finishedTask.retrievedSet.error);
 
 				if (finishedTask.retrievedSet.error.isNetworkFailureError)
 				{
@@ -349,7 +352,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	BOOL targetRemoved = NO;
 	NSMutableArray <OCItem *> *queryResults = nil;
 	__block NSMutableArray <OCItem *> *queryResultsChangedItems = nil;
-	NSString *taskPath = task.path;
+	OCLocationString taskLocationString = task.location.string;
 	__block OCSyncAnchor querySyncAnchor = nil;
 	OCCoreItemListTask *nextTask = nil;
 
@@ -402,7 +405,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 		case OCCoreItemListStateFailed:
 			// Error retrieving items from cache. This should never happen.
-			OCLogError(@"Error retrieving items from cache for %@: %@", OCLogPrivate(task.path), OCLogPrivate(task.cachedSet.error));
+			OCLogError(@"Error retrieving items from cache for %@: %@", OCLogPrivate(taskLocationString), OCLogPrivate(task.cachedSet.error));
 			performMerge = YES;
 			removeTask = YES;
 		break;
@@ -411,13 +414,13 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 		break;
 	}
 
-	if (performMerge && (task.path!=nil))
+	if (performMerge && (task.location.path!=nil))
 	{
 		OCCoreItemListTask *existingTask;
 
-		@synchronized(_itemListTasksByPath)
+		@synchronized(_itemListTasksByLocationString)
 		{
-			existingTask = _itemListTasksByPath[task.path];
+			existingTask = _itemListTasksByLocationString[taskLocationString];
 		}
 
 		if (existingTask != nil)
@@ -449,9 +452,9 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 		}
 		else
 		{
-			@synchronized(_itemListTasksByPath)
+			@synchronized(_itemListTasksByLocationString)
 			{
-				_itemListTasksByPath[task.path] = task;
+				_itemListTasksByLocationString[taskLocationString] = task;
 			}
 		}
 	}
@@ -482,7 +485,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			if (![previousSyncAnchor isEqualToNumber:task.syncAnchorAtStart])
 			{
 				// Out of sync - trigger catching the latest from the cache again, rinse and repeat
-				OCLogDebug(@"IL[%@, path=%@]: Sync anchor changed before task finished: previousSyncAnchor=%@ != task.syncAnchorAtStart=%@", task, task.path, previousSyncAnchor, task.syncAnchorAtStart);
+				OCLogDebug(@"IL[%@, location=%@]: Sync anchor changed before task finished: previousSyncAnchor=%@ != task.syncAnchorAtStart=%@", task, task.location, previousSyncAnchor, task.syncAnchorAtStart);
 
 				task.syncAnchorAtStart = newSyncAnchor; // Update sync anchor before triggering the reload from cache
 
@@ -547,6 +550,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 						[queryResults addObject:cacheItem];
 
 						// Update cache
+						[cacheItem updateSeedFrom:retrievedItem.versionSeed];
 						[changedCacheItems addObject:cacheItem];
 					}
 					else
@@ -558,6 +562,13 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 							// Attach databaseID of cached items to the retrieved items
 							[retrievedItem prepareToReplace:cacheItem];
 
+							// Preserve path change
+							if (![cacheItem.path isEqual:retrievedItem.path])
+							{
+								// Save cacheItem.path as previousPath if it differs
+								retrievedItem.previousPath = cacheItem.path;
+							}
+
 							retrievedItem.localRelativePath = cacheItem.localRelativePath;
 							retrievedItem.localCopyVersionIdentifier = cacheItem.localCopyVersionIdentifier;
 							retrievedItem.downloadTriggerIdentifier = cacheItem.downloadTriggerIdentifier;
@@ -567,9 +578,11 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 							    (retrievedItem.shareTypesMask != cacheItem.shareTypesMask) ||			// Share types mismatch
 							    (retrievedItem.permissions != cacheItem.permissions) ||				// Permissions mismatch
-							    (retrievedItem.isFavorite != cacheItem.isFavorite))					// Favorite mismatch
+							    (retrievedItem.isFavorite != cacheItem.isFavorite) ||				// Favorite mismatch
+							    (retrievedItem.state != cacheItem.state))						// State mismatch
 							{
 								// Update item in the cache if the server has a different version
+								[retrievedItem updateSeedFrom:cacheItem.versionSeed];
 								[changedCacheItems addObject:retrievedItem];
 							}
 						}
@@ -589,6 +602,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 							//    Result: new file's item still points to the local copy it downloaded, but which has been removed by vacuuming of the OLD file -> viewing and other actions requiring the local copy fail unexpectedly
 
 							// Remove cacheItem (with different fileID)
+							[cacheItem updateSeed];
 							[deletedCacheItems addObject:cacheItem];
 
 							// Add retrievedItem (with different fileID + different localID)
@@ -631,6 +645,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					else
 					{
 						// Remove item
+						[cacheItem updateSeed];
 						[deletedCacheItems addObject:cacheItem];
 					}
 				}
@@ -644,7 +659,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				{
 					if (deletedItem.type == OCItemTypeCollection)
 					{
-						[self.database retrieveCacheItemsRecursivelyBelowPath:deletedItem.path includingPathItself:NO includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+						[self.database retrieveCacheItemsRecursivelyBelowLocation:deletedItem.location includingPathItself:NO includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 							if (items.count > 0)
 							{
 								if (recursivelyDeletedItems == nil)
@@ -742,6 +757,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 						}
 
 						// Add to updatedItems
+						[newItem updateSeedFrom:knownItem.versionSeed];
 						[changedCacheItems addObject:newItem];
 					}
 
@@ -767,7 +783,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			if (queryState == OCQueryStateIdle)
 			{
 				// Fully merged => use for updating existing queries that have already gone through their complete, initial update
-				NSMutableArray<OCPath> *refreshPaths = [NSMutableArray new];
+				NSMutableArray<OCLocation *> *refreshLocations = [NSMutableArray new];
 				NSMutableArray<OCItem *> *movedItems = [NSMutableArray new];
 				BOOL fetchUpdatesRunning = NO;
 
@@ -777,25 +793,27 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				}
 
 				BOOL allowRefreshPathAddition = (self.automaticItemListUpdatesEnabled || fetchUpdatesRunning);
+				OCDriveID taskLocationDriveID = task.location.driveID;
+				OCPath taskLocationPath = task.location.path;
 
 				// Determine refreshPaths if automatic item list updates are enabled
 				for (OCItem *item in newItems)
 				{
-					if ((item.type == OCItemTypeCollection) && (item.path != nil) && (item.fileID!=nil) && (item.eTag!=nil) && ![item.path isEqual:task.path])
+					if ((item.type == OCItemTypeCollection) && (item.path != nil) && (item.fileID!=nil) && (item.eTag!=nil) && OCDriveIDIsIdentical(item.driveID, taskLocationDriveID) && ![item.path isEqual:taskLocationPath])
 					{
 						// Moved items are removed from newItems, updated and moved to changedCacheItems above, so that
 						// such items should not end up ending up their item.path to refreshPaths here. Only truly new-
 						// discovered collections will.
 						if (allowRefreshPathAddition)
 						{
-							[refreshPaths addObject:item.path];
+							[refreshLocations addObject:item.location];
 						}
 					}
 				}
 
 				for (OCItem *item in changedCacheItems)
 				{
-					if ((item.type == OCItemTypeCollection) && (item.path != nil) && (item.fileID!=nil) && (item.eTag!=nil) && ![item.path isEqual:task.path])
+					if ((item.type == OCItemTypeCollection) && (item.path != nil) && (item.fileID!=nil) && (item.eTag!=nil) && OCDriveIDIsIdentical(item.driveID, taskLocationDriveID) && ![item.path isEqual:taskLocationPath])
 					{
 						__block OCItem *cacheItem = cacheItemsByFileID[item.fileID];
 
@@ -811,7 +829,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 						{
 							if (allowRefreshPathAddition)
 							{
-								[refreshPaths addObject:item.path];
+								[refreshLocations addObject:item.location];
 							}
 						}
 
@@ -830,14 +848,26 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 										if (item.activeSyncRecordIDs.count == 0)
 										{
 											// Item has no sync activity
+											OCPath recomposedPath;
+
+											if (item.type == OCItemTypeCollection)
+											{
+												recomposedPath = [[item.path stringByAppendingPathComponent:[containedItem.path substringFromIndex:cacheItem.path.length]] normalizedDirectoryPath];
+											}
+											else
+											{
+												recomposedPath = [item.path stringByAppendingPathComponent:[containedItem.path substringFromIndex:cacheItem.path.length]];
+											}
+
 											containedItem.previousPath = containedItem.path;
-											containedItem.path = [item.path stringByAppendingPathComponent:[containedItem.path substringFromIndex:cacheItem.path.length]];
+											containedItem.path = recomposedPath;
 
 											if ([containedItem countOfSyncRecordsWithSyncActivity:OCItemSyncActivityDeleting] == 0)
 											{
 												containedItem.removed = NO;
 											}
 
+											[containedItem updateSeedFrom:item.versionSeed];
 											[movedItems addObject:containedItem];
 										}
 										else
@@ -851,9 +881,9 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					}
 				}
 
-				if (refreshPaths.count == 0)
+				if (refreshLocations.count == 0)
 				{
-					refreshPaths = nil;
+					refreshLocations = nil;
 				}
 
 				if (movedItems.count > 0)
@@ -868,7 +898,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				[self performUpdatesForAddedItems:newItems
 						     removedItems:deletedCacheItems
 						     updatedItems:changedCacheItems
-						     refreshPaths:refreshPaths
+						 refreshLocations:refreshLocations
 						    newSyncAnchor:newSyncAnchor
 					       beforeQueryUpdates:^(dispatch_block_t  _Nonnull completionHandler) {
 							// Called AFTER the database has been updated, but before UPDATING queries
@@ -883,7 +913,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 							OCMeasureEventEnd(task, @"itemlist.query-update", coreQueueRef, @"Done with query updates");
 
 							OCMeasureEventBegin(task, @"itemlist.query-updates.finalize", finalizeQueryUpdateRef, @"Finalize query updates");
-							[self _finalizeQueryUpdatesWithQueryResults:queryResults queryResultsChangedItems:queryResultsChangedItems queryState:queryState querySyncAnchor:querySyncAnchor task:task taskPath:taskPath targetRemoved:targetRemoved];
+							[self _finalizeQueryUpdatesWithQueryResults:queryResults queryResultsChangedItems:queryResultsChangedItems queryState:queryState querySyncAnchor:querySyncAnchor task:task targetRemoved:targetRemoved];
 							OCMeasureEventEnd(task, @"itemlist.query-updates.finalize", finalizeQueryUpdateRef, @"Finalized query updates");
 							OCMeasureLog(task);
 							completionHandler();
@@ -947,21 +977,21 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	// Remove task
 	if (removeTask)
 	{
-		if (task.path != nil)
+		if (task.location.path != nil)
 		{
-			@synchronized(_itemListTasksByPath)
+			@synchronized(_itemListTasksByLocationString)
 			{
-				if (_itemListTasksByPath[task.path] == task)
+				if (_itemListTasksByLocationString[taskLocationString] == task)
 				{
 					if (task.nextItemListTask != nil)
 					{
-						_itemListTasksByPath[task.path] = task.nextItemListTask;
+						_itemListTasksByLocationString[taskLocationString] = task.nextItemListTask;
 						nextTask = task.nextItemListTask;
 						task.nextItemListTask = nil;
 					}
 					else
 					{
-						[_itemListTasksByPath removeObjectForKey:task.path];
+						[_itemListTasksByLocationString removeObjectForKey:taskLocationString];
 					}
 				}
 			}
@@ -974,7 +1004,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 		[self queueBlock:^{
 			// Update non-idle queries
-			[self _finalizeQueryUpdatesWithQueryResults:queryResults queryResultsChangedItems:queryResultsChangedItems queryState:queryState querySyncAnchor:querySyncAnchor task:task taskPath:taskPath targetRemoved:targetRemoved];
+			[self _finalizeQueryUpdatesWithQueryResults:queryResults queryResultsChangedItems:queryResultsChangedItems queryState:queryState querySyncAnchor:querySyncAnchor task:task targetRemoved:targetRemoved];
 
 			if (removeTask)
 			{
@@ -1002,19 +1032,22 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	OCMeasureEventEnd(task, @"core.task-update", taskUpdateEventRef, nil);
 }
 
-- (void)_finalizeQueryUpdatesWithQueryResults:(NSMutableArray<OCItem *> *)queryResults queryResultsChangedItems:(NSMutableArray<OCItem *> *)queryResultsChangedItems queryState:(OCQueryState)queryState querySyncAnchor:(OCSyncAnchor)querySyncAnchor task:(OCCoreItemListTask * _Nonnull)task taskPath:(NSString *)taskPath targetRemoved:(BOOL)targetRemoved
+- (void)_finalizeQueryUpdatesWithQueryResults:(NSMutableArray<OCItem *> *)queryResults queryResultsChangedItems:(NSMutableArray<OCItem *> *)queryResultsChangedItems queryState:(OCQueryState)queryState querySyncAnchor:(OCSyncAnchor)querySyncAnchor task:(OCCoreItemListTask * _Nonnull)task targetRemoved:(BOOL)targetRemoved
 {
 	NSMutableDictionary <OCPath, OCItem *> *queryResultItemsByPath = nil;
 	NSMutableArray <OCItem *> *queryResultWithoutRootItem = nil;
 	OCItem *taskRootItem = nil;
+	OCLocation *taskLocation = task.location;
+	OCPath taskPath = taskLocation.path;
 
 	// Determine root item
 	if ((taskPath != nil) && !targetRemoved)
 	{
 		OCItem *cacheRootItem = nil, *retrievedRootItem = nil;
+		OCDriveID taskLocationDriveID = OCDriveIDWrap(taskLocation.driveID);
 
-		retrievedRootItem = task.retrievedSet.itemsByPath[taskPath];
-		cacheRootItem = task.cachedSet.itemsByPath[taskPath];
+		retrievedRootItem = task.retrievedSet.itemListsByDriveID[taskLocationDriveID].itemsByPath[taskPath];
+		cacheRootItem = task.cachedSet.itemListsByDriveID[taskLocationDriveID].itemsByPath[taskPath];
 
 		if ((taskRootItem==nil) && (cacheRootItem!=nil) && ([queryResults indexOfObjectIdenticalTo:cacheRootItem]!=NSNotFound))
 		{
@@ -1039,15 +1072,17 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	{
 		NSMutableArray <OCItem *> *useQueryResults = nil;
 		OCItem *queryRootItem = nil;
-		OCPath queryPath = query.queryPath;
+		OCLocation *queryLocation = query.queryLocation;
+		OCLocation *queryItemLocation = query.queryItem.location;
+		OCPath queryPath = query.queryLocation.path;
 		OCPath queryItemPath = query.queryItem.path;
-		BOOL taskPathIsAncestorOfQueryPath = (taskPath!=nil) && [queryPath hasPrefix:taskPath] && taskPath.isNormalizedDirectoryPath && ![queryPath isEqual:taskPath];
-		OCQueryState setQueryState = (([queryPath isEqual:taskPath] || [queryItemPath isEqual:taskPath] || taskPathIsAncestorOfQueryPath) && !query.isCustom) ?
+		BOOL taskPathIsAncestorOfQueryPath = (taskPath!=nil) && [queryLocation isLocatedIn:taskLocation] && taskPath.isNormalizedDirectoryPath && ![queryLocation isEqual:taskLocation];
+		OCQueryState setQueryState = (([queryLocation isEqual:taskLocation] || [queryItemLocation isEqual:taskLocation] || taskPathIsAncestorOfQueryPath) && !query.isCustom) ?
 						queryState :
 						query.state;
 
 		// Queries targeting the path
-		if ([queryPath isEqual:taskPath])
+		if ([queryLocation isEqual:taskLocation])
 		{
 			if (query.state != OCQueryStateIdle)	// Keep updating queries that have not gone through its complete, initial content update
 			{
@@ -1119,7 +1154,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			}
 
 			// Queries targeting a particular item
-			if (queryItemPath != nil)
+			if ((queryItemPath != nil) && OCDriveIDIsIdentical(queryItemLocation.driveID, taskLocation.driveID))
 			{
 				if (query.state != OCQueryStateIdle)	// Keep updating queries that have not gone through its complete, initial content update
 				{
@@ -1153,7 +1188,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					}
 					else
 					{
-						if ([[queryItemPath parentPath] isEqual:task.path])
+						if ([[queryItemPath parentPath] isEqual:taskLocation.path])
 						{
 							// Item was contained in queried directory, but is no longer there
 							useQueryResults = [NSMutableArray new];
@@ -1283,10 +1318,6 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 		{
 			if (strongSelf.state == OCCoreStateRunning)
 			{
-				OCEventTarget *eventTarget;
-
-				eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:strongSelf.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
-
 				NSDictionary<OCConnectionOptionKey,id> *options = nil;
 
 				if (nonCritical)
@@ -1296,7 +1327,76 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 					};
 				}
 
-				[strongSelf.connection retrieveItemListAtPath:@"/" depth:0 options:options resultTarget:eventTarget];
+				if (self.useDrives)
+				{
+					[strongSelf.connection retrieveDriveListWithCompletionHandler:^(NSError * _Nullable error, NSArray<OCDrive *> * _Nullable drives) {
+						[weakSelf queueBlock:^{
+							OCCore *strongSelf;
+
+
+							if ((strongSelf = weakSelf) != nil)
+							{
+								BOOL foundChanges = NO;
+
+								if (error == nil)
+								{
+									OCWTLogDebug((@[@"ScanChanges", @"Drives"]), @"New drive list: %@", drives);
+
+									[strongSelf.vault updateWithRemoteDrives:drives];
+
+									// Discover whose drives' root eTag has changed
+									@synchronized(strongSelf->_lastRootETagsByDriveID)
+									{
+										for (OCDrive *subscribedDrive in strongSelf.vault.subscribedDrives)
+										{
+											OCDriveID subscribedDriveID = subscribedDrive.identifier;
+											OCFileETag subscribedDriveETag = subscribedDrive.rootETag;
+
+											OCFileETag lastETag = strongSelf->_lastRootETagsByDriveID[subscribedDriveID];
+
+											if (((lastETag == nil) || ![lastETag isEqual:subscribedDriveETag]) && // Request an update if no last ETag is known (indicating no prior scan) or if the ETag differs from last scan
+											    (subscribedDriveETag != nil)) // Do NOT request an update if no ETag is available (consider this a temporary malfunction on the server-side which needs to be resolved there)
+											{
+												OCWTLogDebug((@[@"ScanChanges", @"Drives"]), @"Root eTag changed %@ -> %@ for %@", lastETag, subscribedDriveETag, subscribedDrive);
+
+												foundChanges = YES;
+												[strongSelf scheduleUpdateScanForLocation:[[OCLocation alloc] initWithDriveID:subscribedDriveID path:@"/"] waitForNextQueueCycle:NO];
+
+												strongSelf->_lastRootETagsByDriveID[subscribedDriveID] = subscribedDriveETag;
+											}
+										}
+									}
+								}
+								else
+								{
+									OCWTLogWarning((@[@"ScanChanges", @"Drives"]), @"Error retrieving drive list: %@", error);
+								}
+
+								if (!foundChanges)
+								{
+									// No changes. We're done.
+									@synchronized(strongSelf->_scheduledDirectoryUpdateJobIDs)
+									{
+										if (strongSelf->_scheduledDirectoryUpdateJobActivity == nil)
+										{
+											[strongSelf _finishedUpdateScanWithError:nil foundChanges:NO];
+										}
+									}
+								}
+
+								// Schedule next
+								[strongSelf coordinatedScanForChangesDidFinish];
+							}
+						}];
+					}];
+				}
+				else
+				{
+					OCEventTarget *eventTarget;
+
+					eventTarget = [OCEventTarget eventTargetWithEventHandlerIdentifier:strongSelf.eventHandlerIdentifier userInfo:nil ephermalUserInfo:nil];
+					[strongSelf.connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:0 options:options resultTarget:eventTarget];
+				}
 			}
 		}
 	} inBackground:inBackground];
@@ -1351,7 +1451,9 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				}
 			}
 
-			if ((cacheItems = [self.database retrieveCacheItemsSyncAtPath:event.path itemOnly:YES error:&error syncAnchor:NULL]) != nil)
+			OCLocation *eventLocation = [[OCLocation alloc] initWithDriveID:event.driveID path:event.path];
+
+			if ((cacheItems = [self.database retrieveCacheItemsSyncAtLocation:eventLocation itemOnly:YES error:&error syncAnchor:NULL]) != nil)
 			{
 				BOOL doSchedule = NO;
 
@@ -1374,7 +1476,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 				if (doSchedule)
 				{
-					[self scheduleUpdateScanForPath:event.path waitForNextQueueCycle:NO];
+					[self scheduleUpdateScanForLocation:eventLocation waitForNextQueueCycle:NO];
 				}
 				else
 				{
@@ -1536,13 +1638,13 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 }
 
 #pragma mark - Update Scans
-- (void)scheduleUpdateScanForPath:(OCPath)path waitForNextQueueCycle:(BOOL)waitForNextQueueCycle
+- (void)scheduleUpdateScanForLocation:(OCLocation *)location waitForNextQueueCycle:(BOOL)waitForNextQueueCycle
 {
-	OCCoreDirectoryUpdateJob *updateScanPath;
+	OCCoreDirectoryUpdateJob *updateJob;
 
-	OCLogDebug(@"Scheduling scan for path=%@, waitForNextCycle: %d", path, waitForNextQueueCycle);
+	OCLogDebug(@"Scheduling scan for location=%@, waitForNextCycle: %d", location, waitForNextQueueCycle);
 
-	if ((updateScanPath = [OCCoreDirectoryUpdateJob withPath:path]) != nil)
+	if ((updateJob = [OCCoreDirectoryUpdateJob withLocation:location]) != nil)
 	{
 		[self beginActivity:@"Scheduling update scan"];
 
@@ -1560,30 +1662,30 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			_pendingScheduledDirectoryUpdateJobs++;
 		}
 
-		[self.database retrieveDirectoryUpdateJobsAfter:nil forPath:path maximumJobs:1 completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCCoreDirectoryUpdateJob *> *updateJobs) {
+		[self.database retrieveDirectoryUpdateJobsAfter:nil forLocation:location maximumJobs:1 completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCCoreDirectoryUpdateJob *> *updateJobs) {
 			if (updateJobs.count > 0)
 			{
 				// Don't schedule
-				OCLogDebug(@"Skipping duplicate update job for path=%@", path);
+				OCLogDebug(@"Skipping duplicate update job for location=%@", location);
 				doneSchedulingPendingDirectoryUpdateJob();
 				[self _checkForUpdateJobsCompletion];
 
 				return;
 			}
 
-			[self.database addDirectoryUpdateJob:updateScanPath completionHandler:^(OCDatabase *db, NSError *error, OCCoreDirectoryUpdateJob *scanPath) {
+			[self.database addDirectoryUpdateJob:updateJob completionHandler:^(OCDatabase *db, NSError *error, OCCoreDirectoryUpdateJob *scanPath) {
 				if (error == nil)
 				{
 					if (waitForNextQueueCycle)
 					{
 						[self queueBlock:^{
-							[self _scheduleUpdateJob:updateScanPath];
+							[self _scheduleUpdateJob:updateJob];
 							doneSchedulingPendingDirectoryUpdateJob();
 						}];
 					}
 					else
 					{
-						[self _scheduleUpdateJob:updateScanPath];
+						[self _scheduleUpdateJob:updateJob];
 						doneSchedulingPendingDirectoryUpdateJob();
 					}
 				}
@@ -1594,7 +1696,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 - (void)recoverPendingUpdateJobs
 {
-	[self.database retrieveDirectoryUpdateJobsAfter:nil forPath:nil maximumJobs:0 completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCCoreDirectoryUpdateJob *> *updateJobs) {
+	[self.database retrieveDirectoryUpdateJobsAfter:nil forLocation:nil maximumJobs:0 completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCCoreDirectoryUpdateJob *> *updateJobs) {
 		OCLogDebug(@"Recovering pending update jobs");
 
 		for (OCCoreDirectoryUpdateJob *job in updateJobs)
@@ -1620,18 +1722,18 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			{
 				[_scheduledDirectoryUpdateJobIDs addObject:job.identifier];
 
-				[self _updateBackgroundScanActivityWithIncrement:YES currentPathChange:nil];
+				[self _updateBackgroundScanActivityWithIncrement:YES currentLocationChange:nil];
 			}
 		}
 	}
 
 	if (schedule)
 	{
-		[self scheduleItemListTaskForPath:job.path forDirectoryUpdateJob:job withMeasurement:nil];
+		[self scheduleItemListTaskForLocation:job.location forDirectoryUpdateJob:job withMeasurement:nil];
 	}
 }
 
-- (void)_updateBackgroundScanActivityWithIncrement:(BOOL)increment currentPathChange:(OCPath)currentPathChange
+- (void)_updateBackgroundScanActivityWithIncrement:(BOOL)increment currentLocationChange:(OCLocation *)currentLocationChange
 {
 	@synchronized(_scheduledDirectoryUpdateJobIDs)
 	{
@@ -1662,7 +1764,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				_totalScheduledDirectoryUpdateJobs++;
 			}
 
-			if (currentPathChange != nil)
+			if (currentLocationChange != nil)
 			{
 				_scheduledDirectoryUpdateJobActivity.completedUpdateJobs = _totalScheduledDirectoryUpdateJobs - activeScheduledJobsCount;
 				_scheduledDirectoryUpdateJobActivity.totalUpdateJobs = _totalScheduledDirectoryUpdateJobs;
@@ -1688,7 +1790,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 	{
 		[_scheduledDirectoryUpdateJobIDs removeObject:doneJobID];
 
-		[self _updateBackgroundScanActivityWithIncrement:NO currentPathChange:nil];
+		[self _updateBackgroundScanActivityWithIncrement:NO currentLocationChange:nil];
 	}
 
 	[self _checkForUpdateJobsCompletion];

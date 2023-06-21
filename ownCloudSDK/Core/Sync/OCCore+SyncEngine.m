@@ -160,7 +160,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	OCSyncExec(databaseRetrieval, {
 		[self beginActivity:@"Retrieve latest version of item"];
 
-		[self.database retrieveCacheItemsAtPath:item.path itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+		[self.database retrieveCacheItemsAtLocation:item.location itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 			if (outError != NULL)
 			{
 				*outError = error;
@@ -374,7 +374,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 						recordRemovedSelf = YES;
 					}
 
-					OCLogDebug(@"record %@ returns from preflight with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", record, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
+					OCLogDebug(@"record %@ returns from preflight with addedItems=%@, removedItems=%@, updatedItems=%@, refreshLocations=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", record, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshLocations, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
 				}
 			}
 			else
@@ -420,9 +420,10 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 		{
 			OCLogDebug(@"record %@ completed preflight with error=%@", record, blockError);
 
-			if (record.recordID != nil)
+			if ((record.recordID != nil) && !record.removed)
 			{
-				// Record still has a recordID, so wasn't included in syncContext.removeRecords. Remove now.
+				// Record still has a recordID and has not been removed, so wasn't included in syncContext.removeRecords.
+				// -> remove now
 				[self removeSyncRecords:@[ record ] completionHandler:nil];
 			}
 		}
@@ -511,7 +512,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 				// Run descheduler
 				[syncAction descheduleWithContext:syncContext];
 
-				OCLogDebug(@"record %@ returns from post-deschedule with addedItems=%@, removedItems=%@, updatedItems=%@, refreshPaths=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", syncRecord, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshPaths, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
+				OCLogDebug(@"record %@ returns from post-deschedule with addedItems=%@, removedItems=%@, updatedItems=%@, refreshLocations=%@, removeRecords=%@, updateStoredSyncRecordAfterItemUpdates=%d, error=%@", syncRecord, syncContext.addedItems, syncContext.removedItems, syncContext.updatedItems, syncContext.refreshLocations, syncContext.removeRecords, syncContext.updateStoredSyncRecordAfterItemUpdates, syncContext.error);
 
 				// Sync record is about to be removed, so no need to try updating it
 				syncContext.updateStoredSyncRecordAfterItemUpdates = NO;
@@ -777,7 +778,25 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 					UpdateRunningActionCategories(actionCategories, 1);
 
 					// Process sync record
-					nextInstruction = [self processSyncRecord:syncRecord error:&error];
+					@try
+					{
+						nextInstruction = [self processSyncRecord:syncRecord error:&error];
+					}
+					@catch (NSException *exception)
+					{
+						// In case of an exception, log the exception, deschedule the record, return an error and proceed
+						OCLogError(@"Exception processing sync record:\nReason: %@\nCall stack symbols:\n%@", exception.reason, exception.callStackSymbols);
+						OCLogError(@"REMOVING sync record due to exception: %@", syncRecord);
+
+						NSString *errorDescription = [NSString stringWithFormat:OCLocalized(@"An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed. If logging is enabled, the exception has been logged."), syncRecord.action.localizedDescription];
+
+						[self descheduleSyncRecord:syncRecord completeWithError:OCError(OCErrorException) parameter:nil];
+
+						[self sendError:OCError(OCErrorException) issue:[OCIssue issueWithLocalizedTitle:OCLocalized(@"Exception occured performing action") localizedDescription:errorDescription level:OCIssueLevelError issueHandler:^(OCIssue * _Nonnull issue, OCIssueDecision decision) {
+						}]];
+
+						nextInstruction = OCCoreSyncInstructionProcessNext;
+					}
 
 					OCLogDebug(@"Processing of sync record finished with nextInstruction=%lu", nextInstruction);
 
@@ -1444,7 +1463,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 
 	[self _scheduleNextWaitConditionRunForRecord:syncContext.syncRecord];
 
-	[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshPaths:syncContext.refreshPaths newSyncAnchor:nil beforeQueryUpdates:beforeQueryUpdateAction afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+	[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshLocations:syncContext.refreshLocations newSyncAnchor:nil beforeQueryUpdates:beforeQueryUpdateAction afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
 }
 
 - (void)_scheduleNextWaitConditionRunForRecord:(OCSyncRecord *)syncRecord
@@ -1665,15 +1684,21 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 #pragma mark - Sync action utilities
 - (OCEventTarget *)_eventTargetWithSyncRecord:(OCSyncRecord *)syncRecord userInfo:(nullable NSDictionary *)userInfo ephermal:(nullable NSDictionary *)ephermalUserInfo
 {
-	NSDictionary *syncRecordUserInfo = @{ OCEventUserInfoKeySyncRecordID : syncRecord.recordID };
+	OCSyncRecordID syncRecordID;
+	NSMutableDictionary *syncRecordUserInfo = [NSMutableDictionary new];
+
+	if ((syncRecordID = syncRecord.recordID) != nil)
+	{
+		syncRecordUserInfo[OCEventUserInfoKeySyncRecordID] = syncRecordID;
+	}
+	else
+	{
+		OCLogError(@"Event target for Sync Record lacks recordID - response events will likely be leaking and lead to a hang: %@", syncRecord);
+	}
 
 	if (userInfo != nil)
 	{
-		NSMutableDictionary *mergedDict = [[NSMutableDictionary alloc] initWithDictionary:syncRecordUserInfo];
-
-		[mergedDict addEntriesFromDictionary:userInfo];
-
-		syncRecordUserInfo = mergedDict;
+		[syncRecordUserInfo addEntriesFromDictionary:userInfo];
 	}
 
 	return ([OCEventTarget eventTargetWithEventHandlerIdentifier:self.eventHandlerIdentifier userInfo:syncRecordUserInfo ephermalUserInfo:ephermalUserInfo]);
@@ -1691,7 +1716,22 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 
 	for (OCSyncRecord *syncRecord in syncRecords)
 	{
-		[self.activityManager update:[OCActivityUpdate publishingActivityFor:syncRecord]];
+		BOOL publish = NO;
+		OCSyncRecordID syncRecordID = syncRecord.recordID;
+
+		@synchronized(_publishedActivitySyncRecordIDs)
+		{
+			if ((syncRecordID != nil) && (!syncRecord.removed) && (![_publishedActivitySyncRecordIDs containsObject:syncRecordID]))
+			{
+				[_publishedActivitySyncRecordIDs addObject:syncRecordID];
+				publish = YES;
+			}
+		}
+
+		if (publish)
+		{
+			[self.activityManager update:[OCActivityUpdate publishingActivityFor:syncRecord]];
+		}
 	}
 
 	[self setNeedsToBroadcastSyncRecordActivityUpdate];
@@ -1729,7 +1769,12 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 - (void)updatePublishedSyncRecordActivities
 {
 	[self.database retrieveSyncRecordsForPath:nil action:nil inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncRecord *> *syncRecords) {
-		NSMutableSet <OCSyncRecordID> *removedSyncRecordIDs = [[NSMutableSet alloc] initWithSet:self->_publishedActivitySyncRecordIDs];
+		NSMutableSet <OCSyncRecordID> *removedSyncRecordIDs = nil;
+
+		@synchronized(self->_publishedActivitySyncRecordIDs)
+		{
+			removedSyncRecordIDs = [[NSMutableSet alloc] initWithSet:self->_publishedActivitySyncRecordIDs];
+		}
 
 		for (OCSyncRecord *syncRecord in syncRecords)
 		{
@@ -1737,11 +1782,19 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 
 			syncRecord.action.core = self;
 
-			if (recordID != nil)
+			if ((recordID != nil) && !syncRecord.removed)
 			{
+				BOOL publish = NO;
+
 				[removedSyncRecordIDs removeObject:recordID];
 
-				if ([self->_publishedActivitySyncRecordIDs containsObject:syncRecord.recordID])
+				@synchronized(self->_publishedActivitySyncRecordIDs)
+				{
+					publish = ![self->_publishedActivitySyncRecordIDs containsObject:recordID];
+					[self->_publishedActivitySyncRecordIDs addObject:recordID];
+				}
+
+				if (!publish)
 				{
 					// Update published activities
 					NSProgress *progress = [syncRecord.progress resolveWith:nil];
@@ -1758,7 +1811,6 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 				{
 					// Publish new activities
 					[self.activityManager update:[OCActivityUpdate publishingActivityFor:syncRecord]];
-					[self->_publishedActivitySyncRecordIDs addObject:recordID];
 
 					syncRecord.action.core = self;
 					[syncRecord.action restoreProgressRegistrationForSyncRecord:syncRecord];
@@ -1772,7 +1824,10 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 			[self.activityManager update:[OCActivityUpdate unpublishActivityForIdentifier:[OCSyncRecord activityIdentifierForSyncRecordID:syncRecordID]]];
 		}
 
-		[self->_publishedActivitySyncRecordIDs minusSet:removedSyncRecordIDs];
+		@synchronized(self->_publishedActivitySyncRecordIDs)
+		{
+			[self->_publishedActivitySyncRecordIDs minusSet:removedSyncRecordIDs];
+		}
 	}];
 }
 
@@ -1866,7 +1921,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 				{
 					OCLogDebug(@"Updated items: %@", updateItems);
 
-					[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:updateItems refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+					[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:updateItems refreshLocations:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
 				}
 			}
 

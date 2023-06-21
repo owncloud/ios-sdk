@@ -455,7 +455,7 @@
 	{
 		connection.delegate = self;
 
-		[connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue * _Nullable issue, NSURL * _Nullable suggestedURL, NSArray<OCAuthenticationMethodIdentifier> * _Nullable supportedMethods, NSArray<OCAuthenticationMethodIdentifier> * _Nullable preferredAuthenticationMethods) {
+		[connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue * _Nullable issue, NSURL * _Nullable suggestedURL, NSArray<OCAuthenticationMethodIdentifier> * _Nullable supportedMethods, NSArray<OCAuthenticationMethodIdentifier> * _Nullable preferredAuthenticationMethods, OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions _Nullable generationOptions) {
 			OCLog(@"preferredAuthenticationMethods: %@ supportedMethods: %@", preferredAuthenticationMethods, supportedMethods);
 
 			if ([preferredAuthenticationMethods.firstObject isEqual:OCAuthenticationMethodIdentifierOpenIDConnect])

@@ -80,6 +80,11 @@
 	return ([OCLocale.sharedLocale localizeString:string bundle:nil table:table options:nil]);
 }
 
++ (NSString *)localizeString:(NSString *)string bundle:(NSBundle *)bundle
+{
+	return ([OCLocale.sharedLocale localizeString:string bundle:bundle table:nil options:nil]);
+}
+
 + (NSString *)localizeString:(NSString *)string bundleOfClass:(Class)class
 {
 	return ([OCLocale.sharedLocale localizeString:string bundle:[NSBundle bundleForClass:class] table:nil options:nil]);

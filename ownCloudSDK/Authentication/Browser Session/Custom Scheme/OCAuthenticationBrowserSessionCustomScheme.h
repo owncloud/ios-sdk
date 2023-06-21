@@ -30,6 +30,7 @@ typedef dispatch_block_t _Nullable (^OCAuthenticationBrowserSessionCustomSchemeB
 @property(class,nonatomic,copy,nullable) OCAuthenticationBrowserSessionCustomSchemeBusyPresenter busyPresenter;
 
 + (BOOL)handleOpenURL:(NSURL *)url;
++ (BOOL)openURL:(NSURL*)url options:(NSDictionary<UIApplicationOpenExternalURLOptionsKey, id> *)options completionHandler:(void (^ __nullable)(BOOL success))completion;
 
 @property(readonly,strong,nonatomic,nullable) NSString *plainCustomScheme;
 @property(readonly,strong,nonatomic,nullable) NSString *secureCustomScheme;

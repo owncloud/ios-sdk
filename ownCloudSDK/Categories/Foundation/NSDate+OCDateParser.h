@@ -28,8 +28,11 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)dateParsedFromCompactUTCString:(NSString *)dateString error:(NSError * _Nullable *)error;
 - (nullable NSString *)compactUTCString;
 - (nullable NSString *)compactUTCStringDateOnly;
+- (nullable NSString *)compactISO8601String;
 
 - (nullable NSString *)compactLocalTimeZoneString;
+
+- (nullable NSString *)localizedStringWithTemplate:(NSString *)dateTemplate locale:(nullable NSLocale *)locale;
 
 @end
 

@@ -56,6 +56,20 @@
 #import "OCProcessManager.h"
 #import "OCBookmark+DBMigration.h"
 #import "OCMeasurement.h"
+#import "OCResourceManager.h"
+#import "OCResourceSourceAvatars.h"
+#import "OCResourceSourceAvatarPlaceholders.h"
+#import "OCResourceSourceItemThumbnails.h"
+#import "OCResourceSourceItemLocalThumbnails.h"
+#import "OCResourceSourceDriveItems.h"
+#import "OCResourceSourceURLItems.h"
+#import "OCConnection+GraphAPI.h"
+#import "NSArray+OCFiltering.h"
+#import "OCCore+DataSources.h"
+#import "OCDataSourceKVO.h"
+#import "OCVault+Internal.h"
+#import "OCLocale+SystemLanguage.h"
+#import "OCCore+DataSources.h"
 
 @interface OCCore ()
 {
@@ -227,6 +241,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			OCLogError(@"Error creating pthread key: %d", pthreadKeyError);
 		}
 
+		OCLog(@"Priorities: default %f low %f high %f", NSURLSessionTaskPriorityDefault, NSURLSessionTaskPriorityLow, NSURLSessionTaskPriorityHigh);
+
 		_runIdentifier = [NSUUID new];
 
 		_bookmark = bookmark;
@@ -246,12 +262,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		_unsolvedIssueSignatures = [NSMutableSet new];
 		_rejectedIssueSignatures = [NSMutableSet new];
 
+		_shareRoles = [NSMutableArray new];
+
 		_vault = [[OCVault alloc] initWithBookmark:bookmark];
 
 		_queries = [NSMutableArray new];
 		_shareQueries = [NSMutableArray new];
 
-		_itemListTasksByPath = [NSMutableDictionary new];
+		_itemListTasksByLocationString = [NSMutableDictionary new];
 		_queuedItemListTaskUpdateJobs = [NSMutableArray new];
 		_scheduledItemListTasks = [NSMutableArray new];
 		_scheduledDirectoryUpdateJobIDs = [NSMutableSet new];
@@ -271,13 +289,35 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 		_progressByLocalID = [NSMutableDictionary new];
 
+		_drives = [NSMutableArray new];
+		_lastRootETagsByDriveID = [NSMutableDictionary new];
+
+		_drivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:nil];
+		_subscribedDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"subscribedDrives" versionedItemUpdateHandler:nil];
+
+		_projectDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"subscribedDrives" versionedItemUpdateHandler:^NSArray<id<OCDataItem,OCDataItemVersioning>> * _Nullable(NSObject * _Nonnull object, NSString * _Nonnull keyPath, NSArray<OCDrive *> *  _Nullable activeDrives) {
+			return ([activeDrives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
+				return ([drive.type isEqual:OCDriveTypeProject]);
+			}]);
+		}];
+		_personalDriveDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:^NSArray<id<OCDataItem,OCDataItemVersioning>> * _Nullable(NSObject * _Nonnull object, NSString * _Nonnull keyPath, NSArray<OCDrive *> *  _Nullable activeDrives) {
+			return ([activeDrives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
+				return ([drive.type isEqual:OCDriveTypePersonal]);
+			}]);
+		}];
+		_shareJailDriveDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:^NSArray<id<OCDataItem,OCDataItemVersioning>> * _Nullable(NSObject * _Nonnull object, NSString * _Nonnull keyPath, NSArray<OCDrive *> *  _Nullable activeDrives) {
+			return ([activeDrives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
+				return ([drive.type isEqual:OCDriveTypeVirtual] && [drive.identifier isEqual:OCDriveIDSharesJail]);
+			}]);
+		}];
+
 		_activityManager = [[OCActivityManager alloc] initWithUpdateNotificationName:[@"OCCore.ActivityUpdate." stringByAppendingString:_bookmark.uuid.UUIDString]];
 		_publishedActivitySyncRecordIDs = [NSMutableSet new];
 
 		_itemPolicies = [NSMutableArray new];
 		_itemPolicyProcessors = [NSMutableArray new];
 
-		_availableOfflineFolderPaths = [NSMutableSet new];
+		_availableOfflineFolderLocations = [NSMutableSet new];
 		_availableOfflineIDs = [NSMutableSet new];
 
 		_claimTokensByClaimIdentifier = [NSMapTable strongToWeakObjectsMapTable];
@@ -317,16 +357,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 		if ([((NSNumber *)[self classSettingForOCClassSettingsKey:OCCoreAddAcceptLanguageHeader]) boolValue])
 		{
-			NSArray <NSString *> *preferredLocalizations = [NSBundle preferredLocalizationsFromArray:[[NSBundle mainBundle] localizations] forPreferences:nil];
+			NSString *acceptLanguage;
 
-			if (preferredLocalizations.count > 0)
+			if ((acceptLanguage = OCLocale.sharedLocale.acceptLanguageString) != nil)
 			{
-				NSString *acceptLanguage;
-
-				if ((acceptLanguage = [[preferredLocalizations componentsJoinedByString:@", "] lowercaseString]) != nil)
-				{
-					_connection.staticHeaderFields = @{ @"Accept-Language" : acceptLanguage };
-				}
+				_connection.staticHeaderFields = @{ @"Accept-Language" : acceptLanguage };
 			}
 		}
 
@@ -380,6 +415,10 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 {
 	OCLogTagName runIDTag = OCLogTagTypedID(@"RunID", _runIdentifier);
 	NSArray<OCLogTagName> *deallocTags = (runIDTag != nil) ? @[@"DEALLOC", runIDTag] : @[@"DEALLOC"];
+
+	[self unsubscribeFromPollingDatasourcesTimer:OCCoreDataSourcePollTypeAll withForcedStop:YES];
+	[self _updateSharedWithMeQueryForceStop:YES];
+	[self _updateAllSharedByMeQueryForceStop:YES];
 
 	[self stopIPCObserveration];
 
@@ -466,6 +505,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 				});
 			}
 
+			// Get latest drive list
+			if (startError == nil)
+			{
+				[self initializeWithDrives];
+
+				self->_connection.drives = self.vault.activeDrives;
+			}
+
 			// Proceed with connecting - or stop
 			if (startError == nil)
 			{
@@ -487,6 +534,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 				// Register as message response handler
 				[self.messageQueue addResponseHandler:self];
+
+				// Register resource sources
+				[self.vault.resourceManager addSource:[[OCResourceSourceAvatarPlaceholders alloc] initWithCore:self]];
+				[self.vault.resourceManager addSource:[[OCResourceSourceAvatars alloc] initWithCore:self]];
+				[self.vault.resourceManager addSource:[[OCResourceSourceItemThumbnails alloc] initWithCore:self]];
+				[self.vault.resourceManager addSource:[[OCResourceSourceItemLocalThumbnails alloc] initWithCore:self]];
+				[self.vault.resourceManager addSource:[[OCResourceSourceDriveItems alloc] initWithCore:self]];
+				[self.vault.resourceManager addSource:[[OCResourceSourceURLItems alloc] initWithCore:self]];
 			}
 			else
 			{
@@ -554,6 +609,9 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 							[strongSelf->_fetchUpdatesCompletionHandlers removeAllObjects];
 						}
 					}
+
+					// Shutdown drives
+					[weakSelf shutdownWithDrives];
 
 					// Tear down item policies
 					[weakSelf teardownItemPolicies];
@@ -685,6 +743,27 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 							self->_preferredChecksumAlgorithm = preferredUploadChecksumType;
 						}
 					}
+
+					// If app provider is available and enabled
+					OCAppProvider *latestSupportedAppProvider = self.connection.capabilities.latestSupportedAppProvider;
+
+					if ((latestSupportedAppProvider != nil) && latestSupportedAppProvider.enabled)
+					{
+						[self.connection retrieveAppProviderListWithCompletionHandler:^(NSError * _Nullable error, OCAppProvider * _Nullable appProvider) {
+							OCLogDebug(@"AppProviderList: error=%@, appProvider=%@", error, appProvider);
+
+							if (error == nil)
+							{
+								[self willChangeValueForKey:@"appProvider"];
+								self->_appProvider = appProvider;
+								[self didChangeValueForKey:@"appProvider"];
+							}
+							else
+							{
+								OCLogWarning(@"Error retrieving app provider list: %@", error);
+							}
+						}];
+					}
 				}
 
 				[self queueBlock:^{
@@ -730,17 +809,17 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		query.state = OCQueryStateStarted;
 
 		// Start task
-		if (query.queryPath != nil)
+		if (query.queryLocation != nil)
 		{
 			// Start item list task for queried directory
-			[self scheduleItemListTaskForPath:query.queryPath forDirectoryUpdateJob:nil withMeasurement:[query extractedMeasurement]];
+			[self scheduleItemListTaskForLocation:query.queryLocation forDirectoryUpdateJob:nil withMeasurement:[query extractedMeasurement]];
 		}
 		else
 		{
 			if (query.queryItem.path != nil)
 			{
 				// Start item list task for parent directory of queried item
-				[self scheduleItemListTaskForPath:[query.queryItem.path parentPath] forDirectoryUpdateJob:nil withMeasurement:[query extractedMeasurement]];
+				[self scheduleItemListTaskForLocation:query.queryItem.location.parentLocation forDirectoryUpdateJob:nil withMeasurement:[query extractedMeasurement]];
 			}
 		}
 	}];
@@ -817,6 +896,28 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	OCShareQuery *shareQuery = OCTypedCast(coreQuery, OCShareQuery);
 
 	OCMeasureEvent(coreQuery, @"query", @"Starting");
+
+	if ((query != nil) && self.useDrives)
+	{
+		// Adapt query location from; legacy root to personal folder
+		OCLocation *queryLocation;
+
+		if ((queryLocation = query.queryLocation) != nil)
+		{
+			// No drive ID? => legacy/OC10 location
+			if (queryLocation.driveID == nil)
+			{
+				// Find personal drive
+				OCDrive *personalDrive;
+
+				if ((personalDrive = self.personalDrive) != nil)
+				{
+					// Set personal drive ID from personal drive
+					queryLocation.driveID = personalDrive.identifier;
+				}
+			}
+		}
+	}
 
 	if (query != nil)
 	{
@@ -915,7 +1016,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 - (void)retrieveLatestDatabaseVersionOfItem:(OCItem *)item completionHandler:(void(^)(NSError *error, OCItem *requestedItem, OCItem *databaseItem))completionHandler
 {
-	[self.vault.database retrieveCacheItemsAtPath:item.path itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+	[self.vault.database retrieveCacheItemsAtLocation:item.location itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 		completionHandler(error, item, items.firstObject);
 	}];
 }
@@ -930,6 +1031,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 - (void)setMemoryConfiguration:(OCCoreMemoryConfiguration)memoryConfiguration
 {
 	_memoryConfiguration = memoryConfiguration;
+
+	self.vault.resourceManager.memoryConfiguration = memoryConfiguration;
 
 	switch (_memoryConfiguration)
 	{
@@ -1105,7 +1208,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			[self performUpdatesForAddedItems:nil
 			   	removedItems:removedItems
 				updatedItems:addedOrUpdatedItems
-				refreshPaths:nil
+				refreshLocations:nil
 				newSyncAnchor:syncAnchor
 				beforeQueryUpdates:^(dispatch_block_t  _Nonnull completionHandler) {
 					// Find items that moved to a different path
@@ -1466,21 +1569,29 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 
 #pragma mark - Item lookup and information
-- (OCCoreItemTracking)trackItemAtPath:(OCPath)inPath trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler
+- (OCCoreItemTracking)trackItemAtLocation:(OCLocation *)location trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler
 {
 	NSObject *trackingObject = [NSObject new];
 	__weak NSObject *weakTrackingObject = trackingObject;
 	__weak OCCore *weakSelf = self;
 
 	// Detect unnormalized path
-	if ([inPath isUnnormalizedPath])
+	if ([location.path isUnnormalizedPath])
 	{
 		trackingHandler(OCError(OCErrorUnnormalizedPath), nil, YES);
 		return (nil);
 	}
 
+	// Detect unresolvable paths
+	if ((location.driveID == nil) && self.useDrives) // Legacy WebDAV is not available in drive-based accounts
+	{
+		trackingHandler(OCError(OCErrorItemNotFound), nil, YES);
+		return (nil);
+	}
+
 	[self queueBlock:^{
-		OCPath path = inPath;
+		OCPath path = location.path;
+		OCDriveID driveID = location.driveID;
 		NSError *error = nil;
 		OCItem *item = nil;
 		OCQuery *query = nil;
@@ -1499,13 +1610,13 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			return;
 		}
 
-		if ((item = [core cachedItemAtPath:path error:&error]) == nil)
+		if ((item = [core cachedItemAtLocation:location error:&error]) == nil)
 		{
 			// No item for this path found in cache
 			if (path.itemTypeByPath == OCItemTypeFile)
 			{
 				// This path indicates a file - but maybe that's what's wanted: retry by looking for a folder at that location instead.
-				if ((item = [core cachedItemAtPath:path.normalizedDirectoryPath error:&error]) != nil)
+				if ((item = [core cachedItemAtLocation:[[OCLocation alloc] initWithBookmarkUUID:core.bookmark.uuid driveID:driveID path:path.normalizedDirectoryPath] error:&error]) != nil)
 				{
 					path = path.normalizedDirectoryPath;
 				}
@@ -1524,7 +1635,20 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			}
 
 			// Start custom query to track changes (won't touch network, but will provide updates)
-			query = [OCQuery queryWithCondition:[OCQueryCondition where:OCItemPropertyNamePath isEqualTo:path] inputFilter:nil];
+			OCQueryCondition *queryCondition = nil;
+			if (driveID != nil)
+			{
+				queryCondition = [OCQueryCondition require:@[
+					[OCQueryCondition where:OCItemPropertyNameDriveID isEqualTo:driveID],
+					[OCQueryCondition where:OCItemPropertyNamePath isEqualTo:path]
+				]];
+			}
+			else
+			{
+				queryCondition = [OCQueryCondition where:OCItemPropertyNamePath isEqualTo:path];
+			}
+
+			query = [OCQuery queryWithCondition:queryCondition inputFilter:nil];
 			query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
 				if (weakTrackingObject != nil)
 				{
@@ -1541,7 +1665,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			// Item not in cache - create full-fledged query
 			__block BOOL lastSentItemWasNil = YES;
 
-			query = [OCQuery queryForPath:path];
+			query = [OCQuery queryForLocation:[[OCLocation alloc] initWithDriveID:driveID path:path]];
 			query.includeRootItem = YES;
 
 			NSString *pathAsDirectory = path.normalizedDirectoryPath;
@@ -1610,14 +1734,80 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	return (trackingObject);
 }
 
-- (nullable OCItem *)cachedItemAtPath:(OCPath)path error:(__autoreleasing NSError * _Nullable * _Nullable)outError
+- (OCCoreItemTracking)trackItemWithCondition:(OCQueryCondition *)queryCondition trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler
+{
+	NSObject *trackingObject = [NSObject new];
+	__weak NSObject *weakTrackingObject = trackingObject;
+	__weak OCCore *weakSelf = self;
+
+	// Detect unnormalized path
+	if (queryCondition == nil)
+	{
+		trackingHandler(OCError(OCErrorInsufficientParameters), nil, YES);
+		return (nil);
+	}
+
+	[self queueBlock:^{
+		NSError *error = nil;
+		OCQuery *query = nil;
+		NSObject *trackingObject = weakTrackingObject;
+		__block BOOL isFirstInvocation = YES;
+		OCCore *core = weakSelf;
+
+		if (trackingObject == nil)
+		{
+			return;
+		}
+
+		if (core == nil)
+		{
+			trackingHandler(OCError(OCErrorInternal), nil, YES);
+			return;
+		}
+
+		query = [OCQuery queryWithCondition:queryCondition inputFilter:nil];
+		query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
+			if (weakTrackingObject != nil)
+			{
+				if ((query.state == OCQueryStateContentsFromCache) || (query.state == OCQueryStateIdle))
+				{
+					trackingHandler(nil, query.queryResults.firstObject, isFirstInvocation);
+					isFirstInvocation = NO;
+				}
+			}
+		};
+
+		if (query != nil)
+		{
+			__weak OCCore *weakCore = core;
+			__weak OCQuery *weakQuery = query;
+
+			[core startQuery:query];
+
+			// Stop query as soon as trackingObject is deallocated
+			[OCDeallocAction addAction:^{
+				OCCore *core = weakCore;
+				OCQuery *query = weakQuery;
+
+				if ((core != nil) && (query != nil))
+				{
+					[core stopQuery:query];
+				}
+			} forDeallocationOfObject:trackingObject];
+		}
+	}];
+
+	return (trackingObject);
+}
+
+- (nullable OCItem *)cachedItemAtLocation:(OCLocation *)location error:(__autoreleasing NSError * _Nullable * _Nullable)outError
 {
 	__block OCItem *cachedItem = nil;
 
-	if (path != nil)
+	if (location.path != nil)
 	{
 		OCSyncExec(retrieveCachedItem, {
-			[self.vault.database retrieveCacheItemsAtPath:path itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+			[self.vault.database retrieveCacheItemsAtLocation:location itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 				cachedItem = items.firstObject;
 
 				if (outError != NULL)
@@ -1640,21 +1830,35 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	return (cachedItem);
 }
 
-- (nullable OCItem *)cachedItemInParentPath:(NSString *)parentPath withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError
+- (void)cachedItemAtLocation:(OCLocation *)location resultHandler:(void (^)(NSError * _Nullable, OCItem * _Nullable))resultHandler
 {
-	NSString *path = [parentPath stringByAppendingPathComponent:name];
+	if (location.path != nil)
+	{
+		[self.vault.database retrieveCacheItemsAtLocation:location itemOnly:YES completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+			resultHandler(error, items.firstObject);
+		}];
+	}
+	else
+	{
+		resultHandler(OCError(OCErrorInsufficientParameters), nil);
+	}
+}
+
+- (nullable OCItem *)cachedItemInParentLocation:(OCLocation *)parentLocation withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError
+{
+	NSString *path = [parentLocation.path stringByAppendingPathComponent:name];
 
 	if (isDirectory)
 	{
 		path = [path normalizedDirectoryPath];
 	}
 
-	return ([self cachedItemAtPath:path error:outError]);
+	return ([self cachedItemAtLocation:[[OCLocation alloc] initWithBookmarkUUID:_bookmark.uuid driveID:parentLocation.driveID path:path] error:outError]);
 }
 
 - (nullable OCItem *)cachedItemInParent:(OCItem *)parentItem withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError
 {
-	return ([self cachedItemInParentPath:parentItem.path withName:name isDirectory:isDirectory error:outError]);
+	return ([self cachedItemInParentLocation:parentItem.location withName:name isDirectory:isDirectory error:outError]);
 }
 
 - (NSURL *)localCopyOfItem:(OCItem *)item
@@ -1672,7 +1876,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 {
 	if (item.localRelativePath != nil)
 	{
-		return ([self.vault.filesRootURL URLByAppendingPathComponent:item.localRelativePath isDirectory:NO]);
+		return ([[self.vault localDriveRootURLForDriveID:item.driveID] URLByAppendingPathComponent:item.localRelativePath isDirectory:NO]);
 	}
 
 	return ([self.vault localURLForItem:item]);
@@ -1890,11 +2094,10 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		// Handle by event type
 		switch (event.eventType)
 		{
-			case OCEventTypeRetrieveThumbnail: {
-				queueBlock = ^{
-					[self _handleRetrieveThumbnailEvent:event sender:sender];
-				};
-			}
+			case OCEventTypeRetrieveThumbnail:
+				// Legacy thumbnail event (pre-OCResourceManager era)
+				OCLogWarning(@"Dropping legacy thumbnail event: %@", event);
+				completionHandler();
 			break;
 
 			case OCEventTypeRetrieveItemList: {
@@ -1953,7 +2156,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		{
 			updatedItem.lastUsed = [NSDate new];
 
-			[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ updatedItem ] refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+			[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[ updatedItem ] refreshLocations:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
 		}
 
 		[self endActivity:@"Registering item usage"];
@@ -1962,6 +2165,143 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		{
 			completionHandler(self, nil);
 		}
+	}];
+}
+
+#pragma mark - Drives
+- (BOOL)useDrives
+{
+	return (_connection.useDriveAPI);
+}
+
+- (void)initializeWithDrives
+{
+	@synchronized(_lastRootETagsByDriveID)
+	{
+		for (OCDrive *drive in self.vault.activeDrives)
+		{
+			_lastRootETagsByDriveID[drive.identifier] = drive.rootETag;
+		}
+
+		[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_handleSubscribedDrivesUpdate:) name:OCVaultSubscribedDrivesListChanged object:nil];
+		[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_handleDetachedDrivesUpdate:) name:OCVaultDetachedDrivesListChanged object:nil];
+	}
+}
+
+- (void)shutdownWithDrives
+{
+	[NSNotificationCenter.defaultCenter removeObserver:self name:OCVaultSubscribedDrivesListChanged object:nil];
+	[NSNotificationCenter.defaultCenter removeObserver:self name:OCVaultDetachedDrivesListChanged object:nil];
+}
+
+- (void)subscribeToDrive:(OCDrive *)drive
+{
+	[self.vault subscribeToDrives:@[ drive ]];
+}
+
+- (void)unsubscribeFromDrive:(OCDrive *)drive
+{
+	[self.vault unsubscribeFromDrives:@[ drive ]];
+}
+
+- (NSArray<OCDrive *> *)drives
+{
+	return (self.vault.activeDrives);
+}
+
+- (NSArray<OCDrive *> *)subscribedDrives
+{
+	return (self.vault.subscribedDrives);
+}
+
+- (NSArray<OCDrive *> *)detachedDrives
+{
+	return (self.vault.detachedDrives);
+}
+
+- (OCDrive *)driveWithIdentifier:(OCDriveID)driveID
+{
+	if (driveID == nil) { return (nil); }
+
+	return ([self.vault driveWithIdentifier:driveID]);
+}
+
+- (OCDrive *)personalDrive
+{
+	return ([self.drives firstObjectMatching:^BOOL(OCDrive * _Nonnull drive) {
+		return ([drive.specialType isEqual:OCDriveSpecialTypePersonal]);
+	}]);
+}
+
+- (void)_handleDetachedDrivesUpdate:(NSNotification *)notification
+{
+	if (notification.object != _vault)
+	{
+		// Only react to notifications from our vault
+		return;
+	}
+
+	[self beginActivity:@"Drive detach handling"];
+
+	[self queueBlock:^{
+		[self incrementSyncAnchorWithProtectedBlock:^NSError *(OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
+			NSArray<OCDrive *> *detachedDrives = self.vault.detachedDrives;
+			__block NSError *returnError = nil;
+
+			for (OCDrive *detachedDrive in detachedDrives)
+			{
+				OCDriveID driveID = detachedDrive.identifier;
+
+				if ((detachedDrive.detachedState == OCDriveDetachedStateNew) && (driveID != nil))
+				{
+					[self.database removeCacheItemsWithDriveID:driveID syncAnchor:newSyncAnchor completionHandler:^(OCDatabase *db, NSError *error) {
+						returnError = error;
+					}];
+
+					if (returnError != nil)
+					{
+						return (returnError);
+					}
+
+					[self.vault changeDetachedState:OCDriveDetachedStateItemsRemoved forDriveID:driveID];
+				}
+			}
+
+			return ((NSError *)returnError);
+		} completionHandler:^(NSError *error, OCSyncAnchor previousSyncAnchor, OCSyncAnchor newSyncAnchor) {
+			[self endActivity:@"Drive detach handling"];
+		}];
+	}];
+}
+
+- (void)_handleSubscribedDrivesUpdate:(NSNotification *)notification
+{
+	if (notification.object != _vault)
+	{
+		// Only react to notifications from our vault
+		return;
+	}
+
+	[self beginActivity:@"Subscribed drives update handling"];
+
+	[self queueBlock:^{
+		NSArray<OCQuery *> *queries;
+
+		@synchronized(self->_queries)
+		{
+			queries = [self->_queries copy];
+		}
+
+		for (OCQuery *query in queries)
+		{
+			if (query.isCustom)
+			{
+				// Reload all custom queries as drives are added/removed
+				[self reloadQuery:query];
+			}
+		}
+
+		[self endActivity:@"Subscribed drives update handling"];
 	}];
 }
 

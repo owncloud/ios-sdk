@@ -187,9 +187,9 @@
 	return ([self.serverVersion compareVersionWith:version] >= NSOrderedSame);
 }
 
-- (BOOL)supportsPreviewAPI
+- (BOOL)useDriveAPI
 {
-	return ([self runsServerVersionOrHigher:@"10.0.9"]);
+	return (self.capabilities.spacesEnabled.boolValue || [self.bookmark hasCapability:OCBookmarkCapabilityDrives]);
 }
 
 #pragma mark - Checks
@@ -214,6 +214,18 @@
 	{
 		if ([serverVersion compareVersionWith:minimumVersion] == NSOrderedAscending)
 		{
+			// ocis public beta special handling
+
+			// NSArray<NSString *> *versionSegments = [serverVersion componentsSeparatedByString:@"."];
+			// ocis returns four digit version numbers, with 2 being the major version
+			// if ((versionSegments.count == 4) && [versionSegments.firstObject isEqual:@"2"])
+
+			if ([serverVersion isEqual:@"0.0.0.0"] || [serverVersion isEqual:@"2.0.0.0"])
+			{
+				// ocis public beta exception
+				return (nil);
+			}
+
 			return ([NSError errorWithDomain:OCErrorDomain code:OCErrorServerVersionNotSupported userInfo:@{
 				NSLocalizedDescriptionKey : [NSString stringWithFormat:OCLocalizedString(@"This server runs an unsupported version (%@). Version %@ or later is required by this app.", @""), longVersion, minimumVersion]
 			}]);

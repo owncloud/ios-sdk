@@ -39,13 +39,13 @@ typedef NS_ENUM(NSInteger, OCAuthenticationOAuth2TokenRequestType)
 @property(strong,nullable) OCPKCE *pkce; //!< pre-configured PKCE object to use for Proof Key for Code Exchange
 
 #pragma mark - Subclassing points
-- (nullable NSURL *)authorizationEndpointURLForConnection:(OCConnection *)connection;
-- (nullable NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection;
+- (nullable NSURL *)authorizationEndpointURLForConnection:(OCConnection *)connection options:(OCAuthenticationMethodDetectionOptions)options;
+- (nullable NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection options:(OCAuthenticationMethodDetectionOptions)options;
 - (NSString *)redirectURIForConnection:(OCConnection *)connection;
 - (NSDictionary<NSString *, NSString *> *)prepareAuthorizationRequestParameters:(NSDictionary<NSString *,NSString *> *)parameters forConnection:(OCConnection *)connection options:(nullable OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options;
 - (NSDictionary<NSString *, NSString *> *)tokenRefreshParametersForRefreshToken:(NSString *)refreshToken connection:(OCConnection *)connection;
 - (NSDictionary<NSString *, id> *)postProcessAuthenticationDataDict:(NSDictionary<NSString *, id> *)authDataDict;
-- (void)retrieveEndpointInformationForConnection:(OCConnection *)connection completionHandler:(void(^)(NSError *error))completionHandler;
+- (void)retrieveEndpointInformationForConnection:(OCConnection *)connection options:(nullable OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(NSError * _Nullable error))completionHandler;
 - (nullable NSString *)scope;
 - (nullable NSString *)prompt;
 - (NSString *)clientID;

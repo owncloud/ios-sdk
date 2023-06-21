@@ -116,14 +116,12 @@
 	for (NSString *key in keys)
 	{
 		NSRange escapeRange = [key rangeOfString:@"$"];
-		NSString *effectiveKey = key;
 		id value = [sourceDict valueForKey:key];
 
 		if (escapeRange.location != NSNotFound)
 		{
 			NSArray<NSString *> *pathComponents = [[key substringFromIndex:escapeRange.location+1] componentsSeparatedByString:@"."];
-
-			effectiveKey = [key substringToIndex:escapeRange.location];
+			NSString *effectiveKey = [key substringToIndex:escapeRange.location];
 
 			// Navigate hierarchy
 			id targetCollection = resultDict;

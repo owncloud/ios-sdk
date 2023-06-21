@@ -42,6 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - INSERT query builder
 + (nullable instancetype)queryInsertingIntoTable:(NSString *)tableName rowValues:(NSDictionary <NSString *, id<NSObject>> *)rowValues resultHandler:(nullable OCSQLiteDBInsertionHandler)resultHandler;
++ (nullable instancetype)queryInsertingOrReplacingIntoTable:(NSString *)tableName rowValues:(NSDictionary <NSString *, id<NSObject>> *)rowValues resultHandler:(OCSQLiteDBInsertionHandler)resultHandler;
 
 #pragma mark - UPDATE query builder
 + (nullable instancetype)queryUpdatingRowsWhere:(NSDictionary <NSString *, id<NSObject>> *)matchValues inTable:(NSString *)tableName withRowValues:(NSDictionary <NSString *, id<NSObject>> *)rowValues completionHandler:(nullable OCSQLiteDBCompletionHandler)completionHandler;

@@ -98,6 +98,23 @@ static OCAuthenticationBrowserSessionCustomSchemeBusyPresenter sBusyPresenter;
 	return (NO);
 }
 
++ (BOOL)openURL:(NSURL*)url options:(NSDictionary<UIApplicationOpenExternalURLOptionsKey, id> *)options completionHandler:(void (^ __nullable)(BOOL success))completion
+{
+	Class uiApplicationClass = NSClassFromString(@"UIApplication");
+	id<ApplicationOpenURL> sharedApplication = [uiApplicationClass valueForKey:@"sharedApplication"];
+
+	if (sharedApplication != nil)
+	{
+		dispatch_async(dispatch_get_main_queue(), ^{ // Make this thread-safe
+			[sharedApplication openURL:url options:options completionHandler:completion];
+		});
+
+		return (YES);
+	}
+
+	return (NO);
+}
+
 - (NSString *)plainCustomScheme
 {
 	return ([self classSettingForOCClassSettingsKey:OCClassSettingsKeyItemBrowserSessionCustomSchemePlain]);

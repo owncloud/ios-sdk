@@ -269,7 +269,16 @@
 
 				if ((httpStatus = propstatNode.keyValues[@"d:status"]) != nil)
 				{
-					if (httpStatus.isSuccess) {
+					BOOL handleContainedTags = httpStatus.isSuccess; // Handle parts with 2xx status
+
+					if (httpStatus.code == OCHTTPStatusCodeTOO_EARLY) // Handle parts with 425 status
+					{
+						// Item is processed server side => adjust state
+						item.state = OCItemStateServerSideProcessing;
+						handleContainedTags = YES;
+					}
+
+					if (handleContainedTags) {
 						[propstatNode enumerateChildNodesWithName:@"d:prop" usingBlock:^(OCXMLParserNode *propNode) {
 							// Collection?
 							__block BOOL isCollection = NO;

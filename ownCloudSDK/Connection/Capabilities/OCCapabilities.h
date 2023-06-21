@@ -20,6 +20,7 @@
 #import "OCChecksumAlgorithm.h"
 #import "OCShare.h"
 #import "OCTUSHeader.h"
+#import "OCAppProvider.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -57,6 +58,14 @@ typedef NSNumber* OCCapabilityBool;
 @property(readonly,nullable,nonatomic) NSArray<NSString *> *davReports;
 @property(readonly,nullable,nonatomic) OCCapabilityBool davPropfindSupportsDepthInfinity;
 
+#pragma mark - Spaces
+@property(readonly,nullable,nonatomic) OCCapabilityBool spacesEnabled;
+@property(readonly,nullable,nonatomic) NSString *spacesVersion;
+
+#pragma mark - App Providers
+@property(readonly,nullable,nonatomic) NSArray<OCAppProvider *> *appProviders;
+@property(readonly,nullable,nonatomic) OCAppProvider *latestSupportedAppProvider; //!< Convenience method to return the latest supported and available app provider
+
 #pragma mark - TUS
 @property(readonly,nonatomic) BOOL tusSupported;
 @property(readonly,nullable,nonatomic) OCTUSCapabilities tusCapabilities;
@@ -74,6 +83,7 @@ typedef NSNumber* OCCapabilityBool;
 @property(readonly,nullable,nonatomic) NSArray<NSString *> *blacklistedFiles;
 @property(readonly,nullable,nonatomic) OCCapabilityBool supportsUndelete;
 @property(readonly,nullable,nonatomic) OCCapabilityBool supportsVersioning;
+@property(readonly,nullable,nonatomic) OCCapabilityBool supportsFavorites;
 
 #pragma mark - Sharing
 @property(readonly,nullable,nonatomic) OCCapabilityBool sharingAPIEnabled;
@@ -113,6 +123,8 @@ typedef NSNumber* OCCapabilityBool;
 #pragma mark - Sharing : Federation
 @property(readonly,nullable,nonatomic) OCCapabilityBool federatedSharingIncoming;
 @property(readonly,nullable,nonatomic) OCCapabilityBool federatedSharingOutgoing;
+
+@property(readonly,nonatomic) BOOL federatedSharingSupported;
 
 #pragma mark - Notifications
 @property(readonly,nullable,nonatomic) NSArray<NSString *> *notificationEndpoints;

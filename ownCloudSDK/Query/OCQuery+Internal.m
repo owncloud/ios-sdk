@@ -18,6 +18,7 @@
 
 #import "OCQuery+Internal.h"
 #import "OCCoreItemList.h"
+#import "OCStatistic.h"
 
 @implementation OCQuery (Internal)
 
@@ -27,6 +28,7 @@
 	@synchronized(self)
 	{
 		_fullQueryResults = fullQueryResults;
+		_fullQueryResultsSetOnce = YES;
 
 		// Release cached item list
 		_fullQueryResultsItemList = nil;
@@ -154,17 +156,98 @@
 			// We just recomputed
 			_processedQueryResults = newProcessedResults;
 			_needsRecomputation = NO;
+
+			_queryResultsDataSource.state = [self _dataSourceState];
+			[self updateDataSourceSpecialItemsForItems:newProcessedResults];
+			[_queryResultsDataSource setVersionedItems:(NSArray<id<OCDataItem,OCDataItemVersioning>> *)newProcessedResults];
 		}
 	}
+}
+
+- (void)updateDataSourceSpecialItemsForItems:(NSArray<OCItem *> *)items
+{
+	if (self.queryResultsDataSourceIncludesStatistics)
+	{
+		NSUInteger fileCount = 0, folderCount = 0, sizeInBytes = 0;
+
+		for (OCItem *item in items)
+		{
+			switch (item.type)
+			{
+				case OCItemTypeFile:
+					fileCount += 1;
+				break;
+
+				case OCItemTypeCollection:
+					folderCount += 1;
+				break;
+			}
+
+			NSInteger size = item.size;
+
+			if (size > 0)
+			{
+				sizeInBytes += item.size;
+			}
+		}
+
+		OCStatistic *statistic = [OCStatistic new];
+
+		statistic.itemCount = @(folderCount + fileCount);
+		statistic.folderCount = @(folderCount);
+		statistic.fileCount = @(fileCount);
+		statistic.sizeInBytes = @(sizeInBytes);
+
+		_queryResultsDataSource.specialItems = @{
+			OCDataSourceSpecialItemFolderStatistics : statistic
+		};
+	}
+}
+
+- (OCDataSourceState)_dataSourceState
+{
+	switch (self.state)
+	{
+		case OCQueryStateStarted:
+			return (OCDataSourceStateLoading);
+		break;
+
+		case OCQueryStateWaitingForServerReply:
+			if (!_fullQueryResultsSetOnce)
+			{
+				return (OCDataSourceStateLoading);
+			}
+
+		case OCQueryStateStopped:
+		case OCQueryStateContentsFromCache:
+		case OCQueryStateTargetRemoved:
+		case OCQueryStateIdle:
+			return (OCDataSourceStateIdle);
+		break;
+	}
+
+	return (OCDataSourceStateIdle);
 }
 
 #pragma mark - Needs recomputation
 - (void)setNeedsRecomputation
 {
+	BOOL updateProcessedResults = NO;
+
 	@synchronized(self)
 	{
 		_needsRecomputation = YES;
 		self.hasChangesAvailable = YES;
+
+		if (_queryResultsDataSource != nil)
+		{
+			updateProcessedResults = YES;
+		}
+	}
+
+	if (updateProcessedResults)
+	{
+		[self updateProcessedResultsIfNeeded:YES];
 	}
 }
 

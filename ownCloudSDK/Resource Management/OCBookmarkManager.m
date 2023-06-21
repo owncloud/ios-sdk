@@ -19,8 +19,13 @@
 #import "OCBookmarkManager.h"
 #import "OCAppIdentity.h"
 #import "OCLogger.h"
+#import "OCDataSourceArray.h"
+#import "OCBookmark+DataItem.h"
 
 @implementation OCBookmarkManager
+{
+	OCDataSourceArray *_bookmarksDatasource;
+}
 
 @synthesize bookmarks = _bookmarks;
 
@@ -77,11 +82,79 @@
 	{
 		if ((bookmarkData = [[NSData alloc] initWithContentsOfURL:bookmarkStoreURL]) != nil)
 		{
-			NSMutableArray<OCBookmark *> *loadedBookmarks = nil;
+			NSMutableArray<OCBookmark *> *reconstructedBookmarks = nil;
 
 			@try
 			{
+				NSArray<OCBookmark *> *existingBookmarks = nil;
+				NSMutableArray<OCBookmark *> *loadedBookmarks = nil;
+
 				loadedBookmarks = [NSKeyedUnarchiver unarchiveObjectWithData:bookmarkData];
+
+				@synchronized(self)
+				{
+					existingBookmarks = [_bookmarks copy];
+				}
+
+				if (existingBookmarks != nil)
+				{
+					// Look for changed bookmarks and update only those that don't match the existing instances
+					reconstructedBookmarks = [NSMutableArray new];
+
+					for (OCBookmark *loadedBookmark in loadedBookmarks)
+					{
+						OCBookmark *existingBookmark = nil;
+
+						for (OCBookmark *bookmark in existingBookmarks)
+						{
+							if ([bookmark.uuid isEqual:loadedBookmark.uuid])
+							{
+								existingBookmark = bookmark;
+								break;
+							}
+						}
+
+						if (existingBookmark == nil)
+						{
+							// New bookmark
+							[reconstructedBookmarks addObject:loadedBookmark];
+						}
+						else
+						{
+							// Existing bookmark - check for changes
+							NSError *error = nil;
+							NSData *existingBookmarkData = nil, *loadedBookmarkData = nil;
+							BOOL isIdentical = NO;
+
+							if ((existingBookmarkData = [NSKeyedArchiver archivedDataWithRootObject:existingBookmark requiringSecureCoding:NO error:&error]) != nil)
+							{
+								if ((loadedBookmarkData = [NSKeyedArchiver archivedDataWithRootObject:loadedBookmark requiringSecureCoding:NO error:&error]) != nil)
+								{
+									if ([existingBookmarkData isEqual:loadedBookmarkData])
+									{
+										isIdentical = YES;
+									}
+								}
+							}
+
+							if (isIdentical)
+							{
+								// Bookmark unchanged - use existing copy
+								[reconstructedBookmarks addObject:existingBookmark];
+							}
+							else
+							{
+								// Bookmark changed - use loaded copy
+								[reconstructedBookmarks addObject:loadedBookmark];
+							}
+						}
+					}
+				}
+				else
+				{
+					// No bookmarks previously loaded - just use the loaded ones
+					reconstructedBookmarks = loadedBookmarks;
+				}
 			}
 			@catch(NSException *exception) {
 				OCLogError(@"Error loading bookmarks: %@", OCLogPrivate(exception));
@@ -89,14 +162,16 @@
 
 			@synchronized(self)
 			{
-				if (loadedBookmarks != nil)
+				if (reconstructedBookmarks != nil)
 				{
-					_bookmarks = loadedBookmarks;
+					_bookmarks = reconstructedBookmarks;
 				}
 				else
 				{
 					[_bookmarks removeAllObjects];
 				}
+
+				[_bookmarksDatasource setVersionedItems:_bookmarks];
 			}
 		}
 		else
@@ -104,6 +179,7 @@
 			@synchronized(self)
 			{
 				[_bookmarks removeAllObjects];
+				[_bookmarksDatasource setVersionedItems:_bookmarks];
 			}
 		}
 	}
@@ -172,6 +248,8 @@
 	@synchronized(self)
 	{
 		[_bookmarks addObject:bookmark];
+
+		[_bookmarksDatasource setVersionedItems:_bookmarks];
 	}
 
 	[self saveBookmarks];
@@ -184,6 +262,8 @@
 	@synchronized(self)
 	{
 		[_bookmarks removeObject:bookmark];
+
+		[_bookmarksDatasource setVersionedItems:_bookmarks];
 	}
 
 	[self saveBookmarks];
@@ -197,6 +277,8 @@
 
 		[_bookmarks removeObject:bookmark];
 		[_bookmarks insertObject:bookmark atIndex:toIndex];
+
+		[_bookmarksDatasource setVersionedItems:_bookmarks];
 	}
 
 	[self saveBookmarks];
@@ -215,10 +297,29 @@
 
 	if (saveAndPostUpdate)
 	{
+		@synchronized (self)
+		{
+			// [_bookmarksDatasource setItems:_bookmarks updated:[NSSet setWithObject:bookmark]] is more accurate, but leads to unnecessary recreation and navigation issues since this forces a recreation of mapped objects in the client sidebar even if there are no relevant changes. Therefore, make sure that user-facing important changes are included in OCBookmark+DataItem versioning - and depend on its mechanisms for this data source.
+			[_bookmarksDatasource setVersionedItems:_bookmarks];
+		}
 		[self saveBookmarks];
 	}
 
 	return (saveAndPostUpdate);
+}
+
+#pragma mark - Data sources
+- (OCDataSource *)bookmarksDatasource
+{
+	@synchronized(self)
+	{
+		if (_bookmarksDatasource == nil)
+		{
+			_bookmarksDatasource = [[OCDataSourceArray alloc] initWithItems:_bookmarks];
+			_bookmarksDatasource.trackItemVersions = YES;
+		}
+	}
+	return (_bookmarksDatasource);
 }
 
 #pragma mark - Acessing bookmarks

@@ -224,7 +224,7 @@
 		// Update items in database in a single transaction
 		OCLogDebug(@"Updating %lu trimmed items", _trimmedItems.count);
 
-		[self.core performUpdatesForAddedItems:nil removedItems:nil updatedItems:_trimmedItems refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+		[self.core performUpdatesForAddedItems:nil removedItems:nil updatedItems:_trimmedItems refreshLocations:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
 
 		_trimmedItems = nil;
 	}

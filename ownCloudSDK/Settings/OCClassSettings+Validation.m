@@ -271,7 +271,7 @@
 		}];
 	}
 
-	if (error != nil)
+	if ((error != nil) && (outError != NULL))
 	{
 		*outError = error;
 	}

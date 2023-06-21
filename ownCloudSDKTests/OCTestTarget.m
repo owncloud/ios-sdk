@@ -26,6 +26,11 @@
 	return ([NSURL URLWithString:@"https://demo.owncloud.com/"]);
 }
 
++ (NSURL *)ocisTargetURL
+{
+	return ([NSURL URLWithString:@"https://ocis.ocis-wopi.latest.owncloud.works/"]);
+}
+
 + (NSString *)adminLogin
 {
 	return (@"admin");
@@ -104,6 +109,11 @@
 + (OCBookmark *)federatedBookmark
 {
 	return ([self bookmarkWithURL:OCTestTarget.federatedTargetURL username:OCTestTarget.federatedLogin passphrase:OCTestTarget.federatedPassword]);
+}
+
++ (OCBookmark *)ocisBookmark
+{
+	return ([self bookmarkWithURL:OCTestTarget.ocisTargetURL username:OCTestTarget.adminLogin passphrase:OCTestTarget.adminPassword]);
 }
 
 @end

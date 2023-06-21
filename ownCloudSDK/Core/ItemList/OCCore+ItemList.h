@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCCore (ItemList)
 
 #pragma mark - Item List Tasks
-- (void)scheduleItemListTaskForPath:(OCPath)path forDirectoryUpdateJob:(nullable OCCoreDirectoryUpdateJob *)directoryUpdateJob withMeasurement:(nullable OCMeasurement *)measurement;
+- (void)scheduleItemListTaskForLocation:(OCLocation *)location forDirectoryUpdateJob:(nullable OCCoreDirectoryUpdateJob *)directoryUpdateJob withMeasurement:(nullable OCMeasurement *)measurement;
 - (void)handleUpdatedTask:(OCCoreItemListTask *)task;
 
 - (void)queueRequestJob:(OCAsyncSequentialQueueJob)requestJob;
@@ -39,7 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)_handleRetrieveItemListEvent:(OCEvent *)event sender:(id)sender;
 
 #pragma mark - Update Scans
-- (void)scheduleUpdateScanForPath:(OCPath)path waitForNextQueueCycle:(BOOL)waitForNextQueueCycle;
+- (void)scheduleUpdateScanForLocation:(OCLocation *)location waitForNextQueueCycle:(BOOL)waitForNextQueueCycle;
 - (void)recoverPendingUpdateJobs;
 
 - (void)coordinatedScanForChanges;

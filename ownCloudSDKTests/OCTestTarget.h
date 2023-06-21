@@ -19,6 +19,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong,readonly,nonnull,class) NSURL *federatedTargetURL;
 
+@property(strong,readonly,nonnull,class) NSURL *ocisTargetURL;
+
 @property(strong,readonly,nonnull,class) NSString *adminLogin;
 @property(strong,readonly,nonnull,class) NSString *adminPassword;
 
@@ -40,6 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (OCBookmark *)oidcBookmark;
 
 + (OCBookmark *)federatedBookmark;
+
++ (OCBookmark *)ocisBookmark;
 
 @end
 

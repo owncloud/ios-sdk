@@ -123,6 +123,7 @@ typedef void(^OCSQLiteDBBusyStatusHandler)(NSProgress * _Nullable progress); //!
 #pragma mark - Table Schemas
 - (void)addTableSchema:(OCSQLiteTableSchema *)schema; //!< Adds a table schema to the database. All schemas must be added prior to calling -applyTableSchemasWithCompletionHandler: the database.
 - (void)applyTableSchemasWithCompletionHandler:(nullable OCSQLiteDBCompletionHandler)completionHandler; //!< Applies the table schemas: creates tables that don't yet exist, applies all available upgrades for existing tables
+- (void)dropTableSchemas; //!< Drops all table schemas. Useful to save memory after migrations and migration checks have run.
 
 #pragma mark - Execute
 - (void)executeQuery:(OCSQLiteQuery *)query; //!< Executes a query. Usually async, but synchronous if called from with in a OCSQLiteTransactionBlock.

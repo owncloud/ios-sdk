@@ -37,7 +37,7 @@ typedef NS_ENUM(NSUInteger, OCCertificateValidationResult)
 	// Proceed
 	OCCertificateValidationResultPassed,
 	OCCertificateValidationResultUserAccepted
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef NSString* OCCertificateAcceptanceReason NS_TYPED_ENUM;
 

@@ -31,7 +31,7 @@ typedef void(^OCCoreItemUpdateQueryPostProcessor)(OCCore *core, OCQuery *query, 
 - (void)performUpdatesForAddedItems:(nullable NSArray<OCItem *> *)addedItems
 		       removedItems:(nullable NSArray<OCItem *> *)removedItems
 		       updatedItems:(nullable NSArray<OCItem *> *)updatedItems
-		       refreshPaths:(nullable NSArray <OCPath> *)refreshPaths
+		   refreshLocations:(nullable NSArray<OCLocation *> *)refreshLocations
 		      newSyncAnchor:(nullable OCSyncAnchor)newSyncAnchor
 		 beforeQueryUpdates:(nullable OCCoreItemUpdateAction)beforeQueryUpdatesAction
 		  afterQueryUpdates:(nullable OCCoreItemUpdateAction)afterQueryUpdatesAction

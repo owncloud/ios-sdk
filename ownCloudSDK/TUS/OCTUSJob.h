@@ -20,6 +20,7 @@
 #import "OCTUSHeader.h"
 #import "OCChecksum.h"
 #import "OCEventTarget.h"
+#import "OCDrive.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -45,6 +46,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nullable) NSNumber *fileSize;
 @property(strong,nullable) NSDate *fileModDate;
 @property(strong,nullable) OCChecksum *fileChecksum;
+
+@property(strong,nullable) OCDriveID fileDriveID;
 
 @property(strong,nullable) OCEventTarget *eventTarget;
 

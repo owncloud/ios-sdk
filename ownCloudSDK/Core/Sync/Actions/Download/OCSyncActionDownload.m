@@ -593,9 +593,9 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 				// The item wasn't found on the server (either a 404 or a failed precondition HTTP status with respective Sabre error message)
 
 				// Request refresh of parent path
-				if (item.path.parentPath != nil)
+				if (item.location.parentLocation != nil)
 				{
-					syncContext.refreshPaths = @[ item.path.parentPath ];
+					syncContext.refreshLocations = @[ item.location.parentLocation ];
 				}
 
 				if ([self.options[OCCoreOptionDownloadTriggerID] isEqual:OCItemDownloadTriggerIDAvailableOffline])
@@ -630,9 +630,9 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 				OCLogError(@"Download %@ error %@ => ETag on the server likely changed from the last known ETag", item, downloadError);
 
 				// Request refresh of parent path
-				if (item.path.parentPath != nil)
+				if (item.location.parentLocation != nil)
 				{
-					syncContext.refreshPaths = @[ item.path.parentPath ];
+					syncContext.refreshLocations = @[ item.location.parentLocation ];
 				}
 
 				// For anything else: wait for metadata update to happen
@@ -643,7 +643,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 					syncContext.updateStoredSyncRecordAfterItemUpdates = YES; // Update sync record in db, so resolutionRetries is persisted
 
 					[syncContext transitionToState:OCSyncRecordStateReady withWaitConditions:@[
-						[[OCWaitConditionMetaDataRefresh waitForPath:item.path versionOtherThan:item.itemVersionIdentifier until:[NSDate dateWithTimeIntervalSinceNow:120.0]] withLocalizedDescription:OCLocalized(@"Waiting for metadata refresh")]
+						[[OCWaitConditionMetaDataRefresh waitForLocation:item.location versionOtherThan:item.itemVersionIdentifier until:[NSDate dateWithTimeIntervalSinceNow:120.0]] withLocalizedDescription:OCLocalized(@"Waiting for metadata refresh")]
 					]];
 
 					handledError = YES;
@@ -666,7 +666,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 					syncContext.updateStoredSyncRecordAfterItemUpdates = YES; // Update sync record in db, so resolutionRetries is persisted
 
 					[syncContext transitionToState:OCSyncRecordStateReady withWaitConditions:@[
-						[[OCWaitConditionMetaDataRefresh waitForPath:item.path versionOtherThan:item.itemVersionIdentifier until:[NSDate dateWithTimeIntervalSinceNow:10.0]] withLocalizedDescription:[NSString stringWithFormat:OCLocalized(@"Waiting to retry (%ld of %ld)"), _resolutionRetries, maxResolutionRetries]]
+						[[OCWaitConditionMetaDataRefresh waitForLocation:item.location versionOtherThan:item.itemVersionIdentifier until:[NSDate dateWithTimeIntervalSinceNow:10.0]] withLocalizedDescription:[NSString stringWithFormat:OCLocalized(@"Waiting to retry (%ld of %ld)"), _resolutionRetries, maxResolutionRetries]]
 					]];
 
 					// NSLog(@"Retry:retries=%lu", (unsigned long)_resolutionRetries);

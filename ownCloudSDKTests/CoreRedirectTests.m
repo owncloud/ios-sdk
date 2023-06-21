@@ -65,8 +65,7 @@
 
 	[connection connectWithCompletionHandler:^(NSError * _Nullable error, OCIssue * _Nullable issue) {
 		[connection sendRequest:[OCHTTPRequest requestWithURL:[NSURL URLWithString:@"/status.php" relativeToURL:bookmark.url]] ephermalCompletionHandler:^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
-			bookmark.certificate = request.httpResponse.certificate;
-			bookmark.certificateModificationDate = NSDate.date;
+			[bookmark.certificateStore storeCertificate:request.httpResponse.certificate forHostname:request.url.host];
 
 			[connection disconnectWithCompletionHandler:^{
 				certificateHandler(request.httpResponse.certificate);
@@ -139,7 +138,7 @@
 			connection.hostSimulator = self->hostSimulator;
 			connection.cookieStorage = [OCHTTPCookieStorage new];
 
-			[connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue * _Nullable issue, NSURL * _Nullable suggestedURL, NSArray<OCAuthenticationMethodIdentifier> * _Nullable supportedMethods, NSArray<OCAuthenticationMethodIdentifier> * _Nullable preferredAuthenticationMethods) {
+			[connection prepareForSetupWithOptions:nil completionHandler:^(OCIssue * _Nullable issue, NSURL * _Nullable suggestedURL, NSArray<OCAuthenticationMethodIdentifier> * _Nullable supportedMethods, NSArray<OCAuthenticationMethodIdentifier> * _Nullable preferredAuthenticationMethods, OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions _Nullable generationOptions) {
 				XCTAssert(supportedMethods.count > 0);
 				XCTAssert(preferredAuthenticationMethods.count > 0);
 

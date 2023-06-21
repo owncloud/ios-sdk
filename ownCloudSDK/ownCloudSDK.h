@@ -26,14 +26,20 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <ownCloudSDK/PublicHeader.h>
 
+#import <ownCloudSDK/OCPlatform.h>
+
 #import <ownCloudSDK/OCTypes.h>
 #import <ownCloudSDK/OCMacros.h>
 #import <ownCloudSDK/OCFeatureAvailability.h>
+
+#import <ownCloudSDK/OCViewProvider.h>
+#import <ownCloudSDK/OCViewProviderContext.h>
 
 #import <ownCloudSDK/OCLocale.h>
 #import <ownCloudSDK/OCLocaleFilter.h>
 #import <ownCloudSDK/OCLocaleFilterClassSettings.h>
 #import <ownCloudSDK/OCLocaleFilterVariables.h>
+#import <ownCloudSDK/OCLocale+SystemLanguage.h>
 
 #import <ownCloudSDK/NSError+OCError.h>
 #import <ownCloudSDK/OCHTTPStatus.h>
@@ -46,6 +52,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCKeychain.h>
 #import <ownCloudSDK/OCCertificate.h>
 #import <ownCloudSDK/OCCertificateRuleChecker.h>
+#import <ownCloudSDK/OCCertificateStore.h>
+#import <ownCloudSDK/OCCertificateStoreRecord.h>
 
 #import <ownCloudSDK/OCClassSetting.h>
 #import <ownCloudSDK/OCClassSettings.h>
@@ -58,6 +66,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCClassSettingsFlatSource.h>
 #import <ownCloudSDK/OCClassSettingsFlatSourceManagedConfiguration.h>
 #import <ownCloudSDK/OCClassSettingsFlatSourcePropertyList.h>
+#import <ownCloudSDK/OCClassSettingsFlatSourcePostBuild.h>
 #import <ownCloudSDK/NSDictionary+OCExpand.h>
 
 #import <ownCloudSDK/OCCore.h>
@@ -73,6 +82,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCCore+ItemPolicies.h>
 #import <ownCloudSDK/OCItemPolicy.h>
+#import <ownCloudSDK/OCItemPolicy+OCDataItem.h>
 #import <ownCloudSDK/OCItemPolicyProcessor.h>
 #import <ownCloudSDK/OCItemPolicyProcessorAvailableOffline.h>
 #import <ownCloudSDK/OCItemPolicyProcessorDownloadExpiration.h>
@@ -99,6 +109,9 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 
 #import <ownCloudSDK/OCConnection.h>
 #import <ownCloudSDK/OCCapabilities.h>
+
+#import <ownCloudSDK/OCServerInstance.h>
+#import <ownCloudSDK/OCBookmark+ServerInstance.h>
 
 #import <ownCloudSDK/OCLockManager.h>
 #import <ownCloudSDK/OCLockRequest.h>
@@ -136,6 +149,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCEventTarget.h>
 
 #import <ownCloudSDK/OCVault.h>
+#import <ownCloudSDK/OCVaultLocation.h>
 #import <ownCloudSDK/OCDatabase.h>
 #import <ownCloudSDK/OCDatabase+Versions.h>
 #import <ownCloudSDK/OCDatabaseConsistentOperation.h>
@@ -151,6 +165,55 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCVault+Prepopulation.h>
 #import <ownCloudSDK/OCDAVRawResponse.h>
 
+#import <ownCloudSDK/OCResourceTypes.h>
+#import <ownCloudSDK/OCResourceManager.h>
+#import <ownCloudSDK/OCResourceManagerJob.h>
+#import <ownCloudSDK/OCResourceSource.h>
+#import <ownCloudSDK/OCResourceSourceURL.h>
+#import <ownCloudSDK/OCResourceSourceStorage.h>
+#import <ownCloudSDK/OCResourceRequest.h>
+#import <ownCloudSDK/OCResourceRequestImage.h>
+#import <ownCloudSDK/OCResource.h>
+#import <ownCloudSDK/OCResourceImage.h>
+#import <ownCloudSDK/OCResourceTextPlaceholder.h>
+#import <ownCloudSDK/OCResourceText.h>
+#import <ownCloudSDK/OCResourceSourceAvatarPlaceholders.h>
+#import <ownCloudSDK/OCResourceSourceAvatars.h>
+#import <ownCloudSDK/OCResourceRequestAvatar.h>
+#import <ownCloudSDK/OCResourceSourceItemThumbnails.h>
+#import <ownCloudSDK/OCResourceSourceItemLocalThumbnails.h>
+#import <ownCloudSDK/OCResourceRequestItemThumbnail.h>
+#import <ownCloudSDK/OCResourceSourceURLItems.h>
+#import <ownCloudSDK/OCResourceRequestURLItem.h>
+
+#import <ownCloudSDK/OCAvatar.h>
+
+#import <ownCloudSDK/GAGraph.h>
+#import <ownCloudSDK/GAGraphObject.h>
+#import <ownCloudSDK/GAGraphContext.h>
+#import <ownCloudSDK/GAQuota.h>
+#import <ownCloudSDK/OCConnection+GraphAPI.h>
+
+#import <ownCloudSDK/OCLocation.h>
+#import <ownCloudSDK/OCDrive.h>
+#import <ownCloudSDK/OCQuota.h>
+
+#import <ownCloudSDK/OCDataTypes.h>
+#import <ownCloudSDK/OCDataSource.h>
+#import <ownCloudSDK/OCDataSourceArray.h>
+#import <ownCloudSDK/OCDataSourceComposition.h>
+#import <ownCloudSDK/OCDataSourceKVO.h>
+#import <ownCloudSDK/OCDataSourceMapped.h>
+#import <ownCloudSDK/OCDataSourceSubscription.h>
+#import <ownCloudSDK/OCDataSourceSnapshot.h>
+#import <ownCloudSDK/OCDataItemRecord.h>
+#import <ownCloudSDK/OCDataConverter.h>
+#import <ownCloudSDK/OCDataConverterPipeline.h>
+#import <ownCloudSDK/OCDataItemPresentable.h>
+#import <ownCloudSDK/OCDataRenderer.h>
+
+#import <ownCloudSDK/OCCore+DataSources.h>
+
 #import <ownCloudSDK/OCQuery.h>
 #import <ownCloudSDK/OCQueryFilter.h>
 #import <ownCloudSDK/OCQueryCondition.h>
@@ -158,12 +221,18 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCQueryChangeSet.h>
 
 #import <ownCloudSDK/OCItem.h>
+#import <ownCloudSDK/OCItem+OCDataItem.h>
+#import <ownCloudSDK/OCItem+OCTypeAlias.h>
 #import <ownCloudSDK/OCItemVersionIdentifier.h>
 
 #import <ownCloudSDK/OCShare.h>
+#import <ownCloudSDK/OCShare+OCDataItem.h>
+#import <ownCloudSDK/OCShareRole.h>
+#import <ownCloudSDK/OCShareRole+OCDataItem.h>
 #import <ownCloudSDK/OCUser.h>
 #import <ownCloudSDK/OCGroup.h>
-#import <ownCloudSDK/OCRecipient.h>
+#import <ownCloudSDK/OCIdentity.h>
+#import <ownCloudSDK/OCIdentity+DataItem.h>
 
 #import <ownCloudSDK/OCRecipientSearchController.h>
 #import <ownCloudSDK/OCShareQuery.h>
@@ -185,6 +254,10 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCMessageChoice.h>
 #import <ownCloudSDK/OCMessagePresenter.h>
 
+#import <ownCloudSDK/OCAppProvider.h>
+#import <ownCloudSDK/OCAppProviderApp.h>
+#import <ownCloudSDK/OCAppProviderFileType.h>
+
 #import <ownCloudSDK/OCTUSHeader.h>
 #import <ownCloudSDK/NSString+TUSMetadata.h>
 
@@ -195,6 +268,9 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/NSString+OCFormatting.h>
 #import <ownCloudSDK/NSProgress+OCExtensions.h>
 #import <ownCloudSDK/NSArray+ObjCRuntime.h>
+#import <ownCloudSDK/NSArray+OCFiltering.h>
+#import <ownCloudSDK/NSArray+OCMapping.h>
+#import <ownCloudSDK/NSDate+OCDateParser.h>
 
 #import <ownCloudSDK/UIImage+OCTools.h>
 
@@ -259,3 +335,13 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCMeasurementEvent.h>
 
 #import <ownCloudSDK/OCServerLocator.h>
+
+#import <ownCloudSDK/OCVFSTypes.h>
+#import <ownCloudSDK/OCVFSCore.h>
+#import <ownCloudSDK/OCVFSNode.h>
+#import <ownCloudSDK/OCVFSContent.h>
+#import <ownCloudSDK/OCItem+OCVFSItem.h>
+
+#import <ownCloudSDK/OCAction.h>
+#import <ownCloudSDK/OCSymbol.h>
+#import <ownCloudSDK/OCStatistic.h>

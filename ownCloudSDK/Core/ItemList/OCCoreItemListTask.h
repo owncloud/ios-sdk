@@ -38,7 +38,7 @@ typedef void(^OCCoreItemListTaskChangeHandler)(OCCore *core, OCCoreItemListTask 
 @interface OCCoreItemListTask : NSObject <OCActivitySource>
 
 @property(weak) OCCore *core;
-@property(strong) OCPath path;
+@property(strong) OCLocation *location;
 
 @property(strong) OCCoreDirectoryUpdateJob *updateJob;
 
@@ -55,7 +55,7 @@ typedef void(^OCCoreItemListTaskChangeHandler)(OCCore *core, OCCoreItemListTask 
 
 @property(strong) OCCoreItemListTask *nextItemListTask;
 
-- (instancetype)initWithCore:(OCCore *)core path:(OCPath)path updateJob:(OCCoreDirectoryUpdateJob *)updateJob;
+- (instancetype)initWithCore:(OCCore *)core location:(OCLocation *)location updateJob:(OCCoreDirectoryUpdateJob *)updateJob;
 
 - (void)update;
 

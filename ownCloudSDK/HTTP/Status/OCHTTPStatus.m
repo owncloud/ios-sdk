@@ -84,6 +84,10 @@
 			return (@"MOVED TEMPORARILY");
 		break;
 
+		case OCHTTPStatusCodeNOT_MODIFIED:
+			return (@"NOT MODIFIED");
+		break;
+
 		case OCHTTPStatusCodeTEMPORARY_REDIRECT:
 			return (@"TEMPORARY REDIRECT");
 		break;
@@ -146,6 +150,10 @@
 
 		case OCHTTPStatusCodeINSUFFICIENT_STORAGE:
 			return (@"INSUFFICIENT STORAGE");
+		break;
+
+		case OCHTTPStatusCodeTOO_EARLY:
+			return (@"TOO EARLY");
 		break;
 	}
 

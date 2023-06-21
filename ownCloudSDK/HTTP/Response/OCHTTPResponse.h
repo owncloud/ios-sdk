@@ -68,9 +68,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSString *)contentType; //!< Content-Type (stripped of charset and other parameters)
 
 #pragma mark - Convenience body conversions
-- (NSStringEncoding)bodyStringEncoding; //!< Returns the body's string encoding
+- (NSStringEncoding)bodyStringEncoding; //!< Returns the body's string encoding - or ISO-8859-1 (Latin1) if none was found
+- (NSStringEncoding)bodyStringEncodingWithFallback:(NSStringEncoding)fallbackEncoding; //!< Returns the body's string encoding - or fallbackEncoding if none was found
 
 - (nullable NSString *)bodyAsString; //!< Returns the response body as a string formatted using the text encoding provided by the server. If no text encoding is provided, ISO-8859-1 is used.
+- (nullable NSString *)bodyAsStringWithFallbackEncoding:(NSStringEncoding)fallbackEncoding; //!< Returns the response body as a string formatted using the text encoding provided by the server. If no text encoding is provided, fallbackEncoding is used.
 
 - (nullable NSDictionary *)bodyConvertedDictionaryFromJSONWithError:(NSError * _Nullable *)outError; //!< Returns the response body as dictionary as converted by the JSON deserializer
 - (nullable NSArray *)bodyConvertedArrayFromJSONWithError:(NSError * _Nullable *)error; //!< Returns the response body as array as converted by the JSON deserializer

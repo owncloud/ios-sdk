@@ -32,7 +32,7 @@ static OIDCDictKeyPath OIDCKeyPathClientRegistrationExpirationDate	= @"clientReg
 static OIDCDictKeyPath OIDCKeyPathClientID				= @"clientRegistrationClientID";
 static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSecret";
 
-@interface OCAuthenticationMethodOpenIDConnect ()
+@implementation OCAuthenticationMethodOpenIDConnect
 {
 	NSDictionary<NSString *, id> *_clientRegistrationResponse; // JSON response from client registration
 	NSURL *_clientRegistrationEndpointURL; // URL the client registration was last performed at
@@ -42,9 +42,6 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 	NSString *_clientID;
 	NSString *_clientSecret;
 }
-@end
-
-@implementation OCAuthenticationMethodOpenIDConnect
 
 #pragma mark - Class settings
 + (void)load
@@ -55,6 +52,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 	[self registerOCClassSettingsDefaults:@{
 		OCAuthenticationMethodOpenIDConnectRedirectURI : @"oc://ios.owncloud.com",
 		OCAuthenticationMethodOpenIDConnectScope       : @"openid offline_access email profile",
+		OCAuthenticationMethodOpenIDConnectPrompt      : @"select_account consent",
 		OCAuthenticationMethodOpenIDRegisterClient     : @(YES),
 		OCAuthenticationMethodOpenIDRegisterClientNameTemplate : @"ownCloud/{{os.name}} {{app.version}}",
 		OCAuthenticationMethodOpenIDFallbackOnClientRegistrationFailure : @(YES)
@@ -67,6 +65,11 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 		OCAuthenticationMethodOpenIDConnectScope : @{
 			OCClassSettingsMetadataKeyType        : OCClassSettingsMetadataTypeString,
 			OCClassSettingsMetadataKeyDescription : @"OpenID Connect Scope",
+			OCClassSettingsMetadataKeyCategory    : @"OIDC"
+		},
+		OCAuthenticationMethodOpenIDConnectPrompt : @{
+			OCClassSettingsMetadataKeyType        : OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription : @"OpenID Connect Prompt",
 			OCClassSettingsMetadataKeyCategory    : @"OIDC"
 		},
 		OCAuthenticationMethodOpenIDRegisterClient : @{
@@ -104,7 +107,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 }
 
 #pragma mark - OAuth2 extensions
-- (NSURL *)authorizationEndpointURLForConnection:(OCConnection *)connection
+- (NSURL *)authorizationEndpointURLForConnection:(OCConnection *)connection options:(OCAuthenticationMethodDetectionOptions)options
 {
 	NSString *authorizationEndpointURLString;
 
@@ -116,7 +119,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 	return (nil);
 }
 
-- (NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection;
+- (NSURL *)tokenEndpointURLForConnection:(OCConnection *)connection options:(OCAuthenticationMethodDetectionOptions)options
 {
 	NSString *tokenEndpointURLString;
 
@@ -169,15 +172,21 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 	return ([super tokenRequestAuthorizationHeaderForType:requestType connection:connection]);
 }
 
-- (void)retrieveEndpointInformationForConnection:(OCConnection *)connection completionHandler:(void(^)(NSError *error))completionHandler
+- (void)retrieveEndpointInformationForConnection:(OCConnection *)connection options:(nullable OCAuthenticationMethodDetectionOptions)options completionHandler:(nonnull void (^)(NSError * _Nullable))completionHandler
 {
 	NSURL *openidConfigURL;
 
-	if ((openidConfigURL = [self.class _openIDConfigurationURLForConnection:connection]) != nil)
+	if ((openidConfigURL = [self.class _openIDConfigurationURLForConnection:connection options:options]) != nil)
 	{
 		OCHTTPRequest *openidConfigRequest = [OCHTTPRequest requestWithURL:openidConfigURL];
 
 		openidConfigRequest.redirectPolicy = OCHTTPRequestRedirectPolicyHandleLocally;
+
+		NSURL *refererForIDPURL;
+		if ((refererForIDPURL = options[OCAuthenticationMethodAuthenticationRefererURL]) != nil)
+		{
+			[openidConfigRequest setValue:refererForIDPURL.absoluteString forHeaderField:@"Referer"];
+		}
 
 		[connection sendRequest:openidConfigRequest ephermalCompletionHandler:^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {
 			NSError *jsonError;
@@ -253,7 +262,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 
 - (NSString *)prompt
 {
-	return (@"consent");
+	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOpenIDConnectPrompt]);
 }
 
 #pragma mark - Dynamic Client Registration
@@ -581,21 +590,49 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 }
 
 #pragma mark - Authentication Method Detection
-+ (NSURL *)_openIDConfigurationURLForConnection:(OCConnection *)connection
++ (NSURL *)_openIDConfigurationURLForConnection:(OCConnection *)connection options:(nullable OCAuthenticationMethodDetectionOptions)options
 {
-	return ([connection URLForEndpoint:OCConnectionEndpointIDWellKnown options:@{ OCConnectionEndpointURLOptionWellKnownSubPath : @"openid-configuration" }]);
+	OCAuthenticationMethodDetectionOptions detectionOptions = @{ OCConnectionEndpointURLOptionWellKnownSubPath : @"openid-configuration" };
+
+	if (options != nil)
+	{
+		NSMutableDictionary<OCAuthenticationMethodKey, id> *mutableOptions = [[NSMutableDictionary alloc] initWithDictionary:options];
+		[mutableOptions addEntriesFromDictionary:detectionOptions];
+		detectionOptions = mutableOptions;
+	}
+
+	return ([connection URLForEndpoint:OCConnectionEndpointIDWellKnown options:detectionOptions]);
 }
 
-+ (NSArray<OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection
++ (NSArray<OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection options:(nullable OCAuthenticationMethodDetectionOptions)options
 {
 	NSURL *openidConfigURL;
-	NSArray <OCHTTPRequest *> *oAuth2DetectionURLs;
+	NSArray <OCHTTPRequest *> *oidcDetectionURLs = nil;
 
-	if ((oAuth2DetectionURLs = [self detectionRequestsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection]) != nil) // Do not use super method here because OAuth2 verifies additional URLs to specifically determine OAuth2 availability
+	if (OCTypedCast(options[OCAuthenticationMethodSkipWWWAuthenticateChecksKey],NSNumber).boolValue)
 	{
-		if ((openidConfigURL = [self _openIDConfigurationURLForConnection:connection]) != nil)
+		// Do not perform "Bearer" check requests to determine OIDC support
+		oidcDetectionURLs = @[];
+	}
+	else
+	{
+		// Do not use super method here because OAuth2 verifies additional URLs to specifically determine OAuth2 availability
+		oidcDetectionURLs = [self detectionRequestsBasedOnWWWAuthenticateMethod:@"Bearer" forConnection:connection];
+	}
+
+	if (oidcDetectionURLs != nil)
+	{
+		if ((openidConfigURL = [self _openIDConfigurationURLForConnection:connection options:options]) != nil)
 		{
-			return ([oAuth2DetectionURLs arrayByAddingObject:[OCHTTPRequest requestWithURL:openidConfigURL]]);
+			OCHTTPRequest *openidConfigRequest = [OCHTTPRequest requestWithURL:openidConfigURL];
+
+			NSURL *refererForIDPURL;
+			if ((refererForIDPURL = options[OCAuthenticationMethodAuthenticationRefererURL]) != nil)
+			{
+				[openidConfigRequest setValue:refererForIDPURL.absoluteString forHeaderField:@"Referer"];
+			}
+
+			return ([oidcDetectionURLs arrayByAddingObject:openidConfigRequest]);
 		}
 	}
 
@@ -604,56 +641,69 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 
 + (void)detectAuthenticationMethodSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
 {
-	[super detectAuthenticationMethodSupportForConnection:connection withServerResponses:serverResponses options:options completionHandler:^(OCAuthenticationMethodIdentifier identifier, BOOL supported) {
-
-		if (supported)
-		{
-			// OAuth2 supported => continue
-			NSURL *wellKnownURL;
-			BOOL completeWithNotSupported = YES;
-
-			if ((wellKnownURL = [self _openIDConfigurationURLForConnection:connection]) != nil)
+	if (OCTypedCast(options[OCAuthenticationMethodSkipWWWAuthenticateChecksKey],NSNumber).boolValue)
+	{
+		// No "Bearer" check requests were performed, so perform just a validity check for the OIDC configuration response
+		[self detectOIDCSupportForConnection:connection withServerResponses:serverResponses options:options completionHandler:completionHandler];
+	}
+	else
+	{
+		// Since OIDC is a superset of OAuth2, ensure criteria for OAuth2 are also met
+		[super detectAuthenticationMethodSupportForConnection:connection withServerResponses:serverResponses options:options completionHandler:^(OCAuthenticationMethodIdentifier identifier, BOOL supported) {
+			if (supported)
 			{
-				OCHTTPRequest *wellKnownRequest;
+				// OAuth2 supported => continue
+				[self detectOIDCSupportForConnection:connection withServerResponses:serverResponses options:options completionHandler:completionHandler];
+			}
+			else
+			{
+				// OAuth2 not supported => OIDC requirement not met
+				completionHandler(OCAuthenticationMethodIdentifierOpenIDConnect, NO);
+			}
+		}];
+	}
+}
 
-				if ((wellKnownRequest = [serverResponses objectForKey:wellKnownURL]) != nil)
++ (void)detectOIDCSupportForConnection:(OCConnection *)connection withServerResponses:(NSDictionary<NSURL *, OCHTTPRequest *> *)serverResponses options:(OCAuthenticationMethodDetectionOptions)options completionHandler:(void(^)(OCAuthenticationMethodIdentifier identifier, BOOL supported))completionHandler
+{
+	NSURL *wellKnownURL;
+	BOOL completeWithNotSupported = YES;
+
+	if ((wellKnownURL = [self _openIDConfigurationURLForConnection:connection options:options]) != nil)
+	{
+		OCHTTPRequest *wellKnownRequest;
+
+		if ((wellKnownRequest = [serverResponses objectForKey:wellKnownURL]) != nil)
+		{
+			OCHTTPResponse *response = wellKnownRequest.httpResponse;
+
+			if (response.status.isSuccess)
+			{
+				if ([response.contentType hasSuffix:@"/json"])
 				{
-					OCHTTPResponse *response = wellKnownRequest.httpResponse;
+					NSError *error = nil;
 
-					if (response.status.isSuccess)
+					if ([response bodyConvertedDictionaryFromJSONWithError:&error] != nil)
 					{
-						if ([response.contentType hasSuffix:@"/json"])
-						{
-							NSError *error = nil;
-
-							if ([response bodyConvertedDictionaryFromJSONWithError:&error] != nil)
-							{
-								// OIDC supported
-								completionHandler(OCAuthenticationMethodIdentifierOpenIDConnect, YES);
-								completeWithNotSupported = NO;
-							}
-							else
-							{
-								OCLogError(@"Error decoding OIDC configuration JSON: %@", OCLogPrivate(error));
-							}
-						}
+						// OIDC supported
+						completionHandler(OCAuthenticationMethodIdentifierOpenIDConnect, YES);
+						completeWithNotSupported = NO;
+					}
+					else
+					{
+						OCLogError(@"Error decoding OIDC configuration JSON: %@", OCLogPrivate(error));
 					}
 				}
 			}
+		}
+	}
 
-			// Fallback completion handler call
-			if (completeWithNotSupported)
-			{
-				// OIDC not supported
-				completionHandler(OCAuthenticationMethodIdentifierOpenIDConnect, NO);
-			}
-		}
-		else
-		{
-			// OAuth2 not supported => OIDC requirement not met
-			completionHandler(OCAuthenticationMethodIdentifierOpenIDConnect, NO);
-		}
-	}];
+	// Fallback completion handler call
+	if (completeWithNotSupported)
+	{
+		// OIDC not supported
+		completionHandler(OCAuthenticationMethodIdentifierOpenIDConnect, NO);
+	}
 }
 
 #pragma mark - Requests
@@ -696,7 +746,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 
 - (void)generateBookmarkAuthenticationDataWithConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler
 {
-	[self retrieveEndpointInformationForConnection:connection completionHandler:^(NSError * _Nonnull error) {
+	[self retrieveEndpointInformationForConnection:connection options:options completionHandler:^(NSError * _Nonnull error) {
 		if (error == nil)
 		{
 			[super generateBookmarkAuthenticationDataWithConnection:connection options:options completionHandler:completionHandler];
@@ -714,6 +764,7 @@ OCAuthenticationMethodIdentifier OCAuthenticationMethodIdentifierOpenIDConnect =
 
 OCClassSettingsKey OCAuthenticationMethodOpenIDConnectRedirectURI = @"oidc-redirect-uri";
 OCClassSettingsKey OCAuthenticationMethodOpenIDConnectScope = @"oidc-scope";
+OCClassSettingsKey OCAuthenticationMethodOpenIDConnectPrompt = @"oidc-prompt";
 OCClassSettingsKey OCAuthenticationMethodOpenIDRegisterClient = @"oidc-register-client";
 OCClassSettingsKey OCAuthenticationMethodOpenIDRegisterClientNameTemplate = @"oidc-register-client-name-template";
 OCClassSettingsKey OCAuthenticationMethodOpenIDFallbackOnClientRegistrationFailure = @"oidc-fallback-on-client-registration-failure";
