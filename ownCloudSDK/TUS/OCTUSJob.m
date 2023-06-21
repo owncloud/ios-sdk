@@ -272,6 +272,7 @@
 		_fileSize = [coder decodeObjectOfClass:NSNumber.class forKey:@"fileSize"];
 		_fileModDate = [coder decodeObjectOfClass:NSDate.class forKey:@"fileModDate"];
 		_fileChecksum = [coder decodeObjectOfClass:OCChecksum.class forKey:@"fileChecksum"];
+		_fileDriveID = [coder decodeObjectOfClass:NSString.class forKey:@"fileDriveID"];
 
 		_eventTarget = [coder decodeObjectOfClass:OCEventTarget.class forKey:@"eventTarget"];
 
@@ -301,6 +302,7 @@
 	[coder encodeObject:_fileSize forKey:@"fileSize"];
 	[coder encodeObject:_fileModDate forKey:@"fileModDate"];
 	[coder encodeObject:_fileChecksum forKey:@"fileChecksum"];
+	[coder encodeObject:_fileDriveID forKey:@"fileDriveID"];
 
 	[coder encodeObject:_eventTarget forKey:@"eventTarget"];
 

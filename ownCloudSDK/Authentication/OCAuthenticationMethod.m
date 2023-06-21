@@ -173,7 +173,7 @@
 }
 
 #pragma mark - Authentication Method Detection
-+ (NSArray <OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection
++ (NSArray <OCHTTPRequest *> *)detectionRequestsForConnection:(OCConnection *)connection options:(nullable OCAuthenticationMethodDetectionOptions)options
 {
 	return(nil);
 }
@@ -392,6 +392,11 @@ OCAuthenticationMethodKey OCAuthenticationMethodPassphraseKey = @"passphrase";
 OCAuthenticationMethodKey OCAuthenticationMethodPresentingViewControllerKey = @"presentingViewController";
 OCAuthenticationMethodKey OCAuthenticationMethodAllowURLProtocolUpgradesKey = @"allowURLProtocolUpgrades";
 OCAuthenticationMethodKey OCAuthenticationMethodRequiredUsernameKey = @"requiredUsername";
+OCAuthenticationMethodKey OCAuthenticationMethodWebFingerAccountLookupURLKey = @"webFingerAccountLookupURL";
+OCAuthenticationMethodKey OCAuthenticationMethodWebFingerAlternativeIDPKey = @"webFingerAlternativeIDP";
+OCAuthenticationMethodKey OCAuthenticationMethodAuthenticationRefererURL = @"authenticationRefererURL";
+OCAuthenticationMethodKey OCAuthenticationMethodSkipWWWAuthenticateChecksKey = @"skipWWWAuthenticateChecks";
+OCAuthenticationMethodKey OCAuthenticationMethodAllowedMethods = @"allowedMethods";
 
 NSString *OCAuthorizationMethodAlternativeServerURLKey = @"alternativeServerURL";
 NSString *OCAuthorizationMethodAlternativeServerURLOriginURLKey = @"alternativeServerURLOriginURL";

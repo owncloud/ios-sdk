@@ -18,6 +18,7 @@
 
 #import "OCSyncActionCopyMove.h"
 #import "NSError+OCNetworkFailure.h"
+#import "OCLocaleFilterVariables.h"
 
 @interface OCSyncActionCopyMove ()
 {
@@ -78,12 +79,22 @@
 		{
 			OCItem *placeholderItem = [OCItem placeholderItemOfType:sourceItem.type];
 
+			// Prevent copying an item into itself
+			if ([_targetParentItem.location isLocatedIn:sourceItem.location])
+			{
+				syncContext.error = OCErrorWithDescription(OCErrorItemOperationForbidden, OCLocalizedFormat(@"{{itemName}} can't be copied into itself.", @{
+					@"itemName" : ((self.localItem.name != nil) ? self.localItem.name : @"Item")
+				}));
+				return;
+			}
+
 			// Copy filesystem metadata from existing item
 			[placeholderItem copyFilesystemMetadataFrom:sourceItem];
 
 			// Set path and parent folder
 			placeholderItem.parentFileID = self.targetParentItem.fileID;
 			placeholderItem.parentLocalID = self.targetParentItem.localID;
+			placeholderItem.driveID = self.targetParentItem.driveID;
 			placeholderItem.path = targetPath;
 
 			// Copy actual file if it exists locally
@@ -141,6 +152,15 @@
 		{
 			OCItem *updatedItem;
 
+			// Prevent moving an item into itself
+			if ([_targetParentItem.location isLocatedIn:sourceItem.location])
+			{
+				syncContext.error = OCErrorWithDescription(OCErrorItemOperationForbidden, OCLocalizedFormat(@"{{itemName}} can't be moved into itself.", @{
+					@"itemName" : ((self.localItem.name != nil) ? self.localItem.name : @"Item")
+				}));
+				return;
+			}
+
 			// Add sync record reference to source item
 			[sourceItem addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUpdating];
 
@@ -167,7 +187,7 @@
 				NSMutableArray <OCItem *> *updatedItems = [syncContext.updatedItems mutableCopy];
 				NSMutableArray <OCLocalID> *updatedLocalIDs = [NSMutableArray new];
 
-				[self.core.vault.database retrieveCacheItemsRecursivelyBelowPath:sourceItem.path includingPathItself:NO includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+				[self.core.vault.database retrieveCacheItemsRecursivelyBelowLocation:sourceItem.location includingPathItself:NO includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
 					for (OCItem *item in items)
 					{
 						item.previousPath = item.path;

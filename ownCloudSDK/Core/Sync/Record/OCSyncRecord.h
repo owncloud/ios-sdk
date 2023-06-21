@@ -109,6 +109,8 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 
 - (void)completeWithError:(nullable NSError *)error core:(OCCore *)core item:(nullable OCItem *)item parameter:(nullable id)parameter; //!< Calls the resultHandler and subsequently drops it. You're responsible from updating the record in the database.
 
+@property(assign) BOOL removed; //!< YES if this instance has been removed via -[OCDatabase removeSyncRecords:completionHandler:]
+
 #pragma mark - Progress convenience method
 - (void)addProgress:(OCProgress *)progress;
 

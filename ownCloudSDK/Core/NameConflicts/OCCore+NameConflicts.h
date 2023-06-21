@@ -35,7 +35,7 @@ typedef void(^OCCoreUnusedNameSuggestionResultHandler)(NSString * _Nullable sugg
 
 @interface OCCore (NameConflicts)
 
-- (void)suggestUnusedNameBasedOn:(NSString *)name atPath:(OCPath)path isDirectory:(BOOL)isDirectory usingNameStyle:(OCCoreDuplicateNameStyle)nameStyle filteredBy:(nullable OCCoreUnusedNameSuggestionFilter)filter resultHandler:(OCCoreUnusedNameSuggestionResultHandler)resultHandler; //!< Request a suggestion for an unused item name based on a given name and path, filtered by an optional block, returning a suggested name and an array of evaluated, but taken names. 
+- (void)suggestUnusedNameBasedOn:(NSString *)name atLocation:(OCLocation *)location isDirectory:(BOOL)isDirectory usingNameStyle:(OCCoreDuplicateNameStyle)nameStyle filteredBy:(nullable OCCoreUnusedNameSuggestionFilter)filter resultHandler:(OCCoreUnusedNameSuggestionResultHandler)resultHandler; //!< Request a suggestion for an unused item name based on a given name and path, filtered by an optional block, returning a suggested name and an array of evaluated, but taken names. 
 
 @end
 

@@ -397,7 +397,7 @@
 {
 	if ([policy.kind isEqual:OCItemPolicyKindAvailableOffline])
 	{
-		@synchronized(_availableOfflineFolderPaths)
+		@synchronized(_availableOfflineFolderLocations)
 		{
 			_availableOfflineCacheValid = NO;
 		}

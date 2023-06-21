@@ -25,6 +25,7 @@
 #import "OCCoreItemList.h"
 #import "OCQueryCondition.h"
 #import "OCCancelAction.h"
+#import "OCDataSourceArray.h"
 
 #pragma mark - Types
 typedef NS_ENUM(NSUInteger, OCQueryState)
@@ -68,6 +69,8 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 
 	NSMutableArray <OCItem *> *_fullQueryResults; 	  		// All items matching the query, before applying filters and sorting.
 	NSMutableArray <OCItem *> *_processedQueryResults; 		// Like full query results, but after applying sorting and filtering.
+	BOOL _fullQueryResultsSetOnce;					// YES if fullQueryResults have been set at least once
+	OCDataSourceArray *_queryResultsDataSource;
 
 	OCCoreItemList *_fullQueryResultsItemList;			// Cached item list of _fullQueryResults used in the default
 
@@ -87,9 +90,9 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 
 #pragma mark - Initializers
 // Native queries
-+ (instancetype)queryForPath:(OCPath)queryPath;	//!< Query for directory
-+ (instancetype)queryWithItem:(OCItem *)item;   //!< Query for single file item
-+ (instancetype)queryForChangesSinceSyncAnchor:(OCSyncAnchor)syncAnchor; //!< Query for changed folders since (but not including) a particular sync anchor
++ (instancetype)queryForLocation:(OCLocation *)location;			//!< Query for directory
++ (instancetype)queryWithItem:(OCItem *)item;   				//!< Query for single file item
++ (instancetype)queryForChangesSinceSyncAnchor:(OCSyncAnchor)syncAnchor; 	//!< Query for changed folders since (but not including) a particular sync anchor
 
 // Custom queries
 /**
@@ -109,7 +112,7 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 + (instancetype)queryWithCondition:(OCQueryCondition *)condition inputFilter:(nullable id<OCQueryFilter>)inputFilter; //!< Custom query for items matching the condition. An inputFilter is automatically generated from the condition. However, for best performance, an inputFilter should be supplied where possible.
 
 #pragma mark - Location
-@property(nullable, strong) OCPath queryPath;	//!< Path targeted by the query, relative to the server's root directory.
+@property(nullable, strong) OCLocation *queryLocation; //!< Location targeted by the query, relative to the server's root directory.
 @property(nullable, strong) OCItem *queryItem;	//!< For queries targeting single items, the item being targeted by the query.
 @property(nullable, strong) OCSyncAnchor querySinceSyncAnchor; //!< For queries targeting all changes occuring since a particular sync anchor.
 
@@ -122,8 +125,8 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 - (void)updateWithAddedItems:(nullable OCCoreItemList *)addedItems updatedItems:(nullable OCCoreItemList *)updatedItems removedItems:(nullable OCCoreItemList *)removedItems; //!< OCQuery subclasses can provide their own custom updating logic for custom queries (.isCustom = YES) here. The default implementation uses .inputFilter in combination with -modifyFullQueryResults: to keep the internal full query results up-to-date.
 
 #pragma mark - State
-@property(assign) OCQueryState state;		//!< Current state of the query
-@property(strong,nullable) OCCancelAction *stopAction; //!< Cancel action thats invoked when the query
+@property(assign) OCQueryState state; //!< Current state of the query
+@property(strong,nullable) OCCancelAction *stopAction; //!< Cancel action thats invoked when the query is stopped
 
 #pragma mark - Sorting
 @property(nullable,copy,nonatomic) NSComparator sortComparator;	//!< Comparator used to sort the query results
@@ -137,9 +140,12 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 - (void)removeFilter:(id<OCQueryFilter>)filter; //!< Remove a filter
 
 #pragma mark - Query results
-@property(nullable, strong,nonatomic) NSArray <OCItem *> *queryResults; //!< Returns an array of OCItems representing the latest results after sorting and filtering. The contents is identical to that of _processedQueryResults at the time of calling. It does not affect the contents of _lastQueryResults.
-@property(nullable, strong) OCItem *rootItem; //!< The rootItem is the item at the root of the query - representing the item at .queryPath/.queryItem.path.
+@property(nullable,strong,nonatomic) NSArray <OCItem *> *queryResults; //!< Returns an array of OCItems representing the latest results after sorting and filtering. The contents is identical to that of _processedQueryResults at the time of calling. It does not affect the contents of _lastQueryResults.
+@property(nullable,strong) OCItem *rootItem; //!< The rootItem is the item at the root of the query - representing the item at .queryLocation/.queryItem.path.
 @property(assign,nonatomic) BOOL includeRootItem; //!< If YES, the rootItem is included in the queryResults and change sets. If NO, it's only exposed via .rootItem.
+
+@property(nullable,strong,readonly,nonatomic) OCDataSource *queryResultsDataSource; //!< Returns a data source providing the OCItems in .queryResults. The data source is only created on demand.
+@property(assign) BOOL queryResultsDataSourceIncludesStatistics; //!< Controls whether the data source also provide an OCStatistic as special item. Ideally, this should be set before starting the query as special items currently don't trigger updates when changed independent of items. Defaults to NO.
 
 #pragma mark - Change Sets
 @property(assign,nonatomic) BOOL hasChangesAvailable;	//!< Indicates that query result changes are available for retrieval

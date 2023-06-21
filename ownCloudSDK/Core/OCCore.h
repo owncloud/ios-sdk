@@ -39,6 +39,10 @@
 #import "OCMeasurement.h"
 #import "OCLock.h"
 #import "OCLockRequest.h"
+#import "OCDataSourceArray.h"
+#import "OCDataSourceComposition.h"
+#import "OCDataItemPresentable.h"
+#import "OCShareRole.h"
 
 @class OCCore;
 @class OCItem;
@@ -62,7 +66,7 @@ typedef NS_ENUM(NSUInteger, OCCoreState)
 	OCCoreStateReady,	//!< The core is started and ready, awaiting connecting to complete
 
 	OCCoreStateRunning	//!< The core is fully operational - and now running
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef NS_ENUM(NSUInteger, OCCoreConnectionStatus)
 {
@@ -70,7 +74,7 @@ typedef NS_ENUM(NSUInteger, OCCoreConnectionStatus)
 	OCCoreConnectionStatusUnavailable,	//!< The server is in maintenance mode and returns with 503 Service Unavailable or /status.php returns "maintenance"=true
 	OCCoreConnectionStatusConnecting,	//!< The connection is available and the client is actively trying to connect to the server
 	OCCoreConnectionStatusOnline		//!< The server and client device are online
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef NS_OPTIONS(NSUInteger, OCCoreConnectionStatusSignal)
 {
@@ -80,7 +84,7 @@ typedef NS_OPTIONS(NSUInteger, OCCoreConnectionStatusSignal)
 	OCCoreConnectionStatusSignalConnected	= (1 << 3), 	//!< The OCConnection has connected successfully
 
 	OCCoreConnectionStatusSignalBitCount	= 4		//!< Number of bits used for status signal
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef NS_ENUM(NSUInteger, OCCoreConnectionStatusSignalState)
 {
@@ -88,20 +92,20 @@ typedef NS_ENUM(NSUInteger, OCCoreConnectionStatusSignalState)
 	OCCoreConnectionStatusSignalStateTrue,  	//!< Signal state is true
 	OCCoreConnectionStatusSignalStateForceFalse,	//!< Signal state is force false (overriding any true + force true states)
 	OCCoreConnectionStatusSignalStateForceTrue   	//!< Signal state is force true (overriding any false states)
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef NS_ENUM(NSUInteger, OCCoreMemoryConfiguration)
 {
 	OCCoreMemoryConfigurationDefault,	//!< Default memory configuration
 	OCCoreMemoryConfigurationMinimum	//!< Try using only the minimum amount of memory needed
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef NS_ENUM(NSUInteger,OCCoreAvailableOfflineCoverage)
 {
 	OCCoreAvailableOfflineCoverageNone,	//!< Item is not targeted by available offline item policy
 	OCCoreAvailableOfflineCoverageIndirect,	//!< Item is indirectly targeted by available offline item policy (f.ex. returned for /Photos/Paris.jpg if /Photos/ is available offline
 	OCCoreAvailableOfflineCoverageDirect	//!< Item is directly targeted by available offline item policy
-};
+} __attribute__((enum_extensibility(closed)));
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -123,6 +127,8 @@ typedef void(^OCCoreBusyStatusHandler)(NSProgress * _Nullable progress);
 typedef void(^OCCoreSyncIssueResolutionResultHandler)(OCSyncIssueChoice *choice);
 
 typedef void(^OCCoreItemListFetchUpdatesCompletionHandler)(NSError * _Nullable error, BOOL didFindChanges);
+
+typedef void(^OCCoreShareJailQueryCustomizer)(OCQuery *query); // Used by OCCore+DataSources.shareJailQueryCustomizer
 
 typedef NSError * _Nullable (^OCCoreImportTransformation)(NSURL *sourceURL);
 
@@ -194,7 +200,7 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	OCRateLimiter *_syncResetRateLimiter;
 
-	NSMutableDictionary <OCPath, OCCoreItemListTask *> *_itemListTasksByPath;
+	NSMutableDictionary <OCLocationString, OCCoreItemListTask *> *_itemListTasksByLocationString;
 	NSMutableArray <OCCoreDirectoryUpdateJob *> *_queuedItemListTaskUpdateJobs;
 	NSMutableArray <OCCoreItemListTask *> *_scheduledItemListTasks;
 	NSMutableSet <OCCoreDirectoryUpdateJobID> *_scheduledDirectoryUpdateJobIDs;
@@ -214,7 +220,7 @@ typedef id<NSObject> OCCoreItemTracking;
 	BOOL _itemPoliciesAppliedInitially;
 	BOOL _itemPoliciesValid;
 
-	NSMutableSet <OCPath> *_availableOfflineFolderPaths;
+	NSMutableSet <OCLocation *> *_availableOfflineFolderLocations;
 	NSMutableSet <OCLocalID> *_availableOfflineIDs;
 	BOOL _availableOfflineCacheValid;
 	NSMapTable <OCClaimIdentifier, NSObject *> *_claimTokensByClaimIdentifier;
@@ -236,7 +242,53 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	NSMutableArray <OCCertificate *> *_warnedCertificates;
 
+	NSMutableArray<OCDrive *> *_drives;
+	NSMutableDictionary<OCDriveID, OCFileETag> *_lastRootETagsByDriveID;
+
+	OCDataSourceArray *_drivesDataSource;
+	OCDataSourceArray *_subscribedDrivesDataSource;
+	OCDataSourceArray *_personalDriveDataSource;
+	OCDataSourceArray *_shareJailDriveDataSource;
+	OCDataSourceArray *_projectDrivesDataSource;
+
+	dispatch_source_t _pollingDataSourcesTimer;
+	NSUInteger _pollingDataSourcesSubscribers;
+	NSUInteger _pollingDataSourcesOutstandingRequests;
+
+	OCShareQuery *_acceptedCloudSharesQuery;
+	OCShareQuery *_pendingCloudSharesQuery;
+
+	OCShareQuery *_sharedWithMeQuery;
+	OCDataSourceComposition *_sharedWithMeDataSource;
+	NSInteger _sharedWithMeSubscribingDataSources;
+	OCQuery *_sharesJailQuery;
+	OCCoreShareJailQueryCustomizer _shareJailQueryCustomizer;
+	OCDataSourceComposition *_sharedWithMePendingDataSource;
+	OCDataSourceComposition *_sharedWithMeAcceptedDataSource;
+	OCDataSourceComposition *_sharedWithMeDeclinedDataSource;
+
+	OCShareQuery *_allSharedByMeQuery;
+	OCDataSourceArray *_allSharedByMeDataSource;
+	NSInteger _allSharedByMeSubscribingDataSources;
+	OCDataSourceArray *_sharedByMeDataSource;
+	OCDataSourceArray *_sharedByMeGroupedDataSource;
+	OCDataSourceArray *_sharedByLinkDataSource;
+
+	OCQuery *_favoritesQuery; // provides content for .favoritesDataSource
+	BOOL _favoritesDataSourceHasSubscribers;
+	OCDataSourceComposition *_favoritesDataSource;
+
+	BOOL _availableOfflineItemPoliciesDataSourceHasSubscribers;
+	BOOL _observesOfflineItemPolicies;
+	OCDataSourceArray *_availableOfflineItemPoliciesDataSource;
+
+	OCQuery *_availableOfflineFilesQuery;
+	BOOL _availableOfflineFilesDataSourceHasSubscribers;
+	OCDataSourceComposition *_availableOfflineFilesDataSource;
+
 	__weak id <OCCoreDelegate> _delegate;
+
+	NSMutableArray<OCShareRole *> *_shareRoles;
 
 	NSNumber *_rootQuotaBytesRemaining;
 	NSNumber *_rootQuotaBytesUsed;
@@ -309,10 +361,12 @@ typedef id<NSObject> OCCoreItemTracking;
 - (BOOL)sendError:(nullable NSError *)error issue:(nullable OCIssue *)issue; //!< If YES is returned, the error was sent to the OCCoreDelegate. If NO is returned, the error was not sent to the OCCoreDelegate.
 
 #pragma mark - Item lookup and information
-- (nullable OCCoreItemTracking)trackItemAtPath:(OCPath)path trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler; //!< Retrieve an item at the specified path from cache and receive updates via the trackingHandler. The returned OCCoreItemTracking object needs to be retained by the caller. Releasing it will end the tracking. This method is a convenience method wrapping cache retrieval, regular and custom queries under the hood.
+- (nullable OCCoreItemTracking)trackItemAtLocation:(OCLocation *)location trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler; //!< Retrieve an item at the specified path from cache and receive updates via the trackingHandler. The returned OCCoreItemTracking object needs to be retained by the caller. Releasing it will end the tracking. This method is a convenience method wrapping cache retrieval, regular and custom queries under the hood.
+- (nullable OCCoreItemTracking)trackItemWithCondition:(OCQueryCondition *)queryCondition trackingHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial))trackingHandler; //!< Like -trackItemAtLocation:trackingHandler:, but backed by a query condition. The returned OCCoreItemTracking object needs to be retained by the caller. Releasing it will end the tracking.
 
-- (nullable OCItem *)cachedItemAtPath:(OCPath)path error:(__autoreleasing NSError * _Nullable * _Nullable)outError; //!< If one exists, returns the item at the specified path from the cache.
-- (nullable OCItem *)cachedItemInParentPath:(NSString *)parentPath withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError; //!< If one exists, returns the item with the provided name in the specified parent directory.
+- (nullable OCItem *)cachedItemAtLocation:(OCLocation *)location error:(__autoreleasing NSError * _Nullable * _Nullable)outError; //!< If one exists, returns the item at the specified location from the cache.
+- (void)cachedItemAtLocation:(OCLocation *)location resultHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item))resultHandler; //!< If one exists, returns the item at the specified location from the cache.
+- (nullable OCItem *)cachedItemInParentLocation:(OCLocation *)parentLocation withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError; //!< If one exists, returns the item with the provided name in the specified parent directory.
 - (nullable OCItem *)cachedItemInParent:(OCItem *)parentItem withName:(NSString *)name isDirectory:(BOOL)isDirectory error:(__autoreleasing NSError * _Nullable * _Nullable)outError; //!< If one exists, returns the item with the provided name in the parent directory represented by parentItem.
 - (nullable NSURL *)localCopyOfItem:(OCItem *)item;		//!< Returns the local URL of the item if a local copy exists.
 
@@ -326,6 +380,21 @@ typedef id<NSObject> OCCoreItemTracking;
 - (nullable NSError *)createDirectoryForItem:(OCItem *)item; 		//!< Creates the directory for the item
 - (nullable NSError *)deleteDirectoryForItem:(OCItem *)item; 		//!< Deletes the directory for the item
 - (nullable NSError *)renameDirectoryFromItem:(OCItem *)fromItem forItem:(OCItem *)toItem adjustLocalMetadata:(BOOL)adjustLocalMetadata; //!< Renames the directory of a (placeholder) item to be usable by another item
+
+#pragma mark - Drives
+@property(readonly,nonatomic) BOOL useDrives; //!< Returns YES if this account is drive-based (oCIS) rather than driven by a single WebDAV endpoint (OC10)
+
+- (void)subscribeToDrive:(OCDrive *)drive; //!< Subscribes to a drive. The metadata for subscribed drives are actively kept up-to-date. [TBD]
+- (void)unsubscribeFromDrive:(OCDrive *)drive; //!< Unsubscribe from a drive. Metadata + files may be kept around, but are not kept up-to-date. [TBD]
+
+@property(strong,readonly,nonatomic) NSArray<OCDrive *> *drives; //!< Returns all known drives.
+@property(strong,readonly,nonatomic) NSArray<OCDrive *> *subscribedDrives; //!< Returns all subscribed drives.
+- (nullable OCDrive *)driveWithIdentifier:(OCDriveID)driveID; //!< Returns the OCDrive* instance for an OCDriveID - or nil, if it wasn't found.
+
+@property(strong,readonly,nullable,nonatomic) OCDrive *personalDrive;
+
+#pragma mark - App Providers
+@property(readonly,nullable,nonatomic) OCAppProvider *appProvider;
 
 #pragma mark - Item usage
 - (void)registerUsageOfItem:(OCItem *)item completionHandler:(nullable OCCompletionHandler)completionHandler; //!< Registers that the item has been used by the user, updating the locally tracked OCItem.lastUsed date with the current date and time.
@@ -346,8 +415,6 @@ typedef id<NSObject> OCCoreItemTracking;
 
 @interface OCCore (Thumbnails)
 + (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType;
-- (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)size scale:(CGFloat)scale retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler;
-- (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item maximumSize:(CGSize)size scale:(CGFloat)scale waitForConnectivity:(BOOL)waitForConnectivity retrieveHandler:(OCCoreThumbnailRetrieveHandler)retrieveHandler;
 @end
 
 @interface OCCore (Sharing)
@@ -394,6 +461,9 @@ typedef id<NSObject> OCCoreItemTracking;
 
 - (nullable NSProgress *)retrievePrivateLinkForItem:(OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable privateLink))completionHandler; //!< Returns the private link for the item
 - (nullable NSProgress *)retrieveItemForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item))completionHandler; //!< Returns the item for the private link
+
+- (nullable NSArray<OCShareRole *> *)availableShareRolesForType:(OCShareType)type location:(OCLocation *)location; //!< Returns the share roles available for this location and type. Returns nil if none are available.
+- (nullable OCShareRole *)matchingShareRoleForShare:(OCShare *)share; //!< Returns the share role matching the provided item and share's permissions and location. Returns nil if none matches.
 
 @end
 

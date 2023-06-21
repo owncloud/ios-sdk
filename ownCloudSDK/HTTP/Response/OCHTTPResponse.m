@@ -126,34 +126,40 @@
 }
 
 #pragma mark - Convenience body conversions
-- (NSStringEncoding)bodyStringEncoding
+- (NSStringEncoding)bodyStringEncodingWithFallback:(NSStringEncoding)fallbackEncoding; //!< Returns the body's string encoding - or fallbackEncoding if none was found
 {
 	NSString *textEncodingName;
-	NSStringEncoding stringEncoding;
+	NSStringEncoding stringEncoding = fallbackEncoding;
 
 	if ((textEncodingName = self.httpURLResponse.textEncodingName) != nil)
 	{
 		stringEncoding = CFStringConvertEncodingToNSStringEncoding(CFStringConvertIANACharSetNameToEncoding((__bridge CFStringRef)textEncodingName));
 	}
-	else
-	{
-		stringEncoding = NSISOLatin1StringEncoding; // ISO-8859-1
-	}
 
 	return(stringEncoding);
 }
 
-- (NSString *)bodyAsString
+- (NSStringEncoding)bodyStringEncoding
+{
+	return ([self bodyStringEncodingWithFallback:NSISOLatin1StringEncoding]);
+}
+
+- (NSString *)bodyAsStringWithFallbackEncoding:(NSStringEncoding)fallbackEncoding
 {
 	NSString *responseBodyAsString = nil;
 	NSData *responseBodyData;
 
 	if ((responseBodyData = self.bodyData) != nil)
 	{
-		responseBodyAsString = [[NSString alloc] initWithData:responseBodyData encoding:self.bodyStringEncoding];
+		responseBodyAsString = [[NSString alloc] initWithData:responseBodyData encoding:[self bodyStringEncodingWithFallback:fallbackEncoding]];
 	}
 
 	return (responseBodyAsString);
+}
+
+- (NSString *)bodyAsString
+{
+	return ([self bodyAsStringWithFallbackEncoding:NSISOLatin1StringEncoding]);
 }
 
 - (NSDictionary *)bodyConvertedDictionaryFromJSONWithError:(NSError **)outError

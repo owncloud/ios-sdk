@@ -24,6 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NSError (OCHTTPStatus)
 
 - (nullable OCHTTPStatus *)HTTPStatus;
+- (BOOL)isHTTPStatusErrorWithCode:(OCHTTPStatusCode)code;
 
 @end
 

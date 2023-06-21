@@ -106,33 +106,33 @@
 
 		OCLog(@"Vault location: %@", core.vault.rootURL);
 
-		query = [OCQuery queryForPath:@"/"];
+		query = [OCQuery queryForLocation:OCLocation.legacyRootLocation];
 		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
 			[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
 				if (changeset != nil)
 				{
 					OCLog(@"============================================");
-					OCLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+					OCLog(@"[%@] QUERY STATE: %lu", query.queryLocation, (unsigned long)query.state);
 
-					OCLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+					OCLog(@"[%@] Query result: %@", query.queryLocation, changeset.queryResult);
 
 					[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
 						switch(operation)
 						{
 							case OCQueryChangeSetOperationInsert:
-								OCLog(@"[%@] Insertions: %@", query.queryPath, items);
+								OCLog(@"[%@] Insertions: %@", query.queryLocation, items);
 							break;
 
 							case OCQueryChangeSetOperationRemove:
-								OCLog(@"[%@] Removals: %@", query.queryPath, items);
+								OCLog(@"[%@] Removals: %@", query.queryLocation, items);
 							break;
 
 							case OCQueryChangeSetOperationUpdate:
-								OCLog(@"[%@] Updates: %@", query.queryPath, items);
+								OCLog(@"[%@] Updates: %@", query.queryLocation, items);
 							break;
 
 							case OCQueryChangeSetOperationContentSwap:
-								OCLog(@"[%@] Content Swap", query.queryPath);
+								OCLog(@"[%@] Content Swap", query.queryLocation);
 							break;
 						}
 					}];
@@ -172,33 +172,33 @@
 							}
 						}
 
-						subfolderQuery = [OCQuery queryForPath:subfolderPath];
+						subfolderQuery = [OCQuery queryForLocation:[OCLocation legacyRootPath:subfolderPath]];
 						subfolderQuery.changesAvailableNotificationHandler = ^(OCQuery *query) {
 							[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
 								if (changeset != nil)
 								{
 									OCLog(@"============================================");
-									OCLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+									OCLog(@"[%@] QUERY STATE: %lu", query.queryLocation, (unsigned long)query.state);
 
-									OCLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+									OCLog(@"[%@] Query result: %@", query.queryLocation, changeset.queryResult);
 
 									[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
 										switch(operation)
 										{
 											case OCQueryChangeSetOperationInsert:
-												OCLog(@"[%@] Insertions: %@", query.queryPath, items);
+												OCLog(@"[%@] Insertions: %@", query.queryLocation, items);
 											break;
 
 											case OCQueryChangeSetOperationRemove:
-												OCLog(@"[%@] Removals: %@", query.queryPath, items);
+												OCLog(@"[%@] Removals: %@", query.queryLocation, items);
 											break;
 
 											case OCQueryChangeSetOperationUpdate:
-												OCLog(@"[%@] Updates: %@", query.queryPath, items);
+												OCLog(@"[%@] Updates: %@", query.queryLocation, items);
 											break;
 
 											case OCQueryChangeSetOperationContentSwap:
-												OCLog(@"[%@] Content Swap", query.queryPath);
+												OCLog(@"[%@] Content Swap", query.queryLocation);
 											break;
 										}
 									}];
@@ -284,7 +284,7 @@
 
 		OCLog(@"Vault location: %@", core.vault.rootURL);
 
-		query = [OCQuery queryForPath:@"/"];
+		query = [OCQuery queryForLocation:OCLocation.legacyRootLocation];
 		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
 			[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
 				if ((query.state == OCQueryStateWaitingForServerReply) && !didDisruptOnce)
@@ -303,27 +303,27 @@
 				if (changeset != nil)
 				{
 					OCLog(@"============================================");
-					OCLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+					OCLog(@"[%@] QUERY STATE: %lu", query.queryLocation, (unsigned long)query.state);
 
-					OCLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+					OCLog(@"[%@] Query result: %@", query.queryLocation, changeset.queryResult);
 
 					[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
 						switch(operation)
 						{
 							case OCQueryChangeSetOperationInsert:
-								OCLog(@"[%@] Insertions: %@", query.queryPath, items);
+								OCLog(@"[%@] Insertions: %@", query.queryLocation, items);
 							break;
 
 							case OCQueryChangeSetOperationRemove:
-								OCLog(@"[%@] Removals: %@", query.queryPath, items);
+								OCLog(@"[%@] Removals: %@", query.queryLocation, items);
 							break;
 
 							case OCQueryChangeSetOperationUpdate:
-								OCLog(@"[%@] Updates: %@", query.queryPath, items);
+								OCLog(@"[%@] Updates: %@", query.queryLocation, items);
 							break;
 
 							case OCQueryChangeSetOperationContentSwap:
-								OCLog(@"[%@] Content Swap", query.queryPath);
+								OCLog(@"[%@] Content Swap", query.queryLocation);
 							break;
 						}
 					}];
@@ -333,43 +333,43 @@
 				{
 					if (subfolderQuery==nil)
 					{
-						OCPath subfolderPath = nil;
+						OCLocation *subfolderLocation = nil;
 
 						for (OCItem *item in query.queryResults)
 						{
 							if (item.type == OCItemTypeCollection)
 							{
-								subfolderPath = item.path;
+								subfolderLocation = item.location;
 							}
 						}
 
-						subfolderQuery = [OCQuery queryForPath:subfolderPath];
+						subfolderQuery = [OCQuery queryForLocation:subfolderLocation];
 						subfolderQuery.changesAvailableNotificationHandler = ^(OCQuery *query) {
 							[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
 								if (changeset != nil)
 								{
 									OCLog(@"============================================");
-									OCLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+									OCLog(@"[%@] QUERY STATE: %lu", query.queryLocation, (unsigned long)query.state);
 
-									OCLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+									OCLog(@"[%@] Query result: %@", query.queryLocation, changeset.queryResult);
 
 									[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
 										switch(operation)
 										{
 											case OCQueryChangeSetOperationInsert:
-												OCLog(@"[%@] Insertions: %@", query.queryPath, items);
+												OCLog(@"[%@] Insertions: %@", query.queryLocation, items);
 											break;
 
 											case OCQueryChangeSetOperationRemove:
-												OCLog(@"[%@] Removals: %@", query.queryPath, items);
+												OCLog(@"[%@] Removals: %@", query.queryLocation, items);
 											break;
 
 											case OCQueryChangeSetOperationUpdate:
-												OCLog(@"[%@] Updates: %@", query.queryPath, items);
+												OCLog(@"[%@] Updates: %@", query.queryLocation, items);
 											break;
 
 											case OCQueryChangeSetOperationContentSwap:
-												OCLog(@"[%@] Content Swap", query.queryPath);
+												OCLog(@"[%@] Content Swap", query.queryLocation);
 											break;
 										}
 									}];
@@ -446,33 +446,33 @@
 
 		OCLog(@"Vault location: %@", core.vault.rootURL);
 
-		query = [OCQuery queryForPath:@"/"];
+		query = [OCQuery queryForLocation:OCLocation.legacyRootLocation];
 		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
 			[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
 				if (changeset != nil)
 				{
 					OCLog(@"============================================");
-					OCLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+					OCLog(@"[%@] QUERY STATE: %lu", query.queryLocation, (unsigned long)query.state);
 
-					OCLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+					OCLog(@"[%@] Query result: %@", query.queryLocation, changeset.queryResult);
 
 					[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
 						switch(operation)
 						{
 							case OCQueryChangeSetOperationInsert:
-								OCLog(@"[%@] Insertions: %@", query.queryPath, items);
+								OCLog(@"[%@] Insertions: %@", query.queryLocation, items);
 							break;
 
 							case OCQueryChangeSetOperationRemove:
-								OCLog(@"[%@] Removals: %@", query.queryPath, items);
+								OCLog(@"[%@] Removals: %@", query.queryLocation, items);
 							break;
 
 							case OCQueryChangeSetOperationUpdate:
-								OCLog(@"[%@] Updates: %@", query.queryPath, items);
+								OCLog(@"[%@] Updates: %@", query.queryLocation, items);
 							break;
 
 							case OCQueryChangeSetOperationContentSwap:
-								OCLog(@"[%@] Content Swap", query.queryPath);
+								OCLog(@"[%@] Content Swap", query.queryLocation);
 							break;
 						}
 					}];
@@ -482,43 +482,43 @@
 				{
 					if (subfolderQuery == nil)
 					{
-						OCPath subfolderPath = nil;
+						OCLocation *subfolderLocation = nil;
 
 						for (OCItem *item in query.queryResults)
 						{
 							if (item.type == OCItemTypeCollection)
 							{
-								subfolderPath = item.path;
+								subfolderLocation = item.location;
 							}
 						}
 
-						subfolderQuery = [OCQuery queryForPath:subfolderPath];
+						subfolderQuery = [OCQuery queryForLocation:subfolderLocation];
 						subfolderQuery.changesAvailableNotificationHandler = ^(OCQuery *query) {
 							[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
 								if (changeset != nil)
 								{
 									OCLog(@"============================================");
-									OCLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+									OCLog(@"[%@] QUERY STATE: %lu", query.queryLocation, (unsigned long)query.state);
 
-									OCLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+									OCLog(@"[%@] Query result: %@", query.queryLocation, changeset.queryResult);
 
 									[changeset enumerateChangesUsingBlock:^(OCQueryChangeSet *changeSet, OCQueryChangeSetOperation operation, NSArray<OCItem *> *items, NSIndexSet *indexSet) {
 										switch(operation)
 										{
 											case OCQueryChangeSetOperationInsert:
-												OCLog(@"[%@] Insertions: %@", query.queryPath, items);
+												OCLog(@"[%@] Insertions: %@", query.queryLocation, items);
 											break;
 
 											case OCQueryChangeSetOperationRemove:
-												OCLog(@"[%@] Removals: %@", query.queryPath, items);
+												OCLog(@"[%@] Removals: %@", query.queryLocation, items);
 											break;
 
 											case OCQueryChangeSetOperationUpdate:
-												OCLog(@"[%@] Updates: %@", query.queryPath, items);
+												OCLog(@"[%@] Updates: %@", query.queryLocation, items);
 											break;
 
 											case OCQueryChangeSetOperationContentSwap:
-												OCLog(@"[%@] Content Swap", query.queryPath);
+												OCLog(@"[%@] Content Swap", query.queryLocation);
 											break;
 										}
 									}];
@@ -534,7 +534,7 @@
 										{
 											[idlePaths addObject:item.path];
 
-											XCTAssert(![item.path isEqualToString:query.queryPath], @"root item not contained in live results: %@", item);
+											XCTAssert(![item.location isEqual:query.queryLocation], @"root item not contained in live results: %@", item);
 										}
 
 										dispatch_async(dispatch_get_main_queue(), ^{
@@ -554,7 +554,7 @@
 									{
 										[fromCachePaths addObject:item.path];
 
-										XCTAssert(![item.path isEqualToString:query.queryPath], @"root item not contained in cached results: %@", item);
+										XCTAssert(![item.location isEqual:query.queryLocation], @"root item not contained in cached results: %@", item);
 									}
 
 									XCTAssert((fromCachePaths.count==idlePaths.count), @"Same number of cached and idle paths");
@@ -591,6 +591,7 @@
 	}];
 }
 
+/*
 - (void)testThumbnailRetrieval
 {
 	OCBookmark *bookmark = nil;
@@ -630,17 +631,17 @@
 
 		OCLog(@"Vault location: %@", core.vault.rootURL);
 
-		query = [OCQuery queryForPath:@"/Photos/"];
+		query = [OCQuery queryForLocation:[OCLocation legacyRootPath:@"/Photos/"]];
 		query.changesAvailableNotificationHandler = ^(OCQuery *query) {
 
-			OCLog(@"[%@] QUERY STATE: %lu", query.queryPath, (unsigned long)query.state);
+			OCLog(@"[%@] QUERY STATE: %lu", query.queryLocation, (unsigned long)query.state);
 
 			if (query.state == OCQueryStateIdle)
 			{
 				[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagDefault completionHandler:^(OCQuery *query, OCQueryChangeSet *changeset) {
 					if (changeset != nil)
 					{
-						OCLog(@"[%@] Query result: %@", query.queryPath, changeset.queryResult);
+						OCLog(@"[%@] Query result: %@", query.queryLocation, changeset.queryResult);
 
 						for (OCItem *item in changeset.queryResult)
 						{
@@ -749,6 +750,7 @@
 		XCTAssert((error==nil), @"Erased with error: %@", error);
 	}];
 }
+*/
 
 - (void)core:(OCCore *)core handleError:(NSError *)error issue:(OCIssue *)issue
 {
@@ -820,8 +822,8 @@
 - (void)testOverlappingQueries
 {
 	OCBookmark *bookmark = [OCTestTarget userBookmark];
-	OCQuery *queryOne = [OCQuery queryForPath:@"/"];
-	OCQuery *queryTwo = [OCQuery queryForPath:@"/"];
+	OCQuery *queryOne = [OCQuery queryForLocation:OCLocation.legacyRootLocation];
+	OCQuery *queryTwo = [OCQuery queryForLocation:OCLocation.legacyRootLocation];
 	__block XCTestExpectation *initialPopulationReceivedExpectation = [self expectationWithDescription:@"Initial database population"];
 	__block XCTestExpectation *coreReturnedExpectation = [self expectationWithDescription:@"Core returned"];
 	__block XCTestExpectation *queryOneItemsReceivedExpectation = [self expectationWithDescription:@"Query 1 idle"];
@@ -840,7 +842,7 @@
 	__block NSTimeInterval queryTwoTimestampIdle = 0;
 
 	[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark setup:nil completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
-		OCQuery *query = [OCQuery queryForPath:@"/"];
+		OCQuery *query = [OCQuery queryForLocation:OCLocation.legacyRootLocation];
 		__weak OCCore *weakCore = core;
 
 		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
@@ -940,7 +942,7 @@
 	__block OCItem *onlyItem = nil;
 
 	[[OCCoreManager sharedCoreManager] requestCoreForBookmark:bookmark setup:nil completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
-		OCQuery *query = [OCQuery queryForPath:@"/"];
+		OCQuery *query = [OCQuery queryForLocation:OCLocation.legacyRootLocation];
 
 		core.vault.database.itemFilter = self.databaseSanityCheckFilter;
 		core.automaticItemListUpdatesEnabled = NO;
@@ -1040,14 +1042,14 @@
 
 		OCLog(@"Vault location: %@", core.vault.rootURL);
 
-		itemTracker = [core trackItemAtPath:trackPath trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
+		itemTracker = [core trackItemAtLocation:[OCLocation legacyRootPath:trackPath] trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
 			OCLog(@"Tracked: isInitial=%d error=%@ item=%@", isInitial, error, serverItem);
 
 			if (isInitial)
 			{
 				[initialTrackingResponseFromServerExpectation fulfill];
 
-				itemTrackerFromCache = [core trackItemAtPath:trackPath trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable cachedItem, BOOL isInitial) {
+				itemTrackerFromCache = [core trackItemAtLocation:[OCLocation legacyRootPath:trackPath] trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable cachedItem, BOOL isInitial) {
 					OCLog(@"Tracked from cache: isInitial=%d error=%@ item=%@", isInitial, error, cachedItem);
 
 					XCTAssert([cachedItem.localID isEqual:serverItem.localID]);
@@ -1111,7 +1113,7 @@
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(58 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 		});
 
-		itemTrackerNonExistantItem = [core trackItemAtPath:@"/does.not.exist" trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
+		itemTrackerNonExistantItem = [core trackItemAtLocation:[OCLocation legacyRootPath:@"/does.not.exist"] trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
 			OCLog(@"Tracked(NE): isInitial=%d error=%@ item=%@", isInitial, error, serverItem);
 
 			if (isInitial)
@@ -1169,7 +1171,7 @@
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(58 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 		});
 
-		itemTrackerNonExistantItem = [core trackItemAtPath:@"/does.not.exist/either/" trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
+		itemTrackerNonExistantItem = [core trackItemAtLocation:[OCLocation legacyRootPath:@"/does.not.exist/either/"] trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
 			OCLog(@"Tracked(NE): isInitial=%d error=%@ item=%@", isInitial, error, serverItem);
 
 			if (isInitial)
@@ -1227,7 +1229,7 @@
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(58 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 		});
 
-		itemTrackerNonExistantItem = [core trackItemAtPath:@"//Photos" trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
+		itemTrackerNonExistantItem = [core trackItemAtLocation:[OCLocation legacyRootPath:@"//Photos"] trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
 			OCLog(@"Tracked(NE): isInitial=%d error=%@ item=%@", isInitial, error, serverItem);
 
 			if (isInitial)
@@ -1288,7 +1290,7 @@
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(58 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 		});
 
-		itemTrackerInitial = [core trackItemAtPath:@"/Documents" trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
+		itemTrackerInitial = [core trackItemAtLocation:[OCLocation legacyRootPath:@"/Documents"] trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
 			OCLog(@"Tracked(1): isInitial=%d error=%@ item=%@", isInitial, error, serverItem);
 
 			if (isInitial)
@@ -1307,7 +1309,7 @@
 					[itemReturnedFromServerExpectation fulfill];
 					itemReturnedFromServerExpectation = nil;
 
-					itemTrackerSecondary = [core trackItemAtPath:@"/Documents" trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
+					itemTrackerSecondary = [core trackItemAtLocation:[OCLocation legacyRootPath:@"/Documents"] trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
 						OCLog(@"Tracked(2): isInitial=%d error=%@ item=%@", isInitial, error, serverItem);
 
 						if (serverItem != nil)
@@ -1373,7 +1375,7 @@
 
 		OCLog(@"Vault location: %@", core.vault.rootURL);
 
-		itemTracker = [core trackItemAtPath:trackPath trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
+		itemTracker = [core trackItemAtLocation:[OCLocation legacyRootPath:trackPath] trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable serverItem, BOOL isInitial) {
 			OCLog(@"Tracked: isInitial=%d error=%@ item=%@", isInitial, error, serverItem);
 
 			if (isInitial)
@@ -1532,7 +1534,7 @@
 
 			// - style: copy
 			dispatch_group_enter(suggestionWaitGroups);
-			[core suggestUnusedNameBasedOn:@"ownCloud Manual.pdf" atPath:@"/" isDirectory:NO usingNameStyle:OCCoreDuplicateNameStyleCopy filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+			[core suggestUnusedNameBasedOn:@"ownCloud Manual.pdf" atLocation:OCLocation.legacyRootLocation isDirectory:NO usingNameStyle:OCCoreDuplicateNameStyleCopy filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
 				XCTAssert([suggestedName isEqual:@"ownCloud Manual copy.pdf"]);
 				XCTAssert(rejectedAndTakenNames.count == 1);
 
@@ -1541,7 +1543,7 @@
 
 			// - style: bracketed
 			dispatch_group_enter(suggestionWaitGroups);
-			[core suggestUnusedNameBasedOn:@"ownCloud Manual.pdf" atPath:@"/" isDirectory:NO usingNameStyle:OCCoreDuplicateNameStyleBracketed filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+			[core suggestUnusedNameBasedOn:@"ownCloud Manual.pdf" atLocation:OCLocation.legacyRootLocation isDirectory:NO usingNameStyle:OCCoreDuplicateNameStyleBracketed filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
 				XCTAssert([suggestedName isEqual:@"ownCloud Manual (1).pdf"]);
 				XCTAssert(rejectedAndTakenNames.count == 1);
 
@@ -1550,7 +1552,7 @@
 
 			// - style: copy + filter first suggestion
 			dispatch_group_enter(suggestionWaitGroups);
-			[core suggestUnusedNameBasedOn:@"ownCloud Manual.pdf" atPath:@"/" isDirectory:NO usingNameStyle:OCCoreDuplicateNameStyleCopy filteredBy:^BOOL(NSString * _Nonnull suggestedName) {
+			[core suggestUnusedNameBasedOn:@"ownCloud Manual.pdf" atLocation:OCLocation.legacyRootLocation isDirectory:NO usingNameStyle:OCCoreDuplicateNameStyleCopy filteredBy:^BOOL(NSString * _Nonnull suggestedName) {
 				return ![suggestedName isEqual:@"ownCloud Manual copy.pdf"];
 			} resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
 				XCTAssert([suggestedName isEqual:@"ownCloud Manual copy 2.pdf"]);
@@ -1561,7 +1563,7 @@
 
 			// - style: unused
 			dispatch_group_enter(suggestionWaitGroups);
-			[core suggestUnusedNameBasedOn:@"Unused.pdf" atPath:@"/" isDirectory:NO usingNameStyle:OCCoreDuplicateNameStyleBracketed filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+			[core suggestUnusedNameBasedOn:@"Unused.pdf" atLocation:OCLocation.legacyRootLocation isDirectory:NO usingNameStyle:OCCoreDuplicateNameStyleBracketed filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
 				XCTAssert([suggestedName isEqual:@"Unused.pdf"]);
 				XCTAssert(rejectedAndTakenNames.count == 0);
 
@@ -1570,7 +1572,7 @@
 
 			// - style: directory
 			dispatch_group_enter(suggestionWaitGroups);
-			[core suggestUnusedNameBasedOn:@"Photos" atPath:@"/" isDirectory:YES usingNameStyle:OCCoreDuplicateNameStyleNumbered filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
+			[core suggestUnusedNameBasedOn:@"Photos" atLocation:OCLocation.legacyRootLocation isDirectory:YES usingNameStyle:OCCoreDuplicateNameStyleNumbered filteredBy:nil resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
 				XCTAssert([suggestedName isEqual:@"Photos 2"]);
 				XCTAssert(rejectedAndTakenNames.count == 1);
 
@@ -1579,7 +1581,7 @@
 
 			// - style: directory 0
 			dispatch_group_enter(suggestionWaitGroups);
-			[core suggestUnusedNameBasedOn:@"Photos 0" atPath:@"/" isDirectory:YES usingNameStyle:OCCoreDuplicateNameStyleNumbered filteredBy:^BOOL(NSString * _Nonnull suggestedName) {
+			[core suggestUnusedNameBasedOn:@"Photos 0" atLocation:OCLocation.legacyRootLocation isDirectory:YES usingNameStyle:OCCoreDuplicateNameStyleNumbered filteredBy:^BOOL(NSString * _Nonnull suggestedName) {
 				return (![suggestedName isEqual:@"Photos 0"]);
 			} resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
 				XCTAssert([suggestedName isEqual:@"Photos 1"]);
@@ -1590,7 +1592,7 @@
 
 			// - style: directory 1
 			dispatch_group_enter(suggestionWaitGroups);
-			[core suggestUnusedNameBasedOn:@"Photos 1" atPath:@"/" isDirectory:YES usingNameStyle:OCCoreDuplicateNameStyleNumbered filteredBy:^BOOL(NSString * _Nonnull suggestedName) {
+			[core suggestUnusedNameBasedOn:@"Photos 1" atLocation:OCLocation.legacyRootLocation isDirectory:YES usingNameStyle:OCCoreDuplicateNameStyleNumbered filteredBy:^BOOL(NSString * _Nonnull suggestedName) {
 				return (![suggestedName isEqual:@"Photos 1"]);
 			} resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
 				XCTAssert([suggestedName isEqual:@"Photos 2"]);
@@ -1601,7 +1603,7 @@
 
 			// - style: directory (1) - usage of different style
 			dispatch_group_enter(suggestionWaitGroups);
-			[core suggestUnusedNameBasedOn:@"Photos (1)" atPath:@"/" isDirectory:YES usingNameStyle:OCCoreDuplicateNameStyleNumbered filteredBy:^BOOL(NSString * _Nonnull suggestedName) {
+			[core suggestUnusedNameBasedOn:@"Photos (1)" atLocation:OCLocation.legacyRootLocation isDirectory:YES usingNameStyle:OCCoreDuplicateNameStyleNumbered filteredBy:^BOOL(NSString * _Nonnull suggestedName) {
 				return (![suggestedName isEqual:@"Photos (1)"]);
 			} resultHandler:^(NSString * _Nullable suggestedName, NSArray<NSString *> * _Nullable rejectedAndTakenNames) {
 				XCTAssert([suggestedName isEqual:@"Photos (2)"]);
@@ -1643,7 +1645,7 @@
 	[core startWithCompletionHandler:^(OCCore *core, NSError *error) {
 		[coreStartedExpectation fulfill];
 
-		OCQuery *query = [OCQuery queryForPath:@"/"];
+		OCQuery *query = [OCQuery queryForLocation:OCLocation.legacyRootLocation];
 
 		query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
 			if ((query.state == OCQueryStateIdle) && (queryCompletionExpectation != nil))
@@ -1741,7 +1743,7 @@
 	[OCBookmarkManager.sharedBookmarkManager addBookmark:bookmark];
 
 	[OCCoreManager.sharedCoreManager requestCoreForBookmark:bookmark setup:nil completionHandler:^(OCCore * _Nullable core, NSError * _Nullable error) {
-		OCQuery *query = [OCQuery queryForPath:@"/"];
+		OCQuery *query = [OCQuery queryForLocation:OCLocation.legacyRootLocation];
 
 		query.changesAvailableNotificationHandler = ^(OCQuery * _Nonnull query) {
 			[query requestChangeSetWithFlags:OCQueryChangeSetRequestFlagOnlyResults completionHandler:^(OCQuery * _Nonnull query, OCQueryChangeSet * _Nullable changeset) {

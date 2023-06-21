@@ -40,6 +40,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		{
 			placeholderItem.parentFileID = parentItem.fileID;
 			placeholderItem.parentLocalID = parentItem.localID;
+			placeholderItem.driveID = parentItem.driveID;
 			placeholderItem.path = [parentItem.path pathForSubdirectoryWithName:folderName];
 			placeholderItem.lastModified = [NSDate date];
 			placeholderItem.permissions = OCItemPermissionCreateFile|OCItemPermissionCreateFolder|OCItemPermissionDelete|OCItemPermissionRename|OCItemPermissionMove;

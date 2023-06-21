@@ -26,7 +26,7 @@ typedef NS_ENUM(NSUInteger,OCActivityUpdateType)
 	OCActivityUpdateTypePublish,
 	OCActivityUpdateTypeProperty,
 	OCActivityUpdateTypeUnpublish
-};
+} __attribute__((enum_extensibility(closed)));
 
 @interface OCActivityUpdate : NSObject
 {

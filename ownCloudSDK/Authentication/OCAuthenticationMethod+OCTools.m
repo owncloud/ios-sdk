@@ -20,6 +20,11 @@
 
 @implementation OCAuthenticationMethod (OCTools)
 
++ (nullable NSString *)localizedNameForAuthenticationMethodIdentifier:(OCAuthenticationMethodIdentifier)identifier
+{
+	return ([OCAuthenticationMethod registeredAuthenticationMethodForIdentifier:identifier].name);
+}
+
 + (NSString *)basicAuthorizationValueForUsername:(NSString *)username passphrase:(NSString *)passPhrase
 {
 	return ([NSString stringWithFormat:@"Basic %@", [[[NSString stringWithFormat:@"%@:%@", username, passPhrase] dataUsingEncoding:NSUTF8StringEncoding] base64EncodedStringWithOptions:0]]);

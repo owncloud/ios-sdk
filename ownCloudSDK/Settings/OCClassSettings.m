@@ -20,6 +20,7 @@
 #import "OCClassSettingsFlatSourceManagedConfiguration.h"
 #import "OCClassSettingsFlatSourceEnvironment.h"
 #import "OCClassSettingsUserPreferences.h"
+#import "OCClassSettingsFlatSourcePostBuild.h"
 #import "OCLogger.h"
 
 @interface OCClassSettings ()
@@ -42,6 +43,7 @@
 
 		[sharedClassSettings addSource:[OCClassSettingsFlatSourceManagedConfiguration new]];
 		[sharedClassSettings addSource:[OCClassSettingsUserPreferences sharedUserPreferences]];
+		[sharedClassSettings addSource:[OCClassSettingsFlatSourcePostBuild sharedPostBuildSettings]];
 		[sharedClassSettings addSource:[[OCClassSettingsFlatSourceEnvironment alloc] initWithPrefix:@"oc:"]];
 	});
 	

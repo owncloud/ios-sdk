@@ -27,11 +27,11 @@
 
 @implementation OCConnection (Recipients)
 
-- (NSMutableArray <OCRecipient *> *)_recipientsFromJSONArray:(NSArray<NSDictionary<NSString *, id> *> *)jsonArray matchType:(OCRecipientMatchType)matchType addToArray:(NSMutableArray <OCRecipient *> *)recipientsArray
+- (NSMutableArray <OCIdentity *> *)_recipientsFromJSONArray:(NSArray<NSDictionary<NSString *, id> *> *)jsonArray matchType:(OCRecipientMatchType)matchType addToArray:(NSMutableArray <OCIdentity *> *)recipientsArray
 {
 	for (NSDictionary<NSString *, id> *recipientDict in jsonArray)
 	{
-		OCRecipient *recipient = nil;
+		OCIdentity *recipient = nil;
 
 		NSString *label = recipientDict[@"label"];
 
@@ -45,15 +45,15 @@
 			switch ((OCShareType)shareTypeID.integerValue)
 			{
 				case OCShareTypeUserShare:
-					recipient = [[OCRecipient recipientWithUser:[OCUser userWithUserName:shareWith displayName:label isRemote:NO]] withSearchResultName:shareWithAdditionalInfo];
+					recipient = [[OCIdentity identityWithUser:[OCUser userWithUserName:shareWith displayName:label isRemote:NO]] withSearchResultName:shareWithAdditionalInfo];
 				break;
 
 				case OCShareTypeRemote:
-					recipient = [[OCRecipient recipientWithUser:[OCUser userWithUserName:shareWith displayName:label isRemote:YES]] withSearchResultName:shareWithAdditionalInfo];
+					recipient = [[OCIdentity identityWithUser:[OCUser userWithUserName:shareWith displayName:label isRemote:YES]] withSearchResultName:shareWithAdditionalInfo];
 				break;
 
 				case OCShareTypeGroupShare:
-					recipient = [[OCRecipient recipientWithGroup:[OCGroup groupWithIdentifier:shareWith name:label]] withSearchResultName:shareWithAdditionalInfo];
+					recipient = [[OCIdentity identityWithGroup:[OCGroup groupWithIdentifier:shareWith name:label]] withSearchResultName:shareWithAdditionalInfo];
 				break;
 
 				default:
@@ -115,7 +115,7 @@
 	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 		NSError *jsonError = nil;
 		NSDictionary <NSString *, id> *jsonDictionary;
-		NSMutableArray<OCRecipient *> *recipients = nil;
+		NSMutableArray<OCIdentity *> *recipients = nil;
 
 		if ((jsonDictionary = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
 		{

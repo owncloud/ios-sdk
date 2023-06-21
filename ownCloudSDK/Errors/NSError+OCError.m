@@ -345,6 +345,14 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 					unlocalizedString = @"Lock invalidated.";
 				break;
 
+				case OCErrorRequestTimeout:
+					unlocalizedString = @"Request timed out";
+				break;
+
+				case OCErrorResourceDoesNotExist:
+					unlocalizedString = @"Resource does not exist.";
+				break;
+
 				case OCErrorWebFingerLacksServerInstanceRelation:
 					unlocalizedString = @"Web finger response lacks server instance relation.";
 				break;
@@ -353,8 +361,40 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 					unlocalizedString = @"Unknown user";
 				break;
 
-				case OCErrorRequestTimeout:
-					unlocalizedString = @"Request timed out";
+				case OCErrorInvalidType:
+					unlocalizedString = @"Invalid type.";
+				break;
+
+				case OCErrorRequiredValueMissing:
+					unlocalizedString = @"Required value missing.";
+				break;
+
+				case OCErrorGraphError:
+					unlocalizedString = @"Generic graph error.";
+				break;
+
+				case OCErrorDataItemTypeUnavailable:
+					unlocalizedString = @"Object does not return DataItemType.";
+				break;
+
+				case OCErrorDataConverterUnavailable:
+					unlocalizedString = @"No data converter available for conversion.";
+				break;
+
+				case OCErrorMissingDriveID:
+					unlocalizedString = @"Missing Drive ID.";
+				break;
+
+				case OCErrorResourceNotFound:
+					unlocalizedString = @"Resource not found.";
+				break;
+
+				case OCErrorInvalidParameter:
+					unlocalizedString = @"Invalid parameter.";
+				break;
+
+				case OCErrorItemProcessing:
+					unlocalizedString = @"Item is currently processing.";
 				break;
 			}
 		}

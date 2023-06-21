@@ -93,7 +93,7 @@
 }
 
 #pragma mark - INSERT query builder
-+ (instancetype)queryInsertingIntoTable:(NSString *)tableName rowValues:(NSDictionary <NSString *, id<NSObject>> *)rowValues resultHandler:(OCSQLiteDBInsertionHandler)resultHandler
++ (instancetype)_queryWith:(NSString *)statement intoTable:(NSString *)tableName rowValues:(NSDictionary <NSString *, id<NSObject>> *)rowValues resultHandler:(OCSQLiteDBInsertionHandler)resultHandler
 {
 	OCSQLiteQuery *query = nil;
 	NSUInteger rowValuesCount;
@@ -128,7 +128,7 @@
 			i++;
 		}];
 
-		sqlQuery = [NSString stringWithFormat:@"INSERT INTO %@ (%@) VALUES (%@)", tableName, [columnNames componentsJoinedByString:@","], placeholdersString];
+		sqlQuery = [NSString stringWithFormat:@"%@ INTO %@ (%@) VALUES (%@)", statement, tableName, [columnNames componentsJoinedByString:@","], placeholdersString];
 
 		query = [self new];
 		query.sqlQuery = sqlQuery;
@@ -139,6 +139,16 @@
 	}
 
 	return (query);
+}
+
++ (instancetype)queryInsertingIntoTable:(NSString *)tableName rowValues:(NSDictionary <NSString *, id<NSObject>> *)rowValues resultHandler:(OCSQLiteDBInsertionHandler)resultHandler
+{
+	return ([self _queryWith:@"INSERT" intoTable:tableName rowValues:rowValues resultHandler:resultHandler]);
+}
+
++ (instancetype)queryInsertingOrReplacingIntoTable:(NSString *)tableName rowValues:(NSDictionary <NSString *, id<NSObject>> *)rowValues resultHandler:(OCSQLiteDBInsertionHandler)resultHandler
+{
+	return ([self _queryWith:@"INSERT OR REPLACE" intoTable:tableName rowValues:rowValues resultHandler:resultHandler]);
 }
 
 #pragma mark - UPDATE query builder
@@ -247,6 +257,8 @@
 
 		[matchValues enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull columnName, id<NSObject>  _Nonnull obj, BOOL * _Nonnull stop) {
 			NSString *sqlOperator = @"=";
+			NSString *placeholderString = @"?";
+			BOOL addObject = YES;
 
 			if ([obj isKindOfClass:[OCSQLiteQueryCondition class]])
 			{
@@ -261,15 +273,37 @@
 				obj = condition.value;
 			}
 
-			[parameters addObject:obj];
+			if ([obj isKindOfClass:NSNull.class])
+			{
+				if ([sqlOperator isEqual:@"="])
+				{
+					// "xyz = NULL" always returns false; SQLite requires usage of "xyz IS NULL" instead
+					sqlOperator = @" IS NULL";
+					placeholderString = @"";
+					addObject = NO;
+				}
+
+				if ([sqlOperator isEqual:@"!="])
+				{
+					// SQLite requires usage of "xyz IS NOT NULL" instead of "xyz != NULL"
+					sqlOperator = @" IS NOT NULL";
+					placeholderString = @"";
+					addObject = NO;
+				}
+			}
+
+			if (addObject)
+			{
+				[parameters addObject:obj];
+			}
 
 			if (addedConditions > 0)
 			{
-				[whereString appendFormat:@" AND %@%@?", columnName, sqlOperator];
+				[whereString appendFormat:@" AND %@%@%@", columnName, sqlOperator, placeholderString];
 			}
 			else
 			{
-				[whereString appendFormat:@" WHERE %@%@?", columnName, sqlOperator];
+				[whereString appendFormat:@" WHERE %@%@%@", columnName, sqlOperator, placeholderString];
 			}
 
 			addedConditions++;

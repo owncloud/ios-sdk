@@ -17,6 +17,7 @@
  */
 
 #import "OCQuery.h"
+#import "OCDataTypes.h"
 
 @interface OCQuery (Internal)
 
@@ -28,8 +29,12 @@
 
 - (OCCoreItemList *)fullQueryResultsItemList;
 
+#pragma mark - Data source
+- (void)updateDataSourceSpecialItemsForItems:(NSArray<OCItem *> *)items;
+
 #pragma mark - Update processed results
 - (void)updateProcessedResultsIfNeeded:(BOOL)ifNeeded;
+- (OCDataSourceState)_dataSourceState;
 
 #pragma mark - Needs recomputation
 - (void)setNeedsRecomputation;

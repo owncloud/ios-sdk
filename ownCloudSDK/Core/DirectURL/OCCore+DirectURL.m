@@ -18,6 +18,7 @@
 
 #import "OCCore+DirectURL.h"
 #import "NSError+OCError.h"
+#import "OCMacros.h"
 
 @implementation OCCore (DirectURL)
 
@@ -43,7 +44,7 @@
 		// Provide URL to file on server
 		if (url == nil)
 		{
-			if ((item.path != nil) && ((url = [[self.connection URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:item.path]) != nil))
+			if ((item.path != nil) && ((url = [[self.connection URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(item.driveID) }] URLByAppendingPathComponent:item.path]) != nil))
 			{
 				authHeaders = [self.connection.authenticationMethod authorizationHeadersForConnection:self.connection error:&error];
 			}

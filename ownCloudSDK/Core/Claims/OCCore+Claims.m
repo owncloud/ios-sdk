@@ -54,7 +54,7 @@
 
 			if (itemModified && (saveItem != nil))
 			{
-				[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[saveItem] refreshPaths:nil newSyncAnchor:newSyncAnchor beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+				[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:@[saveItem] refreshLocations:nil newSyncAnchor:newSyncAnchor beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
 			}
 		}
 		else

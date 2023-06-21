@@ -21,12 +21,20 @@
 
 typedef NSString* OCPath; //!< NSString representing the path relative to the server's root directory.
 
+typedef NSString* OCDriveID; //!< Unique identifier for an oCIS drive / space. oC10 items have no drive ID.
+
+typedef NSUInteger OCSeed; //!< Generic seed value type. Higher values mean newer objects.
+
 typedef NSString* OCLocalID; //!< Unique local identifier of the item (persists over lifetime of file, incl. across modifications and placeholder -> item transition).
 
 typedef NSString* OCFileID; //!< Unique identifier of the item on the server (persists over lifetime of file, incl. across modifications) (files and folders)
 typedef NSString* OCFileETag; //!< Identifier unique to a specific combination of contents and metadata. Can be used to detect changes. (files and folders)
 
 typedef NSString* OCFileIDUniquePrefix; //!< Unique fileID prefix of an item on the server. Background is that OC 10 FileIDs are composed of an 8-digit (%08ld) number and the server's ID (apparently identical across files). That number is unique for every file and also used as the number component in OC10 private links. By using a prefix here, it's possible to support both OC10-style fileID prefixes as well as future full-length fileIDs for searching for items.
+
+typedef NSString* OCMIMEType; //!< MIME Type (f.ex. "application/msexcel")
+typedef NSString* OCTypeAlias; //!< Type Alias (f.ex. "x-office/spreadsheet" for "application/msexcel"). For MIME types where no alias exists, the alias is (OCTypeAliasMIMEPrefix + mimeType)
+typedef NSString* OCFileExtension; //!< File extension string (without leading dot)
 
 typedef NSString* OCLocalAttribute NS_TYPED_ENUM; //!< Identifier uniquely identifying a local attribute
 

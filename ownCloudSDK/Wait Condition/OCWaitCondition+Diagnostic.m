@@ -44,7 +44,8 @@
 	if ((mdRefreshCondition = OCTypedCast(self, OCWaitConditionMetaDataRefresh)) != nil)
 	{
 		nodes = [nodes arrayByAddingObjectsFromArray:@[
-			[OCDiagnosticNode withLabel:@"Item Path" content:mdRefreshCondition.itemPath],
+			[OCDiagnosticNode withLabel:@"Item Path" content:mdRefreshCondition.itemLocation.path],
+			[OCDiagnosticNode withLabel:@"Item Drive" content:mdRefreshCondition.itemLocation.driveID],
 			[OCDiagnosticNode withLabel:@"Item Version" content:mdRefreshCondition.itemVersionIdentifier.description],
 			[OCDiagnosticNode withLabel:@"Expiration Date" content:mdRefreshCondition.expirationDate.description]
 		]];

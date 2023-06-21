@@ -37,6 +37,7 @@
 #import "OCHTTPDAVRequest.h"
 #import "NSString+OCPath.h"
 #import "NSURL+OCPrivateLink.h"
+#import "NSError+OCNetworkFailure.h"
 
 @interface OCSharingResponseStatus : NSObject <OCXMLObjectCreation>
 
@@ -112,7 +113,7 @@
 @implementation OCConnection (Sharing)
 
 #pragma mark - Retrieval
-- (NSArray<OCShare *> *)_parseSharesResponse:(OCHTTPResponse *)response data:(NSData *)responseData error:(NSError **)outError status:(OCSharingResponseStatus **)outStatus statusErrorMapper:(NSError*(^)(OCSharingResponseStatus *status))statusErrorMapper
+- (NSArray<OCShare *> *)_parseSharesResponse:(OCHTTPResponse *)response data:(NSData *)responseData category:(OCShareCategory)shareCategory error:(NSError **)outError status:(OCSharingResponseStatus **)outStatus statusErrorMapper:(NSError*(^)(OCSharingResponseStatus *status))statusErrorMapper
 {
 	OCXMLParser *parser = nil;
 	NSError *error;
@@ -121,7 +122,8 @@
 	{
 		if ((parser = [[OCXMLParser alloc] initWithData:responseData]) != nil)
 		{
-			[parser addObjectCreationClasses:@[ [OCShare class], [OCShareSingle class], [OCSharingResponseStatus class] ]];
+			parser.options[@"_shareCategory"] = @(shareCategory);
+			[parser addObjectCreationClasses:@[ OCShare.class, OCShareSingle.class, OCSharingResponseStatus.class ]];
 
 			if ([parser parse])
 			{
@@ -171,6 +173,7 @@
 	OCHTTPRequest *request;
 	NSProgress *progress = nil;
 	NSURL *url = [self URLForEndpoint:OCConnectionEndpointIDShares options:nil];
+	OCShareCategory shareCategory = OCShareCategoryUnknown;
 
 	request = [OCHTTPRequest new];
 	request.requiredSignals = self.propFindSignals;
@@ -190,28 +193,43 @@
 		break;
 	}
 
+	if ((item != nil) && self.useDriveAPI)
+	{
+		// Add the file ID to allow the server to determine the item's location (path, of course, isn't sufficient there)
+		if (item.fileID != nil)
+		{
+			[request setValue:item.fileID forParameter:@"space_ref"];
+		}
+	}
+
 	switch (scope)
 	{
 		case OCShareScopeSharedByUser:
 			// No options to set
+			shareCategory = OCShareCategoryByMe;
 		break;
 
 		case OCShareScopeSharedWithUser:
+			shareCategory = OCShareCategoryWithMe;
+
 			[request setValue:@"true" forParameter:@"shared_with_me"];
 			[request setValue:@"all" forParameter:@"state"];
 		break;
 
 		case OCShareScopePendingCloudShares:
+			shareCategory = OCShareCategoryWithMe;
 			url = [[self URLForEndpoint:OCConnectionEndpointIDRemoteShares options:nil] URLByAppendingPathComponent:@"pending"];
 		break;
 
 		case OCShareScopeAcceptedCloudShares:
+			shareCategory = OCShareCategoryWithMe;
 			url = [self URLForEndpoint:OCConnectionEndpointIDRemoteShares options:nil];
 		break;
 
 		case OCShareScopeItem:
 		case OCShareScopeItemWithReshares:
 		case OCShareScopeSubItems:
+			shareCategory = OCShareCategoryByMe;
 			if (item == nil)
 			{
 				OCLogError(@"item required for retrieval of shares with scope=%lu", scope);
@@ -246,7 +264,7 @@
 
 		if (error == nil)
 		{
-			shares = [self _parseSharesResponse:response data:response.bodyData error:&error status:&status statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
+			shares = [self _parseSharesResponse:response data:response.bodyData category:shareCategory error:&error status:&status statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 				NSError *error = nil;
 
 				switch (status.statusCode.integerValue)
@@ -318,7 +336,7 @@
 
 		if (!((response.error != nil) && ![response.error.domain isEqual:OCHTTPStatusErrorDomain]))
 		{
-			shares = [self _parseSharesResponse:response data:response.bodyData error:&error status:&status statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
+			shares = [self _parseSharesResponse:response data:response.bodyData category:OCShareCategoryUnknown error:&error status:&status statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 					NSError *error = nil;
 
 					switch (status.statusCode.integerValue)
@@ -355,7 +373,9 @@
 	OCHTTPRequest *request;
 	OCProgress *requestProgress = nil;
 
-	request = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDShares options:nil]];
+	request = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDShares options:@{
+		OCConnectionOptionDriveID : OCDriveIDWrap(share.itemLocation.driveID)
+	}]];
 	request.method = OCHTTPMethodPOST;
 	request.requiredSignals = self.propFindSignals;
 
@@ -366,13 +386,19 @@
 
 	[request setValue:[NSString stringWithFormat:@"%ld", share.type] forParameter:@"shareType"];
 
-	[request setValue:share.itemPath forParameter:@"path"];
+	[request setValue:share.itemLocation.path forParameter:@"path"];
 
 	[request setValue:[NSString stringWithFormat:@"%ld", share.permissions] forParameter:@"permissions"];
 
+	if ((share.itemFileID != nil) && self.useDriveAPI)
+	{
+		// Add the file ID to allow the server to determine the item's location (path, of course, isn't sufficient there)
+		[request setValue:share.itemFileID forParameter:@"space_ref"];
+	}
+
 	if (share.expirationDate != nil)
 	{
-		[request setValue:share.expirationDate.compactUTCStringDateOnly forParameter:@"expireDate"];
+		[request setValue:(self.useDriveAPI ? share.expirationDate.compactISO8601String : share.expirationDate.compactUTCStringDateOnly) forParameter:@"expireDate"];
 	}
 
 	if (share.type != OCShareTypeLink)
@@ -394,7 +420,7 @@
 
 	requestProgress = request.progress;
 	requestProgress.progress.eventType = OCEventTypeCreateShare;
-	requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Creating share for %@…"), share.itemPath.lastPathComponent];
+	requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Creating share for %@…"), share.itemLocation.path.lastPathComponent];
 
 	return (requestProgress);
 }
@@ -405,7 +431,11 @@
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeCreateShare uuid:request.identifier attributes:nil]) != nil)
 	{
-		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
+		if (error.isNetworkFailureError)
+		{
+			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalized(@"Sharing requires an active connection."), error);
+		}
+		else if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
 			event.error = request.error;
 		}
@@ -413,7 +443,7 @@
 		{
 			NSArray <OCShare *> *shares = nil;
 
-			shares = [self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
+			shares = [self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData category:OCShareCategoryByMe error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 				NSError *error = nil;
 
 				switch (status.statusCode.integerValue)
@@ -507,14 +537,21 @@
 
 	if (OCNANotEqual(share.expirationDate, previousExpirationDate))
 	{
-		if (share.type == OCShareTypeLink)
+		NSString *expirationDate = @"";
+
+		if (share.expirationDate != nil)
 		{
-			changedValuesByPropertyNames[@"expireDate"] = (share.expirationDate != nil) ? share.expirationDate.compactUTCStringDateOnly : @"";
+			if (self.useDriveAPI)
+			{
+				expirationDate = share.expirationDate.compactISO8601String;
+			}
+			else
+			{
+				expirationDate = share.expirationDate.compactUTCStringDateOnly;
+			}
 		}
-		else
-		{
-			returnLinkShareOnlyError = YES;
-		}
+
+		changedValuesByPropertyNames[@"expireDate"] = expirationDate;
 	}
 
 	if (share.permissions != previousPermissions)
@@ -602,7 +639,11 @@
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpdateShare uuid:request.identifier attributes:nil]) != nil)
 	{
-		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
+		if (error.isNetworkFailureError)
+		{
+			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalized(@"Sharing requires an active connection."), error);
+		}
+		else if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
 			event.error = request.error;
 		}
@@ -611,7 +652,7 @@
 			NSArray <OCShare *> *shares = nil;
 			NSError *parseError = nil;
 
-			shares = [self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData error:&parseError status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
+			shares = [self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData category:OCShareCategoryByMe error:&parseError status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 				NSError *error = nil;
 
 				switch (status.statusCode.integerValue)
@@ -695,7 +736,9 @@
 		return (nil);
 	}
 
-	request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:nil] URLByAppendingPathComponent:share.identifier]];
+	request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:@{
+		OCConnectionOptionDriveID : OCDriveIDWrap(share.itemLocation.driveID)
+	}] URLByAppendingPathComponent:share.identifier]];
 	request.method = OCHTTPMethodDELETE;
 	request.requiredSignals = self.propFindSignals;
 	request.forceCertificateDecisionDelegation = YES;
@@ -707,7 +750,7 @@
 
 	requestProgress = request.progress;
 	requestProgress.progress.eventType = OCEventTypeDeleteShare;
-	requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Deleting share for %@…"), share.itemPath.lastPathComponent];
+	requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Deleting share for %@…"), share.itemLocation.path.lastPathComponent];
 
 	return (requestProgress);
 }
@@ -718,13 +761,17 @@
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDeleteShare uuid:request.identifier attributes:nil]) != nil)
 	{
-		if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
+		if (error.isNetworkFailureError)
+		{
+			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalized(@"Sharing requires an active connection."), error);
+		}
+		else if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
 			event.error = request.error;
 		}
 		else
 		{
-			[self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
+			[self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData category:OCShareCategoryByMe error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 				NSError *error = nil;
 
 				switch (status.statusCode.integerValue)
@@ -775,11 +822,15 @@
 	{
 		case OCShareTypeUserShare:
 		case OCShareTypeGroupShare:
-			endpointURL = [self URLForEndpoint:OCConnectionEndpointIDShares options:nil];
+			endpointURL = [self URLForEndpoint:OCConnectionEndpointIDShares options:@{
+				OCConnectionOptionDriveID : OCDriveIDWrap(share.itemLocation.driveID)
+			}];
 		break;
 
 		case OCShareTypeRemote:
-			endpointURL = [self URLForEndpoint:OCConnectionEndpointIDRemoteShares options:nil];
+			endpointURL = [self URLForEndpoint:OCConnectionEndpointIDRemoteShares options:@{
+				OCConnectionOptionDriveID : OCDriveIDWrap(share.itemLocation.driveID)
+			}];
 		break;
 
 		default: break;
@@ -823,7 +874,7 @@
 		}
 		else
 		{
-			[self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
+			[self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData category:OCShareCategoryWithMe error:&error status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
 				NSError *error = nil;
 
 				switch (status.statusCode.integerValue)
@@ -873,7 +924,7 @@
 		NSURL *endpointURL;
 		OCHTTPDAVRequest *davRequest;
 
-		if ((endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil]) == nil)
+		if ((endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCDriveIDWrap(item.driveID) }]) == nil)
 		{
 			// WebDAV root could not be generated (likely due to lack of username)
 			completionHandler(OCError(OCErrorInternal), nil);
@@ -893,7 +944,7 @@
 				NSArray <NSError *> *errors = nil;
 				NSArray <OCItem *> *items = nil;
 
-				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID withErrors:&errors]) != nil)
+				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID driveID:nil withErrors:&errors]) != nil)
 				{
 					NSURL *privateLink;
 
@@ -960,17 +1011,17 @@
 				NSArray <NSError *> *errors = nil;
 				NSArray <OCItem *> *items = nil;
 
-				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID withErrors:&errors]) != nil)
+				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID driveID:nil withErrors:&errors]) != nil)
 				{
-					NSString *path;
+					OCLocation *location;
 
-					if ((path = items.firstObject.path) != nil)
+					if ((location = items.firstObject.location) != nil)
 					{
 						// OC Server will return "/Documents" for the documents folder => make sure to normalize the path to follow OCPath conventions in that case
 						// The value of D:resourcetype is not correct when requested with the same (resolution) request. OC server will return d:collection for files, too.
 
 						// Perform standard depth 0 PROPFIND on path to determine type
-						[strongSelf retrieveItemListAtPath:path depth:0 options:@{ OCConnectionOptionIsNonCriticalKey : @(YES) } completionHandler:^(NSError * _Nullable error, NSArray<OCItem *> * _Nullable items) {
+						[strongSelf retrieveItemListAtLocation:location depth:0 options:@{ OCConnectionOptionIsNonCriticalKey : @(YES) } completionHandler:^(NSError * _Nullable error, NSArray<OCItem *> * _Nullable items) {
 							OCPath normalizedPath = nil;
 
 							if (error == nil)
@@ -982,15 +1033,15 @@
 									switch (item.type)
 									{
 										case OCItemTypeFile:
-											normalizedPath = path.normalizedFilePath;
+											normalizedPath = location.path.normalizedFilePath;
 										break;
 
 										case OCItemTypeCollection:
-											normalizedPath = path.normalizedDirectoryPath;
+											normalizedPath = location.path.normalizedDirectoryPath;
 										break;
 
 										default:
-											normalizedPath = path;
+											normalizedPath = location.path;
 										break;
 									}
 								}

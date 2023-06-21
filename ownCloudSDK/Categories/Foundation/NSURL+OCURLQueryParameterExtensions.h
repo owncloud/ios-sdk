@@ -18,14 +18,20 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface NSURL (OCURLQueryParameterExtensions)
 
-- (NSURL *)urlByModifyingQueryParameters:(NSMutableArray <NSURLQueryItem *> *(^)(NSMutableArray <NSURLQueryItem *> *queryItems))queryItemsAction;
+- (nullable NSURL *)urlByModifyingQueryParameters:(nullable NSMutableArray <NSURLQueryItem *> *(^)(NSMutableArray <NSURLQueryItem *> *queryItems))queryItemsAction;
 
-- (NSURL *)urlByAppendingQueryParameters:(NSDictionary<NSString *,NSString *> *)parameters replaceExisting:(BOOL)replaceExisting;
+- (nullable NSURL *)urlByAppendingQueryParameters:(NSDictionary<NSString *,NSString *> *)parameters replaceExisting:(BOOL)replaceExisting;
 
-- (NSDictionary <NSString *,NSString *> *)queryParameters;
+@property(readonly,nullable) NSDictionary <NSString *,NSString *> *queryParameters;
 
-- (NSString *)hostAndPort;
+@property(readonly) NSString *hostAndPort;
+
+@property(readonly,nullable) NSURL *rootURL; //!< Returns just scheme + host, f.ex. "https://owncloud.com/" for "https://owncloud.com/about/"
 
 @end
+
+NS_ASSUME_NONNULL_END

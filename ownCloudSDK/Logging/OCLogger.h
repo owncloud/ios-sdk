@@ -141,6 +141,7 @@ extern OCClassSettingsKey OCClassSettingsKeyLogOnlyMatching;
 extern OCClassSettingsKey OCClassSettingsKeyLogOmitMatching;
 extern OCClassSettingsKey OCClassSettingsKeyLogBlankFilteredMessages;
 extern OCClassSettingsKey OCClassSettingsKeyLogSingleLined;
+extern OCClassSettingsKey OCClassSettingsKeyLogReplaceNewLine;
 extern OCClassSettingsKey OCClassSettingsKeyLogMaximumLogMessageSize;
 extern OCClassSettingsKey OCClassSettingsKeyLogFormat;
 

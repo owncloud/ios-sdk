@@ -28,6 +28,7 @@
 
 "Cancel" = "Cancel";
 "Proceed" = "Proceed";
+"Retry" = "Retry";
 "OK" = "OK";
 
 /* Database upgrades */
@@ -56,6 +57,10 @@
 
 /* Copies */
 "copy" = "copy";
+
+/* Sync errors */
+"An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed." = "An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed. If logging is enabled, the exception has been logged.";
+"Exception occured performing action" = "Exception occured performing action";
 
 /* Delete */
 "%@ changed on the server. Really delete it?" = "%@ changed on the server. Really delete it?";
@@ -96,6 +101,9 @@
 "Moving %@ to %@…" = "Moving %@ to %@…";
 "Copying %@ to %@…" = "Copying %@ to %@…";
 
+"{{itemName}} can't be copied into itself." = "{{itemName}} can't be copied into itself.";
+"{{itemName}} can't be moved into itself." = "{{itemName}} can't be moved into itself.";
+
 /* Upload */
 "Another item named %@ already exists in %@." = "Another item named %@ already exists in %@.";
 "Not enough space left on the server to upload %@." = "Not enough space left on the server to upload %@.";
@@ -113,6 +121,7 @@
 "\"%@\" was modified locally before the download completed." = "\"%@\" was modified locally before the download completed.";
 "Couldn't download %@" = "Couldn't download %@";
 "The contents of the file on the server has changed since initiating download - or the file is no longer available on the server." = "The contents of the file on the server has changed since initiating download - or the file is no longer available on the server.";
+"{{itemName}} is currently processed on the server and can't be downloaded until it finishes processing." = "{{itemName}} is currently processed on the server and can't be downloaded until it finishes processing.";
 
 /* Create folder */
 "Creating folder %@…" = "Creating folder %@…";
@@ -148,12 +157,51 @@
 "Can't open custom scheme URL %@." = "Can't open custom scheme URL %@.";
 "Can't build custom scheme URL from %@." = "Can't build custom scheme URL from %@.";
 
+/* Share roles */
+"Invited persons" = "Invited persons";
+"Only invited persons have access. Login required." = "Only invited persons have access. Login required.";
+
+"Viewer" = "Viewer";
+"Download and preview" = "Download and preview";
+"Download, preview and share" = "Download, preview and share";
+"Recipients can view and download contents." = "Recipients can view and download contents.";
+
+"Uploader" = "Uploader";
+"Recipients can upload but existing contents are not revealed." = "Recipients can upload but existing contents are not revealed.";
+
+"Contributor" = "Contributor";
+"Recipients can view, download and upload contents." = "Recipients can view, download and upload contents.";
+
+"Editor" = "Editor";
+"Edit, download, preview and share" = "Edit, download, preview and share";
+"Upload, edit, delete, download and preview" = "Upload, edit, delete, download and preview";
+"Upload, edit, delete, download, preview and share" = "Upload, edit, delete, download, preview and share";
+"Recipients can view, download and edit contents." = "Recipients can view, download and edit contents.";
+"Recipients can view, download, edit, delete and upload contents." = "Recipients can view, download, edit, delete and upload contents.";
+
+"Manager" = "Manager";
+"Upload, edit, delete, download, preview and share" = "Upload, edit, delete, download, preview and share";
+
+"Custom" = "Custom";
+"Set detailed permissions" = "Set detailed permissions";
+
+/* Sharing */
+"Sharing requires an active connection." = "Sharing requires an active connection.";
+
+/* Drives */
+"Personal" = "Personal";
+"Shares" = "Shares";
+"Shared with me" = "Shared with me";
+
 /* Certificate checks */
 "Certificate changed" = "Certificate changed";
 
 /* Errors */
 "Server doesn't seem to support any authentication method supported by this app." = "Server doesn't seem to support any authentication method supported by this app.";
 "This server runs an unsupported version (%@). Version %@ or later is required by this app." = "This server runs an unsupported version (%@). Version %@ or later is required by this app.";
+
+/* App Provider */
+"This file is currently being processed and is not yet available for use. Please try again shortly." = "This file is currently being processed and is not yet available for use. Please try again shortly.";
 
 /* DAV Errors */
 // OCDAVErrorServiceUnavailable
@@ -350,14 +398,44 @@
 // OCErrorLockInvalidated
 "Lock invalidated." = "Lock invalidated.";
 
+// OCErrorRequestTimeout
+"Request timed out" = "Request timed out";
+
+// OCErrorResourceDoesNotExist
+"Resource does not exist." = "Resource does not exist.";
+
 // OCErrorWebFingerLacksServerInstanceRelation
 "Web finger response lacks server instance relation." = "Web finger response lacks server instance relation.";
 
 // OCErrorUnknownUser
 "Unknown user" = "Unknown user";
 
-// OCErrorRequestTimeout
-"Request timed out" = "Request timed out";
+// OCErrorInvalidType
+"Invalid type." = "Invalid type.";
+
+// OCErrorRequiredValueMissing
+"Required value missing." = "Required value missing.";
+
+// OCErrorGraphError
+"Generic graph error." = "Generic graph error.";
+
+// OCErrorDataItemTypeUnavailable
+"Object does not return DataItemType." = "Object does not return DataItemType.";
+
+// OCErrorDataConverterUnavailable
+"No data converter available for conversion." = "No data converter available for conversion.";
+
+// OCErrorMissingDriveID
+"Missing Drive ID." = "Missing Drive ID.";
+
+// OCErrorResourceNotFound
+"Resource not found." = "Resource not found.";
+
+// OCErrorInvalidParameter
+"Invalid parameter." = "Invalid parameter.";
+
+// OCErrorItemProcessing
+"Item is currently processing." = "Item is currently processing.";
 
 /* Diagnostic */
 "Files" = "Files";

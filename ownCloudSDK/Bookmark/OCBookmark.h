@@ -20,7 +20,9 @@
 #import "OCAuthenticationMethod.h"
 #import "OCCertificate.h"
 #import "OCDatabase+Versions.h"
+#import "OCViewProvider.h"
 #import "OCUser.h"
+#import "OCCertificateStore.h"
 
 typedef NSUUID* OCBookmarkUUID;
 typedef NSString* OCBookmarkUUIDString;
@@ -33,6 +35,8 @@ typedef NS_ENUM(NSUInteger, OCBookmarkAuthenticationDataStorage)
 
 typedef NSString* OCBookmarkUserInfoKey NS_TYPED_ENUM;
 
+typedef NSString* OCBookmarkCapability NS_TYPED_ENUM;
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCBookmark : NSObject <NSSecureCoding, NSCopying>
@@ -42,16 +46,18 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nullable) NSString *name; //!< Name of the server
 @property(strong,nullable) NSURL *url; //!< URL to use to connect to the server
 
+@property(strong,nullable) NSURL *originURL; //!< URL originally provided by the user, which then redirected to .url. In case .url becomes invalid, the originURL can be used to find the new server. If originURL is set, UI should present it prominently - while also displaying .url near it.
+
 @property(strong,nullable) NSString *serverLocationUserName; //!< User name to use for server location
 
-@property(strong,nullable) NSURL *originURL; //!< URL originally provided by the user, which then redirected to .url. In case .url becomes invalid, the originURL can be used to find the new server. If originURL is set, UI should present it prominently - while also displaying .url near it.
+@property(strong,nullable,nonatomic) id<OCViewProvider> avatar; //!< Object that can provide a view to display the avatar of the user
 
 @property(readonly,nullable) NSString *userName; //!< Convenience method for accessing the userName stored in the authenticationData. Use .user.userName instead if possible.
 @property(strong,nullable) NSString *userDisplayName; //!< Display name of a user. Please use .user.userDisplayName instead.
 @property(strong,nullable) OCUser *user; //!< User object of the bookmark's account owner. Available / kept up-to-date after every login.
 
-@property(strong,nullable) OCCertificate *certificate; //!< Certificate last used by the server this bookmark refers to
-@property(strong,nullable) NSDate *certificateModificationDate; //!< Date the certificate stored in this bookmark was last modified.
+@property(strong,nullable) OCCertificateStore *certificateStore; //!< Certificate store
+@property(readonly,nullable) OCCertificate *primaryCertificate; //!< Primary certificate for the bookmark (usually the certificate for url.host - or the only certificate in the store)
 
 @property(strong,nullable) OCAuthenticationMethodIdentifier authenticationMethodIdentifier; //!< Identifies the authentication method to use
 @property(strong,nonatomic,nullable) NSData *authenticationData; //!< OCAuthenticationMethod's data (opaque) needed to log into the server. Backed by keychain or memory depending on .authenticationDataStorage.
@@ -74,6 +80,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setValuesFrom:(OCBookmark *)sourceBookmark; //!< Replaces all values in the receiving bookmark with those in the source bookmark.
 - (void)setLastUserName:(nullable NSString *)userName; //!< Replaces the internally stored fallback user name returned by .userName for when no authentication data is available.
 
+#pragma mark - Capabilities
+@property(strong,nullable,nonatomic) NSSet<OCBookmarkCapability> *capabilities;
+- (void)addCapability:(OCBookmarkCapability)capability;
+- (void)removeCapability:(OCBookmarkCapability)capability;
+- (BOOL)hasCapability:(OCBookmarkCapability)capability;
+
 #pragma mark - Certificate approval
 - (NSNotificationName)certificateUserApprovalUpdateNotificationName; //!< Notification that gets sent if the bookmark's certificate user-approved status changed
 - (void)postCertificateUserApprovalUpdateNotification; //!< Posts a .certificateUserApprovalUpdateNotificationName notification
@@ -83,6 +95,9 @@ NS_ASSUME_NONNULL_BEGIN
 extern OCBookmarkUserInfoKey OCBookmarkUserInfoKeyStatusInfo; //!<  .userInfo key with a NSDictionary holding the info from "status.php".
 extern OCBookmarkUserInfoKey OCBookmarkUserInfoKeyAllowHTTPConnection; //!< .userInfo key with a NSDate value. To be set to the date that the user was informed and allowed the usage of HTTP. To be removed otherwise.
 extern OCBookmarkUserInfoKey OCBookmarkUserInfoKeyBookmarkCreation; //!<  .userInfo key with a NSDictionary holding information on the creation of the bookmark.
+
+extern OCBookmarkCapability OCBookmarkCapabilityDrives; //!< This bookmark is drive-based.
+extern OCBookmarkCapability OCBookmarkCapabilityFavorites; //!< This bookmark supports favorites.
 
 extern NSNotificationName OCBookmarkAuthenticationDataChangedNotification; //!< Name of notification that is sent whenever a bookmark's authenticationData is changed. The object of the notification is the bookmark. Sent only if .authenticationDataStorage is OCBookmarkAuthenticationDataStorageKeychain.
 

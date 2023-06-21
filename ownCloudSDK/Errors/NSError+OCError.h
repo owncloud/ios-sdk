@@ -118,7 +118,24 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorWebFingerLacksServerInstanceRelation, //!< Web finger response lacks server instance relation.
 	OCErrorUnknownUser, //!< Unknown user
 
-	OCErrorRequestTimeout //!< Request timed out
+	OCErrorRequestTimeout, //!< Request timed out
+
+	OCErrorResourceDoesNotExist, //!< Resource does not exist
+
+	OCErrorInvalidType, //!< Invalid type
+	OCErrorRequiredValueMissing, //!< Required value missing
+
+	OCErrorGraphError, //!< Generic graph error
+
+	OCErrorDataItemTypeUnavailable, //!< Object does not return DataItemType.
+	OCErrorDataConverterUnavailable,//!< No data converter available for conversion.
+
+	OCErrorMissingDriveID, //!< Missing Drive ID.
+
+	OCErrorResourceNotFound, //!< Resource not found.
+	OCErrorInvalidParameter, //!< Invalid parameter.
+
+	OCErrorItemProcessing //!< Item is currently processing.
 };
 
 @class OCIssue;

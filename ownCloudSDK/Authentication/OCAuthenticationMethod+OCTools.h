@@ -23,6 +23,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCAuthenticationMethod (OCTools)
 
++ (nullable NSString *)localizedNameForAuthenticationMethodIdentifier:(OCAuthenticationMethodIdentifier)identifier;
+
 + (NSString *)basicAuthorizationValueForUsername:(NSString *)username passphrase:(NSString *)passPhrase;
 
 + (nullable NSArray <OCHTTPRequest *> *)detectionRequestsBasedOnWWWAuthenticateMethod:(NSString *)wwwAuthenticateMethod forConnection:(OCConnection *)connection;

@@ -33,12 +33,17 @@
 #import "OCHTTPCookieStorage.h"
 #import "OCCapabilities.h"
 #import "OCRateLimiter.h"
+#import "OCAvatar.h"
+#import "OCDrive.h"
+#import "OCAppProviderApp.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
 @class OCItem;
 @class OCConnection;
 @class OCXMLNode;
+@class OCAppProviderFileType;
+@class OCServerInstance;
 
 typedef NSString* OCConnectionEndpointID NS_TYPED_ENUM;
 typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
@@ -122,6 +127,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSMutableDictionary<NSString *, OCUser *> *_usersByUserID;
 
+	NSArray<OCDrive *> *_drives;
+	NSMutableDictionary<OCDriveID, OCDrive *> *_drivesByID;
+
 	NSMutableSet<OCConnectionSignalID> *_signals;
 	NSSet<OCConnectionSignalID> *_actionSignals;
 	NSSet<OCConnectionSignalID> *_propFindSignals;
@@ -146,7 +154,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) OCBookmark *bookmark;
 @property(nullable,strong,nonatomic) OCAuthenticationMethod *authenticationMethod;
 
-@property(nullable,strong) NSDictionary<NSString *, NSString *> *staticHeaderFields; //!< Dictionary of header fields to add to every HTTP request
+@property(nullable,strong) OCHTTPStaticHeaderFields staticHeaderFields; //!< Dictionary of header fields to add to every HTTP request
 
 @property(nullable,strong) OCChecksumAlgorithmIdentifier preferredChecksumAlgorithm;
 
@@ -192,10 +200,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (BOOL)shouldConsiderMaintenanceModeIndicationFromResponse:(OCHTTPResponse *)response;
 
 #pragma mark - Metadata actions
-- (nullable NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError * _Nullable error, NSArray <OCItem *> * _Nullable items))completionHandler; //!< Retrieves the items at the specified path
-- (nullable NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options completionHandler:(void(^)(NSError * _Nullable error, NSArray <OCItem *> * _Nullable items))completionHandler; //!< Retrieves the items at the specified path with options
-
-- (nullable NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget; //!< Retrieves the items at the specified path, with options to schedule on the background queue and with a "not before" date.
+- (nullable NSProgress *)retrieveItemListAtLocation:(OCLocation *)location depth:(NSUInteger)depth options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options completionHandler:(void(^)(NSError * _Nullable error, NSArray <OCItem *> * _Nullable items))completionHandler; //!< Retrieves the items at the specified path with options
+- (nullable NSProgress *)retrieveItemListAtLocation:(OCLocation *)location depth:(NSUInteger)depth options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget; //!< Retrieves the items at the specified path, with options to schedule on the background queue and with a "not before" date.
 
 #pragma mark - Actions
 - (nullable OCProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
@@ -243,7 +249,10 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCConnection (Setup)
 
 #pragma mark - Prepare for setup
-- (void)prepareForSetupWithOptions:(nullable NSDictionary<OCConnectionSetupOptionKey, id> *)options completionHandler:(void(^)(OCIssue * _Nullable issue, NSURL * _Nullable suggestedURL, NSArray <OCAuthenticationMethodIdentifier> * _Nullable supportedMethods, NSArray <OCAuthenticationMethodIdentifier> * _Nullable preferredAuthenticationMethods))completionHandler; //!< Helps in creation of a valid bookmark during setup. Provides found issues as OCIssue (type: group) that can be accepted or rejected. Individual issues can be used as source for line items.
+- (void)prepareForSetupWithOptions:(nullable NSDictionary<OCConnectionSetupOptionKey, id> *)options completionHandler:(void(^)(OCIssue * _Nullable issue, NSURL * _Nullable suggestedURL, NSArray <OCAuthenticationMethodIdentifier> * _Nullable supportedMethods, NSArray <OCAuthenticationMethodIdentifier> * _Nullable preferredAuthenticationMethods, OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions _Nullable generationOptions))completionHandler; //!< Helps in creation of a valid bookmark during setup. Provides found issues as OCIssue (type: group) that can be accepted or rejected. Individual issues can be used as source for line items.
+
+#pragma mark - Retrieve instances
+- (void)retrieveAvailableInstancesWithOptions:(nullable OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options authenticationMethodIdentifier:(OCAuthenticationMethodIdentifier)authenticationMethodIdentifier authenticationData:(NSData *)authenticationData completionHandler:(void(^)(NSError * _Nullable error, NSArray<OCServerInstance *> * _Nullable availableInstances))completionHandler;
 
 @end
 
@@ -324,7 +333,7 @@ typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCS
 @end
 
 #pragma mark - RECIPIENTS
-typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCRecipient *> * _Nullable recipients);
+typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCIdentity *> * _Nullable recipients);
 
 @interface OCConnection (Recipients)
 
@@ -342,13 +351,38 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 
 @end
 
+#pragma mark - AVATARS
+@interface OCConnection (Avatars)
+
+#pragma mark - Avatars
+- (nullable NSProgress *)retrieveAvatarForUser:(OCUser *)user existingETag:(nullable OCFileETag)eTag withSize:(CGSize)size completionHandler:(void(^)(NSError * _Nullable error, BOOL unchanged, OCAvatar * _Nullable avatar))completionHandler;
+
+@end
+
+#pragma mark - APP PROVIDERS
+@interface OCConnection (AppProviders)
+
+#pragma mark - App List
+- (nullable NSProgress *)retrieveAppProviderListWithCompletionHandler:(void(^)(NSError * _Nullable error, OCAppProvider * _Nullable appProvider))completionHandler;
+
+#pragma mark - Create App Document
+- (nullable NSProgress *)createAppFileOfType:(OCAppProviderFileType *)appType in:(OCItem *)parentDirectoryItem withName:(NSString *)fileName completionHandler:(void(^)(NSError * _Nullable error, OCFileID _Nullable fileID, OCItem * _Nullable item))completionHandler;
+
+#pragma mark - Open
+- (nullable NSProgress *)openInApp:(OCItem *)item withApp:(nullable OCAppProviderApp *)app viewMode:(nullable OCAppProviderViewMode)viewMode completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable appURL, OCHTTPMethod _Nullable httpMethod, OCHTTPHeaderFields _Nullable headerFields, OCHTTPRequestParameters _Nullable parameters, NSMutableURLRequest * _Nullable urlRequest))completionHandler;
+
+#pragma mark - Open in Web
+- (nullable NSProgress *)openInWeb:(OCItem *)item withApp:(nullable OCAppProviderApp *)app completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable webURL))completionHandler;
+
+@end
+
 #pragma mark - TOOLS
 @interface OCConnection (Tools)
 
 #pragma mark - Endpoints
 - (nullable NSString *)pathForEndpoint:(OCConnectionEndpointID)endpoint; //!< Returns the path of an endpoint identified by its OCConnectionEndpointID
 - (nullable NSURL *)URLForEndpoint:(OCConnectionEndpointID)endpoint options:(nullable NSDictionary <OCConnectionEndpointURLOption,id> *)options; //!< Returns the URL of an endpoint identified by its OCConnectionEndpointID, allowing additional options (reserved for future use)
-- (nullable NSURL *)URLForEndpointPath:(OCPath)endpointPath; //!< Returns the URL of the endpoint at the supplied endpointPath
+- (nullable NSURL *)URLForEndpointPath:(OCPath)endpointPath withAlternativeURL:(nullable NSURL *)alternativeURL; //!< Returns the URL of the endpoint at the supplied endpointPath
 
 #pragma mark - Base URL Extract
 + (nullable NSURL *)extractBaseURLFromRedirectionTargetURL:(NSURL *)inRedirectionTargetURL originalURL:(NSURL *)inOriginalURL originalBaseURL:(NSURL *)inOriginalBaseURL fallbackToRedirectionTargetURL:(BOOL)fallbackToRedirectionTargetURL;
@@ -366,18 +400,18 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 - (nullable NSProgress *)retrieveCapabilitiesWithCompletionHandler:(void(^)(NSError * _Nullable error, OCCapabilities * _Nullable capabilities))completionHandler;
 
 #pragma mark - Version
-- (nullable NSString *)serverVersion; //!< After connecting, the version of the server ("version"), f.ex. "10.0.8.5".
-- (nullable NSString *)serverVersionString; //!< After connecting, the version string of the server ("versionstring"), fe.x. "10.0.8", "10.1.0 prealpha"
+@property(readonly,strong,nullable,nonatomic) NSString *serverVersion; //!< After connecting, the version of the server ("version"), f.ex. "10.0.8.5".
+@property(readonly,strong,nullable,nonatomic) NSString *serverVersionString; //!< After connecting, the version string of the server ("versionstring"), fe.x. "10.0.8", "10.1.0 prealpha"
 - (BOOL)runsServerVersionOrHigher:(NSString *)version; //!< Returns YES if the server runs at least [version].
 
-- (nullable NSString *)serverProductName; //!< After connecting, the product name of the server ("productname"), f.ex. "ownCloud".
-- (nullable NSString *)serverEdition; //!< After connecting, the edition of the server ("edition"), f.ex. "Community".
+@property(readonly,strong,nullable,nonatomic) NSString *serverProductName; //!< After connecting, the product name of the server ("productname"), f.ex. "ownCloud".
+@property(readonly,strong,nullable,nonatomic) NSString *serverEdition; //!< After connecting, the edition of the server ("edition"), f.ex. "Community".
 
-- (nullable NSString *)serverLongProductVersionString; //!< After connecting, a string summarizing the product, edition and version, f.ex. "ownCloud Community 10.0.8.5"
+@property(readonly,strong,nullable,nonatomic) NSString *serverLongProductVersionString; //!< After connecting, a string summarizing the product, edition and version, f.ex. "ownCloud Community 10.0.8.5"
 + (nullable NSString *)serverLongProductVersionStringFromServerStatus:(NSDictionary<NSString *, id> *)serverStatus;
 
 #pragma mark - API Switches
-- (BOOL)supportsPreviewAPI; //!< Returns YES if the server supports the Preview API.
+@property(readonly,nonatomic) BOOL useDriveAPI; //!< Returns YES if the server supports the drive API and it should be used.
 
 #pragma mark - Checks
 - (nullable NSError *)supportsServerVersion:(NSString *)serverVersion product:(NSString *)product longVersion:(NSString *)longVersion allowHiddenVersion:(BOOL)allowHiddenVersion;
@@ -389,13 +423,19 @@ extern OCConnectionEndpointID OCConnectionEndpointIDUser;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAV;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVMeta;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot; //!< Virtual, non-configurable endpoint, builds the root URL based on OCConnectionEndpointIDWebDAV and the username found in connection.loggedInUser
-extern OCConnectionEndpointID OCConnectionEndpointIDThumbnail;
+extern OCConnectionEndpointID OCConnectionEndpointIDPreview; //!< Virtual, non-configurable endpoint, builds the root URL for requesting previews based on OCConnectionEndpointIDWebDAV, the username found in connection.loggedInUser and the drive ID
 extern OCConnectionEndpointID OCConnectionEndpointIDStatus;
 extern OCConnectionEndpointID OCConnectionEndpointIDShares;
 extern OCConnectionEndpointID OCConnectionEndpointIDRemoteShares;
 extern OCConnectionEndpointID OCConnectionEndpointIDRecipients;
+extern OCConnectionEndpointID OCConnectionEndpointIDAvatars;
+extern OCConnectionEndpointID OCConnectionEndpointIDAppProviderList;
+extern OCConnectionEndpointID OCConnectionEndpointIDAppProviderOpen;
+extern OCConnectionEndpointID OCConnectionEndpointIDAppProviderOpenWeb;
+extern OCConnectionEndpointID OCConnectionEndpointIDAppProviderNew;
 
 extern OCConnectionEndpointURLOption OCConnectionEndpointURLOptionWellKnownSubPath;
+extern OCConnectionEndpointURLOption OCConnectionEndpointURLOptionDriveID;
 
 extern OCClassSettingsIdentifier OCClassSettingsIdentifierConnection;
 
@@ -403,6 +443,7 @@ extern OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs; //!< Arr
 extern OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs; //!< Array of OCAuthenticationMethodIdentifiers of allowed authentication methods. Defaults to nil for no restrictions. [NSArray <OCAuthenticationMethodIdentifier> *]
 extern OCClassSettingsKey OCConnectionCertificateExtendedValidationRule; //!< Rule that defines the criteria a certificate needs to meet for OCConnection to accept it.
 extern OCClassSettingsKey OCConnectionRenewedCertificateAcceptanceRule; //!< Rule that defines the criteria that need to be met for OCConnection to accept a renewed certificate automatically. Used when OCConnectionCertificateExtendedValidationRule fails. Set this to "never" if the user should always be prompted when a server's certificate changed.
+extern OCClassSettingsKey OCConnectionAssociatedCertificatesTrackingRule; //!< Rule that defines criteria for whether certificates for hosts other than the bookmark's host should be stored and observed for changes.
 extern OCClassSettingsKey OCConnectionMinimumVersionRequired; //!< Makes sure connections via -connectWithCompletionHandler:completionHandler: can only be made to servers with this version number or higher.
 extern OCClassSettingsKey OCConnectionAllowBackgroundURLSessions; //!< Allows (TRUE) or disallows (FALSE) the use of background URL sessions. Defaults to TRUE.
 extern OCClassSettingsKey OCConnectionForceBackgroundURLSessions; //!< Forces (TRUE) or allows (FALSE) the use of background URL sessions everywhere. Defaults to FALSE.
@@ -424,6 +465,7 @@ extern OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey; //!
 extern OCConnectionOptionKey OCConnectionOptionForceReplaceKey; //!< If YES, force replace existing items.
 extern OCConnectionOptionKey OCConnectionOptionResponseDestinationURL; //!< NSURL of where to store a (raw) response
 extern OCConnectionOptionKey OCConnectionOptionResponseStreamHandler; //!< Response stream handler (OCHTTPRequestEphermalStreamHandler) to receive the response body stream
+extern OCConnectionOptionKey OCConnectionOptionDriveID; //!< Drive ID (OCDriveID) to target.
 
 extern OCConnectionSetupOptionKey OCConnectionSetupOptionUserName; //!< User name to feed to OCConnectionServerLocator to determine server.
 

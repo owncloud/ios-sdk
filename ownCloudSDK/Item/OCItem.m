@@ -22,11 +22,16 @@
 #import "OCFile.h"
 #import "OCItem+OCItemCreationDebugging.h"
 #import "OCMacros.h"
+#import "NSString+OCPath.h"
 
 @implementation OCItem
+{
+	OCLocation *_location;
+}
 
 @dynamic cloudStatus;
 @dynamic hasLocalAttributes;
+@dynamic parentPath;
 
 + (OCLocalID)generateNewLocalID
 {
@@ -47,6 +52,8 @@
 
 		_thumbnailAvailability = OCItemThumbnailAvailabilityInternal;
 		_localID = [OCItem generateNewLocalID];
+
+		[self regenerateSeed];
 	}
 
 	return (self);
@@ -98,6 +105,8 @@
 	[coder encodeObject:_parentLocalID 	forKey:@"parentLocalID"];
 	[coder encodeObject:_localID 		forKey:@"localID"];
 
+	[coder encodeObject:_driveID		forKey:@"driveID"];
+
 	[coder encodeObject:_checksums 		forKey:@"checksums"];
 
 	[coder encodeObject:_parentFileID	forKey:@"parentFileID"];
@@ -115,6 +124,8 @@
 
 	[coder encodeObject:_isFavorite		forKey:@"isFavorite"];
 
+	[coder encodeInteger:_state 		forKey:@"state"];
+
 	[coder encodeObject:_localAttributes 	forKey:@"localAttributes"];
 	[coder encodeDouble:_localAttributesLastModified forKey:@"localAttributesLastModified"];
 
@@ -130,6 +141,8 @@
 	[coder encodeObject:_quotaBytesRemaining forKey:@"quotaBytesRemaining"];
 	[coder encodeObject:_quotaBytesUsed forKey:@"quotaBytesUsed"];
 
+	[coder encodeInteger:_versionSeed 	forKey:@"versionSeed"];
+
 }
 
 - (instancetype)initWithCoder:(NSCoder *)decoder
@@ -142,54 +155,60 @@
 
 		_type = [decoder decodeIntegerForKey:@"type"];
 
-		_mimeType = [decoder decodeObjectOfClass:[NSString class] forKey:@"mimeType"];
+		_mimeType = [decoder decodeObjectOfClass:NSString.class forKey:@"mimeType"];
 
 		_permissions = [decoder decodeIntegerForKey:@"permissions"];
 
 		_localRelativePath = [decoder decodeObjectOfClass:NSString.class forKey:@"localRelativePath"];
 		_locallyModified = [decoder decodeBoolForKey:@"locallyModified"];
-		_localCopyVersionIdentifier = [decoder decodeObjectOfClass:[OCItemVersionIdentifier class] forKey:@"localCopyVersionIdentifier"];
-		_downloadTriggerIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"downloadTriggerIdentifier"];
-		_fileClaim = [decoder decodeObjectOfClass:[OCClaim class] forKey:@"fileClaim"];
+		_localCopyVersionIdentifier = [decoder decodeObjectOfClass:OCItemVersionIdentifier.class forKey:@"localCopyVersionIdentifier"];
+		_downloadTriggerIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"downloadTriggerIdentifier"];
+		_fileClaim = [decoder decodeObjectOfClass:OCClaim.class forKey:@"fileClaim"];
 
-		_remoteItem = [decoder decodeObjectOfClass:[OCItem class] forKey:@"remoteItem"];
+		_remoteItem = [decoder decodeObjectOfClass:OCItem.class forKey:@"remoteItem"];
 
-		_path = [decoder decodeObjectOfClass:[NSString class] forKey:@"path"];
+		_path = [decoder decodeObjectOfClass:NSString.class forKey:@"path"];
 
-		_parentLocalID = [decoder decodeObjectOfClass:[NSString class] forKey:@"parentLocalID"];
-		_localID = [decoder decodeObjectOfClass:[NSString class] forKey:@"localID"];
+		_parentLocalID = [decoder decodeObjectOfClass:NSString.class forKey:@"parentLocalID"];
+		_localID = [decoder decodeObjectOfClass:NSString.class forKey:@"localID"];
+
+		_driveID = [decoder decodeObjectOfClass:NSString.class forKey:@"driveID"];
 
 		_checksums = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSArray class], [OCChecksum class], nil] forKey:@"checksums"];
 
-		_parentFileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"parentFileID"];
-		_fileID = [decoder decodeObjectOfClass:[NSString class] forKey:@"fileID"];
-		_eTag = [decoder decodeObjectOfClass:[NSString class] forKey:@"eTag"];
+		_parentFileID = [decoder decodeObjectOfClass:NSString.class forKey:@"parentFileID"];
+		_fileID = [decoder decodeObjectOfClass:NSString.class forKey:@"fileID"];
+		_eTag = [decoder decodeObjectOfClass:NSString.class forKey:@"eTag"];
 
 		_activeSyncRecordIDs = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSArray.class, NSNumber.class, nil] forKey:@"activeSyncRecordIDs"];
 		_syncActivity = [decoder decodeIntegerForKey:@"syncActivity"];
-		_syncActivityCounts = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSCountedSet class], [NSNumber class], nil] forKey:@"syncActivityCounts"];
+		_syncActivityCounts = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSCountedSet class], NSNumber.class, nil] forKey:@"syncActivityCounts"];
 
 		_size = [decoder decodeIntegerForKey:@"size"];
-		_creationDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"creationDate"];
-		_lastModified = [decoder decodeObjectOfClass:[NSDate class] forKey:@"lastModified"];
-		_lastUsed = [decoder decodeObjectOfClass:[NSDate class] forKey:@"lastUsed"];
+		_creationDate = [decoder decodeObjectOfClass:NSDate.class forKey:@"creationDate"];
+		_lastModified = [decoder decodeObjectOfClass:NSDate.class forKey:@"lastModified"];
+		_lastUsed = [decoder decodeObjectOfClass:NSDate.class forKey:@"lastUsed"];
 
-		_isFavorite = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"isFavorite"];
+		_isFavorite = [decoder decodeObjectOfClass:NSNumber.class forKey:@"isFavorite"];
+
+		_state = [decoder decodeIntegerForKey:@"state"];
 
 		_localAttributes = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"localAttributes"];
 		_localAttributesLastModified = [decoder decodeDoubleForKey:@"localAttributesLastModified"];
 
 		_shareTypesMask = [decoder decodeIntegerForKey:@"shareTypesMask"];
-		_owner = [decoder decodeObjectOfClass:[OCUser class] forKey:@"owner"];
+		_owner = [decoder decodeObjectOfClass:OCUser.class forKey:@"owner"];
 
-		_privateLink = [decoder decodeObjectOfClass:[NSURL class] forKey:@"privateLink"];
+		_privateLink = [decoder decodeObjectOfClass:NSURL.class forKey:@"privateLink"];
 
 		_tusInfo = (UInt64)[decoder decodeInt64ForKey:@"tusInfo"];
 
-		_databaseID = [decoder decodeObjectOfClass:[NSValue class] forKey:@"databaseID"];
+		_databaseID = [decoder decodeObjectOfClass:NSValue.class forKey:@"databaseID"];
 
-		_quotaBytesRemaining = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"quotaBytesRemaining"];
-		_quotaBytesUsed = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"quotaBytesUsed"];
+		_quotaBytesRemaining = [decoder decodeObjectOfClass:NSNumber.class forKey:@"quotaBytesRemaining"];
+		_quotaBytesUsed = [decoder decodeObjectOfClass:NSNumber.class forKey:@"quotaBytesUsed"];
+
+		_versionSeed = [decoder decodeIntegerForKey:@"versionSeed"];
 	}
 
 	return (self);
@@ -214,7 +233,7 @@
 #pragma mark - Metadata
 - (NSString *)name
 {
-	return ([self.path lastPathComponent]);
+	return (self.path.lastPathComponent);
 }
 
 - (void)setETag:(OCFileETag)eTag
@@ -254,6 +273,54 @@
 	return (_owner.userName);
 }
 
+- (OCLocationString)locationString
+{
+	return ([[NSString alloc] initWithFormat:@";%@:%@", ((_driveID != nil) ? _driveID : @""), ((_path != nil) ? _path : @"")]);
+}
+
+- (void)setPath:(OCPath)path
+{
+	_location = nil;
+	_path = path;
+}
+
+- (void)setDriveID:(OCDriveID)driveID
+{
+	_location = nil;
+	_driveID = driveID;
+}
+
+- (OCLocation *)location
+{
+	if (_location != nil)
+	{
+		return (_location);
+	}
+
+	OCLocation *location = [[OCLocation alloc] initWithDriveID:_driveID path:(_type == OCItemTypeCollection) ? _path.normalizedDirectoryPath : _path];
+
+	if (self.bookmarkUUID != nil)
+	{
+		location.bookmarkUUID = [[NSUUID alloc] initWithUUIDString:self.bookmarkUUID];
+	}
+
+	_location = location;
+
+	return (location);
+}
+
+- (void)setLocation:(OCLocation *)location
+{
+	_driveID = location.driveID;
+	_path = location.path;
+	_location = location;
+}
+
+- (OCPath)parentPath
+{
+	return (_path.parentPath);
+}
+
 #pragma mark - Thumbnails
 - (OCItemThumbnailAvailability)thumbnailAvailability
 {
@@ -278,16 +345,6 @@
 	}
 
 	return (_thumbnailAvailability);
-}
-
-- (void)setThumbnail:(OCItemThumbnail *)thumbnail
-{
-	_thumbnail = thumbnail;
-
-	if (thumbnail != nil)
-	{
-		_thumbnailAvailability = OCItemThumbnailAvailabilityAvailable;
-	}
 }
 
 #pragma mark - Local attributes
@@ -575,6 +632,8 @@
 	CloneMetadata(@"fileID");
 	CloneMetadata(@"eTag");
 
+	CloneMetadata(@"driveID");
+
 	CloneMetadata(@"localAttributes");
 	CloneMetadata(@"localAttributesLastModified");
 
@@ -588,6 +647,8 @@
 	CloneMetadata(@"lastUsed");
 
 	CloneMetadata(@"isFavorite");
+
+	CloneMetadata(@"state");
 
 	CloneMetadata(@"thumbnail");
 
@@ -633,6 +694,27 @@
 	}
 
 	return (file);
+}
+
+#pragma mark - Version seed
++ (OCItemVersionSeed)randomSeed
+{
+	return ((NSInteger)NSDate.timeIntervalSinceReferenceDate) ^ ((NSInteger)getpid());
+}
+
+- (void)updateSeedFrom:(OCItemVersionSeed)previousVersionSeed
+{
+	_versionSeed = (previousVersionSeed + 1) ^ OCItem.randomSeed;
+}
+
+- (void)updateSeed
+{
+	[self regenerateSeed];
+}
+
+- (void)regenerateSeed
+{
+	_versionSeed = (NSInteger)_localID.hash ^ OCItem.randomSeed;
 }
 
 #pragma mark - Description
@@ -763,13 +845,17 @@
 {
 	NSString *shareTypesDescription = [self _shareTypesDescription];
 
-	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, Last used: %@ fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.lastUsed, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @""), (_isFavorite.boolValue ? @", favorite" : @""), (_privateLink ? [NSString stringWithFormat:@", privateLink: %@", _privateLink] : @""), (_checksums ? [NSString stringWithFormat:@", checksums: %@", _checksums] : @""), [self _tusSupportDescription], (_downloadTriggerIdentifier ? [NSString stringWithFormat:@", downloadTrigger: %@", _downloadTriggerIdentifier] : @""), ((_fileClaim!=nil) ? @", fileClaim: yes" : @""), ((_localRelativePath!=nil) ? [NSString stringWithFormat:@", localRelativePath: %@", _localRelativePath] : @""), [self syncActivityDescription]]);
+	return ([NSString stringWithFormat:@"<%@: %p, type: %lu, name: %@, path: %@, size: %lu bytes, MIME-Type: %@, Last modified: %@, Last used: %@, driveID: %@, fileID: %@, eTag: %@, parentID: %@, localID: %@, parentLocalID: %@%@%@%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self, (unsigned long)self.type, self.name, self.path, self.size, self.mimeType, self.lastModified, self.lastUsed, self.driveID, self.fileID, self.eTag, self.parentFileID, self.localID, self.parentLocalID, ((shareTypesDescription!=nil) ? [NSString stringWithFormat:@", shareTypes: [%@]",shareTypesDescription] : @""), (self.isSharedWithUser ? @", sharedWithUser" : @""), (self.isShareable ? @", shareable" : @""), ((_owner!=nil) ? [NSString stringWithFormat:@", owner: %@", _owner] : @""), (_removed ? @", removed" : @""), (_isFavorite.boolValue ? @", favorite" : @""), (_privateLink ? [NSString stringWithFormat:@", privateLink: %@", _privateLink] : @""), (_checksums ? [NSString stringWithFormat:@", checksums: %@", _checksums] : @""), [self _tusSupportDescription], (_downloadTriggerIdentifier ? [NSString stringWithFormat:@", downloadTrigger: %@", _downloadTriggerIdentifier] : @""), ((_fileClaim!=nil) ? @", fileClaim: yes" : @""), ((_localRelativePath!=nil) ? [NSString stringWithFormat:@", localRelativePath: %@", _localRelativePath] : @""), ((_state!=OCItemStateNormal) ? [NSString stringWithFormat:@", state: %ld", (long)_state] : @""), ((_bookmarkUUID!=nil) ? [NSString stringWithFormat:@", bookmarkUUID: %@", _bookmarkUUID] : @""), [self syncActivityDescription]]);
 }
 
 #pragma mark - Copying
 - (id)copyWithZone:(nullable NSZone *)zone
 {
-	return ([[self class] itemFromSerializedData:self.serializedData]);
+	OCItem *copy = [[self class] itemFromSerializedData:self.serializedData];
+
+	copy.bookmarkUUID = _bookmarkUUID;
+
+	return (copy);
 }
 
 @end
@@ -795,11 +881,15 @@ OCItemDownloadTriggerID OCItemDownloadTriggerIDUser = @"user";
 OCItemDownloadTriggerID OCItemDownloadTriggerIDAvailableOffline = @"availableOffline";
 
 OCItemPropertyName OCItemPropertyNameType = @"type";
+OCItemPropertyName OCItemPropertyNameDriveID = @"driveID";
+OCItemPropertyName OCItemPropertyNameLocationString = @"locationString";
 OCItemPropertyName OCItemPropertyNamePath = @"path";
+OCItemPropertyName OCItemPropertyNameParentPath = @"parentPath";
 OCItemPropertyName OCItemPropertyNameName = @"name";
 OCItemPropertyName OCItemPropertyNameOwnerUserName = @"ownerUserName";
 OCItemPropertyName OCItemPropertyNameSize = @"size";
 OCItemPropertyName OCItemPropertyNameMIMEType = @"mimeType";
+OCItemPropertyName OCItemPropertyNameTypeAlias = @"typeAlias";
 OCItemPropertyName OCItemPropertyNameLocallyModified = @"locallyModified";
 OCItemPropertyName OCItemPropertyNameLocalRelativePath = @"localRelativePath";
 

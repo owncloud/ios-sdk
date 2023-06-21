@@ -73,7 +73,8 @@
 		OCSyncRecord *syncRecord = nil;
 
 		if (((core = options[OCWaitConditionOptionCore]) != nil) &&
-		    ((syncRecord = options[OCWaitConditionOptionSyncRecord]) != nil)
+		    ((syncRecord = options[OCWaitConditionOptionSyncRecord]) != nil) &&
+		     (syncRecord.recordID != nil)
 		   )
 		{
 			NSDictionary *userInfo = @{
@@ -144,7 +145,7 @@
 			{
 				[syncRecord removeWaitCondition:self];
 
-				if (syncRecord.recordID != nil) // Check if the sync record has been removed as part of the issue resolution (f.ex. when descheduling)
+				if ((syncRecord.recordID != nil) && !syncRecord.removed) // Check if the sync record has been removed as part of the issue resolution (f.ex. when descheduling)
 				{
 					syncContext.updateStoredSyncRecordAfterItemUpdates = YES;
 				}

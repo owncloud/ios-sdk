@@ -47,6 +47,14 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		return(nil);
 	}
 
+	if (self.useDriveAPI && (newParentDirectory.driveID == nil))
+	{
+		// Drive ID required for accounts with Drive API
+		OCLogWarning(@"uploadFile: API call without drive ID in drive-based account");
+		[eventTarget handleError:OCError(OCErrorMissingDriveID) type:OCEventTypeUpload uuid:nil sender:self];
+		return (nil);
+	}
+
 	if (fileName == nil)
 	{
 		if (replacedItem != nil)
@@ -211,7 +219,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 	OCTUSJob *tusJob;
 	NSURL *creationURL;
 
-	if ((creationURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:parentItem.path]) != nil)
+	if ((creationURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(parentItem.driveID) }] URLByAppendingPathComponent:parentItem.path]) != nil)
 	{
 		if ((tusJob = [[OCTUSJob alloc] initWithHeader:parentTusHeader segmentFolderURL:segmentFolderURL fileURL:clonedSourceURL creationURL:creationURL]) != nil)
 		{
@@ -219,6 +227,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 			tusJob.fileSize = fileSize;
 			tusJob.fileModDate = modificationDate;
 			tusJob.fileChecksum = checksum;
+			tusJob.fileDriveID = parentItem.driveID;
 
 			tusJob.futureItemPath = [parentItem.path stringByAppendingPathComponent:fileName];
 
@@ -404,7 +413,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 				[tusJob destroy];
 
 				// Retrieve item information
-				[self retrieveItemListAtPath:tusJob.futureItemPath depth:0 options:@{
+				[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:tusJob.fileDriveID path:tusJob.futureItemPath] depth:0 options:@{
 					@"alternativeEventType"  		: @(OCEventTypeUpload),
 					OCConnectionOptionRequiredSignalsKey 	: self.actionSignals
 				} resultTarget:tusJob.eventTarget];
@@ -623,7 +632,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 	OCProgress *requestProgress = nil;
 	NSURL *uploadURL;
 
-	if ((uploadURL = [[[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:newParentDirectory.path] URLByAppendingPathComponent:fileName]) != nil)
+	if ((uploadURL = [[[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(newParentDirectory.driveID) }] URLByAppendingPathComponent:newParentDirectory.path] URLByAppendingPathComponent:fileName]) != nil)
 	{
 		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:uploadURL];
 
@@ -747,7 +756,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		*/
 
 		// Retrieve item information
-		[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 options:@{
+		[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:parentItem.driveID path:[parentItem.path stringByAppendingPathComponent:fileName]] depth:0 options:@{
 			@"alternativeEventType"  		: @(OCEventTypeUpload),
 			OCConnectionOptionRequiredSignalsKey 	: self.actionSignals
 		} resultTarget:request.eventTarget];
@@ -786,7 +795,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 								// in this place. In order not to return an error if the file on the server equals the file to be uploaded, we first perform a PROPFIND
 								// check and compare the checksums
 
-								[self retrieveItemListAtPath:[parentItem.path stringByAppendingPathComponent:fileName] depth:0 options:@{
+								[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:parentItem.driveID path:[parentItem.path stringByAppendingPathComponent:fileName]] depth:0 options:@{
 									@"alternativeEventType"  		: @(OCEventTypeUpload),
 									OCConnectionOptionRequiredSignalsKey 	: self.actionSignals,
 

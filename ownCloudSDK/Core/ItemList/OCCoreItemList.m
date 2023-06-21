@@ -18,6 +18,7 @@
 
 #import "OCCoreItemList.h"
 #import "NSString+OCPath.h"
+#import "OCDrive.h"
 
 @implementation OCCoreItemList
 
@@ -64,6 +65,14 @@
 {
 	_itemsByPath = nil;
 	_itemPathsSet = nil;
+	_itemsByFileID = nil;
+	_itemFileIDsSet = nil;
+	_itemsByLocalID = nil;
+	_itemLocalIDsSet = nil;
+	_itemsByParentPaths = nil;
+	_itemParentPaths = nil;
+	_itemListsByDriveID = nil;
+
 	_items = items;
 }
 
@@ -222,6 +231,45 @@
 	}
 
 	return (_itemParentPaths);
+}
+
+- (NSMutableDictionary<OCDriveID,NSMutableArray<OCItem *> *> *)_itemsByDriveID
+{
+	NSMutableDictionary<OCDriveID, NSMutableArray<OCItem *> *> *itemsByDriveID = [NSMutableDictionary new];
+	OCDriveID nilID = OCDriveIDNil;
+
+	for (OCItem *item in self.items)
+	{
+		OCDriveID driveID = (item.driveID == nil) ? nilID : item.driveID;
+		NSMutableArray<OCItem *> *items;
+
+		if ((items = itemsByDriveID[driveID]) == nil)
+		{
+			items = [NSMutableArray new];
+			itemsByDriveID[driveID] = items;
+		}
+
+		[items addObject:item];
+	}
+
+	return(itemsByDriveID);
+}
+
+- (NSMutableDictionary<OCDriveID,OCCoreItemList *> *)itemListsByDriveID
+{
+	if (_itemListsByDriveID == nil)
+	{
+		NSMutableDictionary<OCDriveID, NSMutableArray<OCItem *> *> *itemsByDriveID = [self _itemsByDriveID];
+		NSMutableDictionary<OCDriveID, OCCoreItemList *> *itemListsByDriveID = [NSMutableDictionary new];
+
+		[itemsByDriveID enumerateKeysAndObjectsUsingBlock:^(OCDriveID  _Nonnull driveID, NSMutableArray<OCItem *> * _Nonnull driveItems, BOOL * _Nonnull stop) {
+			itemListsByDriveID[driveID] = [OCCoreItemList itemListWithItems:driveItems];
+		}];
+
+		_itemListsByDriveID = itemListsByDriveID;
+	}
+
+	return(_itemListsByDriveID);
 }
 
 @end

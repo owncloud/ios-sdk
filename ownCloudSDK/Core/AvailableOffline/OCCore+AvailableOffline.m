@@ -35,7 +35,7 @@
 
 	if ((newItemPolicy = [[OCItemPolicy alloc] initWithKind:OCItemPolicyKindAvailableOffline item:item]) != nil)
 	{
-		newItemPolicy.path = item.path;
+		newItemPolicy.location = item.location;
 		newItemPolicy.localID = item.localID;
 
 		newItemPolicy.policyAutoRemovalMethod = OCItemPolicyAutoRemovalMethodNoItems;
@@ -91,7 +91,7 @@
 						{
 							if (updateItems.count > 0)
 							{
-								[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:updateItems refreshPaths:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+								[self performUpdatesForAddedItems:nil removedItems:nil updatedItems:updateItems refreshLocations:nil newSyncAnchor:nil beforeQueryUpdates:nil afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
 							}
 						}
 					}];
@@ -155,7 +155,7 @@
 							[core retrievePoliciesOfKind:OCItemPolicyKindAvailableOffline affectingItem:nil includeInternal:NO completionHandler:^(NSError * _Nullable error, NSArray<OCItemPolicy *> * _Nullable allPolicies) {
 								NSArray<OCItemPolicy *> *redundantPolicies = [allPolicies filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(OCItemPolicy * _Nullable existingPolicy, NSDictionary<NSString *,id> * _Nullable bindings) {
 									return ( (![newItemPolicy.databaseID isEqual:existingPolicy.databaseID]) && // Skip new entry :-D
-										 ((existingPolicy.path != nil) && (newItemPolicy.path != nil) && ([existingPolicy.path hasPrefix:newItemPolicy.path])) // Both have paths and existing policy's path is identical or a sub-path of new path
+										 ((existingPolicy.location != nil) && (newItemPolicy.location != nil) && ([existingPolicy.location isLocatedIn:newItemPolicy.location])) // Both have paths and existing policy's path is identical or a sub-path of new path
 									       );
 								}]];
 
@@ -165,7 +165,7 @@
 
 									if (redundantPolicies.count == 1)
 									{
-										errorMessage = [NSString stringWithFormat:OCLocalized(@"Making %@ available offline also covers %@, which was previously requested as being available offline."), item.path, itemPolicies.firstObject.path];
+										errorMessage = [NSString stringWithFormat:OCLocalized(@"Making %@ available offline also covers %@, which was previously requested as being available offline."), item.path, itemPolicies.firstObject.location.path];
 									}
 									else if (redundantPolicies.count > 1)
 									{
@@ -201,7 +201,7 @@
 				{
 					completionHandler(OCErrorWithDescriptionAndUserInfo(
 								OCErrorItemPolicyRedundant,
-								([NSString stringWithFormat:OCLocalized(@"Offline availability of %@ is already ensured by having made %@ available offline."), item.path, itemPolicies.firstObject.path]),
+								([NSString stringWithFormat:OCLocalized(@"Offline availability of %@ is already ensured by having made %@ available offline."), item.location, itemPolicies.firstObject.location]),
 								OCErrorItemPoliciesKey,
 								itemPolicies),
 							  nil);
@@ -249,14 +249,14 @@
 	{
 		NSArray <OCItemPolicy *> *availableOfflinePolicies = [self retrieveAvailableOfflinePoliciesCoveringItem:nil completionHandler:nil];
 
-		[_availableOfflineFolderPaths removeAllObjects];
+		[_availableOfflineFolderLocations removeAllObjects];
 		[_availableOfflineIDs removeAllObjects];
 
 		for (OCItemPolicy *policy in availableOfflinePolicies)
 		{
-			if (policy.path != nil)
+			if (policy.location.path != nil)
 			{
-				[_availableOfflineFolderPaths addObject:policy.path];
+				[_availableOfflineFolderLocations addObject:policy.location];
 			}
 
 			if (policy.localID != nil)
@@ -273,7 +273,7 @@
 {
 	OCCoreAvailableOfflineCoverage coverage = OCCoreAvailableOfflineCoverageNone;
 
-	@synchronized(_availableOfflineFolderPaths)
+	@synchronized(_availableOfflineFolderLocations)
 	{
 		[self _updateAvailableOfflineCaches];
 
@@ -283,18 +283,18 @@
 		}
 		else
 		{
-			OCPath itemPath;
+			OCLocation *itemLocation;
 
-			if ((itemPath = item.path) != nil)
+			if ((itemLocation = item.location) != nil)
 			{
-				for (OCPath folderPath in _availableOfflineFolderPaths)
+				for (OCLocation *folderLocation in _availableOfflineFolderLocations)
 				{
-					if ([folderPath isEqualToString:itemPath])
+					if ([folderLocation isEqual:itemLocation])
 					{
 						coverage = OCCoreAvailableOfflineCoverageDirect;
 						break;
 					}
-					else if ([itemPath hasPrefix:folderPath])
+					else if ([itemLocation isLocatedIn:folderLocation])
 					{
 						coverage = OCCoreAvailableOfflineCoverageIndirect;
 					}

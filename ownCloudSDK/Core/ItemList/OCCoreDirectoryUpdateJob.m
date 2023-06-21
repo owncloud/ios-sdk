@@ -20,11 +20,11 @@
 
 @implementation OCCoreDirectoryUpdateJob
 
-+ (instancetype)withPath:(OCPath)path
++ (instancetype)withLocation:(OCLocation *)location
 {
 	OCCoreDirectoryUpdateJob *updateScanPath = [OCCoreDirectoryUpdateJob new];
 
-	updateScanPath.path = path;
+	updateScanPath.location = location;
 
 	return (updateScanPath);
 }
@@ -69,7 +69,7 @@
 #pragma mark - Description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, jobID: %@, path: %@, isForQuery: %d, representedJobIDs: %@>", NSStringFromClass(self.class), self, _identifier, _path, self.isForQuery, self.representedJobIDs]);
+	return ([NSString stringWithFormat:@"<%@: %p, jobID: %@, location: %@, isForQuery: %d, representedJobIDs: %@>", NSStringFromClass(self.class), self, _identifier, _location, self.isForQuery, self.representedJobIDs]);
 }
 
 @end

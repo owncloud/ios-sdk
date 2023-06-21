@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 #import "OCBookmark.h"
 #import "OCIPNotificationCenter.h"
+#import "OCDataSource.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -48,6 +49,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)moveBookmarkFrom:(NSUInteger)fromIndex to:(NSUInteger)toIndex;
 
 - (BOOL)updateBookmark:(OCBookmark *)bookmark; //!< Notify the manager that properties of the bookmark have been changed. Will return YES if the bookmark is managed by the manager, NO if it's not.
+
+#pragma mark - Data sources
+@property(readonly, nonatomic, strong) OCDataSource *bookmarksDatasource;
 
 #pragma mark - Acessing bookmarks
 - (nullable OCBookmark *)bookmarkAtIndex:(NSUInteger)index;

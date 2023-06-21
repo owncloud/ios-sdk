@@ -21,6 +21,7 @@
 #import "OCBookmark+IPNotificationNames.h"
 #import "OCEvent.h"
 #import "OCAppIdentity.h"
+#import "OCResourceTextPlaceholder.h"
 #import "NSData+OCHash.h"
 
 #if TARGET_OS_IOS
@@ -31,6 +32,9 @@
 {
 	OCIPCNotificationName _coreUpdateNotificationName;
 	OCIPCNotificationName _bookmarkAuthUpdateNotificationName;
+
+	id<OCViewProvider> _avatar;
+	NSData *_avatarData;
 
 	NSString *_lastUsername;
 }
@@ -43,8 +47,7 @@
 @synthesize name = _name;
 @synthesize url = _url;
 
-@synthesize certificate = _certificate;
-@synthesize certificateModificationDate = _certificateModificationDate;
+@synthesize certificateStore = _certificateStore;
 
 @synthesize authenticationMethodIdentifier = _authenticationMethodIdentifier;
 @synthesize authenticationData = _authenticationData;
@@ -86,6 +89,8 @@
 		[OCIPNotificationCenter.sharedNotificationCenter addObserver:self forName:OCBookmark.bookmarkAuthUpdateNotificationName withHandler:^(OCIPNotificationCenter * _Nonnull notificationCenter, OCBookmark *observerBookmark, OCIPCNotificationName  _Nonnull notificationName) {
 			[observerBookmark considerAuthenticationDataFlush];
 		}];
+
+		_certificateStore = [OCCertificateStore new];
 
 		#if TARGET_OS_IOS
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(considerAuthenticationDataFlush) name:UIApplicationWillResignActiveNotification object:nil];
@@ -210,11 +215,136 @@
 
 		if ((authMethod = [OCAuthenticationMethod registeredAuthenticationMethodForIdentifier:self.authenticationMethodIdentifier]) != nil)
 		{
-			return ([authMethod userNameFromAuthenticationData:self.authenticationData]);
+			NSString *userName = nil;
+
+			if ((userName = [authMethod userNameFromAuthenticationData:self.authenticationData]) != nil)
+			{
+				return (userName);
+			}
 		}
 	}
 
 	return (_lastUsername);
+}
+
+- (OCCertificate *)primaryCertificate
+{
+	OCCertificate *primaryCertificate = (_url.host != nil) ? [_certificateStore certificateForHostname:_url.host lastModified:NULL] : nil;
+
+	if ((primaryCertificate == nil) && (_certificateStore != nil))
+	{
+		NSArray<OCCertificateStoreRecord *> *records = _certificateStore.allRecords;
+
+		if (records.count == 1)
+		{
+			primaryCertificate = records.firstObject.certificate;
+		}
+	}
+
+	return (primaryCertificate);
+}
+
+#pragma mark - Avatar
+- (id<OCViewProvider>)avatar
+{
+	@synchronized(self)
+	{
+		if ((_avatar == nil) && (_avatarData != nil))
+		{
+			@try
+			{
+				_avatar = [NSKeyedUnarchiver unarchiveObjectWithData:_avatarData];
+			}
+			@catch (NSException *exception)
+			{
+			}
+		}
+
+		if (_avatar == nil)
+		{
+			NSString *userName;
+
+			if ((userName = ((self.userDisplayName != nil) ? self.userDisplayName : self.userName)) != nil)
+			{
+				OCResourceTextPlaceholder *placeholder = [OCResourceTextPlaceholder new];
+				placeholder.text = [OCUser localizedInitialsForName:userName];
+
+				return ((id<OCViewProvider>)placeholder);
+			}
+		}
+	}
+
+	return (_avatar);
+}
+
+- (void)setAvatar:(id<OCViewProvider>)avatar
+{
+	@synchronized(self)
+	{
+		NSData *avatarData = nil;
+
+		if (avatar != nil)
+		{
+			@try
+			{
+				NSError *error = nil;
+				avatarData = [NSKeyedArchiver archivedDataWithRootObject:avatar requiringSecureCoding:YES error:&error];
+
+				if (error != nil)
+				{
+					OCLogError(@"Error serializing %@: %@", avatar, error);
+				}
+			}
+			@catch (NSException *exception)
+			{
+			}
+		}
+
+		_avatar = (avatarData != nil) ? avatar : nil;
+		_avatarData = avatarData;
+	}
+}
+
+#pragma mark - Capabilities
+- (void)addCapability:(OCBookmarkCapability)capability
+{
+	if (capability == nil)
+	{
+		OCLogError(@"Attempt to add nil capability to bookmark %@", self);
+		return;
+	}
+
+	if (_capabilities == nil)
+	{
+		_capabilities = [[NSSet alloc] initWithObjects:capability, nil];
+	}
+	else
+	{
+		_capabilities = [_capabilities setByAddingObject:capability];
+	}
+}
+
+- (void)removeCapability:(OCBookmarkCapability)capability
+{
+	if (capability == nil)
+	{
+		OCLogError(@"Attempt to add nil capability to bookmark %@", self);
+		return;
+	}
+
+	if (_capabilities != nil)
+	{
+		NSMutableSet<OCBookmarkCapability> *capabilities = [_capabilities mutableCopy];
+
+		[capabilities removeObject:capability];
+
+		_capabilities = [_capabilities copy];
+	}
+}
+
+- (BOOL)hasCapability:(OCBookmarkCapability)capability
+{
+	return ([_capabilities containsObject:capability]);
 }
 
 #pragma mark - Certificate approval
@@ -240,13 +370,17 @@
 
 	_originURL = sourceBookmark.originURL;
 
-	_certificate = sourceBookmark.certificate;
-	_certificateModificationDate = sourceBookmark.certificateModificationDate;
+	_capabilities = sourceBookmark.capabilities;
+
+	_certificateStore = sourceBookmark.certificateStore;
 
 	_authenticationMethodIdentifier = sourceBookmark.authenticationMethodIdentifier;
 	_authenticationData = sourceBookmark.authenticationData;
 	_authenticationDataStorage = sourceBookmark.authenticationDataStorage;
 	_authenticationValidationDate = sourceBookmark.authenticationValidationDate;
+
+	_avatar = sourceBookmark->_avatar;
+	_avatarData = sourceBookmark->_avatarData;
 
 	_lastUsername = sourceBookmark->_lastUsername;
 
@@ -279,11 +413,26 @@
 
 		_originURL = [decoder decodeObjectOfClass:NSURL.class forKey:@"originURL"];
 
-		_certificate = [decoder decodeObjectOfClass:OCCertificate.class forKey:@"certificate"];
-		_certificateModificationDate = [decoder decodeObjectOfClass:NSDate.class forKey:@"certificateModificationDate"];
+		_capabilities = [decoder decodeObjectOfClasses:[NSSet setWithObjects:NSSet.class, NSString.class, nil] forKey:@"capabilities"];
+
+		_certificateStore = [decoder decodeObjectOfClass:OCCertificateStore.class forKey:@"certificateStore"];
+
+		if (_certificateStore == nil)
+		{
+			// Migrate legacy certificate + certificateModificationDate to certificateStore
+			OCCertificate *certificate = [decoder decodeObjectOfClass:OCCertificate.class forKey:@"certificate"];
+			NSDate *certificateModificationDate = [decoder decodeObjectOfClass:NSDate.class forKey:@"certificateModificationDate"];
+
+			if ((certificate != nil) && (certificateModificationDate != nil))
+			{
+				_certificateStore = [[OCCertificateStore alloc] initWithMigrationOfCertificate:certificate forHostname:_url.host lastModifiedDate:certificateModificationDate];
+			}
+		}
 
 		_authenticationMethodIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"authenticationMethodIdentifier"];
 		_authenticationValidationDate = [decoder decodeObjectOfClass:NSDate.class forKey:@"authenticationValidationDate"];
+
+		_avatarData = [decoder decodeObjectOfClass:NSData.class forKey:@"avatarData"];
 
 		_databaseVersion = [decoder decodeIntegerForKey:@"databaseVersion"];
 
@@ -311,11 +460,14 @@
 
 	[coder encodeObject:_originURL forKey:@"originURL"];
 
-	[coder encodeObject:_certificate forKey:@"certificate"];
-	[coder encodeObject:_certificateModificationDate forKey:@"certificateModificationDate"];
+	[coder encodeObject:_capabilities forKey:@"capabilities"];
+
+	[coder encodeObject:_certificateStore forKey:@"certificateStore"];
 
 	[coder encodeObject:_authenticationMethodIdentifier forKey:@"authenticationMethodIdentifier"];
 	[coder encodeObject:_authenticationValidationDate forKey:@"authenticationValidationDate"];
+
+	[coder encodeObject:_avatarData forKey:@"avatarData"];
 
 	[coder encodeInteger:_databaseVersion forKey:@"databaseVersion"];
 
@@ -343,8 +495,8 @@
 			((_databaseVersion!=OCDatabaseVersionUnknown) ? [@", databaseVersion: " stringByAppendingString:@(_databaseVersion).stringValue] : @""),
 			((_url!=nil) ? [@", url: " stringByAppendingString:_url.absoluteString] : @""),
 			((_originURL!=nil) ? [@", originURL: " stringByAppendingString:_originURL.absoluteString] : @""),
-			((_certificate!=nil) ? [@", certificate: " stringByAppendingString:_certificate.description] : @""),
-			((_certificateModificationDate!=nil) ? [@", certificateModificationDate: " stringByAppendingString:_certificateModificationDate.description] : @""),
+			((_capabilities!=nil) ? [@", capabilities: " stringByAppendingString:_capabilities.description] : @""),
+			((_certificateStore.allRecords.count>0) ? [@", certificates: " stringByAppendingString:_certificateStore.allRecords.description] : @""),
 			((_authenticationMethodIdentifier!=nil) ? [@", authenticationMethodIdentifier: " stringByAppendingString:_authenticationMethodIdentifier] : @""),
 			((authData!=nil) ? [@", authenticationData: " stringByAppendingFormat:@"%lu bytes", authData.length] : @""),
 			((_authenticationValidationDate!=nil) ? [@", authenticationValidationDate: " stringByAppendingString:_authenticationValidationDate.description] : @""),
@@ -399,6 +551,9 @@
 OCBookmarkUserInfoKey OCBookmarkUserInfoKeyStatusInfo = @"statusInfo";
 OCBookmarkUserInfoKey OCBookmarkUserInfoKeyAllowHTTPConnection = @"OCAllowHTTPConnection";
 OCBookmarkUserInfoKey OCBookmarkUserInfoKeyBookmarkCreation = @"bookmark-creation";
+
+OCBookmarkCapability OCBookmarkCapabilityDrives = @"drives";
+OCBookmarkCapability OCBookmarkCapabilityFavorites = @"favorites";
 
 NSNotificationName OCBookmarkAuthenticationDataChangedNotification = @"OCBookmarkAuthenticationDataChanged";
 NSNotificationName OCBookmarkUpdatedNotification = @"OCBookmarkUpdatedNotification";

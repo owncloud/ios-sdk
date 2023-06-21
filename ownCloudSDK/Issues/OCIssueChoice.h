@@ -29,7 +29,7 @@ typedef NS_ENUM(NSInteger,OCIssueChoiceType)
 	OCIssueChoiceTypeRegular,
 	OCIssueChoiceTypeDefault,
 	OCIssueChoiceTypeDestructive
-};
+} __attribute__((enum_extensibility(closed)));
 
 @interface OCIssueChoice : NSObject
 

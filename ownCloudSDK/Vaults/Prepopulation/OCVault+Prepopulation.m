@@ -257,7 +257,7 @@
 
 			for (OCPath openPath in openPaths)
 			{
-				[db addDirectoryUpdateJob:[OCCoreDirectoryUpdateJob withPath:openPath] completionHandler:^(OCDatabase *db, NSError *error, OCCoreDirectoryUpdateJob *updateJob) {
+				[db addDirectoryUpdateJob:[OCCoreDirectoryUpdateJob withLocation:[OCLocation legacyRootPath:openPath]] completionHandler:^(OCDatabase *db, NSError *error, OCCoreDirectoryUpdateJob *updateJob) {
 					if (error != nil)
 					{
 						completionError = error;
@@ -326,7 +326,7 @@
 				}
 			};
 
-			retrieveItemsProgress = [connection retrieveItemListAtPath:@"/" depth:OCPropfindDepthInfinity options:@{
+			retrieveItemsProgress = [connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:OCPropfindDepthInfinity options:@{
 				OCConnectionOptionResponseStreamHandler : [streamHandler copy]
 			} resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 				[connection disconnectWithCompletionHandler:^{
@@ -395,7 +395,7 @@
 				NSURL *responseFileURL = [self.davRawResponseFolderURL URLByAppendingPathComponent:NSUUID.UUID.UUIDString isDirectory:NO];
 				NSProgress *retrieveItemsProgress;
 
-				retrieveItemsProgress = [connection retrieveItemListAtPath:@"/" depth:OCPropfindDepthInfinity options:@{
+				retrieveItemsProgress = [connection retrieveItemListAtLocation:OCLocation.legacyRootLocation depth:OCPropfindDepthInfinity options:@{
 					OCConnectionOptionResponseDestinationURL : responseFileURL
 				} resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 					[connection disconnectWithCompletionHandler:^{

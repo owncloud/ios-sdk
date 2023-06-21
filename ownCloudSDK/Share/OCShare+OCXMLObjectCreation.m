@@ -20,6 +20,7 @@
 #import "OCXMLParserNode.h"
 #import "NSDate+OCDateParser.h"
 #import "NSString+OCPath.h"
+#import "OCDrive.h"
 
 @implementation OCShare (OCXMLObjectCreation)
 
@@ -40,6 +41,9 @@
 			// Identifier
 			share.identifier = shareID;
 
+			// Category
+			share.category = ((NSNumber *)xmlParser.options[@"_shareCategory"]).unsignedIntegerValue;
+
 			// Type
 			NSString *shareType;
 
@@ -56,10 +60,49 @@
 				}
 			}
 
-			// Item path
-			share.itemPath = shareNode.keyValues[@"path"];
+			// State
+			OCShareState state;
 
-			if (share.itemPath == nil)
+			if ((state = shareNode.keyValues[@"state"]) != nil)
+			{
+				share.state = state;
+			}
+
+			// Item path
+			OCPath sharePath = shareNode.keyValues[@"path"];
+
+			if (sharePath != nil)
+			{
+				NSString *itemSource;
+
+				if ((itemSource = shareNode.keyValues[@"item_source"]) != nil)
+				{
+					if ([itemSource containsString:@"!"] && [state isEqual:OCShareStateAccepted] && (share.category == OCShareCategoryWithMe))
+					{
+						// Compute location and FileID in Shares Jail
+						share.itemFileID = [OCDriveIDSharesJail stringByAppendingFormat:@"!%@", shareID]; // Item ID in Shares Jail = OCDriveIDSharesJail + "!" + shareID (via https://github.com/owncloud/web/blob/master/packages/web-client/src/helpers/space/functions.ts#L53 )
+						share.itemLocation = [[OCLocation alloc] initWithDriveID:OCDriveIDSharesJail path:[@"/" stringByAppendingString:sharePath.lastPathComponent]]; // Item is located in Shares Jail
+					}
+					else
+					{
+						// OCIS (drive ID could be extracted from item_source, which follows format "[driveID]![fileID]")
+						NSArray<NSString *> *itemSourceIDs = [itemSource componentsSeparatedByString:@"!"];
+
+						if (itemSourceIDs.count == 2)
+						{
+							share.itemFileID = itemSource;
+							share.itemLocation = [[OCLocation alloc] initWithDriveID:itemSourceIDs.firstObject path:sharePath];
+						}
+					}
+				}
+
+				if (share.itemLocation == nil)
+				{
+					// Fall back to OC10 legacy location
+					share.itemLocation = [OCLocation legacyRootPath:sharePath];
+				}
+			}
+			else
 			{
 				// Special case: federated share
 				NSString *mountPoint = nil;
@@ -70,7 +113,7 @@
 					
 					if (![mountPoint hasPrefix:@"{{TemporaryMountPointName#"])
 					{
-						share.itemPath = mountPoint;
+						share.itemLocation = [OCLocation legacyRootPath:mountPoint];
 					}
 				}
 			}
@@ -82,11 +125,11 @@
 			{
 				if ([itemType isEqual:@"file"])
 				{
-					share.itemType = OCItemTypeFile;
+					share.itemType = OCLocationTypeFile;
 				}
 				else if ([itemType isEqual:@"folder"])
 				{
-					share.itemType = OCItemTypeCollection;
+					share.itemType = OCLocationTypeFolder;
 				}
 			}
 			else
@@ -98,19 +141,19 @@
 				{
 					if ([type isEqual:@"file"])
 					{
-						share.itemType = OCItemTypeFile;
+						share.itemType = OCLocationTypeFile;
 					}
 					else if ([type isEqual:@"dir"])
 					{
-						share.itemType = OCItemTypeCollection;
+						share.itemType = OCLocationTypeFolder;
 					}
 				}
 			}
 
-			if (share.itemType == OCItemTypeCollection)
+			if (share.itemType == OCLocationTypeFolder)
 			{
-				// Ensure itemPath conforms to OCPath convention that directories end with a "/"
-				share.itemPath = [share.itemPath normalizedDirectoryPath];
+				// Ensure itemLocation.path conforms to OCPath convention that directories end with a "/"
+				share.itemLocation = share.itemLocation.normalizedDirectoryPathLocation;
 			}
 
 			// Item owner
@@ -224,11 +267,11 @@
 							{
 								recipientDisplayName = [recipientDisplayName stringByAppendingString:[NSString stringWithFormat:@" (%@)", share_with_additional_info]];
 							}
-							share.recipient = [OCRecipient recipientWithUser:[OCUser userWithUserName:recipientName displayName:recipientDisplayName]];
+							share.recipient = [OCIdentity identityWithUser:[OCUser userWithUserName:recipientName displayName:recipientDisplayName]];
 						break;
 
 						case OCShareTypeGroupShare:
-							share.recipient = [OCRecipient recipientWithGroup:[OCGroup groupWithIdentifier:recipientName name:recipientDisplayName]];
+							share.recipient = [OCIdentity identityWithGroup:[OCGroup groupWithIdentifier:recipientName name:recipientDisplayName]];
 						break;
 
 						case OCShareTypeLink:
@@ -249,7 +292,7 @@
 
 				if ((user = shareNode.keyValues[@"user"]) != nil)
 				{
-					share.recipient = [OCRecipient recipientWithUser:[OCUser userWithUserName:user displayName:nil]];
+					share.recipient = [OCIdentity identityWithUser:[OCUser userWithUserName:user displayName:nil]];
 				}
 			}
 
@@ -267,14 +310,6 @@
 			if ((accepted = shareNode.keyValues[@"accepted"]) != nil)
 			{
 				share.accepted = @(accepted.integerValue);
-			}
-
-			// State
-			OCShareState state;
-
-			if ((state = shareNode.keyValues[@"state"]) != nil)
-			{
-				share.state = state;
 			}
 		}
 	}

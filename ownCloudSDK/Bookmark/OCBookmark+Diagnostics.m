@@ -23,11 +23,26 @@
 #import "OCMacros.h"
 #import "OCBookmarkManager.h"
 #import "OCCoreManager.h"
+#import "OCCertificateStoreRecord.h"
 
 @implementation OCBookmark (Diagnostics)
 
 - (NSArray<OCDiagnosticNode *> *)diagnosticNodesWithContext:(OCDiagnosticContext *)context
 {
+	NSMutableArray<OCDiagnosticNode *> *certificateChildren = [NSMutableArray new];
+	__weak OCBookmark *weakSelf = self;
+
+	for (OCCertificateStoreRecord *record in self.certificateStore.allRecords)
+	{
+		[certificateChildren addObject:[OCDiagnosticNode withLabel:record.hostname children:@[
+			[OCDiagnosticNode withLabel:OCLocalized(@"Certificate Date") content:record.lastModifiedDate.description],
+			[OCDiagnosticNode withLabel:OCLocalized(@"Invalidate") action:^(OCDiagnosticContext * _Nullable context) {
+				OCCertificate *invalidCertificate = [OCCertificate certificateWithCertificateData:[NSData new] hostName:record.hostname];
+				[weakSelf.certificateStore storeCertificate:invalidCertificate forHostname:record.hostname];
+			}]
+		]]];
+	}
+
 	return (@[
 		[OCDiagnosticNode withLabel:OCLocalized(@"UUID") 			content:self.uuid.UUIDString],
 		[OCDiagnosticNode withLabel:OCLocalized(@"Name") 			content:self.name],
@@ -43,10 +58,7 @@
 			}
 		}],
 
-		[OCDiagnosticNode withLabel:OCLocalized(@"Certificate Date")		content:self.certificateModificationDate.description],
-		[OCDiagnosticNode withLabel:OCLocalized(@"Invalidate Certificate") 	action:^(OCDiagnosticContext * _Nullable context) {
-			self.certificate = [OCCertificate certificateWithCertificateData:[NSData new] hostName:self.url.host];
-		}],
+		[OCDiagnosticNode withLabel:OCLocalized(@"Certificates") 		children:certificateChildren],
 
 		[OCDiagnosticNode withLabel:OCLocalized(@"User Name")			content:self.userName],
 		[OCDiagnosticNode withLabel:OCLocalized(@"Auth Method")			content:self.authenticationMethodIdentifier],

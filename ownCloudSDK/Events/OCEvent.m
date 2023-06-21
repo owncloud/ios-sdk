@@ -22,6 +22,8 @@
 
 #import "OCBookmark.h"
 #import "OCCertificate.h"
+#import "OCCertificateStore.h"
+#import "OCCertificateStoreRecord.h"
 #import "OCChecksum.h"
 #import "OCClaim.h"
 #import "OCEventRecord.h"
@@ -38,7 +40,7 @@
 #import "OCItemThumbnail.h"
 #import "OCItemVersionIdentifier.h"
 #import "OCProcessSession.h"
-#import "OCRecipient.h"
+#import "OCIdentity.h"
 #import "OCQueryCondition.h"
 #import "OCShare.h"
 #import "OCSyncIssue.h"
@@ -51,6 +53,7 @@
 #import "OCDAVRawResponse.h"
 #import "OCMessage.h"
 #import "OCCoreUpdateScheduleRecord.h"
+#import "OCDrive.h"
 
 @implementation OCEvent
 
@@ -81,6 +84,8 @@
 				// OC classes
 				OCBookmark.class,
 				OCCertificate.class,
+				OCCertificateStore.class,
+				OCCertificateStoreRecord.class,
 				OCChecksum.class,
 				OCClaim.class,
 				OCEvent.class,
@@ -101,6 +106,7 @@
 				OCItemVersionIdentifier.class,
 				OCProcessSession.class,
 				OCProgress.class,
+				OCIdentity.class,
 				OCRecipient.class,
 				OCQueryCondition.class,
 				OCShare.class,
@@ -114,6 +120,8 @@
 				OCMessage.class,
 				OCMessageChoice.class,
 				OCCoreUpdateScheduleRecord.class,
+				OCLocation.class,
+				OCDrive.class,
 
 				// Foundation classes
 				NSArray.class,
@@ -259,7 +267,7 @@
 
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, eventType: %lu, path: %@, uuid: %@, userInfo: %@, result: %@, file: %@%@%@>", NSStringFromClass(self.class), self, (unsigned long)_eventType, _path, _uuid, _userInfo, _result, _file, ((_ephermalUserInfo[@"_processSession"]!=nil)?[NSString stringWithFormat:@", processSession=%@",_ephermalUserInfo[@"_processSession"]]:@""), ((_ephermalUserInfo[@"_doProcess"]!=nil)?[NSString stringWithFormat:@", doProcess=%@",_ephermalUserInfo[@"_doProcess"]]:@"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, eventType: %lu, driveID: %@, path: %@, uuid: %@, userInfo: %@, result: %@, file: %@%@%@>", NSStringFromClass(self.class), self, (unsigned long)_eventType, _driveID, _path, _uuid, _userInfo, _result, _file, ((_ephermalUserInfo[@"_processSession"]!=nil)?[NSString stringWithFormat:@", processSession=%@",_ephermalUserInfo[@"_processSession"]]:@""), ((_ephermalUserInfo[@"_doProcess"]!=nil)?[NSString stringWithFormat:@", doProcess=%@",_ephermalUserInfo[@"_doProcess"]]:@"")]);
 }
 
 #pragma mark - Secure coding
@@ -277,6 +285,7 @@
 		_eventType = [decoder decodeIntegerForKey:@"eventType"];
 		_userInfo = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"userInfo"];
 
+		_driveID = [decoder decodeObjectOfClass:NSString.class forKey:@"driveID"];
 		_path = [decoder decodeObjectOfClass:NSString.class forKey:@"path"];
 		_depth = [decoder decodeIntegerForKey:@"depth"];
 
@@ -298,6 +307,7 @@
 
 	[coder encodeObject:_userInfo forKey:@"userInfo"];
 
+	[coder encodeObject:_driveID forKey:@"driveID"];
 	[coder encodeObject:_path forKey:@"path"];
 	[coder encodeInteger:_depth forKey:@"depth"];
 
@@ -313,3 +323,4 @@
 OCEventUserInfoKey OCEventUserInfoKeyItem = @"item";
 OCEventUserInfoKey OCEventUserInfoKeyItemVersionIdentifier = @"itemVersionIdentifier";
 OCEventUserInfoKey OCEventUserInfoKeySelector = @"selector";
+OCEventUserInfoKey OCEventUserInfoDriveID = @"drive-id";

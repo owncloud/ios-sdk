@@ -29,7 +29,7 @@ typedef NS_ENUM(NSUInteger, OCIssueLevel)
 	OCIssueLevelInformal, //!< Issue that is purely informal and requires no user action
 	OCIssueLevelWarning,	//!< Issue that can ultimately be resolved, but for which the user should be prompted
 	OCIssueLevelError	//!< Issue that can't be resolved
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef NS_ENUM(NSUInteger, OCIssueType)
 {
@@ -41,14 +41,14 @@ typedef NS_ENUM(NSUInteger, OCIssueType)
 	OCIssueTypeGeneric,
 
 	OCIssueTypeError
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef NS_ENUM(NSUInteger, OCIssueDecision)
 {
 	OCIssueDecisionNone,
 	OCIssueDecisionReject,
 	OCIssueDecisionApprove
-};
+} __attribute__((enum_extensibility(closed)));
 
 typedef void(^OCIssueHandler)(OCIssue *issue, OCIssueDecision decision);
 

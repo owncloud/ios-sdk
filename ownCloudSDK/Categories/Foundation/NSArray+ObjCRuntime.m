@@ -43,7 +43,7 @@
 	{
 		Class *classList;
 
-		if ((classList = (Class *)malloc(classCount * sizeof(Class))) != NULL)
+		if ((classList = (Class *)calloc(classCount, sizeof(Class))) != NULL)
 		{
 			classCount = objc_getClassList(classList, classCount);
 

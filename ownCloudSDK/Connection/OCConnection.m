@@ -51,7 +51,9 @@
 #import "NSURL+OCURLNormalization.h"
 #import "OCDAVRawResponse.h"
 #import "OCBookmarkManager.h"
+#import "OCConnection+GraphAPI.h"
 #import "NSError+OCNetworkFailure.h"
+#import "OCLocaleFilterVariables.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOpenIDConnect.h"
@@ -122,10 +124,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",				// Polled in intervals to detect changes to the root directory ETag
 		OCConnectionEndpointIDWebDAVMeta 	    	: @"remote.php/dav/meta",				// Metadata DAV endpoint, used for private link resolution
 		OCConnectionEndpointIDStatus 	    		: @"status.php",					// Requested during login and polled in intervals during maintenance mode
-		OCConnectionEndpointIDThumbnail			: @"index.php/apps/files/api/v1/thumbnail",		// Requested once per item thumbnail request
 		OCConnectionEndpointIDShares			: @"ocs/v2.php/apps/files_sharing/api/v1/shares",	// Polled in intervals to detect changes if OCShareQuery is used with the interval option
 		OCConnectionEndpointIDRemoteShares		: @"ocs/v2.php/apps/files_sharing/api/v1/remote_shares",// Polled in intervals to detect changes if OCShareQuery is used with the interval option
 		OCConnectionEndpointIDRecipients		: @"ocs/v2.php/apps/files_sharing/api/v1/sharees",	// Requested once per search string change when searching for recipients
+		OCConnectionEndpointIDAvatars			: @"remote.php/dav/avatars",				// Requested once per user per session (adding /[user]/[size-in-pixels])
+
+		OCConnectionEndpointIDGraphMeDrives		: @"graph/v1.0/me/drives",				// Drives of the user
+		OCConnectionEndpointIDGraphDrives		: @"graph/v1.0/drives",				// Drives
+
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOpenIDConnect, OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
 		OCConnectionCertificateExtendedValidationRule	: @"bookmarkCertificate == serverCertificate",
 		OCConnectionRenewedCertificateAcceptanceRule	: @"(bookmarkCertificate.publicKeyData == serverCertificate.publicKeyData) OR ((check.parentCertificatesHaveIdenticalPublicKeys == true) AND (serverCertificate.passedValidationOrIsUserAccepted == true)) OR ((bookmarkCertificate.parentCertificate.sha256Fingerprint.asFingerPrintString == \"73 0C 1B DC D8 5F 57 CE 5D C0 BB A7 33 E5 F1 BA 5A 92 5B 2A 77 1D 64 0A 26 F7 A4 54 22 4D AD 3B\") AND (bookmarkCertificate.rootCertificate.sha256Fingerprint.asFingerPrintString == \"06 87 26 03 31 A7 24 03 D9 09 F1 05 E6 9B CF 0D 32 E1 BD 24 93 FF C6 D9 20 6D 11 BC D6 77 07 39\") AND (serverCertificate.parentCertificate.sha256Fingerprint.asFingerPrintString == \"67 AD D1 16 6B 02 0A E6 1B 8F 5F C9 68 13 C0 4C 2A A5 89 96 07 96 86 55 72 A3 C7 E7 37 61 3D FD\") AND (serverCertificate.rootCertificate.sha256Fingerprint.asFingerPrintString == \"96 BC EC 06 26 49 76 F3 74 60 77 9A CF 28 C5 A7 CF E8 A3 C0 AA E1 1A 8F FC EE 05 C0 BD DF 08 C6\") AND (serverCertificate.passedValidationOrIsUserAccepted == true))",
@@ -142,7 +148,6 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			- ISRG Root X1:
 				96 BC EC 06 26 49 76 F3 74 60 77 9A CF 28 C5 A7 CF E8 A3 C0 AA E1 1A 8F FC EE 05 C0 BD DF 08 C6
 		*/
-
 		OCConnectionMinimumVersionRequired		: @"10.0",
 		OCConnectionAllowBackgroundURLSessions		: @(YES),
 		OCConnectionForceBackgroundURLSessions		: @(NO),
@@ -268,14 +273,6 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
-		OCConnectionEndpointIDThumbnail : @{
-			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
-			OCClassSettingsMetadataKeyDescription 	: @"Path of the thumbnail endpoint.",
-			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
-			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
-			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
-		},
-
 		OCConnectionEndpointIDShares : @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
 			OCClassSettingsMetadataKeyDescription 	: @"Path of the shares API endpoint.",
@@ -332,6 +329,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		OCConnectionRenewedCertificateAcceptanceRule: @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
 			OCClassSettingsMetadataKeyDescription 	: @"Rule that defines the criteria that need to be met for OCConnection to accept a renewed certificate and update the bookmark's certificate automatically instead of prompting the user. Used when the extended validation rule fails. Set this to `never` if the user should always be prompted when a server's certificate changed.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Security",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionAssociatedCertificatesTrackingRule : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Rule that defines the criteria that need to be met by a hostname other than a bookmark's hostname for the associated certificate to be added to the bookmark, tracked for changes and validated by the same rules as the bookmark's primary certificate. No value (default) or a value of `(0 == 1)` disables this feature. A value of `$hostname like \"*.mycompany.com\"` tracks the certificates for all hosts ending with mycompany.com.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Security",
 			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
@@ -450,6 +455,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		_authSignals = [NSSet set];
 
 		_usersByUserID = [NSMutableDictionary new];
+
+		_drivesByID = [NSMutableDictionary new];
 
 		[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_connectionCertificateUserApproved) name:self.bookmark.certificateUserApprovalUpdateNotificationName object:nil];
 
@@ -1449,6 +1456,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 										connectProgress.localizedDescription = OCLocalizedString(@"Fetching user information…", @"");
 
 										[self retrieveLoggedInUserWithCompletionHandler:^(NSError *error, OCUser *loggedInUser) {
+											BOOL saveBookmark = NO;
+
 											self.loggedInUser = loggedInUser;
 
 											// Update bookmark.userDisplayName if it has changed
@@ -1458,11 +1467,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 												self.bookmark.user = loggedInUser;
 												self.bookmark.userDisplayName = loggedInUser.displayName;
 
-												if (self.bookmark.authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain)
-												{
-													// Update bookmark - IF it is not a working copy
-													[OCBookmarkManager.sharedBookmarkManager updateBookmark:self.bookmark];
-												}
+												saveBookmark = YES;
 											}
 
 											connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
@@ -1473,12 +1478,63 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 											}
 											else
 											{
-												// DONE!
-												connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
+												// Favorites
+												if (capabilities.supportsFavorites.boolValue != [self.bookmark hasCapability:OCBookmarkCapabilityFavorites])
+												{
+													if (capabilities.supportsFavorites.boolValue)
+													{
+														[self.bookmark addCapability:OCBookmarkCapabilityFavorites];
+													}
+													else
+													{
+														[self.bookmark removeCapability:OCBookmarkCapabilityFavorites];
+													}
 
-												self.state = OCConnectionStateConnected;
+													saveBookmark = YES;
+												}
 
-												completionHandler(nil, nil);
+												// Drives
+												if (self.useDriveAPI)
+												{
+													// Drives
+													// Make sure drives capability is present in bookmark
+													if (![self.bookmark hasCapability:OCBookmarkCapabilityDrives])
+													{
+														[self.bookmark addCapability:OCBookmarkCapabilityDrives];
+														saveBookmark = YES;
+													}
+
+													// Get a list of drives
+													[self retrieveDriveListWithCompletionHandler:^(NSError * _Nullable error, NSArray<OCDrive *> * _Nullable drives) {
+														if (error!=nil)
+														{
+															completionHandler(error, [OCIssue issueForError:error level:OCIssueLevelError issueHandler:nil]);
+														}
+														else
+														{
+															connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
+
+															self.state = OCConnectionStateConnected;
+
+															completionHandler(error, nil);
+														}
+													}];
+												}
+												else
+												{
+													// No drives? DONE!
+													connectProgress.localizedDescription = OCLocalizedString(@"Connected", @"");
+
+													self.state = OCConnectionStateConnected;
+
+													completionHandler(nil, nil);
+												}
+
+												if (saveBookmark && (self.bookmark.authenticationDataStorage == OCBookmarkAuthenticationDataStorageKeychain))
+												{
+													// Update bookmark - IF it is not a working copy
+													[OCBookmarkManager.sharedBookmarkManager updateBookmark:self.bookmark];
+												}
 											}
 										}];
 									}
@@ -1753,14 +1809,9 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	return (davRequest);
 }
 
-- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
+- (NSProgress *)retrieveItemListAtLocation:(OCLocation *)location depth:(NSUInteger)depth options:(NSDictionary<OCConnectionOptionKey,id> *)options completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
 {
-	return ([self retrieveItemListAtPath:path depth:depth options:nil completionHandler:completionHandler]);
-}
-
-- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth options:(NSDictionary<OCConnectionOptionKey,id> *)options completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
-{
-	return ([self retrieveItemListAtPath:path depth:depth options:options resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+	return ([self retrieveItemListAtLocation:location depth:depth options:options resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 			if (event.error != nil)
 			{
 				completionHandler(event.error, nil);
@@ -1772,13 +1823,36 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		} userInfo:nil ephermalUserInfo:nil]]);
 }
 
-- (NSProgress *)retrieveItemListAtPath:(OCPath)path depth:(NSUInteger)depth options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
+- (NSProgress *)retrieveItemListAtLocation:(OCLocation *)location depth:(NSUInteger)depth options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
 	OCHTTPDAVRequest *davRequest;
 	NSProgress *progress = nil;
 	NSURL *endpointURL;
+	OCDriveID driveID = options[OCConnectionOptionDriveID];
+	OCPath path = location.path;
 
-	if ((endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil]) != nil)
+	if (path == nil)
+	{
+		[eventTarget handleError:OCError(OCErrorInsufficientParameters) type:OCEventTypeRetrieveItemList uuid:nil sender:self];
+		return (nil);
+	}
+
+	if (driveID == nil)
+	{
+		driveID = location.driveID;
+	}
+
+	if (self.useDriveAPI && (driveID == nil))
+	{
+		// Drive ID required for accounts with Drive API
+		OCLogWarning(@"retrieveItemListAtLocation: API call without drive ID in drive-based account");
+		[eventTarget handleError:OCError(OCErrorMissingDriveID) type:OCEventTypeRetrieveItemList uuid:nil sender:self];
+		return (nil);
+	}
+
+	if ((endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{
+		OCConnectionEndpointURLOptionDriveID : OCNullProtect(driveID)
+	    }]) != nil)
 	{
 		if ((davRequest = [self _propfindDAVRequestForPath:path endpointURL:endpointURL depth:depth]) != nil)
 		{
@@ -1797,7 +1871,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				@"path" : path,
 				@"depth" : @(depth),
 				@"endpointURL" : endpointURL,
-				@"options" : ((options != nil) ? options : [NSNull null])
+				@"driveID" : OCNullProtect(driveID),
+				@"options" : OCNullProtect(options)
 			};
 			davRequest.eventTarget = eventTarget;
 			davRequest.downloadRequest = YES;
@@ -1884,6 +1959,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	NSDictionary<OCConnectionOptionKey,id> *options = [request.userInfo[@"options"] isKindOfClass:[NSDictionary class]] ? request.userInfo[@"options"] : nil;
 	OCEventType eventType = OCEventTypeRetrieveItemList;
 	NSURL *responseDestinationURL = options[OCConnectionOptionResponseDestinationURL];
+	OCDriveID driveID = OCNullResolved(request.userInfo[@"driveID"]);
 
 	if ((options!=nil) && (options[@"alternativeEventType"]!=nil))
 	{
@@ -1926,6 +2002,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			}
 		}
 
+		event.driveID = driveID;
+
 		if ((event.error == nil) && (responseDestinationURL == nil))
 		{
 			NSArray <NSError *> *errors = nil;
@@ -1933,7 +2011,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 			// OCLogDebug(@"Error: %@ - Response: %@", OCLogPrivate(error), ((request.downloadRequest && (request.downloadedFileURL != nil)) ? OCLogPrivate([NSString stringWithContentsOfURL:request.downloadedFileURL encoding:NSUTF8StringEncoding error:NULL]) : nil));
 
-			items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:_usersByUserID withErrors:&errors];
+			items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:_usersByUserID driveID:driveID withErrors:&errors];
 
 			if ((items.count == 0) && (errors.count > 0) && (event.error == nil))
 			{
@@ -2078,7 +2156,15 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		return(nil);
 	}
 
-	if ((downloadURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:item.path]) != nil)
+	if (self.useDriveAPI && (item.driveID == nil))
+	{
+		// Drive ID required for accounts with Drive API
+		OCLogWarning(@"downloadItem: API call without drive ID in drive-based account");
+		[eventTarget handleError:OCError(OCErrorMissingDriveID) type:OCEventTypeDownload uuid:nil sender:self];
+		return (nil);
+	}
+
+	if ((downloadURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(item.driveID) }] URLByAppendingPathComponent:item.path]) != nil)
 	{
 		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:downloadURL];
 
@@ -2186,6 +2272,20 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 						}
 						break;
 
+						case OCHTTPStatusCodeTOO_EARLY: {
+							NSString *itemName = OCTypedCast(request.userInfo[@"item"], OCItem).name;
+
+							if (itemName == nil)
+							{
+								itemName = OCLocalized(@"File");
+							}
+
+							event.error = OCErrorWithDescriptionFromError(OCErrorItemProcessing, OCLocalizedFormat(@"{{itemName}} is currently processed on the server and can't be downloaded until it finishes processing.", @{
+								@"itemName" : itemName
+							}), request.httpResponse.status.error);
+						}
+						break;
+
 						case OCHTTPStatusCodeFORBIDDEN: {
 							NSError *davError;
 
@@ -2224,7 +2324,15 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	OCProgress *requestProgress = nil;
 	NSURL *itemURL;
 
-	if ((itemURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:item.path]) != nil)
+	if (self.useDriveAPI && (item.driveID == nil))
+	{
+		// Drive ID required for accounts with Drive API
+		OCLogWarning(@"updateItem: API call without drive ID in drive-based account");
+		[eventTarget handleError:OCError(OCErrorMissingDriveID) type:OCEventTypeUpdate uuid:nil sender:self];
+		return (nil);
+	}
+
+	if ((itemURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(item.driveID) }] URLByAppendingPathComponent:item.path]) != nil)
 	{
 		OCXMLNode *setPropNode = [OCXMLNode elementWithName:@"D:prop"];
 		OCXMLNode *removePropNode = [OCXMLNode elementWithName:@"D:prop"];
@@ -2324,7 +2432,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 - (void)_handleUpdateItemResult:(OCHTTPRequest *)request error:(NSError *)error
 {
 	OCEvent *event;
-	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+	NSURL *endpointURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(OCTypedCast(request.userInfo[@"item"], OCItem).driveID) }];
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpdate uuid:request.identifier attributes:nil]) != nil)
 	{
@@ -2400,9 +2508,17 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		return(nil);
 	}
 
+	if (self.useDriveAPI && (parentItem.driveID == nil))
+	{
+		// Drive ID required for accounts with Drive API
+		OCLogWarning(@"createFolder: API call without drive ID in drive-based account");
+		[eventTarget handleError:OCError(OCErrorMissingDriveID) type:OCEventTypeCreateFolder uuid:nil sender:self];
+		return (nil);
+	}
+
 	fullFolderPath =  [parentItem.path pathForSubdirectoryWithName:folderName];
 
-	if ((createFolderURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:fullFolderPath]) != nil)
+	if ((createFolderURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(parentItem.driveID) }] URLByAppendingPathComponent:fullFolderPath]) != nil)
 	{
 		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:createFolderURL];
 
@@ -2463,7 +2579,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				postEvent = NO; // Wait until all info on the new item has been received
 
 				// Retrieve all details on the new folder (OC server returns an "Oc-Fileid" in the HTTP headers, but we really need the full set here)
-				[self retrieveItemListAtPath:fullFolderPath depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+				[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:parentItem.driveID path:fullFolderPath] depth:0 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 					OCItem *newFolderItem = items.firstObject;
 
 					newFolderItem.parentFileID = parentItem.fileID;
@@ -2566,11 +2682,20 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 {
 	OCProgress *requestProgress = nil;
 	NSURL *sourceItemURL, *destinationURL;
-	NSURL *webDAVRootURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
+	NSURL *sourceWebDAVRootURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(item.driveID) }];
+	NSURL *destinationWebDAVRootURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(parentItem.driveID) }];
 
-	if ((sourceItemURL = [webDAVRootURL URLByAppendingPathComponent:item.path]) != nil)
+	if (self.useDriveAPI && ((item.driveID == nil) || (parentItem.driveID == nil)))
 	{
-		if ((destinationURL = [[webDAVRootURL URLByAppendingPathComponent:parentItem.path] URLByAppendingPathComponent:newName]) != nil)
+		// Drive ID required for accounts with Drive API
+		OCLogWarning(@"copyMoveItem: API call without drive ID in drive-based account");
+		[eventTarget handleError:OCError(OCErrorMissingDriveID) type:eventType uuid:nil sender:self];
+		return (nil);
+	}
+
+	if ((sourceItemURL = [sourceWebDAVRootURL URLByAppendingPathComponent:item.path]) != nil)
+	{
+		if ((destinationURL = [[destinationWebDAVRootURL URLByAppendingPathComponent:parentItem.path] URLByAppendingPathComponent:newName]) != nil)
 		{
 			OCHTTPRequest *request = [OCHTTPRequest requestWithURL:sourceItemURL];
 
@@ -2659,7 +2784,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				postEvent = NO; // Wait until all info on the new item has been received
 
 				// Retrieve all details on the new item
-				[self retrieveItemListAtPath:newFullPath depth:0 completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
+				[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:parentItem.driveID path:newFullPath] depth:0 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
 					OCItem *newItem = items.firstObject;
 
 					newItem.parentFileID = parentItem.fileID;
@@ -2725,7 +2850,15 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	OCProgress *requestProgress = nil;
 	NSURL *deleteItemURL;
 
-	if ((deleteItemURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil] URLByAppendingPathComponent:item.path]) != nil)
+	if (self.useDriveAPI && (item.driveID == nil))
+	{
+		// Drive ID required for accounts with Drive API
+		OCLogWarning(@"deleteItem: API call without drive ID in drive-based account");
+		[eventTarget handleError:OCError(OCErrorMissingDriveID) type:OCEventTypeDelete uuid:nil sender:self];
+		return (nil);
+	}
+
+	if ((deleteItemURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(item.driveID) }] URLByAppendingPathComponent:item.path]) != nil)
 	{
 		OCHTTPRequest *request = [OCHTTPRequest requestWithURL:deleteItemURL];
 
@@ -2884,62 +3017,47 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		return (nil);
 	}
 
+	if (self.useDriveAPI && (item.driveID == nil))
+	{
+		// Drive ID required for accounts with Drive API
+		OCLogWarning(@"retrieveThumbnail: API call without drive ID in drive-based account");
+		[eventTarget handleError:OCError(OCErrorMissingDriveID) type:OCEventTypeRetrieveThumbnail uuid:nil sender:self];
+		return (nil);
+	}
+
 	if (item.type != OCItemTypeCollection)
 	{
-		if (self.supportsPreviewAPI)
+		// Preview API (OC 10.0.9+)
+		url = [self URLForEndpoint:OCConnectionEndpointIDPreview options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(item.driveID) }];
+
+		if (url == nil)
 		{
-			// Preview API (OC 10.0.9+)
-			url = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:nil];
-
-			if (url == nil)
-			{
-				// WebDAV root could not be generated (likely due to lack of username)
-				[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveThumbnail uuid:nil sender:self];
-				return (nil);
-			}
-
-			// Add path
-			if (item.path != nil)
-			{
-				url = [url URLByAppendingPathComponent:item.path];
-			}
-
-			// Compose request
-			request = [OCHTTPRequest requestWithURL:url];
-
-			request.groupID = item.path.stringByDeletingLastPathComponent;
-			request.priority = NSURLSessionTaskPriorityDefault;
-
-			request.parameters = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-				@(size.width).stringValue, 	@"x",
-				@(size.height).stringValue,	@"y",
-				item.eTag, 			@"c",
-				@"1",				@"a", // Request resize respecting aspect ratio 
-				@"1", 				@"preview",
-			nil];
+			// WebDAV root could not be generated (likely due to lack of username)
+			[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveThumbnail uuid:nil sender:self];
+			return (nil);
 		}
-		else
+
+		// Add path
+		if (item.path != nil)
 		{
-			// Thumbnail API (OC < 10.0.9)
-			url = [self URLForEndpoint:OCConnectionEndpointIDThumbnail options:nil];
-
-			if (url == nil)
-			{
-				// WebDAV root could not be generated (likely due to lack of username)
-				[eventTarget handleError:OCError(OCErrorInternal) type:OCEventTypeRetrieveThumbnail uuid:nil sender:self];
-				return (nil);
-			}
-
-			url = [url URLByAppendingPathComponent:[NSString stringWithFormat:@"%d/%d/%@", (int)size.height, (int)size.width, item.path]];
-
-			// Compose request
-			request = [OCHTTPRequest requestWithURL:url];
-			/*
-
-			// Not supported for OC < 10.0.9
-			error = [NSError errorWithOCError:OCErrorFeatureNotSupportedByServer];
-			*/
+			url = [url URLByAppendingPathComponent:item.path];
 		}
+
+		// Compose request
+		request = [OCHTTPRequest requestWithURL:url];
+
+		request.groupID = item.path.stringByDeletingLastPathComponent;
+		request.priority = NSURLSessionTaskPriorityDefault;
+
+		request.parameters = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+			@(size.width).stringValue, 	@"x",
+			@(size.height).stringValue,	@"y",
+			item.eTag, 			@"c",
+			@"1",				@"a", // Request resize respecting aspect ratio 
+			@"1", 				@"preview",
+
+			@"0",				@"scalingup", // do not scale up images (new in ocis)
+		nil];
 	}
 	else
 	{
@@ -2999,25 +3117,40 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		{
 			if (request.httpResponse.status.isSuccess)
 			{
-				OCItemThumbnail *thumbnail = [OCItemThumbnail new];
-				OCItemVersionIdentifier *itemVersionIdentifier = request.userInfo[OCEventUserInfoKeyItemVersionIdentifier];
-				CGSize maximumSize = ((NSValue *)request.userInfo[@"maximumSize"]).CGSizeValue;
-
-				thumbnail.mimeType = request.httpResponse.headerFields[OCHTTPHeaderFieldNameContentType];
-
-				if ((request.httpResponse.bodyURL != nil) && !request.httpResponse.bodyURLIsTemporary)
+				if (![request.httpResponse.contentType hasPrefix:@"image/"])
 				{
-					thumbnail.url = request.downloadedFileURL;
+					// Do not accept anything but images as thumbnail (https://github.com/owncloud/ocis/issues/3558)
+					event.error = OCError(OCErrorFeatureNotSupportedForItem);
 				}
 				else
 				{
-					thumbnail.data = request.httpResponse.bodyData;
+					OCItemThumbnail *thumbnail = [OCItemThumbnail new];
+					OCItemVersionIdentifier *itemVersionIdentifier = request.userInfo[OCEventUserInfoKeyItemVersionIdentifier];
+					CGSize maximumSize = ((NSValue *)request.userInfo[@"maximumSize"]).CGSizeValue;
+
+					thumbnail.mimeType = request.httpResponse.contentType;
+
+					if ((request.httpResponse.bodyURL != nil) && !request.httpResponse.bodyURLIsTemporary)
+					{
+						thumbnail.url = request.downloadedFileURL;
+					}
+					else
+					{
+						thumbnail.data = request.httpResponse.bodyData;
+					}
+
+					thumbnail.itemVersionIdentifier = itemVersionIdentifier;
+					thumbnail.maxPixelSize = maximumSize;
+
+					thumbnail.fillMode = OCImageFillModeScaleToFit;
+
+					event.result = thumbnail;
 				}
-
-				thumbnail.itemVersionIdentifier = itemVersionIdentifier;
-				thumbnail.maximumSizeInPixels = maximumSize;
-
-				event.result = thumbnail;
+			}
+			else if (request.httpResponse.status.code == OCHTTPStatusCodeNOT_FOUND)
+			{
+				// No thumbnail available for item
+				event.error = OCError(OCErrorFeatureNotSupportedForItem);
 			}
 			else
 			{
@@ -3113,7 +3246,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 				if (endpointURL != nil)
 				{
-					if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID withErrors:&errors]) != nil)
+					if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID driveID:nil withErrors:&errors]) != nil)
 					{
 						event.result = items;
 					}
@@ -3195,13 +3328,19 @@ OCConnectionEndpointID OCConnectionEndpointIDUser = @"endpoint-user";
 OCConnectionEndpointID OCConnectionEndpointIDWebDAV = @"endpoint-webdav";
 OCConnectionEndpointID OCConnectionEndpointIDWebDAVMeta = @"endpoint-webdav-meta";
 OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot = @"endpoint-webdav-root";
-OCConnectionEndpointID OCConnectionEndpointIDThumbnail = @"endpoint-thumbnail";
+OCConnectionEndpointID OCConnectionEndpointIDPreview = @"endpoint-preview";
 OCConnectionEndpointID OCConnectionEndpointIDStatus = @"endpoint-status";
 OCConnectionEndpointID OCConnectionEndpointIDShares = @"endpoint-shares";
 OCConnectionEndpointID OCConnectionEndpointIDRemoteShares = @"endpoint-remote-shares";
 OCConnectionEndpointID OCConnectionEndpointIDRecipients = @"endpoint-recipients";
+OCConnectionEndpointID OCConnectionEndpointIDAvatars = @"endpoint-avatars";
+OCConnectionEndpointID OCConnectionEndpointIDAppProviderList = @"app-provider-list";
+OCConnectionEndpointID OCConnectionEndpointIDAppProviderOpen = @"app-provider-open";
+OCConnectionEndpointID OCConnectionEndpointIDAppProviderOpenWeb = @"app-provider-open-web";
+OCConnectionEndpointID OCConnectionEndpointIDAppProviderNew = @"app-provider-new";
 
 OCConnectionEndpointURLOption OCConnectionEndpointURLOptionWellKnownSubPath = @"well-known-subpath";
+OCConnectionEndpointURLOption OCConnectionEndpointURLOptionDriveID = @"drive-id";
 
 OCClassSettingsIdentifier OCClassSettingsIdentifierConnection = @"connection";
 
@@ -3209,6 +3348,7 @@ OCClassSettingsKey OCConnectionPreferredAuthenticationMethodIDs = @"preferred-au
 OCClassSettingsKey OCConnectionAllowedAuthenticationMethodIDs = @"allowed-authentication-methods";
 OCClassSettingsKey OCConnectionCertificateExtendedValidationRule = @"certificate-extended-validation-rule";
 OCClassSettingsKey OCConnectionRenewedCertificateAcceptanceRule = @"renewed-certificate-acceptance-rule";
+OCClassSettingsKey OCConnectionAssociatedCertificatesTrackingRule = @"associated-certificates-tracking-rule";
 OCClassSettingsKey OCConnectionMinimumVersionRequired = @"minimum-server-version";
 OCClassSettingsKey OCConnectionAllowBackgroundURLSessions = @"allow-background-url-sessions";
 OCClassSettingsKey OCConnectionForceBackgroundURLSessions = @"force-background-url-sessions";
@@ -3230,6 +3370,7 @@ OCConnectionOptionKey OCConnectionOptionTemporarySegmentFolderURLKey = @"tempora
 OCConnectionOptionKey OCConnectionOptionForceReplaceKey = @"force-replace";
 OCConnectionOptionKey OCConnectionOptionResponseDestinationURL = @"response-destination-url";
 OCConnectionOptionKey OCConnectionOptionResponseStreamHandler = @"response-stream-handler";
+OCConnectionOptionKey OCConnectionOptionDriveID = @"drive-id";
 
 OCConnectionSetupOptionKey OCConnectionSetupOptionUserName = @"user-name";
 

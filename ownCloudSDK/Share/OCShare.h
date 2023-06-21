@@ -18,7 +18,7 @@
 
 #import <Foundation/Foundation.h>
 #import "OCUser.h"
-#import "OCRecipient.h"
+#import "OCIdentity.h"
 
 typedef NS_ENUM(NSInteger, OCShareType)
 {
@@ -46,6 +46,7 @@ typedef NS_OPTIONS(NSInteger, OCShareTypesMask)
 typedef NS_OPTIONS(NSInteger, OCSharePermissionsMask)
 {
 	OCSharePermissionsMaskNone    	= 0,
+	OCSharePermissionsMaskInternal 	= 0,		// 0
 	OCSharePermissionsMaskRead    	= (1<<0),	// 1
 	OCSharePermissionsMaskUpdate  	= (1<<1),	// 2
 	OCSharePermissionsMaskCreate  	= (1<<2),	// 4
@@ -64,6 +65,13 @@ typedef NS_ENUM(NSUInteger, OCShareScope)
 	OCShareScopeSubItems			//!< Return shares for items contained in the provided (container) item
 };
 
+typedef NS_ENUM(NSUInteger, OCShareCategory)
+{
+	OCShareCategoryUnknown,
+	OCShareCategoryWithMe,
+	OCShareCategoryByMe
+};
+
 typedef NSString* OCShareOptionKey NS_TYPED_ENUM;
 typedef NSDictionary<OCShareOptionKey,id>* OCShareOptions;
 
@@ -77,12 +85,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCShare : NSObject <NSSecureCoding, NSCopying>
 
-@property(nullable,strong) OCShareID identifier; //!< Server-issued unique identifier of the share
+@property(nullable,strong) OCShareID identifier; //!< Server-issued unique identifier of the share (server-provided instances are guaranteed to have an ID, locally created ones do typically NOT have an ID)
 
 @property(assign) OCShareType type; //!< The type of share (i.e. public or user)
+@property(assign) OCShareCategory category; //!< Category of share (with me/by me)
 
-@property(strong) OCPath itemPath; //!< Path of the shared item
-@property(assign) OCItemType itemType; //!< Type of the shared item
+@property(strong,nonatomic) OCLocation *itemLocation; //!< Location of the shared item
+@property(strong,nullable) OCFileID itemFileID; //!< File ID of item
+@property(assign) OCLocationType itemType; //!< Type of the shared item
 @property(nullable,strong) OCUser *itemOwner; //!< Owner of the item
 @property(nullable,strong) NSString *itemMIMEType; //!< MIME-Type of the shared item
 
@@ -105,40 +115,48 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) NSString *password; //!< Password of the share (not always available)
 
 @property(nullable,strong) OCUser *owner; //!< Owner of the share
-@property(nullable,strong) OCRecipient *recipient; //!< Recipient of the share
+@property(nullable,strong) OCIdentity *recipient; //!< Recipient of the share
 
 @property(nullable,strong) NSString *mountPoint; //!< Mount point of federated share (if accepted, itemPath contains a sanitized path to the location inside the user's account)
 @property(nullable,strong) OCShareState state; //!< Local share is pending, accepted or rejected
 @property(nullable,strong) NSNumber *accepted; //!< Federated share has been accepted
+
+@property(nullable,readonly,nonatomic) OCShareState effectiveState; //!< Unified state information for both remote and local shares
+
+@property(nullable,strong) NSArray<OCShare *> *otherItemShares; //!< Other shares targeting the same item (! not serialized !)
 
 #pragma mark - Convenience constructors
 /**
  Creates an object that can be used to create a share on the server.
 
  @param recipient The recipient representing the user or group to share with.
- @param path The path of the item to share. Can be retrieved from OCItem.path.
+ @param location The location of the item to share. Can be retrieved from OCItem.location.
  @param permissions Bitmask of permissions.
  @param expirationDate Optional expiration date.
  @return An OCShare instance configured with the respective options.
  */
-+ (instancetype)shareWithRecipient:(OCRecipient *)recipient path:(OCPath)path permissions:(OCSharePermissionsMask)permissions expiration:(nullable NSDate *)expirationDate;
++ (instancetype)shareWithRecipient:(OCIdentity *)recipient location:(OCLocation *)location permissions:(OCSharePermissionsMask)permissions expiration:(nullable NSDate *)expirationDate;
 
 /**
  Creates an object that can be used to create a public link.
 
- @param path The path of the item to share. Can be retrieved from OCItem.path.
+ @param location The location of the item to share. Can be retrieved from OCItem.location.
  @param name Optional name for the public link.
  @param permissions Bitmask of permissions: OCSharePermissionsMaskRead for "Download + View". OCSharePermissionsMaskCreate for "Upload" (specify only this for a folder to create a file drop). OCSharePermissionsMaskUpdate|OCSharePermissionsMaskDelete to also allow changes / deletion of items.
  @param password Optional password to control access.
  @param expirationDate Optional expiration date.
  @return An OCShare instance configured with the respective options.
  */
-+ (instancetype)shareWithPublicLinkToPath:(OCPath)path linkName:(nullable NSString *)name permissions:(OCSharePermissionsMask)permissions password:(nullable NSString *)password expiration:(nullable NSDate *)expirationDate;
++ (instancetype)shareWithPublicLinkToLocation:(OCLocation *)location linkName:(nullable NSString *)name permissions:(OCSharePermissionsMask)permissions password:(nullable NSString *)password expiration:(nullable NSDate *)expirationDate;
+
+#pragma mark - Conversions
++ (OCShareTypesMask)maskForType:(OCShareType)type; //!< Converts share types into mask values.
++ (OCShareType)typeForMask:(OCShareTypesMask)mask; //!< Converts single-type mask values into types. Multi-type masks are returned as OCShareTypeUnknown
 
 @end
 
 extern OCShareState OCShareStateAccepted;
 extern OCShareState OCShareStatePending;
-extern OCShareState OCShareStateRejected;
+extern OCShareState OCShareStateDeclined;
 
 NS_ASSUME_NONNULL_END

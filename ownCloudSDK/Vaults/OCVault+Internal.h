@@ -27,12 +27,17 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)compactInContext:(nullable void(^)(void(^blockToRunInContext)(OCSyncAnchor syncAnchor, void(^updateHandler)(NSSet<OCLocalID> *updateDirectoryLocalIDs))))runInContext withSelector:(OCVaultCompactSelector)selector completionHandler:(nullable OCCompletionHandler)completionHandler; //!< Compacts the vault's contents using the selector to determine which items' files to delete. If the vault is used by an online core, make sure to pass a block for runInContext that runs the passed block inside -[OCCore performProtectedSyncBlock:..] to guarantee integrity.
 
 #pragma mark - File Provider
+- (void)signalDriveChangesWithAdditions:(NSArray <OCDrive *> *)addedDrives updates:(NSArray<OCDrive *> *)updates removals:(NSArray<OCDrive *> *)removedDrives;
 - (void)signalChangesForItems:(NSArray <OCItem *> *)changedItems;
-- (void)signalChangesInDirectoriesWithLocalIDs:(NSSet <OCLocalID> *)changedDirectoriesLocalIDs;
+
+- (void)signalChangesInDirectoriesWithVFSItemIDs:(NSSet <OCVFSItemID> *)changedDirectoriesVFSItemIDs;
 #if OC_FEATURE_AVAILABLE_FILEPROVIDER
-- (void)signalEnumeratorForContainerItemIdentifier:(NSFileProviderItemIdentifier)changedDirectoryLocalID;
+- (void)signalEnumeratorForContainerItemIdentifier:(OCVFSItemID)changedDirectoryLocalID;
 #endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 
 @end
+
+extern NSNotificationName OCVaultDetachedDrivesListChanged; //!< Notification sent when an OCVault's .detachedDrives list has changed. Sent from the thread that modified the list in KVO. The object is the OCVault.
+extern NSNotificationName OCVaultSubscribedDrivesListChanged; //!< Notification sent when an OCVault's .subscribedDrivesList has changed. Sent from the thread that modified the list in KVO. The object is the OCVault.
 
 NS_ASSUME_NONNULL_END
