@@ -41,6 +41,7 @@
 #import "NSArray+OCFiltering.h"
 #import "GADrive.h"
 #import "GADriveItem.h"
+#import "NSURL+OCURLNormalization.h"
 
 @implementation OCVault
 
@@ -1115,10 +1116,10 @@
 + (nullable OCVaultLocation *)locationForURL:(NSURL *)url
 {
 	OCVaultLocation *location = nil;
-	NSString *urlPath = url.URLByStandardizingPath.path;
-	NSString *storageRootPath = OCVault.storageRootURL.path.normalizedDirectoryPath;
+	NSString *urlPath = url.standardizedFileURLPath;
+	NSString *storageRootPath = OCVault.storageRootURL.standardizedFileURLPath.normalizedDirectoryPath;
 
-	if (![urlPath hasPrefix:storageRootPath])
+	if (![url isIdenticalOrChildOf:OCVault.storageRootURL])
 	{
 		// URL not in file provider's storage root path
 		return (nil);

@@ -111,4 +111,32 @@
 	return ([otherURL.scheme isEqual:self.scheme] && [otherURL.host isEqual:self.host] && [otherURL.effectivePort isEqual:self.effectivePort]);
 }
 
+- (NSString *)standardizedFileURLPath
+{
+	NSURL *url = self.URLByStandardizingPath;
+
+	if (url.isFileURL)
+	{
+		NSString *path = url.path;
+
+		if ([path hasPrefix:@"/private/"])
+		{
+			// Remove leading "/private/" - URLByStandardizingPath will only do this for files that *exist*, so not for f.ex. placeholders that *don't* exist
+			path = [path substringFromIndex:8];
+		}
+
+		return (path);
+	}
+
+	return (nil);
+}
+
+- (BOOL)isIdenticalOrChildOf:(NSURL *)parentFileURL
+{
+	NSString *parentPath = parentFileURL.standardizedFileURLPath;
+	NSString *path = self.standardizedFileURLPath;
+
+	return ([path hasPrefix:parentPath]);
+}
+
 @end

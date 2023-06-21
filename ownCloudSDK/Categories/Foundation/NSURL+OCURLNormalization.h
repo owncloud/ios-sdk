@@ -28,6 +28,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)hasSameSchemeHostAndPortAs:(NSURL *)otherURL;
 
+@property(strong,nullable,readonly,nonatomic) NSString *standardizedFileURLPath;
+- (BOOL)isIdenticalOrChildOf:(NSURL *)parentFileURL;
+
 @end
 
 NS_ASSUME_NONNULL_END
