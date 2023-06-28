@@ -28,13 +28,7 @@
 {
 	return (
 		// Require version 1.1.X
-		[self.version hasPrefix:@"1.1."] &&
-
-		// Require open_web_url
-		(self.openWebURLPath != nil) &&
-
-		// Require new_url
-		(self.createURLPath != nil)
+		[self.version hasPrefix:@"1.1."]
 	);
 }
 
@@ -130,6 +124,27 @@
 		_types = types;
 		_appList = newAppList;
 	}
+}
+
+#pragma mark - Feature support
+- (BOOL)supportsOpen
+{
+	return (self.supportsOpenDirect || self.supportsOpenInWeb);
+}
+
+- (BOOL)supportsOpenDirect
+{
+	return (_openURLPath != nil);
+}
+
+- (BOOL)supportsOpenInWeb
+{
+	return (_openWebURLPath != nil);
+}
+
+- (BOOL)supportsCreateDocument
+{
+	return (_createURLPath != nil);
 }
 
 #pragma mark - Description

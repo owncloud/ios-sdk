@@ -39,6 +39,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nullable) NSString *openWebURLPath; //!< relative URL to open a file using web (GET only)
 @property(strong,nullable) NSString *createURLPath; //!< relative URL to create a new file (newURL, needs to be named createURL due to compiler-enforced Cocoa naming conventions)
 
+@property(readonly,nonatomic) BOOL supportsOpen;
+@property(readonly,nonatomic) BOOL supportsOpenDirect;
+@property(readonly,nonatomic) BOOL supportsOpenInWeb;
+@property(readonly,nonatomic) BOOL supportsCreateDocument;
+
 @property(strong,nullable,nonatomic) OCAppProviderAppList appList; //!< Raw app list as returned from the server. Setting this property parses the list and generates OCAppProviderApp and OCAppProviderFileType instances
 
 @property(strong,nullable,readonly) NSArray<OCAppProviderApp *> *apps; //!< OCAppProviderApp instances created from the raw .appList
