@@ -327,11 +327,18 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		request.method = OCHTTPMethodPOST;
 
 		// Compose header and body
+		OCTUSMutableMetadata tusMetaData = NSMutableDictionary.new;
+
+		tusMetaData[OCTUSMetadataKeyFileName] = tusJob.fileName;
+		if (tusJob.fileChecksum != nil) {
+			tusMetaData[OCTUSMetadataKeyChecksum] = [NSString stringWithFormat:@"%@ %@", tusJob.fileChecksum.algorithmIdentifier, tusJob.fileChecksum.checksum];
+		}
+		if (tusJob.fileModDate != nil) {
+			tusMetaData[OCTUSMetadataKeyMTime] = [NSString stringWithFormat:@"%llu", (UInt64)floor(tusJob.fileModDate.timeIntervalSince1970)];
+		}
+
 		reqTusHeader.uploadLength = tusJob.fileSize;
-		reqTusHeader.uploadMetadata = @{
-			OCTUSMetadataKeyFileName : tusJob.fileName,
-			OCTUSMetadataKeyChecksum : [NSString stringWithFormat:@"%@ %@", tusJob.fileChecksum.algorithmIdentifier, tusJob.fileChecksum.checksum]
-		};
+		reqTusHeader.uploadMetadata = tusMetaData;
 
 		if (useCreationWithUpload && // server supports creation-with-upload
 		    (tusJob.fileSize != nil) && // file size is known
