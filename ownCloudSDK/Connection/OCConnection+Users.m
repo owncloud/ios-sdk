@@ -19,6 +19,7 @@
 #import "OCConnection.h"
 #import "OCUser.h"
 #import "NSError+OCError.h"
+#import "OCMacros.h"
 
 @implementation OCConnection (Users)
 
@@ -56,10 +57,7 @@
 
 			if ((userInfoReturnDict = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
 			{
-				if ([userInfoReturnDict isKindOfClass:[NSDictionary class]])
-				{
-					userInfoDict = userInfoReturnDict[@"ocs"][@"data"];
-				}
+				userInfoDict = OCTypedCast(OCTypedCast(OCTypedCast(userInfoReturnDict, NSDictionary)[@"ocs"], NSDictionary)[@"data"], NSDictionary);
 			}
 
 			if (userInfoDict != nil)
