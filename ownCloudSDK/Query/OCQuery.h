@@ -59,6 +59,9 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 - (void)query:(OCQuery *)query failedWithError:(NSError *)error; //!< Notifies the delegate that the query failed with an error (f.ex. network/server unreachable) and was removed from the core.
 - (void)queryHasChangesAvailable:(OCQuery *)query; //!< Notifies the delegate that changes are available and can be collected via -requestChangeSetWithFlags:completionHandler:
 
+@optional
+- (void)queryHasChangedState:(OCQuery *)query; //!< Notifies the delegate that the state of the query has changed
+
 @end
 
 #pragma mark - Query
@@ -85,6 +88,7 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 
 	OCSyncAnchor _lastMergeSyncAnchor; // Sync anchor at the time of the last call to -mergeItemsToFullQueryResults:
 
+	NSInteger _activeUpdateCounter;
 	BOOL _needsRecomputation;
 }
 
@@ -125,7 +129,7 @@ typedef void(^OCQueryCustomSource)(OCCore *core, OCQuery *query, OCQueryCustomRe
 - (void)updateWithAddedItems:(nullable OCCoreItemList *)addedItems updatedItems:(nullable OCCoreItemList *)updatedItems removedItems:(nullable OCCoreItemList *)removedItems; //!< OCQuery subclasses can provide their own custom updating logic for custom queries (.isCustom = YES) here. The default implementation uses .inputFilter in combination with -modifyFullQueryResults: to keep the internal full query results up-to-date.
 
 #pragma mark - State
-@property(assign) OCQueryState state; //!< Current state of the query
+@property(nonatomic,assign) OCQueryState state; //!< Current state of the query
 @property(strong,nullable) OCCancelAction *stopAction; //!< Cancel action thats invoked when the query is stopped
 
 #pragma mark - Sorting

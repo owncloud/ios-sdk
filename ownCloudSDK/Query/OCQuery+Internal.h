@@ -37,6 +37,10 @@
 - (OCDataSourceState)_dataSourceState;
 
 #pragma mark - Needs recomputation
+- (void)performUpdates:(dispatch_block_t)updates;
+- (void)beginUpdates;
+- (void)endUpdates;
+
 - (void)setNeedsRecomputation;
 
 #pragma mark - Queue

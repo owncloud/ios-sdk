@@ -338,6 +338,25 @@
 	[self setNeedsRecomputation];
 }
 
+#pragma mark - State
+- (void)setState:(OCQueryState)state
+{
+	if (_state != state)
+	{
+		_state = state;
+
+		if ((_state != OCQueryStateStarted) && (_state != OCQueryStateStopped))
+		{
+			[self setHasChangesAvailable:YES];
+		}
+
+		if ((_delegate != nil) && [_delegate respondsToSelector:@selector(queryHasChangedState:)])
+		{
+			[_delegate queryHasChangedState:self];
+		}
+	}
+}
+
 #pragma mark - Query results
 - (NSArray<OCItem *> *)queryResults
 {
@@ -373,9 +392,16 @@
 #pragma mark - Change Sets
 - (void)setHasChangesAvailable:(BOOL)hasChangesAvailable
 {
+	BOOL sendUpdates = NO;
+
 	@synchronized(self)
 	{
 		_hasChangesAvailable = YES;
+
+		if (_activeUpdateCounter == 0)
+		{
+			sendUpdates = YES;
+		}
 	}
 
 	if (_hasChangesAvailable && (_state != OCQueryStateStopped))

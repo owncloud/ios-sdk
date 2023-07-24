@@ -836,10 +836,10 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			[self queueBlock:^{
 				if ((error == nil) && (items != nil))
 				{
-					[query mergeItemsToFullQueryResults:items syncAnchor:syncAnchor];
-					query.state = OCQueryStateContentsFromCache;
-
-					[query setNeedsRecomputation];
+					[query performUpdates:^{
+						[query mergeItemsToFullQueryResults:items syncAnchor:syncAnchor];
+						query.state = OCQueryStateContentsFromCache;
+					}];
 				}
 
 				query.state = OCQueryStateIdle;
@@ -870,10 +870,12 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 			[self queueBlock:^{
 				if ((error == nil) && (initialItems != nil))
 				{
-					[query setFullQueryResults:[[NSMutableArray alloc] initWithArray:initialItems]];
-					query.state = OCQueryStateContentsFromCache;
+					[query performUpdates:^{
+						[query setFullQueryResults:[[NSMutableArray alloc] initWithArray:initialItems]];
+						query.state = OCQueryStateContentsFromCache;
 
-					[query setNeedsRecomputation];
+						[query setNeedsRecomputation];
+					}];
 				}
 				else
 				{

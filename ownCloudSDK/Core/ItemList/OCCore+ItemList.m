@@ -1205,13 +1205,15 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 			    (queryResultsChangedItems!=nil) &&
 			    (queryResultsChangedItems.count > 0))
 			{
-				query.state = OCQueryStateWaitingForServerReply;
+				[query performUpdates:^{
+					query.state = OCQueryStateWaitingForServerReply;
 
-				[query mergeItemsToFullQueryResults:queryResultsChangedItems syncAnchor:querySyncAnchor];
+					[query mergeItemsToFullQueryResults:queryResultsChangedItems syncAnchor:querySyncAnchor];
 
-				query.state = OCQueryStateIdle;
+					query.state = OCQueryStateIdle;
 
-				[query setNeedsRecomputation];
+					[query setNeedsRecomputation];
+				}];
 			}
 		}
 
@@ -1219,9 +1221,11 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 		{
 			@synchronized(query) // Protect full query results against modification (-setFullQueryResults: is protected using @synchronized(query), too)
 			{
-				query.state = setQueryState;
-				query.rootItem = queryRootItem;
-				query.fullQueryResults = useQueryResults;
+				[query performUpdates:^{
+					query.state = setQueryState;
+					query.rootItem = queryRootItem;
+					query.fullQueryResults = useQueryResults;
+				}];
 			}
 		}
 	}
