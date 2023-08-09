@@ -102,7 +102,7 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				break;
 
 				case OCErrorAuthorizationNoMethodData:
-					unlocalizedString = @"Authorization failed because no secret data was set for the authentication method.";
+					unlocalizedString = @"Authorization failed because no authorization data was set for the authentication method.";
 				break;
 
 				case OCErrorAuthorizationMissingData:

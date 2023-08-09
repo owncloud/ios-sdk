@@ -226,7 +226,7 @@
 "Authorization failed because the server returned a redirect. Authorization may be successful when retried with the redirect URL." = "Authorization failed because the server returned a redirect. Authorization may be successful when retried with the redirect URL.";
 
 // OCErrorAuthorizationNoMethodData
-"Authorization failed because no secret data was set for the authentication method." = "Authorization failed because no secret data was set for the authentication method.";
+"Authorization failed because no authorization data was set for the authentication method." = "Authorization failed because no authorization data was set for the authentication method.";
 
 // OCErrorAuthorizationMissingData
 "Authorization failed because data was missing from the secret data for the authentication method." = "Authorization failed because data was missing from the secret data for the authentication method.";
