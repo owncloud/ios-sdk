@@ -298,7 +298,7 @@
 "The targeted item has not been found." = "The targeted item has not been found.";
 
 // OCErrorItemDestinationNotFound
-"The destination item has not been found." = "The destination item has not been found.";
+"The target location has not been found." = "The target location has not been found.";
 
 // OCErrorItemChanged
 "The targeted item has changed." = "The targeted item has changed.";

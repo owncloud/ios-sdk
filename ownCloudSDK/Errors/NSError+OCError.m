@@ -202,7 +202,7 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				break;
 
 				case OCErrorItemDestinationNotFound:
-					unlocalizedString = @"The destination item has not been found.";
+					unlocalizedString = @"The target location has not been found.";
 				break;
 
 				case OCErrorItemChanged:
