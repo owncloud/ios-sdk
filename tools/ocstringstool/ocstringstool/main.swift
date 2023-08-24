@@ -35,8 +35,9 @@ var argIdx = 2
 
 switch command {
 	case .normalize:
-		while argIdx+1 < CommandLine.argc {
-			commandNormalize(rootPath: arguments[argIdx])
+		while argIdx < CommandLine.argc {
+			let rootPath = arguments[argIdx]
+			commandNormalize(rootPath: rootPath)
 			argIdx += 1
 		}
 
@@ -48,6 +49,10 @@ switch command {
 //MARK: - Commands
 func commandNormalize(rootPath locRootPath: String) {
 	let locRootURL = NSURL(fileURLWithPath: locRootPath)
+	var convertedFilesCount = 0
+
+	print("[normalize] scanning \(locRootURL.path ?? locRootPath)")
+
 	if let enumerator = FileManager.default.enumerator(at: locRootURL as URL, includingPropertiesForKeys: [ .isDirectoryKey, .nameKey ]) {
 		for case let fileURL as URL in enumerator {
 			guard let resourceValues = try? fileURL.resourceValues(forKeys: [.isDirectoryKey, .nameKey]),
@@ -61,10 +66,14 @@ func commandNormalize(rootPath locRootPath: String) {
 
 			if !isDirectory, fileName.hasSuffix(".strings"),
 			   let strings = try? String(contentsOf: fileURL, usedEncoding: &encoding), encoding != .utf8 {
+				print("[normalize] converting \(fileURL.path(percentEncoded: false)) to UTF-8…")
 				if let utf8Data = strings.data(using: .utf8, allowLossyConversion: false) {
 					try? utf8Data.write(to: fileURL)
+					convertedFilesCount += 1
 				}
 			}
 		}
 	}
+
+	print("[normalize] converted \(convertedFilesCount) files in \(locRootURL.path ?? locRootPath)")
 }
