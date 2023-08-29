@@ -28,7 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 @property(copy,nullable) OCDataItemHasChildrenProvider dataItemHasChildrenProvider;
-@property(assign) BOOL trackItemVersions; //!< If YES, tracks versions internally, allowing to detect/track changes to the same object
+@property(assign,nonatomic) BOOL trackItemVersions; //!< If YES, tracks versions internally, allowing to detect/track changes to the same object
 
 - (instancetype)initWithItems:(nullable NSArray<id<OCDataItem>> *)items;
 

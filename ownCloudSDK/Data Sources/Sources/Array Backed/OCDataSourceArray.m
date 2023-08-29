@@ -17,6 +17,7 @@
  */
 
 #import "OCDataSourceArray.h"
+#import "OCLogger.h"
 
 @implementation OCDataSourceArray
 
@@ -112,6 +113,16 @@
 	}
 
 	[self setItems:items updated:updatedItems];
+}
+
+- (void)setTrackItemVersions:(BOOL)trackItemVersions
+{
+	_trackItemVersions = trackItemVersions;
+
+	if ((_itemsByReference.count > 0) && trackItemVersions)
+	{
+		OCLogWarning(@"Item version tracking enabled for already populated data source. The first change may not be detected because the internal versionsByReference table is not populated. To correctly use .trackItemVersions, create an empty data source, enable version tracking, then use -setVersionedItems: to fill it with items.");
+	}
 }
 
 - (nullable OCDataItemRecord *)recordForItemRef:(OCDataItemReference)itemRef error:(NSError * _Nullable * _Nullable)error
