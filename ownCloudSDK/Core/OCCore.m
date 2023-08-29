@@ -1750,7 +1750,6 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	}
 
 	[self queueBlock:^{
-		NSError *error = nil;
 		OCQuery *query = nil;
 		NSObject *trackingObject = weakTrackingObject;
 		__block BOOL isFirstInvocation = YES;
