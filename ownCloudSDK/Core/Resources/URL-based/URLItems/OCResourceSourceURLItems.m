@@ -64,7 +64,7 @@
 				}
 				else
 				{
-					OCWLogDebug(@"Cancelled request to %@ due to certificate issue (validation=%lu, error=%@)", request.url, validationResult, certificateValidationError);
+					OCWLogWarning(@"Cancelled request to %@ due to certificate issue (validation=%lu, error=%@)", request.url, validationResult, certificateValidationError);
 					proceedHandler(NO, nil);
 				}
 			};
