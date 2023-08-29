@@ -61,7 +61,7 @@
 	    ((driveItem = OCTypedCast(driveItemRequest.reference, GADriveItem)) != nil) &&
 	    ((url = driveItem.webDavUrl) != nil))
 	{
-		[super provideResourceForRequest:driveItemRequest url:url eTag:nil resultHandler:resultHandler];
+		[super provideResourceForRequest:driveItemRequest url:url eTag:nil customizeRequest:nil resultHandler:resultHandler];
 		return;
 	}
 

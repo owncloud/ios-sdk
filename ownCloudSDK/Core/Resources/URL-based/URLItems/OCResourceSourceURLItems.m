@@ -52,7 +52,26 @@
 	if (((urlItemRequest = OCTypedCast(request, OCResourceRequestURLItem)) != nil) &&
 	    ((url = OCTypedCast(urlItemRequest.reference, NSURL)) != nil))
 	{
-		[super provideResourceForRequest:urlItemRequest url:url eTag:nil resultHandler:resultHandler];
+		OCResourceSourceURLItems *weakSelf = self;
+
+		[super provideResourceForRequest:urlItemRequest url:url eTag:nil customizeRequest:^OCHTTPRequest * _Nonnull(OCHTTPRequest * _Nonnull httpRequest) {
+			// Cancel connection on certificate errors, do not prompt user (addresses https://github.com/owncloud/core/issues/40953#issuecomment-1695979509)
+			// Temporary solution, to be superseded by implementation of https://github.com/owncloud/ios-app/issues/1176
+			httpRequest.ephermalRequestCertificateProceedHandler = ^(OCHTTPRequest * _Nonnull request, OCCertificate * _Nonnull certificate, OCCertificateValidationResult validationResult, NSError * _Nonnull certificateValidationError, OCConnectionCertificateProceedHandler  _Nonnull proceedHandler) {
+				if ((validationResult == OCCertificateValidationResultPassed) || (validationResult == OCCertificateValidationResultUserAccepted))
+				{
+					proceedHandler(YES, certificateValidationError);
+				}
+				else
+				{
+					OCWLogDebug(@"Cancelled request to %@ due to certificate issue (validation=%lu, error=%@)", request.url, validationResult, certificateValidationError);
+					proceedHandler(NO, nil);
+				}
+			};
+
+			return (httpRequest);
+		} resultHandler:resultHandler];
+
 		return;
 	}
 

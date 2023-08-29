@@ -31,7 +31,7 @@
 	return (OCResourceSourcePriorityRemote);
 }
 
-- (void)provideResourceForRequest:(OCResourceRequest *)resourceRequest url:(NSURL *)url eTag:(OCFileETag)eTag resultHandler:(OCResourceSourceResultHandler)resultHandler
+- (void)provideResourceForRequest:(OCResourceRequest *)resourceRequest url:(NSURL *)url eTag:(nullable OCFileETag)eTag customizeRequest:(nullable OCResourceSourceURLHTTPRequestCustomizer)requestCustomizer resultHandler:(OCResourceSourceResultHandler)resultHandler
 {
 	if (url != nil)
 	{
@@ -52,6 +52,11 @@
 				[httpRequest addHeaderFields:@{
 					@"If-None-Match" : existingETag
 				}];
+			}
+
+			if (requestCustomizer != nil)
+			{
+				httpRequest = requestCustomizer(httpRequest);
 			}
 
 			progress = [connection sendRequest:httpRequest ephermalCompletionHandler:^(OCHTTPRequest * _Nonnull request, OCHTTPResponse * _Nullable response, NSError * _Nullable error) {

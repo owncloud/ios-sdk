@@ -21,9 +21,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef OCHTTPRequest * _Nonnull (^OCResourceSourceURLHTTPRequestCustomizer)(OCHTTPRequest *httpRequest);
+
 @interface OCResourceSourceURL : OCResourceSource
 
-- (void)provideResourceForRequest:(OCResourceRequest *)request url:(NSURL *)url eTag:(nullable OCFileETag)eTag resultHandler:(OCResourceSourceResultHandler)resultHandler;
+- (void)provideResourceForRequest:(OCResourceRequest *)request url:(NSURL *)url eTag:(nullable OCFileETag)eTag customizeRequest:(nullable OCResourceSourceURLHTTPRequestCustomizer)requestCustomizer resultHandler:(OCResourceSourceResultHandler)resultHandler;
 
 @end
 
