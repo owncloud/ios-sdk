@@ -1,0 +1,52 @@
+/* 
+  Localizable.strings
+  ownCloudSDK
+
+  Created by Felix Schwarz on 13.03.18.
+  Copyright © 2018 ownCloud GmbH. All rights reserved.
+*/
+
+/* OCCertificateViewController buttons */
+"Show ±" = "Показване ±";
+"Hide ±" = "Скриване ±";
+
+/* OCCertificateViewController section titles */
+"Subject" = "Относно";
+"Issuer" = "Издател";
+"Public Key" = "Публичен ключ";
+"Extensions" = "Разширения";
+"Fingerprints" = "Пръстови отпечатъци";
+
+"Validation Status" = "Статус на удостоверяване";
+"Hostname" = "Име на хост";
+"Validation Error" = "Грешка при проверката";
+"User-rejected." = "Отхвърлено от потребителя.";
+"Certificate has issues." = "В сертификата има проблеми.";
+"User-accepted." = "Приема се от потребителя.";
+"Auto-accepted." = "Автоматично приемане.";
+"Reason" = "Причина";
+"No issues found." = "Не бяха открити проблеми.";
+
+/* X.509 certificate fields */
+"businessCategory" = "Бизнес категория";
+"commonName" = "Общоприето име";
+"countryName" = "Държава";
+"jurisdictionCountryName" = "Юрисдикция на държавата";
+"jurisdictionLocalityName" = "Юрисдикция на населеното място";
+"jurisdictionStateOrProvinceName" = "Юрисдикция на държавата или провинцията";
+"localityName" = "Местонахождение";
+"organizationName" = "Организация";
+"organizationalUnitName" = "Подразделение на организацията";
+"stateOrProvinceName" = "Страна или област";
+
+"version" = "Версия";
+"serialNumber" = "Сериен номер";
+"signatureAlgorithm" = "Алгоритъм за подпис";
+
+"validFrom" = "Валидeн от";
+"validUntil" = "Валиден до";
+
+"keyBytes" = "Байтове на ключа";
+"keyExponent" = "Ключов степенен показател";
+"keyInformation" = "Информация";
+"keySizeInBits" = "Размер на ключа (в битове)";

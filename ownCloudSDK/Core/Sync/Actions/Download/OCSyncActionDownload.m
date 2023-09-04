@@ -99,6 +99,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 	if ((item = self.localItem) != nil)
 	{
 		item.lastUsed = [NSDate new];
+		[item updateSeed];
 
 		OCLogDebug(@"Preflight on item=%@\narchivedServerItem=%@\n- item.itemVersionIdentifier=%@\n- item.localCopyVersionIdentifier=%@\n- archivedServerItem.itemVersionIdentifier=%@", item, self.archivedServerItem, item.itemVersionIdentifier, item.localCopyVersionIdentifier, self.archivedServerItem.itemVersionIdentifier);
 

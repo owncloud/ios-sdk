@@ -7,197 +7,479 @@
 */
 
 /* Item property names */
-"itemProperty.lastModified" = "Last modified";
-"itemProperty.isFavorite" = "Favorite";
-"itemProperty.localAttributes" = "Local attributes";
+"itemProperty.lastModified" = "최종 수정됨";
+"itemProperty.isFavorite" = "즐겨찾기";
+"itemProperty.localAttributes" = "로컬 속성";
+
+/* Item policy */
+"Available Offline" = "오프라인 사용 가능";
+
+/* Cellular Switches */
+"Allow cellular access" = "무선 접근 허용";
 
 /* Connection Progress */
-"Connecting…" = "Connecting…";
-"Authenticating…" = "Authenticating…";
-"Error" = "Error";
-"Fetching user information…" = "Fetching user information…";
-"Connected" = "Connected";
+"Connecting…" = "연결 중...";
+"Authenticating…" = "인증 중...";
+"Error" = "오류";
+"Fetching user information…" = "사용자 정보 가져오는 중...";
+"Connected" = "연결됨";
 
-"Retrieving thumbnail…" = "Retrieving thumbnail…";
+"Retrieving thumbnail…" = "미리 보기 그림 생성 중...";
 
-"Cancel" = "Cancel";
-"Proceed" = "Proceed";
-"OK" = "OK";
+"Cancel" = "취소";
+"Proceed" = "진행";
+"Retry" = "다시 시도";
+"OK" = "확인";
+
+/* Database upgrades */
+"Upgrading database…" = "데이터베이스 업그레이드 중...";
+
+/* Connection setup */
+"Insecure HTTP URL" = "안전하지 않은 HTTP URL";
+"The URL you provided uses the HTTP rather than the HTTPS scheme. If you continue, your communication will not be encrypted." = "제공한 URL은 HTTPS 구성표 대신 HTTP를 사용합니다. 계속하면 통신이 암호화되지 않습니다.";
+
+"Insecure HTTP URL forbidden" = "안전하지 않은 HTTP URL은 금지됨";
+"The URL you provided uses the HTTP rather than the HTTPS scheme, so your communication would not be encrypted." = "제공한 URL은 HTTPS 구성표 대신 HTTP를 사용하므로, 통신이 암호화되지 않습니다.";
+
+/* Connection status */
+"Offline" = "오프라인";
+"Offline (no WiFi connection)" = "오프라인 (WiFi 연결 없음)";
+"Server down for maintenance" = "유지보수를 위해 서버가 중단됨";
+"Network unavailable" = "네트워크를 사용할 수 없음";
+"Online" = "온라인";
+"Previous token refresh attempts indicated an invalid refresh token." = "Previous token refresh attempts indicated an invalid refresh token.";
+"Server returns status %ld" = "서버가 응답을 반환함: %ld";
+
+/* Account prepopulation */
+"Populating database…" = "Populating database…";
+"%lu files in %lu folders" = "%lu files in %lu folders";
+"Closing vault…" = "Closing vault…";
+
+/* Copies */
+"copy" = "복사";
+
+/* Sync errors */
+"An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed." = "An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed. If logging is enabled, the exception has been logged.";
+"Exception occured performing action" = "Exception occured performing action";
 
 /* Delete */
-"%@ changed on the server. Really delete it?" = "%@ changed on the server. Really delete it?";
-"%@ has changed on the server since you requested its deletion." = "%@ has changed on the server since you requested its deletion.";
-"Delete" = "Delete";
+"%@ changed on the server. Really delete it?" = "서버에서 %@이(가) 변경되었습니다. 정말로 삭제하시겠습니까?";
+"%@ has changed on the server since you requested its deletion." = "삭제 요청으로 서버에서 %@이(가) 변경되었습니다";
+"Delete" = "삭제";
 
-"%@ couldn't be deleted" = "%@ couldn't be deleted";
-"Please check if you have sufficient permissions to delete %@." = "Please check if you have sufficient permissions to delete %@.";
-
-/* Copy / Move */
-"Operation forbidden" = "Operation forbidden";
-"%@ can't be copied to %@." = "%@ can't be copied to %@.";
-"%@ can't be moved to %@." = "%@ can't be moved to %@.";
-
-"%@ not found" = "%@ not found";
-"%@ wasn't found at %@." = "%@ wasn't found at %@.";
-
-"The target directory %@ doesn't seem to exist." = "The target directory %@ doesn't seem to exist.";
-
-"%@ already exists" = "%@ already exists";
-"Couldn't copy %@ to %@, because an item called %@ already exists there." = "Couldn't copy %@ to %@, because an item called %@ already exists there.";
-"Couldn't move %@ to %@, because an item called %@ already exists there." = "Couldn't move %@ to %@, because an item called %@ already exists there.";
-
-"Insufficient permissions" = "Insufficient permissions";
-"%@ can't be copied to %@." = "%@ can't be copied to %@.";
-"%@ can't be moved to %@." = "%@ can't be moved to %@.";
-
-"%@ not found on the server" = "%@ not found on the server";
-"%@ may have been renamed, moved or deleted remotely." = "%@ may have been renamed, moved or deleted remotely.";
-
-"Error copying %@" = "Error copying %@";
-"Error moving %@" = "Error moving %@";
-
-/* Download */
-"Downloading %@…" = "Downloading %@…";
+"%@ couldn't be deleted" = "%@을(를) 삭제할 수 없습니다";
+"Please check if you have sufficient permissions to delete %@." = "%@을(를) 삭제할 수 있는 권한이 있는지 확인하십시오";
 
 /* Move/Rename/Copy */
-"Renaming %@ to %@…" = "Renaming %@ to %@…";
-"Moving %@ to %@…" = "Moving %@ to %@…";
-"Copying %@ to %@…" = "Copying %@ to %@…";
+"Operation forbidden" = "작업이 금지됨";
+"%@ can't be copied to %@." = "%@을(를) %@으로 복사할 수 없습니다.";
+"%@ can't be moved to %@." = "%@을(를) %@으로 이동할 수 없습니다.";
+
+"%@ not found" = "%@을(를) 찾을 수 없습니다.";
+"%@ wasn't found at %@." = "%@을(를) %@에서 찾을 수 없습니다.";
+
+"The target directory %@ doesn't seem to exist." = "대상 디렉터리 %@이(가) 존재하지 않습니다.";
+
+"%@ already exists" = "%@이(가) 이미 존재합니다";
+"Couldn't copy %@ to %@, because an item called %@ already exists there." = "항목 %@이(가) 이미 존재하여 %@을(를) %@으로 복사할 수 없습니다 ";
+"Couldn't move %@ to %@, because an item called %@ already exists there." = "항목 %@이(가) 이미 존재하여 %@을(를) %@으로 이동할 수 없습니다 ";
+"Couldn't rename %@ to %@, because another item with that name already exists." = "Couldn't rename %@ to %@, because another item with that name already exists.";
+
+"Insufficient permissions" = "권한 부족";
+"%@ can't be copied to %@." = "%@을(를) %@으로 복사할 수 없습니다.";
+"%@ can't be moved to %@." = "%@을(를) %@으로 이동할 수 없습니다.";
+"%@ can't be renamed to %@." = "%@ couldn't be renamed to %@.";
+
+"%@ not found on the server" = "서버에서 %@을 찾을 수 없음";
+"%@ may have been renamed, moved or deleted remotely." = "%@이(가) 원격으로 이름 변경, 이동 또는 삭제되었을 수 있습니다.";
+
+"Error copying %@" = "%@ 복사 오류";
+"Error moving %@" = "%@ 이동 오류";
+"Error renaming %@" = "Error renaming %@";
+
+"Renaming %@ to %@…" = "%@에서 %@으로 이름 변경 중...";
+"Moving %@ to %@…" = "%@에서 %@으로 이동 중...";
+"Copying %@ to %@…" = "%@에서 %@으로 복사 중...";
+
+"{{itemName}} can't be copied into itself." = "{{itemName}} can't be copied into itself.";
+"{{itemName}} can't be moved into itself." = "{{itemName}} can't be moved into itself.";
+
+/* Upload */
+"Another item named %@ already exists in %@." = "%@항목이 이미 %@에 존재합니다.";
+"Not enough space left on the server to upload %@." = "서버에 남은 공간이 부족하여 %@을(를) 업로드할 수 없습니다.";
+"Uploads to this folder are not allowed." = "이 폴더를 업로드하는 것은 허용되지 않습니다.";
+"Replace" = "바꾸기";
+"Keep both" = "모두 저장";
+
+/* Download */
+"Downloading %@…" = "%@ 다운로드 중...";
+"\"%@\" has been modified locally" = "\"%@\"이(가) 로컬로 수정되었습니다.";
+"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost." = "장치에 \"%@\"의 수정되고 동기화되지 않은 버전이 있습니다. 서버에서 파일을 다운로드하면 파일을 덮어쓰고 수정 내용이 손실됩니다.";
+"Invalid checksum" = "체크섬 잘못됨";
+"The downloaded file's checksum does not match the checksum provided by the server." = "다운로드한 파일의 체크섬이 서버에서 제공한 체크섬과 일치하지 않습니다.";
+"File modified locally" = "로컬에서 수정된 파일";
+"\"%@\" was modified locally before the download completed." = "다운로드가 완료되기 전에 \"%@\"이(가) 로컬에서 수정되었습니다.";
+"Couldn't download %@" = "%@을(를) 다운로드할 수 없습니다.";
+"The contents of the file on the server has changed since initiating download - or the file is no longer available on the server." = "다운로드를 시작한 후 서버의 파일 내용이 변경되었거나 서버에서 파일을 더 이상 사용할 수 없습니다.";
+"{{itemName}} is currently processed on the server and can't be downloaded until it finishes processing." = "{{itemName}} is currently processed on the server and can't be downloaded until it finishes processing.";
 
 /* Create folder */
-"Creating folder %@…" = "Creating folder %@…";
+"Creating folder %@…" = "%@ 폴더 생성 중...";
 
 /* Delete */
-"Deleting %@…" = "Deleting %@…";
+"Deleting %@…" = "%@ 삭제 중...";
 
 /* Retrieving file list */
-"Retrieving file list for %@…" = "Retrieving file list for %@…";
+"Retrieving file list for %@…" = "%@에 대한 파일 목록 검색 중... ";
+
+/* Status */
+"Pending" = "대기 중";
+"Running" = "실행 중";
+"Failed" = "실패함";
+"Waiting for user" = "사용자 대기 중";
+"Waiting for metadata refresh" = "메타데이터 새로고침을 대기 중";
+"Waiting to retry (%ld of %ld)" = "재시도 대기 중 (%ld / %ld)";
+"Fetching updates…" = "업데이트를 가져오는 중...";
+"Retrieving items for %@" = "%@에 대한 항목을 검색하는 중";
 
 /* Update */
-"\"%@\" metadata for %@ couldn't be updated" = "\"%@\" metadata for %@ couldn't be updated";
-"Update failed with status code %d" = "Update failed with status code %d";
-"Error updating %@ metadata" = "Error updating %@ metadata";
+"\"%@\" metadata for %@ couldn't be updated" = "%@에 대한 \"%@\" 메타데이터를 업데이트할 수 없습니다.";
+"Update failed with status code %d" = "상태 코드 %d으로 업데이트가 실패했습니다.";
+"Error updating %@ metadata" = "메타데이터 %@ 업데이트 중 오류 발생";
 
 /* Logging */
-"Standard error output" = "Standard error output";
-"Log file" = "Log file";
+"Standard error output" = "표준 오류 출력";
+"Log file" = "로그 파일";
+"Log HTTP requests and responses" = "HTTP 요청 및 응답 로그";
+"Log internal file operations" = "내부 파일 작업 로그";
+
+/* Custom Scheme Browser Sessions */
+"Can't open custom scheme URL %@." = "Can't open custom scheme URL %@.";
+"Can't build custom scheme URL from %@." = "Can't build custom scheme URL from %@.";
+
+/* Share roles */
+"Invited persons" = "Invited persons";
+"Only invited persons have access. Login required." = "Only invited persons have access. Login required.";
+
+"Viewer" = "Viewer";
+"Download and preview" = "Download and preview";
+"Download, preview and share" = "Download, preview and share";
+"Recipients can view and download contents." = "Recipients can view and download contents.";
+
+"Uploader" = "Uploader";
+"Recipients can upload but existing contents are not revealed." = "Recipients can upload but existing contents are not revealed.";
+
+"Contributor" = "Contributor";
+"Recipients can view, download and upload contents." = "받는 사람은 콘텐츠를 조회, 다운로드, 업로드할 수 있습니다.";
+
+"Editor" = "Editor";
+"Edit, download, preview and share" = "Edit, download, preview and share";
+"Upload, edit, delete, download and preview" = "Upload, edit, delete, download and preview";
+"Upload, edit, delete, download, preview and share" = "Upload, edit, delete, download, preview and share";
+"Recipients can view, download and edit contents." = "받는 사람은 콘텐츠를 조회, 다운로드 및 편집할 수 있습니다.";
+"Recipients can view, download, edit, delete and upload contents." = "받는 사람은 컨텐츠를 조회, 다운로드, 편집, 삭제, 업로드할 수 있습니다.";
+
+"Manager" = "Manager";
+"Upload, edit, delete, download, preview and share" = "Upload, edit, delete, download, preview and share";
+
+"Custom" = "사용자 정의";
+"Set detailed permissions" = "Set detailed permissions";
+
+/* Sharing */
+"Sharing requires an active connection." = "Sharing requires an active connection.";
+
+/* Drives */
+"Personal" = "개인";
+"Shares" = "공유";
+"Shared with me" = "Shared with me";
+
+/* Certificate checks */
+"Certificate changed" = "인증서 변경";
 
 /* Errors */
-"Server doesn't seem to support any authentication method supported by this app." = "Server doesn't seem to support any authentication method supported by this app.";
-"This server runs an unsupported version (%@). Version %@ or later is required by this app." = "This server runs an unsupported version (%@). Version %@ or later is required by this app.";
+"Server doesn't seem to support any authentication method supported by this app." = "서버가 이 앱에서 지원하는 인증 방법을 지원하지 않습니다.";
+"This server runs an unsupported version (%@). Version %@ or later is required by this app." = "이 서버는 지원되지 않는 버전(%@)을 실행합니다. 이 앱에는 버전 %@  이상이 필요합니다.";
+
+/* App Provider */
+"This file is currently being processed and is not yet available for use. Please try again shortly." = "This file is currently being processed and is not yet available for use. Please try again shortly.";
 
 /* DAV Errors */
 // OCDAVErrorServiceUnavailable
-"Server down for maintenance." = "Server down for maintenance.";
+"Server down for maintenance." = "유지 관리를 위해 서버가 다운되었습니다.";
+// OCDAVErrorNotFound
+"Resource not found." = "리소스를 찾을 수 없습니다.";
 
 /* OC Errors */
-"%@ (error %ld, %@)" = "%@ (error %ld, %@)";
-"%@ (error %ld)" = "%@ (error %ld)";
+"%@ (error %ld, %@)" = "%@ (오류 %ld, %@)";
+"%@ (error %ld)" = "%@ (오류 %ld)";
 
 // OCErrorInternal
-"Internal error." = "Internal error.";
+"Internal error." = "내부 오류";
 
 // OCErrorInsufficientParameters
-"Insufficient parameters." = "Insufficient parameters.";
+"Insufficient parameters." = "매개 변수가 충분하지 않습니다.";
 
 // OCErrorAuthorizationFailed
-"Authorization failed." = "Authorization failed.";
+"Authorization failed." = "인증 실패.";
 
 // OCErrorAuthorizationRedirect
-"Authorization failed because the server returned a redirect. Authorization may be successful when retried with the redirect URL." = "Authorization failed because the server returned a redirect. Authorization may be successful when retried with the redirect URL.";
+"Authorization failed because the server returned a redirect. Authorization may be successful when retried with the redirect URL." = "서버가 리디렉션을 반환하여 인증에 실패했습니다. 리디렉션 URL을 사용하여 재시도하면 인증이 성공할 수 있습니다.";
 
 // OCErrorAuthorizationNoMethodData
-"Authorization failed because no secret data was set for the authentication method." = "Authorization failed because no secret data was set for the authentication method.";
+"Authorization failed because no authorization data was set for the authentication method." = "Authorization failed because no authorization data was set for the authentication method.";
 
 // OCErrorAuthorizationMissingData
-"Authorization failed because data was missing from the secret data for the authentication method." = "Authorization failed because data was missing from the secret data for the authentication method.";
+"Authorization failed because data was missing from the secret data for the authentication method." = "인증 방법에 대한 기밀 데이터로부터 데이터가 누락되어 인증에 실패했습니다.";
 
 // OCErrroAuthorizationCancelled
-"Authorization was cancelled by the user." = "Authorization was cancelled by the user.";
+"Authorization was cancelled by the user." = "사용자가 승인을 취소했습니다.";
 
 // OCErrorRequestURLSessionTaskConstructionFailed
-"Construction of URL Session Task failed." = "Construction of URL Session Task failed.";
+"Construction of URL Session Task failed." = "URL 세션 작업을 구성하지 못했습니다.";
 
 // OCErrorNewerVersionExists
-"A newer version already exists." = "A newer version already exists.";
+"A newer version already exists." = "최신 버전이 이미 존재합니다.";
 
 // OCErrorRequestCancelled
-"Request was cancelled." = "Request was cancelled.";
+"Request was cancelled." = "요청이 취소되었습니다.";
 
 // OCErrorRequestRemovedBeforeScheduling
-"Request was removed before scheduling." = "Request was removed before scheduling.";
+"Request was removed before scheduling." = "예약하기 전에 요청이 제거되었습니다.";
 
 // OCErrorRequestServerCertificateRejected
-"Request was cancelled because the server certificate was rejected." = "Request was cancelled because the server certificate was rejected.";
+"Request was cancelled because the server certificate was rejected." = "서버 인증서가 거부되어 요청이 취소되었습니다.";
 
 // OCErrorRequestDroppedByURLSession
-"Request was dropped by the NSURLSession." = "Request was dropped by the NSURLSession.";
+"Request was dropped by the NSURLSession." = "요청이 NSURL 세션에서 삭제되었습니다.";
 
 // OCErrorRequestCompletedWithError
-"Request completed with error." = "Request completed with error.";
+"Request completed with error." = "요청이 오류와 함께 완료되었습니다.";
 
 // OCErrorRequestURLSessionInvalidated
-"Request couldn't be scheduled because the underlying URL session has been invalidated." = "Request couldn't be scheduled because the underlying URL session has been invalidated.";
+"Request couldn't be scheduled because the underlying URL session has been invalidated." = "기본 URL 세션이 무효화되었기 때문에 요청을 예약할 수 없습니다";
 
 // OCErrorException
-"An exception occured." = "An exception occured.";
+"An exception occured." = "예외가 발생했습니다.";
 
 // OCErrorResponseUnknownFormat
-"Response was in an unknown format." = "Response was in an unknown format.";
+"Response was in an unknown format." = "알 수 없는 응답 형식입니다.";
 
 // OCErrorServerDetectionFailed
-"Server detection failed, i.e. when the server at a URL is not an ownCloud instance." = "Server detection failed, i.e. when the server at a URL is not an ownCloud instance.";
+"Server detection failed, i.e. when the server at a URL is not an ownCloud instance." = "서버 감지에 실패했습니다. URL의 서버가 클라우드 인스턴스가 아닙니다.";
 
 // OCErrorServerTooManyRedirects
-"Server detection failed because of too many redirects." = "Server detection failed because of too many redirects.";
+"Server detection failed because of too many redirects." = "너무 많은 리디렉션으로 서버 감지에 실패했습니다.";
 
 // OCErrorServerBadRedirection
-"Server redirection to bad/invalid URL." = "Server redirection to bad/invalid URL.";
+"Server redirection to bad/invalid URL." = "잘못된 URL로 서버 리디렉션";
 
 // OCErrorServerVersionNotSupported
-"This server version is not supported." = "This server version is not supported.";
+"This server version is not supported." = "이 서버 버전은 지원되지 않습니다.";
 
 // OCErrorServerNoSupportedAuthMethods
-"Server doesn't seem to support any authentication method supported by this app." = "Server doesn't seem to support any authentication method supported by this app.";
+"Server doesn't seem to support any authentication method supported by this app." = "서버가 이 앱에서 지원하는 인증 방법을 지원하지 않습니다.";
 
 // OCErrorCertificateInvalid
-"The certificate is invalid or contains errors" = "The certificate is invalid or contains errors";
+"The certificate is invalid or contains errors" = "인증서가 잘못되었거나 오류를 포함하고 있습니다.";
 
 // OCErrorCertificateMissing
-"No certificate was returned for a request despite this being a HTTPS connection (should never occur in production, but only if you forgot to provide a certificate during simulated responses to HTTPS requests)." = "No certificate was returned for a request despite this being a HTTPS connection (should never occur in production, but only if you forgot to provide a certificate during simulated responses to HTTPS requests).";
+"No certificate was returned for a request despite this being a HTTPS connection (should never occur in production, but only if you forgot to provide a certificate during simulated responses to HTTPS requests)." = "HTTPS 연결임에도 불구하고 요청에 대한 인증서가 반환되지 않았습니다(운영 환경에서 절대 발생하지 않아야 하지만, HTTPS 요청에 대한 시뮬레이션 응답 중에 인증서를 제공하는 것을 잊은 경우에만 해당).";
 
 // OCErrorFeatureNotSupportedForItem
-"This feature is not supported for this item." = "This feature is not supported for this item.";
+"This feature is not supported for this item." = "이 항목은이 기능을 지원하지 않습니다.";
 
 // OCErrorFeatureNotSupportedByServer
-"This feature is not supported for this server (version)." = "This feature is not supported for this server (version).";
+"This feature is not supported for this server (version)." = "이 기능은 현재 서버(버전)에서 지원되지 않습니다.";
 
 // OCErrorFeatureNotImplemented
-"This feature is currently not implemented" = "This feature is currently not implemented";
+"This feature is currently not implemented" = "이 기능은 현재 구현되지 않았습니다.";
 
 // OCErrorItemNotFound
-"The targeted item has not been found." = "The targeted item has not been found.";
+"The targeted item has not been found." = "대상 항목을 찾을 수 없습니다.";
 
 // OCErrorItemDestinationNotFound
-"The destination item has not been found." = "The destination item has not been found.";
+"The target location has not been found." = "The target location has not been found.";
 
 // OCErrorItemChanged
-"The targeted item has changed." = "The targeted item has changed.";
+"The targeted item has changed." = "대상 항목이 변경되었습니다.";
 
 // OCErrorItemInsufficientPermissions
-"The action couldn't be performed on the targeted item because the client lacks permisssions." = "The action couldn't be performed on the targeted item because the client lacks permisssions.";
+"The action couldn't be performed on the targeted item because the client lacks permissions." = "클라이언트에 권한이 없기 때문에 대상 항목에 대해 작업을 수행할 수 없습니다.";
 
 // OCErrorItemOperationForbidden
-"The operation on the targeted item is not allowed." = "The operation on the targeted item is not allowed.";
+"The operation on the targeted item is not allowed." = "대상 항목에 대한 작업이 허용되지 않습니다.";
 
 // OCErrorItemAlreadyExists
-"There already is an item at the destination of this action." = "There already is an item at the destination of this action.";
+"There already is an item at the destination of this action." = "현재 작업의 대상에 항목이 이미 있습니다.";
+
+// OCErrorItemNotAvailableOffline
+"Item not available offline." = "항목을 오프라인으로 사용할 수 없음";
+
+// OCErrorFileNotFound:
+"File not found." = "파일을 찾을 수 없음";
 
 // OCErrorCancelled
-"The operation was cancelled." = "The operation was cancelled.";
+"The operation was cancelled." = "작업이 취소되었습니다.";
 
 // OCErrorOutdatedCache
-"An operation failed due to outdated cache information." = "An operation failed due to outdated cache information.";
+"An operation failed due to outdated cache information." = "캐시 정보가 오래되어 작업에 실패했습니다.";
 
 // OCErrorRunningOperation
-"A running operation prevents execution." = "A running operation prevents execution.";
+"A running operation prevents execution." = "구동중인 작업이 실행을 방지합니다.";
+
+// OCErrorShareUnauthorized:
+"Not authorized to access shares." = "공유에 접할 수 있는 권한이 없음";
+
+// OCErrorShareUnavailable
+"Shares are unavailable." = "공유할 수 없음";
+
+// OCErrorShareItemNotADirectory:
+"Item is not a directory." = "항목이 디렉터리가 아닙니다.";
+
+// OCErrorShareItemNotFound
+"Item not found." = "항목을 찾을 수 없음";
+
+// OCErrorShareNotFound
+"Share not found." = "공유를 찾을 수 없음";
+
+// OCErrorShareUnknownType
+"Unknown share type." = "알 수 없는 공유 유형";
+
+// OCErrorSharePublicUploadDisabled
+"Public upload was disabled by the administrator." = "관리자에 의해 공개 업로드가 비활성화 되었습니다.";
+
+// OCErrorNotAvailableOffline
+"Not available offline." = "오프라인 사용 불가능";
+
+// OCErrorAuthorizationRetry
+"Authorization needs to be retried." = "다시 인증해주십시오.";
+
+// OCErrorItemPolicyRedundant
+"Another item policy of the same kind already includes the item, making the addition of this item policy redundant." = "동일한 종류의 다른 항목 정책이 이미 항목을 포함하므로 이 항목 정책의 추가는 중복됩니다.";
+
+// OCErrorItemPolicyMakesRedundant
+"Other item policies of the same kind covering subsets of this item policy become redundant by the addition of this item policy." = "이 항목 정책의 하위 집합을 포함하는 동일한 종류의 다른 항목 정책은 이 항목 정책을 추가하면 중복됩니다.";
+
+// OCErrorUnnormalizedPath
+"The provided path is not normalized." = "제공된 경로가 정규화되지 않았습니다.";
+
+// OCErrorPrivateLinkInvalidFormat
+"Private link format invalid." = "잘못된 개인 링크 형식";
+
+// OCErrorPrivateLinkResolutionFailed
+"Resolution of private link failed." = "개인 링크 확인에 실패함";
+
+// OCErrorAuthorizationMethodNotAllowed
+"Authentication method not allowed. Re-authentication needed." = "허용되지 않은 인증 방법. 재인증 필요.";
+
+// OCErrorAuthorizationMethodUnknown
+"Authentication method unknown." = "알 수 없는 인증 방법";
+
+// OCErrorServerConnectionValidationFailed
+"Connection validation failed." = "연결 유효성 검사 실패";
+
+// OCErrorAuthorizationClientRegistrationFailed
+"Client registration failed." = "클라이언트 등록 실패";
+
+// OCErrorAuthorizationNotMatchingRequiredUserID
+"The logged in user is not matching the required user ID." = "로그인한 사용자가 요구된 사용자 ID와 일치하지 않습니다.";
+"You logged in as user %@, but must log in as user %@. Please retry." = "사용자 %@으로 로그인했지만 사용자 %@으로 로그인해야 합니다. 다시 시도하십시오.";
+"Login as user %@ required. Please retry." = "사용자 %@으로 로그인해야 합니다. 다시 시도하십시오.";
+
+// OCErrorDatabaseMigrationRequired
+"Database upgrade required. Please open the app to perform the upgrade." = "데이터베이스 업그레이드가 필요합니다. 업그레이드를 하기 위해 앱을 실행해주십시오.";
+
+// OCErrorHostUpdateRequired
+"Bookmark created with a newer app version. Please update the app." = "최신 앱 버전에 책갈피가 생성되었습니다. 앱을 업데이트해주십시오.";
+
+// OCErrorAuthorizationCantOpenCustomSchemeURL
+"Can't open authorization URL with custom scheme." = "Can't open authorization URL with custom scheme.";
+
+// OCErrorLockInvalidated
+"Lock invalidated." = "Lock invalidated.";
+
+// OCErrorRequestTimeout
+"Request timed out" = "요청 시간 초과됨";
+
+// OCErrorResourceDoesNotExist
+"Resource does not exist." = "Resource does not exist.";
+
+// OCErrorWebFingerLacksServerInstanceRelation
+"Web finger response lacks server instance relation." = "Web finger response lacks server instance relation.";
+
+// OCErrorUnknownUser
+"Unknown user" = "알려지지 않은 사용자";
+
+// OCErrorInvalidType
+"Invalid type." = "Invalid type.";
+
+// OCErrorRequiredValueMissing
+"Required value missing." = "Required value missing.";
+
+// OCErrorGraphError
+"Generic graph error." = "Generic graph error.";
+
+// OCErrorDataItemTypeUnavailable
+"Object does not return DataItemType." = "Object does not return DataItemType.";
+
+// OCErrorDataConverterUnavailable
+"No data converter available for conversion." = "No data converter available for conversion.";
+
+// OCErrorMissingDriveID
+"Missing Drive ID." = "Missing Drive ID.";
+
+// OCErrorResourceNotFound
+"Resource not found." = "리소스를 찾을 수 없습니다.";
+
+// OCErrorInvalidParameter
+"Invalid parameter." = "Invalid parameter.";
+
+// OCErrorItemProcessing
+"Item is currently processing." = "Item is currently processing.";
+
+/* Diagnostic */
+"Files" = "파일";
+"Folders" = "폴더";
+"Total Items" = "모든 항목";
+"Removed Items" = "삭제된 항목";
+"Scheduled folder scans" = "예약된 폴더 검사";
+"Sync Record ID"  = "기록 ID 동기화";
+"State" = "상태";
+"In progress since" = "진행 기간:";
+"Origin Process" = "출처 처리";
+"Origin Process Valid" = "출처 처리 유효";
+"Timestamp" = "타임 스탬프";
+"Lane ID" = "도로 ID";
+"Local ID" = "로컬 ID";
+"Action ID" = "작업 ID";
+"Process Sync Records" = "프로세스 동기화 기록";
+"Reschedule" = "재예약";
+"Deschedule (remove)" = "예약 취소(삭제)";
+"Action" = "동작";
+"Wait Conditions" = "조건 대기";
+"Events" = "이벤트";
+"Class" = "클래스";
+"Identifier" = "식별자";
+"Localized Description" = "현지화된 설명";
+"Database size" = "데이터베이스 크기";
+"Thumbnail database size" = "데이터베이스 크기 미리 보기 그림";
+"Vacuum" = "진공";
+"UUID" = "UUID";
+"Name" = "이름";
+"URL" = "URL";
+"Origin URL" = "기존 URL";
+"Use Origin URL as URL" = "기존 URL을 URL로 사용";
+"Certificate Date" = "날짜 인증서";
+"Invalidate Certificate" = "잘못된 인증서";
+"User Name" = "사용자 이름";
+"Auth Method" = "인증 방법";
+"Auth Data" = "인증 데이터";
+"Auth Validation Date" = "인증 유효성 검사 날짜";
+"Database Version" = "데이터베이스 버전";
+"UserInfo" = "사용자정보";
+"Invalidate Login Data" = "잘못된 로그인 데이터";
+"Delete Authentication Data" = "인증 정보 삭제";
+"Remove Database Version" = "데이터베이스 버전 삭제";
+"Delete Database" = "데이터베이스 삭제";
+"Removed database at %@" = "%@에서 삭제된 데이터베이스";
+"Removed thumbnail database at %@" = "%@에서 삭제된 데이터베이스 미리 보기 그림";

@@ -21,6 +21,7 @@
 typedef NSString* OCTUSMetadataKey;
 typedef NSString* OCTUSMetadataString;
 typedef NSDictionary<OCTUSMetadataKey,NSString*>* OCTUSMetadata;
+typedef NSMutableDictionary<OCTUSMetadataKey,NSString*>* OCTUSMutableMetadata;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -36,5 +37,6 @@ extern NSString *OCTUSMetadataNilValue; //!< Value for keys that should be encod
 
 extern OCTUSMetadataKey OCTUSMetadataKeyFileName;
 extern OCTUSMetadataKey OCTUSMetadataKeyChecksum;
+extern OCTUSMetadataKey OCTUSMetadataKeyMTime;
 
 NS_ASSUME_NONNULL_END

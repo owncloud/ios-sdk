@@ -6,41 +6,47 @@
   Copyright © 2018 ownCloud GmbH. All rights reserved.
 */
 
-/* OCCertificateViewController section titles */
-"Subject" = "Subject";
-"Issuer" = "Issuer";
-"Public Key" = "Public Key";
-"Extensions" = "Extensions";
-"Fingerprints" = "Fingerprints";
+/* OCCertificateViewController buttons */
+"Show ±" = "보이기 ±";
+"Hide ±" = "숨기기 ±";
 
-"Validation Status" = "Validation Status";
-"Hostname" = "Hostname";
-"Validation Error" = "Validation Error";
-"User-rejected." = "User-rejected.";
-"Certificate has issues." = "Certificate has issues.";
-"User-accepted." = "User-accepted.";
-"No issues found." = "No issues found.";
+/* OCCertificateViewController section titles */
+"Subject" = "제목";
+"Issuer" = "발급자";
+"Public Key" = "공용 키";
+"Extensions" = "확장프로그램";
+"Fingerprints" = "지문";
+
+"Validation Status" = "확인 상태";
+"Hostname" = "호스트 이름";
+"Validation Error" = "확인 중 오류";
+"User-rejected." = "사용자가 거부했습니다.";
+"Certificate has issues." = "인증서에 오류가 있습니다";
+"User-accepted." = "사용자 허가됨";
+"Auto-accepted." = "자동 수락됨";
+"Reason" = "이유";
+"No issues found." = "오류를 찾지 못했습니다";
 
 /* X.509 certificate fields */
-"businessCategory" = "Business category";
-"commonName" = "Common name";
-"countryName" = "Country";
-"jurisdictionCountryName" = "Jurisdiction country";
-"jurisdictionLocalityName" = "Jurisdiction locality";
-"jurisdictionStateOrProvinceName" = "Jurisdiction state or province";
-"localityName" = "Locality";
-"organizationName" = "Organization";
-"organizationalUnitName" = "Organization Unit";
-"stateOrProvinceName" = "State or province";
+"businessCategory" = "사업 분류";
+"commonName" = "일반 이름";
+"countryName" = "국가";
+"jurisdictionCountryName" = "관할 국가";
+"jurisdictionLocalityName" = "관할 지역";
+"jurisdictionStateOrProvinceName" = "관할 주 또는 도";
+"localityName" = "지역";
+"organizationName" = "조직";
+"organizationalUnitName" = "조직 단위";
+"stateOrProvinceName" = "도 및 광역시";
 
-"version" = "Version";
-"serialNumber" = "Serial Number";
-"signatureAlgorithm" = "Signature Algorithm";
+"version" = "버전";
+"serialNumber" = "시리얼 번호";
+"signatureAlgorithm" = "지문 알고리즘";
 
-"validFrom" = "Valid from";
-"validUntil" = "Valid until";
+"validFrom" = "올바른 양식";
+"validUntil" = "만료 기간:";
 
-"keyBytes" = "Key bytes";
-"keyExponent" = "Key exponent";
-"keyInformation" = "Information";
-"keySizeInBits" = "Key size (bits)";
+"keyBytes" = "키 바이트";
+"keyExponent" = "키 지수";
+"keyInformation" = "정보";
+"keySizeInBits" = "키의 크기 (bits)";

@@ -204,6 +204,7 @@
 		DC30955F2057D18100189B9A /* fake-demo_owncloud_org.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC30955E2057D18100189B9A /* fake-demo_owncloud_org.cer */; };
 		DC30956220580D5F00189B9A /* OCCertificateViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = DC30956020580D5F00189B9A /* OCCertificateViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC30956320580D5F00189B9A /* OCCertificateViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DC30956120580D5F00189B9A /* OCCertificateViewController.m */; };
+		DC31BAE22A82445200BFF393 /* OpenSSL.LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = DC31BAE12A82445200BFF393 /* OpenSSL.LICENSE */; };
 		DC34227A217CAA0B00705508 /* OCIPNotificationCenter.h in Headers */ = {isa = PBXBuildFile; fileRef = DC342278217CAA0B00705508 /* OCIPNotificationCenter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC34227B217CAA0B00705508 /* OCIPNotificationCenter.m in Sources */ = {isa = PBXBuildFile; fileRef = DC342279217CAA0B00705508 /* OCIPNotificationCenter.m */; };
 		DC3422822180765900705508 /* OCCore+ItemUpdates.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3422802180765900705508 /* OCCore+ItemUpdates.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1223,6 +1224,7 @@
 		DC30955E2057D18100189B9A /* fake-demo_owncloud_org.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = "fake-demo_owncloud_org.cer"; sourceTree = "<group>"; };
 		DC30956020580D5F00189B9A /* OCCertificateViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCertificateViewController.h; sourceTree = "<group>"; };
 		DC30956120580D5F00189B9A /* OCCertificateViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCertificateViewController.m; sourceTree = "<group>"; };
+		DC31BAE12A82445200BFF393 /* OpenSSL.LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = OpenSSL.LICENSE; sourceTree = "<group>"; };
 		DC342278217CAA0B00705508 /* OCIPNotificationCenter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCIPNotificationCenter.h; sourceTree = "<group>"; };
 		DC342279217CAA0B00705508 /* OCIPNotificationCenter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCIPNotificationCenter.m; sourceTree = "<group>"; };
 		DC3422802180765900705508 /* OCCore+ItemUpdates.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCore+ItemUpdates.h"; sourceTree = "<group>"; };
@@ -2509,6 +2511,14 @@
 			path = ownCloudUI;
 			sourceTree = "<group>";
 		};
+		DC31BADE2A82443200BFF393 /* OpenSSL license */ = {
+			isa = PBXGroup;
+			children = (
+				DC31BAE12A82445200BFF393 /* OpenSSL.LICENSE */,
+			);
+			path = "OpenSSL license";
+			sourceTree = "<group>";
+		};
 		DC3596A12240F1EC00C4D6E6 /* Condition */ = {
 			isa = PBXGroup;
 			children = (
@@ -3171,6 +3181,7 @@
 		DC79E1A3205871FA00189B9A /* Certificate Metadata */ = {
 			isa = PBXGroup;
 			children = (
+				DC31BADE2A82443200BFF393 /* OpenSSL license */,
 				DC30955120574C2C00189B9A /* OCCertificate+OpenSSL.m */,
 				DC30955020574C2C00189B9A /* OCCertificate+OpenSSL.h */,
 				DC30956120580D5F00189B9A /* OCCertificateViewController.m */,
@@ -4904,6 +4915,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC31BAE22A82445200BFF393 /* OpenSSL.LICENSE in Resources */,
 				DC79E1A42058725700189B9A /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

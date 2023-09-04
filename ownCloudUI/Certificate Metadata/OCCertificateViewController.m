@@ -21,6 +21,7 @@
 #import "OCCertificate+OpenSSL.h"
 
 #import <ownCloudSDK/OCMacros.h>
+#import <ownCloudSDK/OCExtension+License.h>
 
 #pragma mark - Table Cells
 @interface OCCertificateTableCell : UITableViewCell
@@ -38,6 +39,11 @@
 
 @synthesize titleLabel = _titleLabel;
 @synthesize descriptionLabel = _descriptionLabel;
+
++ (void)load
+{
+	[[OCExtensionManager sharedExtensionManager] addExtension:[OCExtension licenseExtensionWithIdentifier:@"license.openssl" bundleOfClass:OCCertificateTableCell.class title:@"OpenSSL" resourceName:@"OpenSSL" fileExtension:@"LICENSE"]];
+}
 
 - (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {

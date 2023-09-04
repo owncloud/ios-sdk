@@ -1,0 +1,485 @@
+/* 
+  Localizable.strings
+  ownCloudSDK
+
+  Created by Felix Schwarz on 03.03.18.
+  Copyright © 2018 ownCloud GmbH. All rights reserved.
+*/
+
+/* Item property names */
+"itemProperty.lastModified" = "Последна промяна";
+"itemProperty.isFavorite" = "Любими";
+"itemProperty.localAttributes" = "Локални атрибути";
+
+/* Item policy */
+"Available Offline" = "Налично офлайн";
+
+/* Cellular Switches */
+"Allow cellular access" = "Разрешаване на клетъчен достъп";
+
+/* Connection Progress */
+"Connecting…" = "Свързване...";
+"Authenticating…" = "Удостоверяване...";
+"Error" = "Грешка";
+"Fetching user information…" = "Извличане на информация за потребителя...";
+"Connected" = "Свързан";
+
+"Retrieving thumbnail…" = "Извличане на миниатюра...";
+
+"Cancel" = "Отказ";
+"Proceed" = "Продължете";
+"Retry" = "Повторение";
+"OK" = "ОК";
+
+/* Database upgrades */
+"Upgrading database…" = "Надграждане на базата данни...";
+
+/* Connection setup */
+"Insecure HTTP URL" = "Несигурен HTTP url адрес";
+"The URL you provided uses the HTTP rather than the HTTPS scheme. If you continue, your communication will not be encrypted." = "Предоставеният от вас URL адрес използва протокола HTTP, а не HTTPS. Ако продължите, комуникацията ви няма да бъде криптирана.";
+
+"Insecure HTTP URL forbidden" = "Несигурният HTTP URL адрес е забранен";
+"The URL you provided uses the HTTP rather than the HTTPS scheme, so your communication would not be encrypted." = "Предоставеният от вас URL адрес използва протокола HTTP, а не HTTPS, така че комуникацията ви няма да бъде криптирана.";
+
+/* Connection status */
+"Offline" = "Офлайн";
+"Offline (no WiFi connection)" = "Офлайн ( няма WiFi връзка)";
+"Server down for maintenance" = "Сървърът е спрян за поддръжка";
+"Network unavailable" = "Няма достъп до мрежата";
+"Online" = "Онлайн";
+"Previous token refresh attempts indicated an invalid refresh token." = "Previous token refresh attempts indicated an invalid refresh token.";
+"Server returns status %ld" = "Сървърът връща статус %ld";
+
+/* Account prepopulation */
+"Populating database…" = "Populating database…";
+"%lu files in %lu folders" = "%lu files in %lu folders";
+"Closing vault…" = "Closing vault…";
+
+/* Copies */
+"copy" = "копиране";
+
+/* Sync errors */
+"An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed." = "An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed. If logging is enabled, the exception has been logged.";
+"Exception occured performing action" = "Exception occured performing action";
+
+/* Delete */
+"%@ changed on the server. Really delete it?" = "%@ е променен на сървъра. Наистина ли искате да го изтриете?";
+"%@ has changed on the server since you requested its deletion." = "%@ е променен на сървъра, след заявката за изтриването му.";
+"Delete" = "Изтриване";
+
+"%@ couldn't be deleted" = "%@ не може да бъде изтрит";
+"Please check if you have sufficient permissions to delete %@." = "Моля, проверете дали имате необходимите права за изтриването на %@.";
+
+/* Move/Rename/Copy */
+"Operation forbidden" = "Операцията е забранена";
+"%@ can't be copied to %@." = "%@ не може да се копира в %@.";
+"%@ can't be moved to %@." = "%@ не може да се премести в %@.";
+
+"%@ not found" = "%@ не е намерен";
+"%@ wasn't found at %@." = "%@ не е намерен в %@.";
+
+"The target directory %@ doesn't seem to exist." = "Изглежда, че целевата директория %@ не съществува.";
+
+"%@ already exists" = "%@ вече съществува";
+"Couldn't copy %@ to %@, because an item called %@ already exists there." = "Неуспех при копирането на %@ в %@, защото там вече съществува елемент с име %@.";
+"Couldn't move %@ to %@, because an item called %@ already exists there." = "Неуспех при преместването на %@ в %@, защото там вече съществува елемент с име %@.";
+"Couldn't rename %@ to %@, because another item with that name already exists." = "Couldn't rename %@ to %@, because another item with that name already exists.";
+
+"Insufficient permissions" = "Недостатъчни права";
+"%@ can't be copied to %@." = "%@ не може да се копира в %@.";
+"%@ can't be moved to %@." = "%@ не може да се премести в %@.";
+"%@ can't be renamed to %@." = "%@ couldn't be renamed to %@.";
+
+"%@ not found on the server" = "%@ не е намерен на сървъра";
+"%@ may have been renamed, moved or deleted remotely." = "%@ може да са били преименувани, преместени или изтрити отдалечено.";
+
+"Error copying %@" = "Грешка при копирането на %@";
+"Error moving %@" = "Грешка в преместването на %@";
+"Error renaming %@" = "Error renaming %@";
+
+"Renaming %@ to %@…" = "Преименуване на %@ на %@...";
+"Moving %@ to %@…" = "Преместване на %@ в %@...";
+"Copying %@ to %@…" = "Копиране на %@ в %@...";
+
+"{{itemName}} can't be copied into itself." = "{{itemName}} can't be copied into itself.";
+"{{itemName}} can't be moved into itself." = "{{itemName}} can't be moved into itself.";
+
+/* Upload */
+"Another item named %@ already exists in %@." = "Друг елемент с това име %@ вече съществува в %@.";
+"Not enough space left on the server to upload %@." = "На сървъра няма достатъчно място за качване в %@.";
+"Uploads to this folder are not allowed." = "Качването в тази папка не е разрешено.";
+"Replace" = "Замяна";
+"Keep both" = "Запазване и на двата";
+
+/* Download */
+"Downloading %@…" = "Изтегляне на %@...";
+"\"%@\" has been modified locally" = "\"%@\" е променен локално";
+"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost." = "На вашето устройство има променена, несинхронизирана версия на \"%@\". Изтеглянето на файла от сървъра ще го презапише и промените ще бъдат изгубени.";
+"Invalid checksum" = "Невалидна контролна сума";
+"The downloaded file's checksum does not match the checksum provided by the server." = "Контролната сума на изтегления файл не съвпада с контролната сума, предоставена от сървъра.";
+"File modified locally" = "Файл, променен локално";
+"\"%@\" was modified locally before the download completed." = "\"%@\" е бил променен локално, преди изтеглянето да приключи.";
+"Couldn't download %@" = "Неуспешно изтегляне на %@";
+"The contents of the file on the server has changed since initiating download - or the file is no longer available on the server." = "Съдържанието на файла на сървъра е променено след започване на изтеглянето - или файлът вече не е наличен на сървъра.";
+"{{itemName}} is currently processed on the server and can't be downloaded until it finishes processing." = "{{itemName}} is currently processed on the server and can't be downloaded until it finishes processing.";
+
+/* Create folder */
+"Creating folder %@…" = "Създаване на папка %@...";
+
+/* Delete */
+"Deleting %@…" = "Изтриване на %@...";
+
+/* Retrieving file list */
+"Retrieving file list for %@…" = "Извличане на списък с файлове за %@...";
+
+/* Status */
+"Pending" = "Чакащо";
+"Running" = "Работещ";
+"Failed" = "Неуспешно";
+"Waiting for user" = "Изчакване на потребител";
+"Waiting for metadata refresh" = "Изчакване за опресняване на метаданни";
+"Waiting to retry (%ld of %ld)" = "Изчакване за повторен опит (%ld от %ld)";
+"Fetching updates…" = "Получаване на актуализации...";
+"Retrieving items for %@" = "Извличане на елементи за %@";
+
+/* Update */
+"\"%@\" metadata for %@ couldn't be updated" = "\"%@\" метаданните за %@ не могат да бъдат актуализирани";
+"Update failed with status code %d" = "Актуализацията е неуспешна с код на състоянието %d";
+"Error updating %@ metadata" = "Грешка при актуализацията на %@ метаданни";
+
+/* Logging */
+"Standard error output" = "Стандартна изходна грешка";
+"Log file" = "Регистрационен файл";
+"Log HTTP requests and responses" = "Дневник за HTTP заявки и отговори";
+"Log internal file operations" = "Дневник с файл за вътрешни операции ";
+
+/* Custom Scheme Browser Sessions */
+"Can't open custom scheme URL %@." = "Can't open custom scheme URL %@.";
+"Can't build custom scheme URL from %@." = "Can't build custom scheme URL from %@.";
+
+/* Share roles */
+"Invited persons" = "Invited persons";
+"Only invited persons have access. Login required." = "Only invited persons have access. Login required.";
+
+"Viewer" = "Viewer";
+"Download and preview" = "Download and preview";
+"Download, preview and share" = "Download, preview and share";
+"Recipients can view and download contents." = "Recipients can view and download contents.";
+
+"Uploader" = "Uploader";
+"Recipients can upload but existing contents are not revealed." = "Recipients can upload but existing contents are not revealed.";
+
+"Contributor" = "Contributor";
+"Recipients can view, download and upload contents." = "Получателите могат да преглеждат, изтеглят и качват съдържание.";
+
+"Editor" = "Editor";
+"Edit, download, preview and share" = "Edit, download, preview and share";
+"Upload, edit, delete, download and preview" = "Upload, edit, delete, download and preview";
+"Upload, edit, delete, download, preview and share" = "Upload, edit, delete, download, preview and share";
+"Recipients can view, download and edit contents." = "Получателите могат да преглеждат, изтеглят и редактират съдържанието.";
+"Recipients can view, download, edit, delete and upload contents." = "Получателите могат да преглеждат, изтеглят, редактират, изтриват и качват съдържание.";
+
+"Manager" = "Manager";
+"Upload, edit, delete, download, preview and share" = "Upload, edit, delete, download, preview and share";
+
+"Custom" = "Персонализирано";
+"Set detailed permissions" = "Set detailed permissions";
+
+/* Sharing */
+"Sharing requires an active connection." = "Sharing requires an active connection.";
+
+/* Drives */
+"Personal" = "Лично";
+"Shares" = "Споделяния";
+"Shared with me" = "Shared with me";
+
+/* Certificate checks */
+"Certificate changed" = "Промяна в сертификата";
+
+/* Errors */
+"Server doesn't seem to support any authentication method supported by this app." = "Изглежда, че сървърът не поддържа нито един метод за удостоверяване, поддържан от това приложение.";
+"This server runs an unsupported version (%@). Version %@ or later is required by this app." = "Този сървър работи с неподдържана версия (%@). Това приложение изисква версия %@ или по-нова.";
+
+/* App Provider */
+"This file is currently being processed and is not yet available for use. Please try again shortly." = "This file is currently being processed and is not yet available for use. Please try again shortly.";
+
+/* DAV Errors */
+// OCDAVErrorServiceUnavailable
+"Server down for maintenance." = "Сървърът е спрян за поддръжка.";
+// OCDAVErrorNotFound
+"Resource not found." = "Ресурсът не е намерен.";
+
+/* OC Errors */
+"%@ (error %ld, %@)" = "%@  (грешка %ld, %@)";
+"%@ (error %ld)" = "%@  (грешка %ld)";
+
+// OCErrorInternal
+"Internal error." = "Вътрешна грешка.";
+
+// OCErrorInsufficientParameters
+"Insufficient parameters." = "Недостатъчни параметри.";
+
+// OCErrorAuthorizationFailed
+"Authorization failed." = "Упълномощаването е неуспешно.";
+
+// OCErrorAuthorizationRedirect
+"Authorization failed because the server returned a redirect. Authorization may be successful when retried with the redirect URL." = "Упълномощаването е неуспешно, защото сървърът върна пренасочване. Упълномощаването може да бъде успешно при повторен опит с пренасочващият URL адрес.";
+
+// OCErrorAuthorizationNoMethodData
+"Authorization failed because no authorization data was set for the authentication method." = "Authorization failed because no authorization data was set for the authentication method.";
+
+// OCErrorAuthorizationMissingData
+"Authorization failed because data was missing from the secret data for the authentication method." = "Упълномощаването е неуспешно, защото липсват данни от секретните данни за метода на удостоверяване.";
+
+// OCErrroAuthorizationCancelled
+"Authorization was cancelled by the user." = "Упълномощаването е прекратено от потребителя.";
+
+// OCErrorRequestURLSessionTaskConstructionFailed
+"Construction of URL Session Task failed." = "Изграждането на задачата за URL сесия е неуспешно.";
+
+// OCErrorNewerVersionExists
+"A newer version already exists." = "Вече е налична по-нова версия.";
+
+// OCErrorRequestCancelled
+"Request was cancelled." = "Заявката беше анулирана.";
+
+// OCErrorRequestRemovedBeforeScheduling
+"Request was removed before scheduling." = "Заявката е премахната преди да бъде планирана.";
+
+// OCErrorRequestServerCertificateRejected
+"Request was cancelled because the server certificate was rejected." = "Заявката е прекратена, тъй като сертификатът на сървъра е отхвърлен.";
+
+// OCErrorRequestDroppedByURLSession
+"Request was dropped by the NSURLSession." = "Заявката е прекъсната от NSURLSession.";
+
+// OCErrorRequestCompletedWithError
+"Request completed with error." = "Заявката приключи с грешка.";
+
+// OCErrorRequestURLSessionInvalidated
+"Request couldn't be scheduled because the underlying URL session has been invalidated." = "Заявката не можа да бъде планирана, тъй като основната URL сесия е невалидна.";
+
+// OCErrorException
+"An exception occured." = "Възникна изключение.";
+
+// OCErrorResponseUnknownFormat
+"Response was in an unknown format." = "Отговорът е в непознат формат.";
+
+// OCErrorServerDetectionFailed
+"Server detection failed, i.e. when the server at a URL is not an ownCloud instance." = "Откриването на сървъра е неуспешно, т.е. когато сървърът на даден URL адрес не е инстанция на ownCloud.";
+
+// OCErrorServerTooManyRedirects
+"Server detection failed because of too many redirects." = "Откриването на сървъра е неуспешно заради твърде много пренасочвания.";
+
+// OCErrorServerBadRedirection
+"Server redirection to bad/invalid URL." = "Сървърът е пренасочен към лош/невалиден URL адрес.";
+
+// OCErrorServerVersionNotSupported
+"This server version is not supported." = "Тази версия на сървъра не се поддържа.";
+
+// OCErrorServerNoSupportedAuthMethods
+"Server doesn't seem to support any authentication method supported by this app." = "Изглежда, че сървърът не поддържа нито един метод за удостоверяване, поддържан от това приложение.";
+
+// OCErrorCertificateInvalid
+"The certificate is invalid or contains errors" = "Сертификатът е невалиден или съдържа грешки";
+
+// OCErrorCertificateMissing
+"No certificate was returned for a request despite this being a HTTPS connection (should never occur in production, but only if you forgot to provide a certificate during simulated responses to HTTPS requests)." = "Не е върнат сертификат за заявката, въпреки че това е HTTPS връзка (никога не трябва да се появява в производствената среда, но е възможно само ако сте забравили да предоставите сертификат по време на симулираните отговори на HTTPS заявки).";
+
+// OCErrorFeatureNotSupportedForItem
+"This feature is not supported for this item." = "Тази функция не се поддържа за този елемент.";
+
+// OCErrorFeatureNotSupportedByServer
+"This feature is not supported for this server (version)." = "Тази функция не се поддържа за този сървър (версия).";
+
+// OCErrorFeatureNotImplemented
+"This feature is currently not implemented" = "Тази функция в момента не е внедрена";
+
+// OCErrorItemNotFound
+"The targeted item has not been found." = "Целевият елемент не е намерен.";
+
+// OCErrorItemDestinationNotFound
+"The target location has not been found." = "The target location has not been found.";
+
+// OCErrorItemChanged
+"The targeted item has changed." = "Целевият елемент е променен.";
+
+// OCErrorItemInsufficientPermissions
+"The action couldn't be performed on the targeted item because the client lacks permissions." = "Действието не може да бъде извършено върху целевия елемент, тъй като клиентът няма необходимите права.";
+
+// OCErrorItemOperationForbidden
+"The operation on the targeted item is not allowed." = "Операцията върху целевия елемент не е разрешена.";
+
+// OCErrorItemAlreadyExists
+"There already is an item at the destination of this action." = "Вече има елемент в местоназначението на това действие.";
+
+// OCErrorItemNotAvailableOffline
+"Item not available offline." = "Елементът не е наличен офлайн.";
+
+// OCErrorFileNotFound:
+"File not found." = "Файлът не е намерен.";
+
+// OCErrorCancelled
+"The operation was cancelled." = "Операцията беше анулирана.";
+
+// OCErrorOutdatedCache
+"An operation failed due to outdated cache information." = "Операцията е неуспешна поради остаряла кеш информация.";
+
+// OCErrorRunningOperation
+"A running operation prevents execution." = "Текуща операция предотвратява изпълнението.";
+
+// OCErrorShareUnauthorized:
+"Not authorized to access shares." = "Нямате пълномощия, за да споделяте.";
+
+// OCErrorShareUnavailable
+"Shares are unavailable." = "Споделянията не са налични.";
+
+// OCErrorShareItemNotADirectory:
+"Item is not a directory." = "Елементът не е директория.";
+
+// OCErrorShareItemNotFound
+"Item not found." = "Елементът не е намерен.";
+
+// OCErrorShareNotFound
+"Share not found." = "Споделянето не е намерено.";
+
+// OCErrorShareUnknownType
+"Unknown share type." = "Непознат тип споделяне.";
+
+// OCErrorSharePublicUploadDisabled
+"Public upload was disabled by the administrator." = "Публичното качване е деактивирано от администратор.";
+
+// OCErrorNotAvailableOffline
+"Not available offline." = "Не е налично офлайн.";
+
+// OCErrorAuthorizationRetry
+"Authorization needs to be retried." = "Трябва да се направи повторен опит за упълномощаване.";
+
+// OCErrorItemPolicyRedundant
+"Another item policy of the same kind already includes the item, making the addition of this item policy redundant." = "Друга политика на елемент от същия вид вече включва елемента, поради което  добавянето й е излишно.";
+
+// OCErrorItemPolicyMakesRedundant
+"Other item policies of the same kind covering subsets of this item policy become redundant by the addition of this item policy." = "Другите политики за елементите от същия вид, които обхващат подгрупи от тази политика за елементите, стават излишни поради добавянето на тази политика за елементите.";
+
+// OCErrorUnnormalizedPath
+"The provided path is not normalized." = "Предоставеният път не е нормализиран.";
+
+// OCErrorPrivateLinkInvalidFormat
+"Private link format invalid." = "Форматът на поверителната връзка е невалиден.";
+
+// OCErrorPrivateLinkResolutionFailed
+"Resolution of private link failed." = "Разрешаването на поверителната връзка е неуспешно.";
+
+// OCErrorAuthorizationMethodNotAllowed
+"Authentication method not allowed. Re-authentication needed." = "Методът за удостоверяване не е разрешен. Необходимо е повторно удостоверяване.";
+
+// OCErrorAuthorizationMethodUnknown
+"Authentication method unknown." = "Методът за удостоверяване е неизвестен.";
+
+// OCErrorServerConnectionValidationFailed
+"Connection validation failed." = "Удостоверяването на връзката е неуспешно.";
+
+// OCErrorAuthorizationClientRegistrationFailed
+"Client registration failed." = "Регистрацията на клиента е неуспешна.";
+
+// OCErrorAuthorizationNotMatchingRequiredUserID
+"The logged in user is not matching the required user ID." = "Влезлият потребител не съответства на необходимия ID.";
+"You logged in as user %@, but must log in as user %@. Please retry." = "Влязъл сте като потребител%@, но трябва да влезете като потребител %@. Моля, опитайте отново.";
+"Login as user %@ required. Please retry." = "Изисква се влизане като потребител %@. Моля, опитайте отново.";
+
+// OCErrorDatabaseMigrationRequired
+"Database upgrade required. Please open the app to perform the upgrade." = "Изисква се надграждане на базата данни. Моля, отворете приложението, за да извършите надграждането.";
+
+// OCErrorHostUpdateRequired
+"Bookmark created with a newer app version. Please update the app." = "Отметката е създадена с по-нова версия на приложението. Моля, актуализирайте приложението.";
+
+// OCErrorAuthorizationCantOpenCustomSchemeURL
+"Can't open authorization URL with custom scheme." = "Can't open authorization URL with custom scheme.";
+
+// OCErrorLockInvalidated
+"Lock invalidated." = "Lock invalidated.";
+
+// OCErrorRequestTimeout
+"Request timed out" = "Времето на заявката изтече";
+
+// OCErrorResourceDoesNotExist
+"Resource does not exist." = "Resource does not exist.";
+
+// OCErrorWebFingerLacksServerInstanceRelation
+"Web finger response lacks server instance relation." = "Web finger response lacks server instance relation.";
+
+// OCErrorUnknownUser
+"Unknown user" = "Непознат потребител";
+
+// OCErrorInvalidType
+"Invalid type." = "Invalid type.";
+
+// OCErrorRequiredValueMissing
+"Required value missing." = "Required value missing.";
+
+// OCErrorGraphError
+"Generic graph error." = "Generic graph error.";
+
+// OCErrorDataItemTypeUnavailable
+"Object does not return DataItemType." = "Object does not return DataItemType.";
+
+// OCErrorDataConverterUnavailable
+"No data converter available for conversion." = "No data converter available for conversion.";
+
+// OCErrorMissingDriveID
+"Missing Drive ID." = "Missing Drive ID.";
+
+// OCErrorResourceNotFound
+"Resource not found." = "Ресурсът не е намерен.";
+
+// OCErrorInvalidParameter
+"Invalid parameter." = "Invalid parameter.";
+
+// OCErrorItemProcessing
+"Item is currently processing." = "Item is currently processing.";
+
+/* Diagnostic */
+"Files" = "Файлове";
+"Folders" = "Папки";
+"Total Items" = "Общо елементи";
+"Removed Items" = "Изтрити елементи";
+"Scheduled folder scans" = "Планирано сканиране на папки";
+"Sync Record ID"  = "ID на записа за синхронизация";
+"State" = "Състояние";
+"In progress since" = "В процес на изпълнение от";
+"Origin Process" = "Произход на процеса";
+"Origin Process Valid" = "Произходът на процеса е валиден";
+"Timestamp" = "Времево клеймо";
+"Lane ID" = "ID на лентата";
+"Local ID" = "Локално ID";
+"Action ID" = "ID на действието";
+"Process Sync Records" = "Процес на синхронизиране на записи";
+"Reschedule" = "Промяна на графика";
+"Deschedule (remove)" = "Отмяна на графика (премахване)";
+"Action" = "Действие";
+"Wait Conditions" = "Условия за изчакване";
+"Events" = "Събития";
+"Class" = "Клас";
+"Identifier" = "Идентификатор";
+"Localized Description" = "Локално описание";
+"Database size" = "Размер на базата данни";
+"Thumbnail database size" = "Размер на миниатюрната база данни";
+"Vacuum" = "Вакуум";
+"UUID" = "UUID";
+"Name" = "Име";
+"URL" = "URL адрес";
+"Origin URL" = "Изходен URL адрес";
+"Use Origin URL as URL" = "Използване на изходния URL адрес като URL адрес";
+"Certificate Date" = "Дата на сертификата";
+"Invalidate Certificate" = "Невалиден сертификат";
+"User Name" = "Потребителско име";
+"Auth Method" = "Метод за удостоверяване";
+"Auth Data" = "Данни за удостоверяване";
+"Auth Validation Date" = "Дата на потвърждаване на удостоверяването";
+"Database Version" = "Версия на базата данни";
+"UserInfo" = "Потребителска информация";
+"Invalidate Login Data" = "Невалидни данни за вход";
+"Delete Authentication Data" = "Изтриване на данните за удостоверяване";
+"Remove Database Version" = "Премахване на версията на базата данни";
+"Delete Database" = "Изтриване на база данни";
+"Removed database at %@" = "Премахната е базата данни в %@";
+"Removed thumbnail database at %@" = "Премахната е базата данни с миниатюри в %@";

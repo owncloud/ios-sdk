@@ -102,7 +102,7 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				break;
 
 				case OCErrorAuthorizationNoMethodData:
-					unlocalizedString = @"Authorization failed because no secret data was set for the authentication method.";
+					unlocalizedString = @"Authorization failed because no authorization data was set for the authentication method.";
 				break;
 
 				case OCErrorAuthorizationMissingData:
@@ -202,7 +202,7 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				break;
 
 				case OCErrorItemDestinationNotFound:
-					unlocalizedString = @"The destination item has not been found.";
+					unlocalizedString = @"The target location has not been found.";
 				break;
 
 				case OCErrorItemChanged:

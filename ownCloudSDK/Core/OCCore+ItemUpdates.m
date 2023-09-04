@@ -541,13 +541,15 @@
 
 						if (addedUpdatedRemovedItems.count > 0)
 						{
-							query.state = OCQueryStateWaitingForServerReply;
+							[query performUpdates:^{
+								query.state = OCQueryStateWaitingForServerReply;
 
-							[query mergeItemsToFullQueryResults:addedUpdatedRemovedItems syncAnchor:newSyncAnchor];
+								[query mergeItemsToFullQueryResults:addedUpdatedRemovedItems syncAnchor:newSyncAnchor];
 
-							query.state = OCQueryStateIdle;
+								query.state = OCQueryStateIdle;
 
-							[query setNeedsRecomputation];
+								[query setNeedsRecomputation];
+							}];
 						}
 					}
 

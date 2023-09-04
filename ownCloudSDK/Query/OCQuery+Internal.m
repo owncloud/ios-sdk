@@ -19,6 +19,7 @@
 #import "OCQuery+Internal.h"
 #import "OCCoreItemList.h"
 #import "OCStatistic.h"
+#import "OCLogger.h"
 
 @implementation OCQuery (Internal)
 
@@ -230,6 +231,39 @@
 }
 
 #pragma mark - Needs recomputation
+- (void)performUpdates:(dispatch_block_t)updates
+{
+	[self beginUpdates];
+	updates();
+	[self endUpdates];
+}
+- (void)beginUpdates
+{
+	@synchronized(self)
+	{
+		_activeUpdateCounter++;
+	}
+}
+
+- (void)endUpdates
+{
+	@synchronized(self)
+	{
+		_activeUpdateCounter--;
+
+		if (_activeUpdateCounter == 0)
+		{
+			self.hasChangesAvailable = YES;
+			_queryResultsDataSource.state = [self _dataSourceState];
+		}
+
+		if (_activeUpdateCounter < 0)
+		{
+			OCLogError(@"Active update counter < 0 for %@ - this should not happen!", self);
+		}
+	}
+}
+
 - (void)setNeedsRecomputation
 {
 	BOOL updateProcessedResults = NO;

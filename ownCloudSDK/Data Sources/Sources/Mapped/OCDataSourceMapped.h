@@ -32,7 +32,7 @@ typedef void(^OCDataSourceMappedItemDestroyer)(OCDataSourceMapped *mappedSource,
 
 - (instancetype)initWithItems:(nullable NSArray<id<OCDataItem>> *)items NS_UNAVAILABLE;
 
-- (instancetype)initWithSource:(OCDataSource *)source creator:(OCDataSourceMappedItemCreator)itemCreator updater:(nullable OCDataSourceMappedItemUpdater)updater destroyer:(nullable OCDataSourceMappedItemDestroyer)destroyer queue:(nullable dispatch_queue_t)queue;
+- (instancetype)initWithSource:(nullable OCDataSource *)source creator:(OCDataSourceMappedItemCreator)itemCreator updater:(nullable OCDataSourceMappedItemUpdater)updater destroyer:(nullable OCDataSourceMappedItemDestroyer)destroyer queue:(nullable dispatch_queue_t)queue;
 
 @end
 
