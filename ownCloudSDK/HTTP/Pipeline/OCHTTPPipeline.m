@@ -36,6 +36,7 @@
 #import "OCHTTPPolicyManager.h"
 #import "OCHTTPRequest+Stream.h"
 #import "NSURLSessionTask+Debug.h"
+#import "NSURLSessionTaskMetrics+OCCompactSummary.h"
 
 @interface OCHTTPPipeline ()
 {
@@ -1303,7 +1304,8 @@
 
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Response", task.request.method, OCLogTagTypedID(@"RequestID", task.request.identifier), OCLogTagTypedID(@"URLSessionTaskID", task.urlSessionTaskID), nil];
 		OCTLogDebug([extraTags arrayByAddingObject:@"HTSum"], @"<- %lu %@ (%@ %@)%@", (unsigned long)task.response.status.code, task.response.status.name, task.request.method, task.request.effectiveURL, ((task.response.redirectURL != nil) ? [NSString stringWithFormat:@" -> %@ ",task.response.redirectURL] : @""));
-		OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n%@# RESPONSE --------------------------------------------------------\n%@Method:      %@\n%@URL:         %@\n%@Request-ID:  %@%@\n%@Error:       %@\n%@Req Signals: %@\n%@- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", infoPrefix, infoPrefix, task.request.method, infoPrefix, task.request.effectiveURL, infoPrefix, task.request.identifier, ((task.request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID] != nil) ? (![task.request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID] isEqual:task.request.identifier] ? [NSString stringWithFormat:@" (original: %@)", task.request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID]] : @"") : @""), infoPrefix, errorDescription, infoPrefix, [task.request.requiredSignals.allObjects componentsJoinedByString:@", "], infoPrefix, [task.response responseDescriptionPrefixed:prefixedLogging]);
+		OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n%@# RESPONSE --------------------------------------------------------\n%@Method:      %@\n%@URL:         %@\n%@Request-ID:  %@%@\n%@Error:       %@\n%@Req Signals: %@\n%@Metrics: %@\n%@- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", infoPrefix, infoPrefix, task.request.method, infoPrefix, task.request.effectiveURL, infoPrefix, task.request.identifier, ((task.request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID] != nil) ? (![task.request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID] isEqual:task.request.identifier] ? [NSString stringWithFormat:@" (original: %@)", task.request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID]] : @"") : @""), infoPrefix, errorDescription, infoPrefix, [task.request.requiredSignals.allObjects componentsJoinedByString:@", "], infoPrefix, task.metrics.compactSummary, infoPrefix, [task.response responseDescriptionPrefixed:prefixedLogging]);
+
 	}
 
 	// Attempt delivery
@@ -2038,18 +2040,17 @@
 {
 	OCHTTPPipelineTask *task = nil;
 	NSError *backendError = nil;
+	NSString *compactSummary = nil;
 
 	if (OCLogToggleEnabled(OCLogOptionLogRequestsAndResponses) && OCLoggingEnabled())
 	{
-		NSString *XRequestID = [urlSessionTask.currentRequest valueForHTTPHeaderField:OCHTTPHeaderFieldNameXRequestID];
-		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Metrics", urlSessionTask.currentRequest.HTTPMethod, OCLogTagTypedID(@"RequestID", XRequestID), OCLogTagTypedID(@"URLSessionTaskID", @(urlSessionTask.taskIdentifier)), nil];
-
-		OCPFLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Task [%@] didFinishCollectingMetrics: %@", urlSessionTask.requestIdentityDescription, [metrics compactSummaryWithTask:urlSessionTask]);
+		compactSummary = [metrics compactSummaryWithTask:urlSessionTask];
 	}
 
 	if ((task = [self.backend retrieveTaskForPipeline:self URLSession:session task:urlSessionTask error:&backendError]) != nil)
 	{
 		task.metrics = [[OCHTTPPipelineTaskMetrics alloc] initWithURLSessionTaskMetrics:metrics];
+		task.metrics.compactSummary = compactSummary;
 	}
 	else
 	{

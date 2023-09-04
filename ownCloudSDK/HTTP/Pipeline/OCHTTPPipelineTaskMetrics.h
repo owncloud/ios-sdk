@@ -48,6 +48,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nullable, readonly, nonatomic) NSNumber *totalTransferDuration; //!< Number of seconds a transfer took place (requestSendTimeInterval + responseReceiveTimeInterval)
 
+@property(nullable, strong) NSString *compactSummary; //!< Optional, compact summary created from -[NSURLSessionTask compactSummaryWithTask:]
+
 #pragma mark - Composition
 - (instancetype)initWithURLSessionTaskMetrics:(NSURLSessionTaskMetrics *)urlSessionTaskMetrics;
 

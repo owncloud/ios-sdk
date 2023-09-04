@@ -158,6 +158,8 @@
 
 	[coder encodeObject:_totalRequestSizeBytes forKey:@"totalOut"];
 	[coder encodeObject:_totalResponseSizeBytes forKey:@"totalIn"];
+
+	[coder encodeObject:_compactSummary forKey:@"compactSummary"];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)decoder
@@ -177,6 +179,8 @@
 
 		_totalRequestSizeBytes = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"totalOut"];
 		_totalResponseSizeBytes = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"totalIn"];
+
+		_compactSummary = [decoder decodeObjectOfClass:NSString.class forKey:@"compactSummary"];
 	}
 
 	return (self);
