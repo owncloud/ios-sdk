@@ -361,6 +361,43 @@
 			}
 		}
 
+		if (error == nil)
+		{
+			id possibleKeys;
+
+			if ((possibleKeys = metadata[OCClassSettingsMetadataKeyPossibleKeys]) != nil)
+			{
+				if ([resultValue isKindOfClass:NSDictionary.class])
+				{
+					NSMutableDictionary *resultDictionary = [NSMutableDictionary new];
+
+					for (id key in (NSDictionary *)resultValue)
+					{
+						id validatedValue;
+
+						if ((validatedValue = [self _validatedValue:key forPossibleValues:possibleKeys ofSettingsIdentifier:settingsIdentifier key:key autoExpansion:metadata[OCClassSettingsMetadataKeyAutoExpansion] error:&error]) != nil)
+						{
+							resultDictionary[key] = ((NSDictionary *)resultValue)[key];
+						}
+						else
+						{
+							// Ignore
+						}
+					}
+
+					if (resultValue != nil)
+					{
+						resultValue = resultDictionary;
+					}
+				}
+				else
+				{
+					// Possible keys requires a dictionary value, so drop any values that are not a dictionary
+					resultValue = nil;
+				}
+			}
+		}
+
 		// Custom Validation Class
 		NSString *validationClassName;
 
