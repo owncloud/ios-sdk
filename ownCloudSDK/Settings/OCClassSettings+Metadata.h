@@ -60,6 +60,7 @@ extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeySubCategoryTag; //!<
 ///
 /// - an array of dictionaries (f.ex. [ { OCClassSettingsMetadataKeyValue : @"allow-all", OCClassSettingsMetadataKeyDescription : @"Allows all." }, … ]), leaving room for a future expansion beyond fixed values.
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyPossibleValues;
+extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyPossibleKeys;
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyValue; //!< Only for use in OCClassSettingsMetadataKeyPossibleValues dictionaries.
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyDocDefaultValue; //!< Return-only key, with the default value for documentation.
 extern OCClassSettingsMetadataKey OCClassSettingsMetadataKeyAutoExpansion; //!< None for no auto-expansion, Trailing for auto expansion if the value is identical to the end of a supported value. Defaults to None.

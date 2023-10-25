@@ -338,6 +338,7 @@ OCClassSettingsMetadataKey OCClassSettingsMetadataKeyCategoryTag = @"categoryTag
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeySubCategory = @"subCategory";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeySubCategoryTag = @"subCategoryTag";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyPossibleValues = @"possibleValues";
+OCClassSettingsMetadataKey OCClassSettingsMetadataKeyPossibleKeys = @"possibleKeys";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyAutoExpansion = @"autoExpansion";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyValue = @"value";
 OCClassSettingsMetadataKey OCClassSettingsMetadataKeyDocDefaultValue = @"defaultValue";
