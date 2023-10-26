@@ -308,6 +308,17 @@
 	return (saveAndPostUpdate);
 }
 
+- (void)replaceBookmarks:(NSArray<OCBookmark *> *)bookmarks
+{
+	@synchronized(self)
+	{
+		[_bookmarks setArray:bookmarks];
+		[_bookmarksDatasource setVersionedItems:_bookmarks];
+	}
+
+	[self saveBookmarks];
+}
+
 #pragma mark - Data sources
 - (OCDataSource *)bookmarksDatasource
 {
