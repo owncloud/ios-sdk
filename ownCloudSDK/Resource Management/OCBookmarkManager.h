@@ -50,6 +50,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)updateBookmark:(OCBookmark *)bookmark; //!< Notify the manager that properties of the bookmark have been changed. Will return YES if the bookmark is managed by the manager, NO if it's not.
 
+- (void)replaceBookmarks:(NSArray<OCBookmark *> *)bookmarks; //!< Replace current .bookmarks with the provided bookmarks, update .bookmarksDatasource and -saveBookmarks.
+
 #pragma mark - Data sources
 @property(readonly, nonatomic, strong) OCDataSource *bookmarksDatasource;
 
