@@ -374,14 +374,22 @@
 					for (id key in (NSDictionary *)resultValue)
 					{
 						id validatedValue;
+						NSError *validationError = nil;
 
-						if ((validatedValue = [self _validatedValue:key forPossibleValues:possibleKeys ofSettingsIdentifier:settingsIdentifier key:key autoExpansion:metadata[OCClassSettingsMetadataKeyAutoExpansion] error:&error]) != nil)
+						if ((validatedValue = [self _validatedValue:key forPossibleValues:possibleKeys ofSettingsIdentifier:settingsIdentifier key:key autoExpansion:metadata[OCClassSettingsMetadataKeyAutoExpansion] error:&validationError]) != nil)
 						{
 							resultDictionary[key] = ((NSDictionary *)resultValue)[key];
 						}
 						else
 						{
-							// Ignore
+							if (validationError != nil)
+							{
+								if (!([validationError.domain isEqual:OCClassSettingsErrorDomain] && (validationError.code == OCClassSettingsErrorCodeInvalidValue)))
+								{
+									// Ignore invalid keys, but not any other error
+									error = validationError;
+								}
+							}
 						}
 					}
 
