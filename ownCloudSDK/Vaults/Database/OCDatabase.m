@@ -1339,7 +1339,14 @@
 		}
 		else
 		{
-			OCLogError(@"Sync record without recordID can't be used for updating: %@", syncRecord);
+			if (syncRecord.removed)
+			{
+				OCLogError(@"Removed sync record can't be used for updating: %@", syncRecord);
+			}
+			else
+			{
+				OCLogError(@"Sync record without recordID can't be used for updating: %@", syncRecord);
+			}
 		}
 	}
 
