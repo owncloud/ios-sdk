@@ -212,6 +212,13 @@
 				}
 			} copy],
 
+			@"oc:spaceid" : [^(OCItem *item, NSString *key, id value) {
+				if ([value isKindOfClass:NSString.class])
+				{
+					item.driveID = value;
+				}
+			} copy],
+
 			@"d:quota-available-bytes" : [^(OCItem *item, NSString *key, id value) {
 				if ([value isKindOfClass:[NSString class]])
 				{
