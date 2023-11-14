@@ -188,7 +188,7 @@
 				[logMsg appendString:@"-- Terminated --\n"];
 			}
 
-			OCLog(@"%@", logMsg);
+			OCLogVerbose(@"%@", logMsg);
 		}
 	}
 }
