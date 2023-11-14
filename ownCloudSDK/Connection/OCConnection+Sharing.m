@@ -977,7 +977,7 @@
 	}
 }
 
-- (nullable NSProgress *)retrievePathForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, NSString * _Nullable path))completionHandler
+- (nullable NSProgress *)retrievePathForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, OCLocation * _Nullable location))completionHandler
 {
 	NSProgress *progress = nil;
 	OCPrivateLinkFileID privateFileID = nil;
@@ -1047,7 +1047,9 @@
 								}
 							}
 
-							completionHandler(error, normalizedPath);
+							OCLocation *normalizedLocation = [[OCLocation alloc] initWithDriveID:location.driveID path:normalizedPath];
+
+							completionHandler(error, normalizedLocation);
 						}];
 
 						return;

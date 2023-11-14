@@ -637,7 +637,7 @@
 
 - (nullable NSProgress *)_retrieveItemForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item))completionHandler
 {
-	NSProgress *progress = [_connection retrievePathForPrivateLink:privateLink completionHandler:^(NSError * _Nullable error, NSString * _Nullable path) {
+	NSProgress *progress = [_connection retrievePathForPrivateLink:privateLink completionHandler:^(NSError * _Nullable error, OCLocation * _Nullable location) {
 		if (error != nil)
 		{
 			// Forward error
@@ -650,7 +650,7 @@
 			__block BOOL trackingCompleted = NO;
 			OCCoreItemTracking tracking;
 
-			if ((tracking = [self trackItemAtLocation:[OCLocation legacyRootPath:path] trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial) {
+			if ((tracking = [self trackItemAtLocation:location trackingHandler:^(NSError * _Nullable error, OCItem * _Nullable item, BOOL isInitial) {
 				BOOL endTracking = NO;
 
 				if (trackingCompleted)

@@ -328,7 +328,7 @@ typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCS
 
 #pragma mark - Private Link
 - (nullable NSProgress *)retrievePrivateLinkForItem:(OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable privateLink))completionHandler;
-- (nullable NSProgress *)retrievePathForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, NSString * _Nullable path))completionHandler;
+- (nullable NSProgress *)retrievePathForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, OCLocation * _Nullable location))completionHandler;
 
 @end
 
