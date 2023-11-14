@@ -299,10 +299,13 @@
 		// Apply body
 		if (_bodyURL != nil)
 		{
+			// Mitigate error "The request of a upload task should not contain a body or a body stream, use `uploadTask(with:fromFile:)` or supply the body stream through the `urlSession(_:needNewBodyStreamForTask:)` delegate method."
+			/*
 			if ((_bodyURLInputStream = [[NSInputStream alloc] initWithURL:_bodyURL]) != nil)
 			{
 				urlRequest.HTTPBodyStream = _bodyURLInputStream;
 			}
+			*/
 		}
 		else if (self.bodyData != nil)
 		{

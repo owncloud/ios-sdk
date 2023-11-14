@@ -37,6 +37,8 @@
 	NSData *_avatarData;
 
 	NSString *_lastUsername;
+
+	NSString *_lastDescription;
 }
 @end
 
@@ -488,22 +490,32 @@
 - (NSString *)description
 {
 	NSData *authData = self.authenticationData;
+	NSString *lastDescription = _lastDescription;
 
-	return ([NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self,
-			((_name!=nil) ? [@", name: " stringByAppendingString:_name] : @""),
-			((_uuid!=nil) ? [@", uuid: " stringByAppendingString:_uuid.UUIDString] : @""),
-			((_databaseVersion!=OCDatabaseVersionUnknown) ? [@", databaseVersion: " stringByAppendingString:@(_databaseVersion).stringValue] : @""),
-			((_url!=nil) ? [@", url: " stringByAppendingString:_url.absoluteString] : @""),
-			((_originURL!=nil) ? [@", originURL: " stringByAppendingString:_originURL.absoluteString] : @""),
-			((_capabilities!=nil) ? [@", capabilities: " stringByAppendingString:_capabilities.description] : @""),
-			((_certificateStore.allRecords.count>0) ? [@", certificates: " stringByAppendingString:_certificateStore.allRecords.description] : @""),
-			((_authenticationMethodIdentifier!=nil) ? [@", authenticationMethodIdentifier: " stringByAppendingString:_authenticationMethodIdentifier] : @""),
-			((authData!=nil) ? [@", authenticationData: " stringByAppendingFormat:@"%lu bytes", authData.length] : @""),
-			((_authenticationValidationDate!=nil) ? [@", authenticationValidationDate: " stringByAppendingString:_authenticationValidationDate.description] : @""),
-			((_userDisplayName!=nil) ? [@", userDisplayName: " stringByAppendingString:_userDisplayName] : @""),
-			((_user!=nil) ? [@", user: " stringByAppendingString:_user.description] : @""),
-			((_userInfo!=nil) ? [@", userInfo: " stringByAppendingString:_userInfo.description] : @"")
-		]);
+	_lastDescription = [NSString stringWithFormat:@"<%@: %p%@%@%@%@%@%@%@%@%@%@%@%@%@>", NSStringFromClass(self.class), self,
+		((_name!=nil) ? [@", name: " stringByAppendingString:_name] : @""),
+		((_uuid!=nil) ? [@", uuid: " stringByAppendingString:_uuid.UUIDString] : @""),
+		((_databaseVersion!=OCDatabaseVersionUnknown) ? [@", databaseVersion: " stringByAppendingString:@(_databaseVersion).stringValue] : @""),
+		((_url!=nil) ? [@", url: " stringByAppendingString:_url.absoluteString] : @""),
+		((_originURL!=nil) ? [@", originURL: " stringByAppendingString:_originURL.absoluteString] : @""),
+		((_capabilities!=nil) ? [@", capabilities: " stringByAppendingString:_capabilities.description] : @""),
+		((_certificateStore.allRecords.count>0) ? [@", certificates: " stringByAppendingString:_certificateStore.allRecords.description] : @""),
+		((_authenticationMethodIdentifier!=nil) ? [@", authenticationMethodIdentifier: " stringByAppendingString:_authenticationMethodIdentifier] : @""),
+		((authData!=nil) ? [@", authenticationData: " stringByAppendingFormat:@"%lu bytes", authData.length] : @""),
+		((_authenticationValidationDate!=nil) ? [@", authenticationValidationDate: " stringByAppendingString:_authenticationValidationDate.description] : @""),
+		((_userDisplayName!=nil) ? [@", userDisplayName: " stringByAppendingString:_userDisplayName] : @""),
+		((_user!=nil) ? [@", user: " stringByAppendingString:_user.description] : @""),
+		((_userInfo!=nil) ? [@", userInfo: " stringByAppendingString:_userInfo.description] : @"")
+	];
+
+	if ((lastDescription == nil) || ![lastDescription isEqual:_lastDescription]) {
+		return (_lastDescription);
+	}
+
+	return ([NSString stringWithFormat:@"<%@: %p%@%@>", NSStringFromClass(self.class), self,
+		((_name!=nil) ? [@", name: " stringByAppendingString:_name] : @""),
+		((_uuid!=nil) ? [@", uuid: " stringByAppendingString:_uuid.UUIDString] : @"")
+	]);
 }
 
 #pragma mark - Copying
