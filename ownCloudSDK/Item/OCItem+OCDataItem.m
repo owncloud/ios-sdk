@@ -32,7 +32,7 @@
 
 - (OCDataItemVersion)dataItemVersion
 {
-	return (@(_versionSeed));
+	return (@(_versionSeed ^ ((self.syncActivity << 8) | self.cloudStatus)));
 }
 
 #pragma mark - OCDataConverter for OCDrives
