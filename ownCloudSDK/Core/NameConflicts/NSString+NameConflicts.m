@@ -115,7 +115,14 @@
 
 	if (extension != nil)
 	{
-		return ([baseName stringByAppendingPathExtension:extension]);
+		if (baseName.length > 0)
+		{
+			return ([baseName stringByAppendingPathExtension:extension]);
+		}
+		else
+		{
+			return ([@"." stringByAppendingString:extension]);
+		}
 	}
 
 	return (baseName);
@@ -171,7 +178,14 @@
 
 	if (extension != nil)
 	{
-		return ([baseName stringByAppendingPathExtension:extension]);
+		if (baseName.length > 0)
+		{
+			return ([baseName stringByAppendingPathExtension:extension]);
+		}
+		else
+		{
+			return ([@"." stringByAppendingString:extension]);
+		}
 	}
 
 	return (baseName);
