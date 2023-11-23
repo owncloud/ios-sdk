@@ -40,12 +40,13 @@
 	return (privateFileID);
 }
 
-- (OCFileIDUniquePrefix)fileIDUniquePrefixFromPrivateLinkInCore:(OCCore *)core
+- (OCFileIDUniquePrefix)fileIDUniquePrefixFromPrivateLinkInCore:(OCCore *)core isPrefix:(BOOL *)outIsPrefix
 {
 	// Put any special handling here if the private link fileID
 	// is not / no longer identical to FileIDs - or needs conversion
 	OCPrivateLinkFileID linkFileID;
 	OCFileIDUniquePrefix uniquePrefix = nil;
+	BOOL isPrefix = YES;
 
 	if ((linkFileID = self.privateLinkFileID) != nil)
 	{
@@ -54,7 +55,19 @@
 		if ([[NSString stringWithFormat:@"%lu",fileIDInt] isEqual:linkFileID]) // Fully numeric ID
 		{
 			uniquePrefix = [NSString stringWithFormat:@"%08lu", fileIDInt]; // Prefix of OC10-style fileIDs (f.ex. 00000090ocxif4l0973a, where "00000090" is the numeric file ID and "ocxif4l0973a" is the host ID)
+			isPrefix = YES;
 		}
+		else if (core.useDrives)
+		{
+			// ocis-style, non-numeric File ID
+			uniquePrefix = linkFileID;
+			isPrefix = NO;
+		}
+	}
+
+	if (outIsPrefix != NULL)
+	{
+		*outIsPrefix = isPrefix;
 	}
 
 	return (uniquePrefix);

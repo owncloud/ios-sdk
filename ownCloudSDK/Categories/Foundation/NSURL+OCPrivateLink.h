@@ -29,7 +29,7 @@ typedef NSString* OCPrivateLinkFileID;
 
 @property(readonly,nonatomic,nullable) OCPrivateLinkFileID privateLinkFileID;
 
-- (nullable OCFileIDUniquePrefix)fileIDUniquePrefixFromPrivateLinkInCore:(OCCore *)core; //!< Returns the fileID (if any) for the private link (if any) for the provided core.
+- (nullable OCFileIDUniquePrefix)fileIDUniquePrefixFromPrivateLinkInCore:(OCCore *)core isPrefix:(BOOL *)outIsPrefix; //!< Returns the fileID (if any) for the private link (if any) for the provided core.
 
 @end
 

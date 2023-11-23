@@ -602,28 +602,44 @@
 
 - (nullable NSProgress *)retrieveItemForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item))completionHandler
 {
-	OCFileIDUniquePrefix fileIDUniquePrefix;
+	OCFileIDUniquePrefix idPart;
+	BOOL isPrefix = YES;
 	NSProgress *retrieveProgress = nil;
 
 	// Try to extract a FileID from the private link
-	if ((fileIDUniquePrefix = [privateLink fileIDUniquePrefixFromPrivateLinkInCore:self]) != nil)
+	if ((idPart = [privateLink fileIDUniquePrefixFromPrivateLinkInCore:self isPrefix:&isPrefix]) != nil)
 	{
 		// Try resolution from database first
 		retrieveProgress = [NSProgress indeterminateProgress];
 
-		[self.database retrieveCacheItemForFileIDUniquePrefix:fileIDUniquePrefix includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
-			if (item != nil)
+		void (^HandleRetrievalResult)(OCItem *item) = [^(OCItem *item) {
+			if (item != nil) 
 			{
-				OCLogDebug(@"Resolved private link %@ locally - using fileID %@ - to item %@", OCLogPrivate(privateLink), OCLogPrivate(fileIDUniquePrefix), OCLogPrivate(item));
+				OCLogDebug(@"Resolved private link %@ locally - using fileID %@ - to item %@", OCLogPrivate(privateLink), OCLogPrivate(idPart), OCLogPrivate(item));
 				completionHandler(nil, item);
 			}
 			else
 			{
-				OCLogDebug(@"Resolving private link %@ locally - using fileID %@ - failed: resolving via server…", OCLogPrivate(privateLink), OCLogPrivate(fileIDUniquePrefix));
+				OCLogDebug(@"Resolving private link %@ locally - using fileID %@ - failed: resolving via server…", OCLogPrivate(privateLink), OCLogPrivate(idPart));
 				NSProgress *progress = [self _retrieveItemForPrivateLink:privateLink completionHandler:completionHandler];
 				[retrieveProgress addChild:progress withPendingUnitCount:0];
 			}
-		}];
+		} copy];
+
+		if (isPrefix)
+		{
+			// ID Part is OC10-style File ID prefix
+			[self.database retrieveCacheItemForFileIDUniquePrefix:idPart includingRemoved:NO completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+				HandleRetrievalResult(item);
+			}];
+		}
+		else
+		{
+			// ID Part is File ID
+			[self.database retrieveCacheItemForFileID:(OCFileID)idPart completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+				HandleRetrievalResult(item);
+			}];
+		}
 	}
 	else
 	{
