@@ -32,9 +32,14 @@
 
 	urlComponents.queryItems = queryItems;
 
-	// NSURLComponents.percentEncodedQuery will NOT escape "+" as "%2B" because Apple argues that's not what's in the standard and causes issues with normalization
-	// (source: http://www.openradar.me/24076063)
-	return ([[[urlComponents percentEncodedQuery] stringByReplacingOccurrencesOfString:@"+" withString:@"%2B"] dataUsingEncoding:NSUTF8StringEncoding]);
+	NSString *encodedString = urlComponents.percentEncodedQuery;
+	// NSURLComponents.percentEncodedQuery will NOT
+	// - escape "+" as "%2B" because Apple argues that's not what's in the standard and causes issues with normalization (source: http://www.openradar.me/24076063)
+	encodedString = [encodedString stringByReplacingOccurrencesOfString:@"+" withString:@"%2B"];
+	// - escape ";" as "%3B" (seen under iOS 17.0.1)
+	encodedString = [encodedString stringByReplacingOccurrencesOfString:@";" withString:@"%3B"];
+
+	return ([encodedString dataUsingEncoding:NSUTF8StringEncoding]);
 }
 
 @end
