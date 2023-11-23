@@ -41,12 +41,7 @@
 #pragma mark - Update state
 - (void)_updateState:(nullable NSNotification *)notification
 {
-	OCNetworkMonitor *networkMonitor = notification.object;
-
-	if (networkMonitor == nil)
-	{
-		networkMonitor = OCNetworkMonitor.sharedNetworkMonitor;
-	}
+	OCNetworkMonitor *networkMonitor = OCNetworkMonitor.sharedNetworkMonitor;
 
 	if (networkMonitor != nil)
 	{
