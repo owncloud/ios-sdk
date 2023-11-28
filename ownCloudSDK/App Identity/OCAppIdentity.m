@@ -18,6 +18,7 @@
 
 #import "OCAppIdentity.h"
 #import "OCFeatureAvailability.h"
+#import "OCMacros.h"
 
 @implementation OCAppIdentity
 
@@ -31,6 +32,8 @@
 
 @synthesize appName = _appName;
 @synthesize appDisplayName = _appDisplayName;
+@synthesize appBundle = _appBundle;
+@synthesize appURLSchemes = _appURLSchemes;
 
 @synthesize componentIdentifier = _componentIdentifier;
 
@@ -150,6 +153,62 @@
 	}
 
 	return (_appBuildNumber);
+}
+
+- (NSURL *)appBundleURL
+{
+	NSURL *bundleURL = NSBundle.mainBundle.bundleURL;
+
+	while ((bundleURL != nil) && ![bundleURL.path isEqual:@"/"] && ![bundleURL.pathExtension isEqual:@"app"]) {
+		bundleURL = bundleURL.URLByDeletingLastPathComponent;
+	};
+
+	return (bundleURL);
+}
+
+- (NSBundle *)appBundle
+{
+	if (_appBundle == nil)
+	{
+		NSURL *appBundleURL;
+
+		if ((appBundleURL = self.appBundleURL) != nil)
+		{
+			_appBundle = [NSBundle bundleWithURL:appBundleURL];
+		}
+	}
+
+	return (_appBundle);
+}
+
+- (NSArray<NSString *> *)appURLSchemes
+{
+	if (_appURLSchemes == nil)
+	{
+		NSDictionary<NSString *, id> *infoDict = self.appBundle.infoDictionary;
+		NSArray<NSDictionary<NSString *,id> *> *urlTypesDictsArray;
+		NSMutableArray<NSString *> *appURLSchemes = [NSMutableArray new];
+
+		if ((urlTypesDictsArray = OCTypedCast(infoDict[@"CFBundleURLTypes"], NSArray)) != nil)
+		{
+			for (NSDictionary<NSString *,id> *urlTypeDict in urlTypesDictsArray)
+			{
+				if ([urlTypeDict isKindOfClass:NSDictionary.class])
+				{
+					NSArray<NSString *> *urlSchemes;
+
+					if ((urlSchemes = OCTypedCast(urlTypeDict[@"CFBundleURLSchemes"], NSArray)) != nil)
+					{
+						[appURLSchemes addObjectsFromArray:urlSchemes];
+					}
+				}
+			}
+		}
+
+		_appURLSchemes = appURLSchemes;
+	}
+
+	return (_appURLSchemes);
 }
 
 - (NSString *)sdkCommit
