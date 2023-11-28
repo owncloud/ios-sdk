@@ -74,6 +74,9 @@ typedef NSString* OCAppComponentIdentifier NS_TYPED_ENUM;
 @property(strong,nonatomic,nullable) NSString *appVersion;
 @property(strong,nonatomic,nullable) NSString *appBuildNumber;
 
+@property(strong,nonatomic,readonly,nullable) NSBundle *appBundle;
+@property(strong,nonatomic,readonly,nullable) NSArray<NSString *> *appURLSchemes;
+
 @property(strong,nonatomic,readonly,nullable) NSString *sdkCommit;
 @property(strong,nonatomic,readonly,nullable) NSString *sdkVersionString;
 
