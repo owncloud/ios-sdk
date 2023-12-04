@@ -1116,10 +1116,10 @@
 
 						[expectPrivateLink fulfill];
 
-						[connection retrievePathForPrivateLink:privateLink completionHandler:^(NSError * _Nullable error, NSString * _Nullable path) {
+						[connection retrievePathForPrivateLink:privateLink completionHandler:^(NSError * _Nullable error, OCLocation * _Nullable location) {
 							XCTAssert(error == nil);
-							XCTAssert(path != nil);
-							XCTAssert([item.path isEqual:path]);
+							XCTAssert(location != nil);
+							XCTAssert([item.path isEqual:location.path]);
 
 							[expectPrivateLinkResolution fulfill];
 

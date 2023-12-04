@@ -777,6 +777,8 @@
 		@"test$[1].nicknames.[0]" 	 : @"max",
 		@"test$[1].nicknames[1]" 	 : @"maxy",
 
+		@"test-two$hello"		 : @"world",
+
 		@"unrelated.settings.with.dots"	 : @"oc"
 	};
 
@@ -806,6 +808,10 @@
 					]
 				}
 		],
+
+		@"test-two" : @{
+			@"hello" : @"world"
+		},
 
 		@"unrelated.settings.with.dots" : @"oc"
 	};
