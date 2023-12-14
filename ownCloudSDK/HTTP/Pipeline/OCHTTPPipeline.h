@@ -35,6 +35,8 @@ typedef NS_ENUM(NSInteger, OCHTTPPipelineState)
 	OCHTTPPipelineStateStopping
 };
 
+typedef NSString* OCHTTPPipelineLogFormat NS_TYPED_ENUM;
+
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol OCHTTPPipelinePolicyHandler <NSObject>
@@ -165,5 +167,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 extern OCClassSettingsIdentifier OCClassSettingsIdentifierHTTP;
 extern OCClassSettingsKey OCHTTPPipelineSettingUserAgent;
+extern OCClassSettingsKey OCHTTPPipelineSettingTrafficLogFormat;
+
+extern OCHTTPPipelineLogFormat OCHTTPPipelineLogFormatPlainText;
+extern OCHTTPPipelineLogFormat OCHTTPPipelineLogFormatJSON;
 
 NS_ASSUME_NONNULL_END
