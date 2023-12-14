@@ -1175,13 +1175,78 @@
 	// Log request
 	if (OCLogToggleEnabled(OCLogOptionLogRequestsAndResponses) && OCLoggingEnabled())
 	{
-		BOOL prefixedLogging = [[OCLogger classSettingForOCClassSettingsKey:OCClassSettingsKeyLogSingleLined] boolValue];
-		NSString *infoPrefix = (prefixedLogging ? @"[info] " : @"");
-		NSString *errorDescription = (error != nil) ? (prefixedLogging ? [[error description] stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"\n"] withString:[NSString stringWithFormat:@"\n[info] "]] : [error description]) : @"-";
-
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Request", request.method, OCLogTagTypedID(@"RequestID", request.identifier), OCLogTagTypedID(@"URLSessionTaskID", task.urlSessionTaskID), nil];
-		OCTLogDebug([extraTags arrayByAddingObject:@"HTSum"], @"-> %@ %@", request.method, request.effectiveURL);
-		OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Sending request:\n%@# REQUEST ---------------------------------------------------------\n%@URL:         %@\n%@Error:       %@\n%@Req Signals: %@\n%@- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", infoPrefix, infoPrefix, request.effectiveURL, infoPrefix, errorDescription, infoPrefix, [request.requiredSignals.allObjects componentsJoinedByString:@", "], infoPrefix, [request requestDescriptionPrefixed:prefixedLogging]);
+		OCHTTPPipelineLogFormat httpLogFormat = [self classSettingForOCClassSettingsKey:OCHTTPPipelineSettingTrafficLogFormat];
+
+		if ([httpLogFormat isEqual:OCHTTPPipelineLogFormatJSON])
+		{
+			// OCHTTPPipelineLogFormatJSON: JSON logging
+			NSMutableDictionary<NSString *, id> *infoDict = [NSMutableDictionary new];
+			NSMutableDictionary<NSString *, NSString *> *headerDict = [NSMutableDictionary new];
+			NSMutableDictionary<NSString *, id> *bodyDict = [NSMutableDictionary new];
+
+			// ## Info
+			// IDs
+			infoDict[@"id"] = request.identifier;
+			if (![request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID] isEqual:request.identifier])
+			{
+				infoDict[@"original-id"] = request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID];
+			}
+			infoDict[@"url-session-task-id"] = task.urlSessionTaskID;
+			infoDict[@"required-signals"] = (request.requiredSignals.count > 0) ? request.requiredSignals.allObjects : nil;
+
+			// Method + URL
+			infoDict[@"method"] = request.method;
+			infoDict[@"url"] = request.effectiveURL.absoluteString;
+
+			// HTTP Error
+			if (error != nil)
+			{
+				infoDict[@"error"] = error.description;
+			}
+
+			// ## Header
+			[OCHTTPRequest formatHeaders:request.headerFields withConsumer:^(NSString *headerField, NSString *value) {
+				headerDict[headerField] = value;
+			}];
+
+			// ## Body
+			NSNumber *bodyLength = nil;
+			NSString *readableContent = [OCHTTPRequest bodyDescriptionForURL:request.bodyURL data:request.bodyData headers:request.headerFields prefixed:NO bodyLength:&bodyLength altTextDescription:NULL];
+			bodyDict[@"length"] = bodyLength;
+			bodyDict[@"data"] = readableContent;
+			bodyDict[@"local-data-url"] = request.bodyURL.absoluteString;
+
+			// Compose JSON dict
+			NSDictionary<NSString *, NSDictionary *> *jsonDict = @{
+				@"request" : @{
+					@"info"   : infoDict,
+					@"header" : headerDict,
+					@"body"   : bodyDict
+				}
+			};
+
+			// Log JSON dict
+			NSError *jsonError = nil;
+			NSData *jsonData;
+			NSString *jsonString = nil;
+
+			if ((jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:&jsonError]) != nil)
+			{
+				jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+			}
+			OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"REQUEST %@ %@", request.identifier, (jsonString != nil) ? jsonString : [NSString stringWithFormat:@"JSON log encoding error: %@", jsonError]);
+		}
+		else
+		{
+			// OCHTTPPipelineLogFormatPlainText + default: plain text logging
+			BOOL prefixedLogging = [[OCLogger classSettingForOCClassSettingsKey:OCClassSettingsKeyLogSingleLined] boolValue];
+			NSString *infoPrefix = (prefixedLogging ? @"[info] " : @"");
+			NSString *errorDescription = (error != nil) ? (prefixedLogging ? [[error description] stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"\n"] withString:[NSString stringWithFormat:@"\n[info] "]] : [error description]) : @"-";
+
+			OCTLogDebug([extraTags arrayByAddingObject:@"HTSum"], @"-> %@ %@", request.method, request.effectiveURL);
+			OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Sending request:\n%@# REQUEST ---------------------------------------------------------\n%@URL:         %@\n%@Error:       %@\n%@Req Signals: %@\n%@- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", infoPrefix, infoPrefix, request.effectiveURL, infoPrefix, errorDescription, infoPrefix, [request.requiredSignals.allObjects componentsJoinedByString:@", "], infoPrefix, [request requestDescriptionPrefixed:prefixedLogging]);
+		}
 	}
 
 	// Update task
@@ -1298,14 +1363,85 @@
 	// Log response
 	if (OCLogToggleEnabled(OCLogOptionLogRequestsAndResponses) && OCLoggingEnabled())
 	{
-		BOOL prefixedLogging = [[OCLogger classSettingForOCClassSettingsKey:OCClassSettingsKeyLogSingleLined] boolValue];
-		NSString *infoPrefix = (prefixedLogging ? @"[info] " : @"");
-		NSString *errorDescription = (task.response.httpError != nil) ? (prefixedLogging ? [[task.response.httpError description] stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"\n"] withString:[NSString stringWithFormat:@"\n[info] "]] : [task.response.httpError description]) : @"-";
-
 		NSArray <OCLogTagName> *extraTags = [NSArray arrayWithObjects: @"HTTP", @"Response", task.request.method, OCLogTagTypedID(@"RequestID", task.request.identifier), OCLogTagTypedID(@"URLSessionTaskID", task.urlSessionTaskID), nil];
-		OCTLogDebug([extraTags arrayByAddingObject:@"HTSum"], @"<- %lu %@ (%@ %@)%@", (unsigned long)task.response.status.code, task.response.status.name, task.request.method, task.request.effectiveURL, ((task.response.redirectURL != nil) ? [NSString stringWithFormat:@" -> %@ ",task.response.redirectURL] : @""));
-		OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n%@# RESPONSE --------------------------------------------------------\n%@Method:      %@\n%@URL:         %@\n%@Request-ID:  %@%@\n%@Error:       %@\n%@Req Signals: %@\n%@Metrics:     %@\n%@- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", infoPrefix, infoPrefix, task.request.method, infoPrefix, task.request.effectiveURL, infoPrefix, task.request.identifier, ((task.request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID] != nil) ? (![task.request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID] isEqual:task.request.identifier] ? [NSString stringWithFormat:@" (original: %@)", task.request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID]] : @"") : @""), infoPrefix, errorDescription, infoPrefix, [task.request.requiredSignals.allObjects componentsJoinedByString:@", "], infoPrefix, task.metrics.compactSummary, infoPrefix, [task.response responseDescriptionPrefixed:prefixedLogging]);
+		OCHTTPPipelineLogFormat httpLogFormat = [self classSettingForOCClassSettingsKey:OCHTTPPipelineSettingTrafficLogFormat];
 
+		if ([httpLogFormat isEqual:OCHTTPPipelineLogFormatJSON])
+		{
+			// OCHTTPPipelineLogFormatJSON: JSON logging
+			NSMutableDictionary<NSString *, id> *infoDict = [NSMutableDictionary new];
+			NSMutableDictionary<NSString *, id> *replyDict = [NSMutableDictionary new];
+			NSMutableDictionary<NSString *, NSString *> *headerDict = [NSMutableDictionary new];
+			NSMutableDictionary<NSString *, id> *bodyDict = [NSMutableDictionary new];
+
+			// ## Info
+			// IDs
+			infoDict[@"id"] = task.request.identifier;
+			if (![task.request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID] isEqual:task.request.identifier])
+			{
+				infoDict[@"original-id"] = task.request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID];
+			}
+			infoDict[@"url-session-task-id"] = task.urlSessionTaskID;
+			infoDict[@"required-signals"] = (task.request.requiredSignals.count > 0) ? task.request.requiredSignals.allObjects : nil;
+
+			// Method + URL
+			infoDict[@"method"] = task.request.method;
+			infoDict[@"url"] = task.request.effectiveURL.absoluteString;
+
+			// Reply status + HTTP Error
+			replyDict[@"status"] = @(task.response.status.code);
+			replyDict[@"status-name"] = task.response.status.name;
+			replyDict[@"metrics"] = task.metrics.compactSummary;
+
+			if (task.response.httpError != nil)
+			{
+				replyDict[@"error"] = [task.response.httpError description];
+			}
+
+			infoDict[@"reply"] = replyDict;
+
+			// ## Header
+			[OCHTTPRequest formatHeaders:task.response.headerFields withConsumer:^(NSString *headerField, NSString *value) {
+				headerDict[headerField] = value;
+			}];
+
+			// ## Body
+			NSNumber *bodyLength = nil;
+			NSString *readableContent = [OCHTTPRequest bodyDescriptionForURL:task.response.bodyURL data:task.response.bodyData headers:task.response.headerFields prefixed:NO bodyLength:&bodyLength altTextDescription:NULL];
+			bodyDict[@"length"] = bodyLength;
+			bodyDict[@"data"] = readableContent;
+			bodyDict[@"local-data-url"] = task.response.bodyURL.absoluteString;
+
+			// Compose JSON dict
+			NSDictionary<NSString *, NSDictionary *> *jsonDict = @{
+				@"response" : @{
+					@"info"   : infoDict,
+					@"header" : headerDict,
+					@"body"   : bodyDict
+				}
+			};
+
+			// Log JSON dict
+			NSError *jsonError = nil;
+			NSData *jsonData;
+			NSString *jsonString = nil;
+
+			if ((jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:&jsonError]) != nil)
+			{
+				jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+			}
+			OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"RESPONSE %@ %@", task.request.identifier, (jsonString != nil) ? jsonString : [NSString stringWithFormat:@"JSON log encoding error: %@", jsonError]);
+		}
+		else
+		{
+			// OCHTTPPipelineLogFormatPlainText + default: plain text logging
+			BOOL prefixedLogging = [[OCLogger classSettingForOCClassSettingsKey:OCClassSettingsKeyLogSingleLined] boolValue];
+			NSString *infoPrefix = (prefixedLogging ? @"[info] " : @"");
+			NSString *errorDescription = (task.response.httpError != nil) ? (prefixedLogging ? [[task.response.httpError description] stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"\n"] withString:[NSString stringWithFormat:@"\n[info] "]] : [task.response.httpError description]) : @"-";
+
+			OCTLogDebug([extraTags arrayByAddingObject:@"HTSum"], @"<- %lu %@ (%@ %@)%@", (unsigned long)task.response.status.code, task.response.status.name, task.request.method, task.request.effectiveURL, ((task.response.redirectURL != nil) ? [NSString stringWithFormat:@" -> %@ ",task.response.redirectURL] : @""));
+			OCPFMLogDebug(OCLogOptionLogRequestsAndResponses, extraTags, @"Received response:\n%@# RESPONSE --------------------------------------------------------\n%@Method:      %@\n%@URL:         %@\n%@Request-ID:  %@%@\n%@Error:       %@\n%@Req Signals: %@\n%@Metrics:     %@\n%@- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n%@-----------------------------------------------------------------", infoPrefix, infoPrefix, task.request.method, infoPrefix, task.request.effectiveURL, infoPrefix, task.request.identifier, ((task.request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID] != nil) ? (![task.request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID] isEqual:task.request.identifier] ? [NSString stringWithFormat:@" (original: %@)", task.request.headerFields[OCHTTPHeaderFieldNameOriginalRequestID]] : @"") : @""), infoPrefix, errorDescription, infoPrefix, [task.request.requiredSignals.allObjects componentsJoinedByString:@", "], infoPrefix, task.metrics.compactSummary, infoPrefix, [task.response responseDescriptionPrefixed:prefixedLogging]);
+		}
 	}
 
 	// Attempt delivery
@@ -2555,7 +2691,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCHTTPPipeline)
 + (NSDictionary<NSString *,id> *)defaultSettingsForIdentifier:(OCClassSettingsIdentifier)identifier
 {
 	return (@{
-		OCHTTPPipelineSettingUserAgent : @"ownCloudApp/{{app.version}} ({{app.part}}/{{app.build}}; {{os.name}}/{{os.version}}; {{device.model}})"
+		OCHTTPPipelineSettingUserAgent : @"ownCloudApp/{{app.version}} ({{app.part}}/{{app.build}}; {{os.name}}/{{os.version}}; {{device.model}})",
+		OCHTTPPipelineSettingTrafficLogFormat : OCHTTPPipelineLogFormatJSON
 	});
 }
 
@@ -2569,6 +2706,17 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCHTTPPipeline)
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusSupported,
 			OCClassSettingsMetadataKeyCategory	: @"Connection",
 		},
+
+		OCHTTPPipelineSettingTrafficLogFormat : @{
+			OCClassSettingsMetadataKeyType 		 : OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	 : @"If request and response logging is enabled, the format to use.",
+			OCClassSettingsMetadataKeyStatus	 : OCClassSettingsKeyStatusSupported,
+			OCClassSettingsMetadataKeyCategory	 : @"Connection",
+			OCClassSettingsMetadataKeyPossibleValues : @{
+				OCHTTPPipelineLogFormatPlainText : @"Plain text",
+				OCHTTPPipelineLogFormatJSON	 : @"JSON"
+			}
+		}
 	});
 }
 
@@ -2643,3 +2791,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCHTTPPipeline)
 
 OCClassSettingsIdentifier OCClassSettingsIdentifierHTTP = @"http";
 OCClassSettingsKey OCHTTPPipelineSettingUserAgent = @"user-agent";
+OCClassSettingsKey OCHTTPPipelineSettingTrafficLogFormat = @"traffic-log-format";
+
+OCHTTPPipelineLogFormat OCHTTPPipelineLogFormatPlainText = @"plain";
+OCHTTPPipelineLogFormat OCHTTPPipelineLogFormatJSON = @"json";

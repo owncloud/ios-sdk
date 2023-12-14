@@ -381,7 +381,7 @@
 }
 
 #pragma mark - Description
-+ (NSString *)bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers prefixed:(BOOL)prefixed
++ (NSString *)bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers prefixed:(BOOL)prefixed bodyLength:(NSNumber **)outBodyLengthNumber altTextDescription:(NSString **)outAltTextDescription
 {
 	NSString *contentType = [[headers[OCHTTPHeaderFieldNameContentType] componentsSeparatedByString:@"; "] firstObject];
 	BOOL readableContent = [contentType hasPrefix:@"text/"] ||
@@ -403,38 +403,71 @@
 
 	if (url != nil)
 	{
+		NSNumber *fileSize = nil;
+
+		if ([url getResourceValue:&fileSize forKey:NSURLFileSizeKey error:NULL])
+		{
+			if (outBodyLengthNumber != NULL)
+			{
+				*outBodyLengthNumber = fileSize;
+			}
+		}
+
 		if (readableContent)
 		{
 			return (FormatReadableData([NSData dataWithContentsOfURL:url]));
 		}
 
-		NSNumber *fileSize = nil;
-
-		if ([url getResourceValue:&fileSize forKey:NSURLFileSizeKey error:NULL])
+		if (url != nil)
 		{
-			return ([NSString stringWithFormat:@"%@[Contents from %@ (%ld bytes)]", (prefixed ? @"[body] " : @""), url.path, fileSize.integerValue]);
+			if (outAltTextDescription != NULL)
+			{
+				*outAltTextDescription = [NSString stringWithFormat:@"%@[Contents from %@ (%ld bytes)]", (prefixed ? @"[body] " : @""), url.path, fileSize.integerValue];
+			}
+			return (nil);
 		}
 
-		return ([NSString stringWithFormat:@"%@[Contents from %@]", (prefixed ? @"[body] " : @""), url.path]);
+		if (outAltTextDescription != NULL)
+		{
+			*outAltTextDescription = [NSString stringWithFormat:@"%@[Contents from %@]", (prefixed ? @"[body] " : @""), url.path];
+		}
+		return (nil);
 	}
 
 	if (data != nil)
 	{
+		if (outBodyLengthNumber != NULL)
+		{
+			*outBodyLengthNumber = @(data.length);
+		}
+
 		if (readableContent)
 		{
 			return (FormatReadableData(data));
 		}
 
-		return ([NSString stringWithFormat:@"%@[%lu bytes of %@ data]", (prefixed ? @"[body] " : @""), (unsigned long)data.length, contentType]);
+		if (outAltTextDescription != NULL)
+		{
+			*outAltTextDescription = [NSString stringWithFormat:@"%@[%lu bytes of %@ data]", (prefixed ? @"[body] " : @""), (unsigned long)data.length, contentType];
+		}
+		return (nil);
 	}
 
 	return (nil);
 }
 
-+ (NSString *)formattedHeaders:(NSDictionary<NSString *, NSString *> *)headers withLinePrefix:(NSString *)linePrefix
++ (NSString *)bodyDescriptionForURL:(NSURL *)url data:(NSData *)data headers:(NSDictionary<NSString *, NSString *> *)headers prefixed:(BOOL)prefixed
 {
-	NSMutableString *formattedHeaders = [NSMutableString new];
+	NSString *readableContent = nil;
+	NSString *altTextDescription = nil;
 
+	readableContent = [self bodyDescriptionForURL:url data:data headers:headers prefixed:prefixed bodyLength:NULL altTextDescription:&altTextDescription];
+
+	return ((readableContent != nil) ? readableContent : altTextDescription);
+}
+
++ (void)formatHeaders:(NSDictionary<NSString *, NSString *> *)headers withConsumer:(void(^)(NSString *, NSString *))headerConsumer
+{
 	static dispatch_once_t onceToken;
 	static NSMutableArray<NSString *> *knownAuthorizationHeaders;
 
@@ -470,6 +503,16 @@
 				value = [NSString stringWithFormat:@"[redacted:%lu]", authHeaderIndex];
 			}
 		}
+
+		headerConsumer(headerField, value);
+	}];
+}
+
++ (NSString *)formattedHeaders:(NSDictionary<NSString *, NSString *> *)headers withLinePrefix:(NSString *)linePrefix
+{
+	NSMutableString *formattedHeaders = [NSMutableString new];
+
+	[self formatHeaders:headers withConsumer:^(NSString *headerField, NSString *value) {
 
 		if (linePrefix != nil)
 		{
