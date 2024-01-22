@@ -158,6 +158,12 @@ OCAuthenticationMethodAutoRegister
 			OCClassSettingsMetadataKeyDescription 	: @"OAuth2 Expiration Override - lets OAuth2 tokens expire after the provided number of seconds (useful to prompt quick `refresh_token` requests for testing)",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusDebugOnly,
 			OCClassSettingsMetadataKeyCategory	: @"OAuth2"
+		},
+		OCAuthenticationMethodOAuth2OmitAuthorizationParameters : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeStringArray,
+			OCClassSettingsMetadataKeyDescription 	: @"Omit Authorization Request Parameters - parameter names provided here are omitted from OAuth2 authorization requests.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"OAuth2"
 		}
 	});
 }
@@ -385,6 +391,7 @@ OCAuthenticationMethodAutoRegister
 	if ((options[OCAuthenticationMethodPresentingViewControllerKey] != nil) && (connection!=nil))
 	{
 		NSURL *authorizationRequestURL;
+		NSArray<NSString *> *omitAuthorizationParameters;
 
 		// Generate Authorization Request URL
 		NSDictionary<NSString *,NSString *> *parameters = @{
@@ -406,6 +413,20 @@ OCAuthenticationMethodAutoRegister
 
 		parameters = [self prepareAuthorizationRequestParameters:parameters forConnection:connection options:options];
 
+		// Omit parameters from authorization as per settings (default: none)
+		if ((parameters != nil) && ((omitAuthorizationParameters = [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2OmitAuthorizationParameters]) != nil))
+		{
+			NSMutableDictionary<NSString *, NSString *> *mutableParameters = [parameters mutableCopy];
+
+			for (NSString *omitParameter in omitAuthorizationParameters)
+			{
+				[mutableParameters removeObjectForKey:omitParameter];
+			}
+
+			parameters = mutableParameters;
+		}
+
+		// Compose authorization request
 		authorizationRequestURL = [[self authorizationEndpointURLForConnection:connection options:options] urlByAppendingQueryParameters:parameters replaceExisting:NO];
 		
 		dispatch_async(dispatch_get_main_queue(), ^{
@@ -1110,3 +1131,4 @@ OCClassSettingsKey OCAuthenticationMethodOAuth2RedirectURI = @"oa2-redirect-uri"
 OCClassSettingsKey OCAuthenticationMethodOAuth2ClientID = @"oa2-client-id";
 OCClassSettingsKey OCAuthenticationMethodOAuth2ClientSecret = @"oa2-client-secret";
 OCClassSettingsKey OCAuthenticationMethodOAuth2ExpirationOverrideSeconds = @"oa2-expiration-override-seconds";
+OCClassSettingsKey OCAuthenticationMethodOAuth2OmitAuthorizationParameters = @"omit-authorization-parameters";
