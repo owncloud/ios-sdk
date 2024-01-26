@@ -869,6 +869,8 @@
 		DCF575E027956D84003BEBBA /* OCViewProviderContext.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF575DE27956D84003BEBBA /* OCViewProviderContext.m */; };
 		DCF95AEA25666FBB00806D2A /* OCClassSetting.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF95AE825666FBB00806D2A /* OCClassSetting.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCF95AEB25666FBB00806D2A /* OCClassSetting.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF95AE925666FBB00806D2A /* OCClassSetting.m */; };
+		DCF962DD2B5A698500509705 /* OCDatabase+Scans.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF962DB2B5A698500509705 /* OCDatabase+Scans.h */; };
+		DCF962DE2B5A698500509705 /* OCDatabase+Scans.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF962DC2B5A698500509705 /* OCDatabase+Scans.m */; };
 		DCFA564E2975B6490092C89F /* OCClassSettingsFlatSourcePostBuild.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFA564C2975B6490092C89F /* OCClassSettingsFlatSourcePostBuild.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCFA564F2975B6490092C89F /* OCClassSettingsFlatSourcePostBuild.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFA564D2975B6490092C89F /* OCClassSettingsFlatSourcePostBuild.m */; };
 		DCFBACF121BAA77F00943F76 /* largePropFindResponse1000.xml in Resources */ = {isa = PBXBuildFile; fileRef = DCFBACF021BAA77F00943F76 /* largePropFindResponse1000.xml */; };
@@ -1905,6 +1907,8 @@
 		DCF575DE27956D84003BEBBA /* OCViewProviderContext.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCViewProviderContext.m; sourceTree = "<group>"; };
 		DCF95AE825666FBB00806D2A /* OCClassSetting.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCClassSetting.h; sourceTree = "<group>"; };
 		DCF95AE925666FBB00806D2A /* OCClassSetting.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCClassSetting.m; sourceTree = "<group>"; };
+		DCF962DB2B5A698500509705 /* OCDatabase+Scans.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCDatabase+Scans.h"; sourceTree = "<group>"; };
+		DCF962DC2B5A698500509705 /* OCDatabase+Scans.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCDatabase+Scans.m"; sourceTree = "<group>"; };
 		DCFA564C2975B6490092C89F /* OCClassSettingsFlatSourcePostBuild.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCClassSettingsFlatSourcePostBuild.h; sourceTree = "<group>"; };
 		DCFA564D2975B6490092C89F /* OCClassSettingsFlatSourcePostBuild.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCClassSettingsFlatSourcePostBuild.m; sourceTree = "<group>"; };
 		DCFBACF021BAA77F00943F76 /* largePropFindResponse1000.xml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = largePropFindResponse1000.xml; sourceTree = "<group>"; };
@@ -3407,6 +3411,8 @@
 				DCE370922099D18100114981 /* OCDatabaseConsistentOperation.h */,
 				DCC3700E24D4B3B7008B0DEB /* OCDatabase+Diagnostic.m */,
 				DCC3700D24D4B3B7008B0DEB /* OCDatabase+Diagnostic.h */,
+				DCF962DC2B5A698500509705 /* OCDatabase+Scans.m */,
+				DCF962DB2B5A698500509705 /* OCDatabase+Scans.h */,
 				DCD3439920592EE100189B9A /* SQLite */,
 			);
 			path = Database;
@@ -4612,6 +4618,7 @@
 				DCADC0522072DE6600DB8E83 /* OCSQLiteMigration.h in Headers */,
 				DCEEB2E92046BC2600189B9A /* OCHTTPStatus.h in Headers */,
 				DC188993218B031600CFB3F9 /* OCLogSource.h in Headers */,
+				DCF962DD2B5A698500509705 /* OCDatabase+Scans.h in Headers */,
 				DC510D3227E1469600F2754F /* OCDataSourceSnapshot.h in Headers */,
 				DC98BDF521E73ECE003B5658 /* OCCoreNetworkMonitorSignalProvider.h in Headers */,
 				DCDBEE382049EF3C00189B9A /* NSURL+OCURLNormalization.h in Headers */,
@@ -5088,6 +5095,7 @@
 				DC68057E212EB438006C3B1F /* OCExtensionMatch.m in Sources */,
 				DCC4F40027D75BF700ABF4C9 /* OCDataConverterPipeline.m in Sources */,
 				DC9D22EB25A8754200CF5675 /* OCHTTPRequest+JSON.m in Sources */,
+				DCF962DE2B5A698500509705 /* OCDatabase+Scans.m in Sources */,
 				DC772E9226FC90E2002C0015 /* OCAuthenticationBrowserSessionAWBrowser.m in Sources */,
 				DC302AEF221EAC55003218C6 /* OCProxyProgress.m in Sources */,
 				DC9C19F3278EE7230021222E /* OCResourceRequestImage.m in Sources */,

@@ -473,6 +473,8 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 		NSMutableArray <OCItem *> *deletedCacheItems = [NSMutableArray new];
 		NSMutableArray <OCItem *> *newItems = [NSMutableArray new];
 
+		__block NSMutableArray<OCLocation *> *restoredFolderLocations = nil;
+
 		__block NSError *cacheUpdateError = nil;
 
 		queryResults = [NSMutableArray new];
@@ -726,6 +728,23 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 								newItem.removed = knownItemRemoved; // carry over the removed status
 								[queryResults removeObject:newItem]; // remove from query results
 							}
+
+							// Trigger re-scan of folders restored in the same location
+							if (knownItemRemoved && (newItem.type == OCItemTypeCollection))
+							{
+								OCLocation *folderLocation;
+
+								if ((folderLocation = newItem.location) != nil)
+								{
+									if (restoredFolderLocations == nil)
+									{
+										restoredFolderLocations = [NSMutableArray new];
+									}
+									[restoredFolderLocations addObject:folderLocation];
+
+									// OCLogDebug(@"Restored folder: %@", folderLocation);
+								}
+							}
 						}
 
 						// Remove from deletedCacheItems
@@ -795,6 +814,12 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 				BOOL allowRefreshPathAddition = (self.automaticItemListUpdatesEnabled || fetchUpdatesRunning);
 				OCDriveID taskLocationDriveID = task.location.driveID;
 				OCPath taskLocationPath = task.location.path;
+
+				// Add restored folders to refreshLocations
+				if (restoredFolderLocations != nil)
+				{
+					[refreshLocations addObjectsFromArray:restoredFolderLocations];
+				}
 
 				// Determine refreshPaths if automatic item list updates are enabled
 				for (OCItem *item in newItems)
@@ -888,7 +913,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 				if (movedItems.count > 0)
 				{
-					OCLogDebug(@"Moved items: %@", OCLogPrivate(movedItems));
+					// OCLogDebug(@"Moved items: %@", OCLogPrivate(movedItems));
 					[changedCacheItems addObjectsFromArray:movedItems];
 				}
 

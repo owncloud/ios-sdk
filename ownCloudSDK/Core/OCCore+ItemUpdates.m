@@ -47,11 +47,6 @@
 		return;
 	}
 
-	// Determine driveID
-//	if (driveID == nil) { driveID = addedItems.firstObject.driveID; }
-//	if (driveID == nil) { driveID = removedItems.firstObject.driveID; }
-//	if (driveID == nil) { driveID = updatedItems.firstObject.driveID; }
-
 	// Begin
 	[self beginActivity:@"Perform item and query updates"];
 
@@ -135,7 +130,10 @@
 		dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
 			for (OCItem *removeItem in removedItems)
 			{
-				[self->_thumbnailCache removeObjectForKey:removeItem.fileID];
+				if (removeItem.fileID != nil)
+				{
+					[self->_thumbnailCache removeObjectForKey:removeItem.fileID];
+				}
 			}
 
 			OCWaitDidFinishTask(cacheUpdatesGroup);
