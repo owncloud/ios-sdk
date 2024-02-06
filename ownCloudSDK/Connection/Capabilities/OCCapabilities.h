@@ -62,6 +62,16 @@ typedef NSNumber* OCCapabilityBool;
 @property(readonly,nullable,nonatomic) OCCapabilityBool spacesEnabled;
 @property(readonly,nullable,nonatomic) NSString *spacesVersion;
 
+#pragma mark - Password Policy
+@property(readonly,nonatomic) BOOL passwordPolicyEnabled;
+@property(readonly,nullable,nonatomic) NSNumber *passwordPolicyMinCharacters;
+@property(readonly,nullable,nonatomic) NSNumber *passwordPolicyMaxCharacters;
+@property(readonly,nullable,nonatomic) NSNumber *passwordPolicyMinLowerCaseCharacters;
+@property(readonly,nullable,nonatomic) NSNumber *passwordPolicyMinUpperCaseCharacters;
+@property(readonly,nullable,nonatomic) NSNumber *passwordPolicyMinDigits;
+@property(readonly,nullable,nonatomic) NSNumber *passwordPolicyMinSpecialCharacters;
+@property(readonly,nullable,nonatomic) NSString *passwordPolicySpecialCharacters;
+
 #pragma mark - App Providers
 @property(readonly,nullable,nonatomic) NSArray<OCAppProvider *> *appProviders;
 @property(readonly,nullable,nonatomic) OCAppProvider *latestSupportedAppProvider; //!< Convenience method to return the latest supported and available app provider

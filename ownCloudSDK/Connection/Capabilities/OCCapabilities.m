@@ -264,6 +264,64 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 	return (OCTypedCast(_capabilities[@"spaces"][@"version"], NSString));
 }
 
+#pragma mark - Password Policy
+- (NSDictionary<NSString *, id> *)_passwordPolicy
+{
+	return (OCTypedCast(_capabilities[@"password_policy"], NSDictionary));
+}
+
+- (BOOL)passwordPolicyEnabled
+{
+	return (self._passwordPolicy != nil);
+}
+
+- (NSNumber *)passwordPolicyMinCharacters
+{
+	return (OCTypedCast(self._passwordPolicy[@"min_characters"], NSNumber));
+}
+
+- (NSNumber *)passwordPolicyMaxCharacters
+{
+	return (OCTypedCast(self._passwordPolicy[@"max_characters"], NSNumber));
+}
+
+- (NSNumber *)passwordPolicyMinLowerCaseCharacters
+{
+	return (OCTypedCast(self._passwordPolicy[@"min_lowercase_characters"], NSNumber));
+}
+
+- (NSNumber *)passwordPolicyMinUpperCaseCharacters
+{
+	return (OCTypedCast(self._passwordPolicy[@"min_uppercase_characters"], NSNumber));
+}
+
+- (NSNumber *)passwordPolicyMinDigits
+{
+	return (OCTypedCast(self._passwordPolicy[@"min_digits"], NSNumber));
+}
+
+- (NSNumber *)passwordPolicyMinSpecialCharacters
+{
+	return (OCTypedCast(self._passwordPolicy[@"min_special_characters"], NSNumber));
+}
+
+- (NSString *)passwordPolicySpecialCharacters
+{
+	if (self.spacesEnabled.boolValue)
+	{
+		// ocis special characters, as per:
+		// - https://doc.owncloud.com/ocis/next/deployment/services/s-list/frontend.html (general idea)
+		// - https://github.com/owncloud/ocis/pull/7195 (implementation description)
+		// - https://github.com/owncloud/ocis/blob/master/vendor/github.com/cs3org/reva/v2/pkg/password/password_policies.go#L12 (actual implementation) <= mirrored here
+		return (@" !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~");
+	}
+	else
+	{
+		// OC10 special characters, as per https://github.com/owncloud/password_policy/blob/master/lib/Controller/SettingsController.php#L47
+		return (@"#!");
+	}
+}
+
 #pragma mark - App Providers
 - (NSArray<OCAppProvider *> *)appProviders
 {
