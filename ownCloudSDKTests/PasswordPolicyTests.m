@@ -252,4 +252,118 @@
 	XCTAssert(capabilities.passwordPolicy == nil);
 }
 
+- (void)testGeneration
+{
+	OCPasswordPolicy *passwordPolicy = OCPasswordPolicy.defaultPolicy;
+	NSError *error = nil;
+	NSString *generatedPassword;
+	NSUInteger testCount = 1000; // also tested with 1000000
+	NSMutableSet<NSString *> *generatedPasswords = [NSMutableSet new];
+
+	for (NSUInteger i=0; i<testCount; i++) {
+		if ((generatedPassword = [passwordPolicy generatePasswordWithMinLength:nil maxLength:nil error:&error]) != nil)
+		{
+			OCPasswordPolicyReport *report = [passwordPolicy validate:generatedPassword];
+
+			if (!report.passedValidation) {
+				NSLog(@"%@ didn't pass validation:", generatedPassword);
+
+				for (OCPasswordPolicyRule *rule in report.rules) {
+					if (![report passedValidationForRule:rule]) {
+						NSLog(@"- %@", [report resultForRule:rule]);
+					}
+				}
+			}
+
+			XCTAssert(report.passedValidation, @"%@ didn't pass validation", generatedPassword);
+
+			XCTAssert(![generatedPasswords containsObject:generatedPassword], @"Duplicate password: %@", generatedPassword);
+
+			[generatedPasswords addObject:generatedPassword];
+		}
+
+		XCTAssert(error == nil, @"Error generating password: %@", error);
+	}
+
+	XCTAssert(generatedPasswords.count == testCount, @"Only %lu different passwords were generated when %lu different passwords were expected", (unsigned long)generatedPasswords.count, testCount);
+}
+
+- (void)testGenerationRandomLength
+{
+	OCPasswordPolicy *passwordPolicy = OCPasswordPolicy.defaultPolicy;
+	NSError *error = nil;
+	NSString *generatedPassword;
+	NSUInteger testCount = 1000, minLength = 12, maxLength = 20;
+	NSMutableSet<NSString *> *generatedPasswords = [NSMutableSet new];
+	NSCountedSet<NSNumber *> *generatedPasswordsLengths = [NSCountedSet new];
+
+	for (NSUInteger i=0; i<testCount; i++) {
+		if ((generatedPassword = [passwordPolicy generatePasswordWithMinLength:@(minLength) maxLength:@(maxLength) error:&error]) != nil)
+		{
+			OCPasswordPolicyReport *report = [passwordPolicy validate:generatedPassword];
+
+			if (!report.passedValidation) {
+				NSLog(@"%@ didn't pass validation:", generatedPassword);
+
+				for (OCPasswordPolicyRule *rule in report.rules) {
+					if (![report passedValidationForRule:rule]) {
+						NSLog(@"- %@", [report resultForRule:rule]);
+					}
+				}
+			}
+
+			XCTAssert(report.passedValidation, @"%@ didn't pass validation", generatedPassword);
+
+			XCTAssert(![generatedPasswords containsObject:generatedPassword], @"Duplicate password: %@", generatedPassword);
+
+			[generatedPasswords addObject:generatedPassword];
+			[generatedPasswordsLengths addObject:@(generatedPassword.length)];
+		}
+
+		XCTAssert(error == nil, @"Error generating password: %@", error);
+	}
+
+	NSLog(@"Generated passwords: %@", generatedPasswords);
+
+	NSLog(@"Generated password lengths:");
+	for (NSUInteger length = minLength; length <= maxLength; length++)
+	{
+		NSLog(@"- %lu: %lu x", length, [generatedPasswordsLengths countForObject:@(length)]);
+
+		XCTAssert([generatedPasswordsLengths countForObject:@(length)] > 0, @"No passwords with length %lu generated", length);
+	}
+
+	XCTAssert(generatedPasswords.count == testCount, @"Only %lu different passwords were generated when %lu different passwords were expected", (unsigned long)generatedPasswords.count, testCount);
+}
+
+- (void)testGenerationWithInvalidParameters
+{
+	OCPasswordPolicy *passwordPolicy;
+	NSError *error = nil;
+	NSString *password = nil;
+
+	// Minimum > Maximum
+	passwordPolicy = [[OCPasswordPolicy alloc] initWithRules:@[
+		[OCPasswordPolicyRule uppercaseCharactersMinimum:@(10) maximum:@(5)]
+	]];
+
+	password = [passwordPolicy generatePasswordWithMinLength:nil maxLength:nil error:&error];
+	XCTAssert(password == nil);
+	XCTAssert(error != nil);
+
+	error = nil;
+	password = [passwordPolicy generatePasswordWithMinLength:@(10) maxLength:@(5) error:&error];
+	XCTAssert(password == nil);
+	XCTAssert(error != nil);
+
+	// Running out of generation rules
+	passwordPolicy = [[OCPasswordPolicy alloc] initWithRules:@[
+		[OCPasswordPolicyRule uppercaseCharactersMinimum:@(10) maximum:@(11)]
+	]];
+
+	password = [passwordPolicy generatePasswordWithMinLength:@(12) maxLength:nil error:&error];
+	XCTAssert(password == nil);
+	XCTAssert(error != nil);
+}
+
 @end

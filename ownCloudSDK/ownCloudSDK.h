@@ -89,6 +89,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCItemPolicyProcessorVacuum.h>
 
 #import <ownCloudSDK/OCPasswordPolicy.h>
+#import <ownCloudSDK/OCPasswordPolicy+Default.h>
+#import <ownCloudSDK/OCPasswordPolicy+Generator.h>
 #import <ownCloudSDK/OCPasswordPolicyRule.h>
 #import <ownCloudSDK/OCPasswordPolicyRule+StandardRules.h>
 #import <ownCloudSDK/OCPasswordPolicyReport.h>
