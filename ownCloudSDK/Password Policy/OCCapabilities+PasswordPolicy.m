@@ -20,6 +20,7 @@
 
 #import "OCPasswordPolicy.h"
 #import "OCPasswordPolicyRule.h"
+#import "OCPasswordPolicyRule+StandardRules.h"
 
 #import "OCMacros.h"
 #import "OCLocale.h"
@@ -41,34 +42,31 @@
 	if ((self.passwordPolicyMinCharacters != nil) ||
 	    (self.passwordPolicyMaxCharacters != nil))
 	{
-		[rules addObject:[[OCPasswordPolicyRule alloc] initWithCharacters:nil characterSet:nil minimumCount:self.passwordPolicyMinCharacters maximumCount:self.passwordPolicyMaxCharacters localizedDescription:nil localizedName:OCLocalized(@"characters")]];
+		[rules addObject:[OCPasswordPolicyRule characterCountMinimum:self.passwordPolicyMinCharacters maximum:self.passwordPolicyMaxCharacters]];
 	}
 
 	// Minimum lower-case characters
 	if (self.passwordPolicyMinLowerCaseCharacters != nil)
 	{
-		[rules addObject:[[OCPasswordPolicyRule alloc] initWithCharacters:@"abcdefghijklmnopqrstuvwxyz" characterSet:NSCharacterSet.lowercaseLetterCharacterSet minimumCount:self.passwordPolicyMinLowerCaseCharacters maximumCount:nil localizedDescription:nil localizedName:OCLocalized(@"lower-case characters")]];
+		[rules addObject:[OCPasswordPolicyRule lowercaseCharactersMinimum:self.passwordPolicyMinLowerCaseCharacters maximum:nil]];
 	}
 
 	// Minimum upper-case characters
 	if (self.passwordPolicyMinUpperCaseCharacters != nil)
 	{
-		[rules addObject:[[OCPasswordPolicyRule alloc] initWithCharacters:@"ABCDEFGHIJKLMNOPQRSTUVWXYZ" characterSet:NSCharacterSet.uppercaseLetterCharacterSet minimumCount:self.passwordPolicyMinUpperCaseCharacters maximumCount:nil localizedDescription:nil localizedName:OCLocalized(@"upper-case characters")]];
+		[rules addObject:[OCPasswordPolicyRule uppercaseCharactersMinimum:self.passwordPolicyMinUpperCaseCharacters maximum:nil]];
 	}
 
 	// Minimum digits
 	if (self.passwordPolicyMinDigits != nil)
 	{
-		[rules addObject:[[OCPasswordPolicyRule alloc] initWithCharacters:@"1234567890" characterSet:NSCharacterSet.decimalDigitCharacterSet minimumCount:self.passwordPolicyMinDigits maximumCount:nil localizedDescription:nil localizedName:@"digits"]];
+		[rules addObject:[OCPasswordPolicyRule digitsMinimum:self.passwordPolicyMinDigits maximum:nil]];
 	}
 
 	// Minimum special characters
 	if ((self.passwordPolicyMinSpecialCharacters != nil) && (self.passwordPolicySpecialCharacters != nil))
 	{
-		[rules addObject:[[OCPasswordPolicyRule alloc] initWithCharacters:self.passwordPolicySpecialCharacters characterSet:nil minimumCount:self.passwordPolicyMinSpecialCharacters maximumCount:nil localizedDescription:OCLocalizedFormat(@"At least {{min}} special characters: {{specialCharacters}}", (@{
-			@"min" : self.passwordPolicyMinSpecialCharacters.stringValue,
-			@"specialCharacters" : self.passwordPolicySpecialCharacters
-		})) localizedName:@"special characters"]];
+		[rules addObject:[OCPasswordPolicyRule specialCharacters:self.passwordPolicySpecialCharacters minimum:self.passwordPolicyMinSpecialCharacters]];
 	}
 
 	return ([[OCPasswordPolicy alloc] initWithRules:rules]);

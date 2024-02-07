@@ -654,6 +654,9 @@
 		DCC26FB62B7228B500904000 /* OCCapabilities+PasswordPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC26FB42B7228B500904000 /* OCCapabilities+PasswordPolicy.m */; };
 		DCC26FB92B722C8900904000 /* OCPasswordPolicyReport.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC26FB72B722C8900904000 /* OCPasswordPolicyReport.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCC26FBA2B722C8900904000 /* OCPasswordPolicyReport.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC26FB82B722C8900904000 /* OCPasswordPolicyReport.m */; };
+		DCC26FBC2B73978000904000 /* PasswordPolicyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC26FBB2B73978000904000 /* PasswordPolicyTests.m */; };
+		DCC26FBF2B7397D400904000 /* OCPasswordPolicyRule+StandardRules.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC26FBD2B7397D400904000 /* OCPasswordPolicyRule+StandardRules.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCC26FC02B7397D400904000 /* OCPasswordPolicyRule+StandardRules.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC26FBE2B7397D400904000 /* OCPasswordPolicyRule+StandardRules.m */; };
 		DCC3700F24D4B3B7008B0DEB /* OCDatabase+Diagnostic.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC3700D24D4B3B7008B0DEB /* OCDatabase+Diagnostic.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCC3701024D4B3B7008B0DEB /* OCDatabase+Diagnostic.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC3700E24D4B3B7008B0DEB /* OCDatabase+Diagnostic.m */; };
 		DCC3701324D4D134008B0DEB /* OCScanJobActivity.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC3701124D4D134008B0DEB /* OCScanJobActivity.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1697,6 +1700,9 @@
 		DCC26FB42B7228B500904000 /* OCCapabilities+PasswordPolicy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCapabilities+PasswordPolicy.m"; sourceTree = "<group>"; };
 		DCC26FB72B722C8900904000 /* OCPasswordPolicyReport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCPasswordPolicyReport.h; sourceTree = "<group>"; };
 		DCC26FB82B722C8900904000 /* OCPasswordPolicyReport.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCPasswordPolicyReport.m; sourceTree = "<group>"; };
+		DCC26FBB2B73978000904000 /* PasswordPolicyTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PasswordPolicyTests.m; sourceTree = "<group>"; };
+		DCC26FBD2B7397D400904000 /* OCPasswordPolicyRule+StandardRules.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCPasswordPolicyRule+StandardRules.h"; sourceTree = "<group>"; };
+		DCC26FBE2B7397D400904000 /* OCPasswordPolicyRule+StandardRules.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCPasswordPolicyRule+StandardRules.m"; sourceTree = "<group>"; };
 		DCC3700D24D4B3B7008B0DEB /* OCDatabase+Diagnostic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCDatabase+Diagnostic.h"; sourceTree = "<group>"; };
 		DCC3700E24D4B3B7008B0DEB /* OCDatabase+Diagnostic.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCDatabase+Diagnostic.m"; sourceTree = "<group>"; };
 		DCC3701124D4D134008B0DEB /* OCScanJobActivity.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCScanJobActivity.h; sourceTree = "<group>"; };
@@ -3723,6 +3729,8 @@
 				DCC26FAB2B718C3300904000 /* OCPasswordPolicy.h */,
 				DCC26FB02B718CA200904000 /* OCPasswordPolicyRule.m */,
 				DCC26FAF2B718CA200904000 /* OCPasswordPolicyRule.h */,
+				DCC26FBE2B7397D400904000 /* OCPasswordPolicyRule+StandardRules.m */,
+				DCC26FBD2B7397D400904000 /* OCPasswordPolicyRule+StandardRules.h */,
 				DCC26FB82B722C8900904000 /* OCPasswordPolicyReport.m */,
 				DCC26FB72B722C8900904000 /* OCPasswordPolicyReport.h */,
 				DCC26FB42B7228B500904000 /* OCCapabilities+PasswordPolicy.m */,
@@ -3944,6 +3952,7 @@
 				DC0AE4562310793100428681 /* KeyValueStoreTests.m */,
 				DCEAA0DC25CEDBC40017F99B /* LockTests.m */,
 				DCDBEE3B2049F3D100189B9A /* MiscTests.m */,
+				DCC26FBB2B73978000904000 /* PasswordPolicyTests.m */,
 				DCFBACF621BAB35A00943F76 /* PerformanceTests.m */,
 				DC72E4342063DF5C00189B9A /* SettingsTests.m */,
 				DC03AC4822295AA6006901DC /* SharingTests.m */,
@@ -4724,6 +4733,7 @@
 				DCC8F9EA2028557100EB6701 /* OCDatabase.h in Headers */,
 				DC76500C2404703A00201812 /* OCWaitConditionMetaDataRefresh.h in Headers */,
 				DC4B11FE220996480062BCDD /* OCProgress.h in Headers */,
+				DCC26FBF2B7397D400904000 /* OCPasswordPolicyRule+StandardRules.h in Headers */,
 				DC9C19EE278CD0B30021222E /* OCDatabase+ResourceStorage.h in Headers */,
 				DCFE3B7A27A1666B00939415 /* GAGraphObject.h in Headers */,
 				DCE3D4E42701C40B0074C254 /* OCCoreUpdateScheduleRecord.h in Headers */,
@@ -5292,6 +5302,7 @@
 				DCD3439D2059319C00189B9A /* OCSQLiteDB.m in Sources */,
 				DCE784F922325D4F00733F01 /* OCConnection+Recipients.m in Sources */,
 				DC0BE5B228F80BBA00CE2101 /* OCShareRole.m in Sources */,
+				DCC26FC02B7397D400904000 /* OCPasswordPolicyRule+StandardRules.m in Sources */,
 				DCC6567520CA695600110A97 /* OCCoreManager.m in Sources */,
 				DC2F66A12603FCF6001BFDB6 /* OCCancelAction.m in Sources */,
 				DC6DEEBA24C5C82400E3772E /* OCHTTPPolicyBookmark.m in Sources */,
@@ -5513,6 +5524,7 @@
 				DCC6563D20C979FB00110A97 /* TestTools.m in Sources */,
 				DCEAA0DD25CEDBC40017F99B /* LockTests.m in Sources */,
 				DC812558210B548F00A9C037 /* OCTestTarget.m in Sources */,
+				DCC26FBC2B73978000904000 /* PasswordPolicyTests.m in Sources */,
 				DC7E0A8F20373381006111FA /* BookmarkTests.m in Sources */,
 				DCA7A2C124EC81B000237085 /* CoreRedirectTests.m in Sources */,
 				DCFBACF921BAB5F500943F76 /* OCDetailedPerformanceTestCase.m in Sources */,

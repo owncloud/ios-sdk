@@ -41,7 +41,6 @@
 	return (_rules);
 }
 
-
 - (void)addRule:(OCPasswordPolicyRule *)rule result:(NSString *)result
 {
 	[_rules addObject:rule];
@@ -56,6 +55,11 @@
 - (NSString *)resultForRule:(OCPasswordPolicyRule *)rule
 {
 	return ([_resultByRule objectForKey:rule]);
+}
+
+- (BOOL)passedValidation
+{
+	return (_resultByRule.count == 0);
 }
 
 @end
