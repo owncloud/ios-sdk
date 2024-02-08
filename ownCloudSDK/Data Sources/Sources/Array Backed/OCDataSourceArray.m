@@ -117,6 +117,13 @@
 
 - (void)setTrackItemVersions:(BOOL)trackItemVersions
 {
+	if (_trackItemVersions && !trackItemVersions) {
+		// Release _versionsByReference if version tracking is turned off
+		@synchronized(self) {
+			_versionsByReference = nil;
+		}
+	}
+
 	_trackItemVersions = trackItemVersions;
 
 	if ((_itemsByReference.count > 0) && trackItemVersions)
