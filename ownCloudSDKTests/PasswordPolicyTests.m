@@ -30,18 +30,18 @@
 	// Test minimum
 	OCPasswordPolicyRule *rule;
 
-	rule = [[OCPasswordPolicyRule alloc] initWithCharacters:@"a" characterSet:nil minimumCount:@(1) maximumCount:nil localizedDescription:nil localizedName:@"test"];
+	rule = [[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:@"a" characterSet:nil minimumCount:@(1) maximumCount:nil localizedDescription:nil localizedName:@"test"];
 
 	XCTAssert([rule validate:@"a"] == nil);
 	XCTAssert([rule validate:@"b"] != nil);
 
-	rule = [[OCPasswordPolicyRule alloc] initWithCharacters:@"a" characterSet:nil minimumCount:@(2) maximumCount:nil localizedDescription:nil localizedName:@"test"];
+	rule = [[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:@"a" characterSet:nil minimumCount:@(2) maximumCount:nil localizedDescription:nil localizedName:@"test"];
 
 	XCTAssert([rule validate:@"a"] != nil);
 	XCTAssert([rule validate:@"aa"] == nil);
 	XCTAssert([rule validate:@"b"] != nil);
 
-	rule = [[OCPasswordPolicyRule alloc] initWithCharacters:@"abc" characterSet:nil minimumCount:@(2) maximumCount:nil localizedDescription:nil localizedName:@"test"];
+	rule = [[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:@"abc" characterSet:nil minimumCount:@(2) maximumCount:nil localizedDescription:nil localizedName:@"test"];
 
 	XCTAssert([rule validate:@"a"] != nil);
 	XCTAssert([rule validate:@"b"] != nil);
@@ -54,13 +54,13 @@
 	// Test maximum
 	OCPasswordPolicyRule *rule;
 
-	rule = [[OCPasswordPolicyRule alloc] initWithCharacters:@"a" characterSet:nil minimumCount:nil maximumCount:@(1) localizedDescription:nil localizedName:@"test"];
+	rule = [[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:@"a" characterSet:nil minimumCount:nil maximumCount:@(1) localizedDescription:nil localizedName:@"test"];
 
 	XCTAssert([rule validate:@"a"] == nil);
 	XCTAssert([rule validate:@"aa"] != nil);
 	XCTAssert([rule validate:@"b"] == nil);
 
-	rule = [[OCPasswordPolicyRule alloc] initWithCharacters:@"a" characterSet:nil minimumCount:nil maximumCount:@(2) localizedDescription:nil localizedName:@"test"];
+	rule = [[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:@"a" characterSet:nil minimumCount:nil maximumCount:@(2) localizedDescription:nil localizedName:@"test"];
 
 	XCTAssert([rule validate:@"a"] == nil);
 	XCTAssert([rule validate:@"aa"] == nil);
@@ -71,7 +71,7 @@
 - (void)testRuleInvalid
 {
 	// Invalid rule without minimum or maximum
-	OCPasswordPolicyRule *rule = [[OCPasswordPolicyRule alloc] initWithCharacters:@"a" characterSet:nil minimumCount:nil maximumCount:nil localizedDescription:nil localizedName:@"test"];
+	OCPasswordPolicyRule *rule = [[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:@"a" characterSet:nil minimumCount:nil maximumCount:nil localizedDescription:nil localizedName:@"test"];
 
 	XCTAssert([rule validate:@"a"] != nil);
 }
@@ -169,6 +169,30 @@
 	XCTAssert([rule validate:@"!#"] == nil);
 }
 
+- (void)testRuleByteLengthMaximum
+{
+	OCPasswordPolicyRuleByteLength *rule = [[OCPasswordPolicyRuleByteLength alloc] initWithEncoding:NSUTF8StringEncoding maximumByteLength:5];
+
+	// Check with 0 and maximum number of allowed bytes
+	XCTAssert([rule validate:@""]==nil);
+	XCTAssert([rule validate:@"12345"]==nil);
+
+	// Check with 6 bytes
+	NSString *tooLongError = [rule validate:@"123456"];
+	NSLog(@"%@", tooLongError);
+	XCTAssert(tooLongError!=nil);
+}
+
+- (void)testRuleByteLengthConversionError
+{
+	OCPasswordPolicyRuleByteLength *rule = [[OCPasswordPolicyRuleByteLength alloc] initWithEncoding:NSISOLatin1StringEncoding maximumByteLength:5];
+
+	// Conversion failure
+	NSString *nonconvertingCharacters = [rule validate:@"🤯"];
+	NSLog(@"%@", nonconvertingCharacters);
+	XCTAssert(nonconvertingCharacters!=nil);
+}
+
 - (void)testCapabilitiesToPolicyConversion
 {
 	// Test conversion of capabilities to policy
@@ -240,7 +264,10 @@
 			NSLog(@"Violation: %@", result);
 		}
 
-		XCTAssert(result != nil, @"Rule did not trigger: %@", rule);
+		if ([rule isKindOfClass:OCPasswordPolicyRuleCharacters.class])
+		{
+			XCTAssert(result != nil, @"Rule did not trigger: %@", rule);
+		}
 	}
 }
 

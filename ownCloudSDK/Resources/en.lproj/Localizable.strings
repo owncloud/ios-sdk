@@ -203,6 +203,31 @@
 /* App Provider */
 "This file is currently being processed and is not yet available for use. Please try again shortly." = "This file is currently being processed and is not yet available for use. Please try again shortly.";
 
+/* Password Policy */
+
+// OCPasswordPolicyRuleCharacters
+"Between {{min}} and {{max}} {{characterType}}" = "Between {{min}} and {{max}} {{characterType}}";
+"At least {{min}} {{characterType}}" = "At least {{min}} {{characterType}}";
+"At most {{max}} {{characterType}}" = "At most {{max}} {{characterType}}";
+"Too few {{localizedName}}" = "Too few {{localizedName}}";
+"Too many {{localizedName}}" = "Too many {{localizedName}}";
+"Invalid rule without minimum and maximum count" = "Invalid rule without minimum and maximum count";
+
+// OCPasswordPolicyRule+StandardRules
+"characters" = "characters";
+"lower-case characters" = "lower-case characters";
+"upper-case characters" = "upper-case characters";
+"digits" = "digits";
+"special characters" = "special characters";
+
+"At least {{min}} special characters: {{specialCharacters}}" = "At least {{min}} special characters: {{specialCharacters}}";
+
+// OCPasswordPolicyRuleByteLength
+"Less than {{byteLength}} bytes." = "Less than {{byteLength}} bytes.";
+"Password can't be converted to {{encoding}}." = "Password can't be converted to {{encoding}}.";
+"Longer than {{byteLength}} bytes in {{encoding}} encoding." = "Longer than {{byteLength}} bytes in {{encoding}} encoding.";
+
+
 /* DAV Errors */
 // OCDAVErrorServiceUnavailable
 "Server down for maintenance." = "Server down for maintenance.";

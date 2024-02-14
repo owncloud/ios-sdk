@@ -17,6 +17,7 @@
  */
 
 #import "OCPasswordPolicyRule+StandardRules.h"
+#import "OCPasswordPolicyRuleCharacters.h"
 #import "OCMacros.h"
 #import "OCLocale.h"
 #import "OCLocaleFilterVariables.h"
@@ -27,7 +28,7 @@
 {
 	if ((minimum != nil) || (maximum != nil))
 	{
-		return ([[OCPasswordPolicyRule alloc] initWithCharacters:nil characterSet:nil minimumCount:minimum maximumCount:maximum localizedDescription:nil localizedName:OCLocalized(@"characters")]);
+		return ([[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:nil characterSet:nil minimumCount:minimum maximumCount:maximum localizedDescription:nil localizedName:OCLocalized(@"characters")]);
 	}
 
 	return (nil);
@@ -37,7 +38,7 @@
 {
 	if ((minimum != nil) || (maximum != nil))
 	{
-		return ([[OCPasswordPolicyRule alloc] initWithCharacters:@"abcdefghijklmnopqrstuvwxyz" characterSet:NSCharacterSet.lowercaseLetterCharacterSet minimumCount:minimum maximumCount:maximum localizedDescription:nil localizedName:OCLocalized(@"lower-case characters")]);
+		return ([[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:@"abcdefghijklmnopqrstuvwxyz" characterSet:NSCharacterSet.lowercaseLetterCharacterSet minimumCount:minimum maximumCount:maximum localizedDescription:nil localizedName:OCLocalized(@"lower-case characters")]);
 	}
 
 	return (nil);
@@ -47,7 +48,7 @@
 {
 	if ((minimum != nil) || (maximum != nil))
 	{
-		return ([[OCPasswordPolicyRule alloc] initWithCharacters:@"ABCDEFGHIJKLMNOPQRSTUVWXYZ" characterSet:NSCharacterSet.uppercaseLetterCharacterSet minimumCount:minimum maximumCount:maximum localizedDescription:nil localizedName:OCLocalized(@"upper-case characters")]);
+		return ([[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:@"ABCDEFGHIJKLMNOPQRSTUVWXYZ" characterSet:NSCharacterSet.uppercaseLetterCharacterSet minimumCount:minimum maximumCount:maximum localizedDescription:nil localizedName:OCLocalized(@"upper-case characters")]);
 	}
 
 	return (nil);
@@ -57,7 +58,7 @@
 {
 	if ((minimum != nil) || (maximum != nil))
 	{
-		return ([[OCPasswordPolicyRule alloc] initWithCharacters:@"1234567890" characterSet:NSCharacterSet.decimalDigitCharacterSet minimumCount:minimum maximumCount:maximum localizedDescription:nil localizedName:OCLocalized(@"digits")]);
+		return ([[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:@"1234567890" characterSet:NSCharacterSet.decimalDigitCharacterSet minimumCount:minimum maximumCount:maximum localizedDescription:nil localizedName:OCLocalized(@"digits")]);
 	}
 
 	return (nil);
@@ -67,7 +68,7 @@
 {
 	if ((minimum != nil) && (specialCharacters != nil))
 	{
-		return ([[OCPasswordPolicyRule alloc] initWithCharacters:specialCharacters characterSet:nil minimumCount:minimum maximumCount:nil localizedDescription:OCLocalizedFormat(@"At least {{min}} special characters: {{specialCharacters}}", (@{
+		return ([[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:specialCharacters characterSet:nil minimumCount:minimum maximumCount:nil localizedDescription:OCLocalizedFormat(@"At least {{min}} special characters: {{specialCharacters}}", (@{
 			@"min" : minimum.stringValue,
 			@"specialCharacters" : specialCharacters
 		})) localizedName:OCLocalized(@"special characters")]);

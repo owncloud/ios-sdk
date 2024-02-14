@@ -22,18 +22,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCPasswordPolicyRule : NSObject
 
-@property(strong,nullable) NSString *validCharacters; //!< A string with valid characters.
-@property(strong,nullable) NSCharacterSet *validCharactersSet; //!< A character set with all valid characters. This can be wider than .validCharacters.
-
-@property(strong,nullable) NSNumber *minimumCount; //!< The minimum number of matching characters required by this rule.
-@property(strong,nullable) NSNumber *maximumCount; //!< The maximum number of matching characters allowed by this rule.
-
 @property(strong,nullable) NSString *localizedDescription; //!< A localized description of the rule. F.ex. "At least %@ upper-case characters"
-@property(strong,nullable) NSString *localizedName; //!< A localized description of the matching characters. F.ex. "upper-case characters"
 
-- (instancetype)initWithCharacters:(nullable NSString *)characters characterSet:(nullable NSCharacterSet *)characterSet minimumCount:(nullable NSNumber *)minimumCount maximumCount:(nullable NSNumber *)maximumCount localizedDescription:(nullable NSString *)localizedDescription localizedName:(NSString *)localizedName;
+- (instancetype)initWithLocalizedDescription:(nullable NSString *)localizedDescription;
 
-- (NSUInteger)charactersMatchCountIn:(NSString *)password; //!< Returns the number of characters matching the rule
 - (nullable NSString *)validate:(NSString *)password; //!< Validates the password against the rule. If the password satisfies the rule, nil is returned, otherwise a localized description of the error that can be presented to the user as a hint.
 
 @end

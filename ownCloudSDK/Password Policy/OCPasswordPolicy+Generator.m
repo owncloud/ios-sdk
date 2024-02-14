@@ -37,6 +37,9 @@
 - (NSString *)generatePasswordWithMinLength:(NSNumber *)minLen maxLength:(NSNumber *)maxLen error:(NSError * _Nullable __autoreleasing *)error
 {
 	__block OSStatus randomError = errSecSuccess;
+	NSArray<OCPasswordPolicyRuleCharacters *> *rules = (NSArray<OCPasswordPolicyRuleCharacters *> *)[self.rules filteredArrayUsingBlock:^BOOL(OCPasswordPolicyRule * _Nonnull object, BOOL * _Nonnull stop) {
+		return ([object isKindOfClass:OCPasswordPolicyRuleCharacters.class]);
+	}];
 
 	// Random number generator, using kSecRandomDefault (described as "cryptographically secure random number generator" in the header)
 	UInt8 (^Random)(UInt8 maxValue) = ^(UInt8 divisor){
@@ -52,7 +55,7 @@
 		return (UInt8)(randomByte % divisor);
 	};
 
-	NSString * _Nullable (^RandomChar)(OCPasswordPolicyRule *rule) = ^(OCPasswordPolicyRule *rule) {
+	NSString * _Nullable (^RandomChar)(OCPasswordPolicyRuleCharacters *rule) = ^(OCPasswordPolicyRuleCharacters *rule) {
 		NSString *validCharacters;
 
 		if ((validCharacters = rule.validCharacters) == nil)
@@ -66,7 +69,7 @@
 	// Determine the number of characters to generate. If a range is provided, pick a random number of characters within that range.
 	NSUInteger minLength = minLen.unsignedIntegerValue, maxLength = maxLen.unsignedIntegerValue;
 
-	for (OCPasswordPolicyRule *rule in self.rules)
+	for (OCPasswordPolicyRuleCharacters *rule in rules)
 	{
 		if ((rule.validCharactersSet == nil) && (rule.validCharacters == nil))
 		{
@@ -102,11 +105,11 @@
 	NSUInteger length = minLength + ((maxLength != 0) ? Random(maxLength-minLength+1) : 0);
 	NSString *generatedPassword = nil;
 	NSMutableArray<NSString *> *characters = [NSMutableArray new];
-	NSMutableArray<OCPasswordPolicyRule *> *remainingRules = [NSMutableArray new];
+	NSMutableArray<OCPasswordPolicyRuleCharacters *> *remainingRules = [NSMutableArray new];
 	NSString *randomChar;
 
 	// - for each rule, generate the minimum number of characters required for the rule, picking characters randomly from the valid characters of the respective rule
-	for (OCPasswordPolicyRule *rule in self.rules)
+	for (OCPasswordPolicyRuleCharacters *rule in rules)
 	{
 		NSUInteger minCount = rule.minimumCount.unsignedIntegerValue;
 
@@ -133,7 +136,7 @@
 	{
 		for (NSInteger i=0; i<remaining; i++)
 		{
-			OCPasswordPolicyRule *rule = nil;
+			OCPasswordPolicyRuleCharacters *rule = nil;
 
 			if (remainingRules.count > 0) {
 				rule = remainingRules[Random(remainingRules.count)];

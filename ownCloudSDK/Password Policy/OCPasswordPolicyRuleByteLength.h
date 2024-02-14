@@ -1,8 +1,8 @@
 //
-//  OCPasswordPolicyRule.m
+//  OCPasswordPolicyRuleByteLength.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 06.02.24.
+//  Created by Felix Schwarz on 14.02.24.
 //  Copyright © 2024 ownCloud GmbH. All rights reserved.
 //
 
@@ -16,23 +16,17 @@
  *
  */
 
-#import "OCPasswordPolicyRule.h"
+#import <ownCloudSDK/ownCloudSDK.h>
 
-@implementation OCPasswordPolicyRule
+NS_ASSUME_NONNULL_BEGIN
 
-- (instancetype)initWithLocalizedDescription:(NSString *)localizedDescription
-{
-	if ((self = [super init]) != nil)
-	{
-		self.localizedDescription = localizedDescription;
-	}
+@interface OCPasswordPolicyRuleByteLength : OCPasswordPolicyRule
 
-	return (self);
-}
+@property(assign) NSStringEncoding encoding;
+@property(assign) NSInteger maximumByteLength;
 
-- (NSString *)validate:(NSString *)password
-{
-	return (@"Unimplemented rule");
-}
+- (instancetype)initWithEncoding:(NSStringEncoding)encoding maximumByteLength:(NSInteger)maximumByteLength;
 
 @end
+
+NS_ASSUME_NONNULL_END
