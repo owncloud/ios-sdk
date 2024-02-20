@@ -1248,7 +1248,7 @@
 				localID : TEXT			- OCLocalID identifying the item
 				itemData : BLOB	  		- data of the serialized OCItem
 			*/
-			@"CREATE TABLE metaData (mdID INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER NOT NULL, sy.ncAnchor INTEGER NOT NULL, removed INTEGER NOT NULL, mdTimestamp INTEGER NOT NULL, locallyModified INTEGER NOT NULL, localRelativePath TEXT NULL, locationString TEXT NOT NULL, path TEXT NOT NULL, parentPath TEXT NOT NULL, name TEXT NOT NULL COLLATE OCLOCALIZED, mimeType TEXT NULL, typeAlias TEXT NULL, size INTEGER NOT NULL, favorite INTEGER NOT NULL, cloudStatus INTEGER NOT NULL, downloadTrigger TEXT NULL, hasLocalAttributes INTEGER NOT NULL, lastUsedDate REAL NULL, lastModifiedDate REAL NULL, syncActivity INTEGER NULL, ownerUserName TEXT, driveID TEXT, fileID TEXT, localID TEXT, itemData BLOB NOT NULL)",
+			@"CREATE TABLE metaData (mdID INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER NOT NULL, syncAnchor INTEGER NOT NULL, removed INTEGER NOT NULL, mdTimestamp INTEGER NOT NULL, locallyModified INTEGER NOT NULL, localRelativePath TEXT NULL, locationString TEXT NOT NULL, path TEXT NOT NULL, parentPath TEXT NOT NULL, name TEXT NOT NULL COLLATE OCLOCALIZED, mimeType TEXT NULL, typeAlias TEXT NULL, size INTEGER NOT NULL, favorite INTEGER NOT NULL, cloudStatus INTEGER NOT NULL, downloadTrigger TEXT NULL, hasLocalAttributes INTEGER NOT NULL, lastUsedDate REAL NULL, lastModifiedDate REAL NULL, syncActivity INTEGER NULL, ownerUserName TEXT, driveID TEXT, fileID TEXT, localID TEXT, itemData BLOB NOT NULL)",
 
 			// Create indexes over path and parentPath
 			@"CREATE INDEX idx_metaData_locationString ON metaData (locationString)",
