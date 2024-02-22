@@ -22,6 +22,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCPasswordPolicyRuleByteLength : OCPasswordPolicyRule
 
+@property(nonatomic,strong,class,readonly) OCPasswordPolicyRuleByteLength *defaultRule;
+
 @property(assign) NSStringEncoding encoding;
 @property(assign) NSInteger maximumByteLength;
 

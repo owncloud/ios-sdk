@@ -45,7 +45,7 @@
 				if (maximumCount != nil)
 				{
 					// Minimum + Maximum count
-					localizedDescription = OCLocalizedFormat(@"Between {{min}} and {{max}} {{characterType}}", (@{
+					self.localizedDescription = OCLocalizedFormat(@"Between {{min}} and {{max}} {{characterType}}", (@{
 						@"min" : minimumCount.stringValue,
 						@"max" : maximumCount.stringValue,
 						@"characterType" : localizedName
@@ -54,7 +54,7 @@
 				else
 				{
 					// Minimum count only
-					localizedDescription = OCLocalizedFormat(@"At least {{min}} {{characterType}}", (@{
+					self.localizedDescription = OCLocalizedFormat(@"At least {{min}} {{characterType}}", (@{
 						@"min" : minimumCount.stringValue,
 						@"characterType" : localizedName
 					}));
@@ -63,7 +63,7 @@
 			else if (maximumCount != nil)
 			{
 				// Maximum count only
-				localizedDescription = OCLocalizedFormat(@"At most {{max}} {{characterType}}", (@{
+				self.localizedDescription = OCLocalizedFormat(@"At most {{max}} {{characterType}}", (@{
 					@"max" : maximumCount.stringValue,
 					@"characterType" : localizedName
 				}));

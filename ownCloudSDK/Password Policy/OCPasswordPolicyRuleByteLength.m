@@ -23,6 +23,20 @@
 
 @implementation OCPasswordPolicyRuleByteLength
 
++ (OCPasswordPolicyRuleByteLength *)defaultRule
+{
+	// According to https://owncloud.dev/services/frontend/#the-password-policy no limitations on the characters themselves need to be applied:
+	// > Generally, a password can contain any UTF-8 characters, […].
+	//
+	// However, there's a maximum BYTE length that applies:
+	// > Note that a password can have a maximum length of 72 bytes. Depending on the alphabet
+	// > used, a character is encoded by 1 to 4 bytes, defining the maximum length of a password
+	// > indirectly. While US-ASCII will only need one byte, Latin alphabets and also Greek or
+	// > Cyrillic ones need two bytes. Three bytes are needed for characters in Chinese, Japanese
+	// > and Korean etc.
+	return ([[OCPasswordPolicyRuleByteLength alloc] initWithEncoding:NSUTF8StringEncoding maximumByteLength:72]);
+}
+
 - (instancetype)initWithEncoding:(NSStringEncoding)encoding maximumByteLength:(NSInteger)maximumByteLength
 {
 	if ((self = [super init]) != nil)
@@ -68,7 +82,7 @@
 	{
 		// Encoded string would exceed maximum number of bytes
 		return (OCLocalizedFormat(@"Longer than {{byteLength}} bytes in {{encoding}} encoding.", (@{
-			@"byteLength" : [@(byteLength) stringValue],
+			@"byteLength" : [@(_maximumByteLength) stringValue],
 			@"encoding" : [self nameOfEncoding]
 		})));
 	}

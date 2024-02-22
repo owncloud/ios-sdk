@@ -313,7 +313,8 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 		// - https://doc.owncloud.com/ocis/next/deployment/services/s-list/frontend.html (general idea)
 		// - https://github.com/owncloud/ocis/pull/7195 (implementation description)
 		// - https://github.com/owncloud/ocis/blob/master/vendor/github.com/cs3org/reva/v2/pkg/password/password_policies.go#L12 (actual implementation) <= mirrored here
-		return (@" !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~");
+		// - minus space, because that can lead to issues, especially if it is at the end
+		return (@"!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~");
 	}
 	else
 	{

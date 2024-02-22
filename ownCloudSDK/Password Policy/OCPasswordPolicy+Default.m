@@ -29,7 +29,9 @@
 		[OCPasswordPolicyRule lowercaseCharactersMinimum:@(2) maximum:nil],
 		[OCPasswordPolicyRule uppercaseCharactersMinimum:@(2) maximum:nil],
 		[OCPasswordPolicyRule digitsMinimum:@(2) maximum:nil],
-		[OCPasswordPolicyRule specialCharacters:@" !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~" minimum:@(2)] // special characters as per https://owasp.org/www-community/password-special-characters
+		[OCPasswordPolicyRule specialCharacters:@"!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~" minimum:@(2)], // special characters as per https://owasp.org/www-community/password-special-characters (minus space, because that can lead to issues, especially if it is at the end)
+
+		OCPasswordPolicyRuleByteLength.defaultRule
 	]]);
 }
 

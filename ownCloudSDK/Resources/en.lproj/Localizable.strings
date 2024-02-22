@@ -227,7 +227,6 @@
 "Password can't be converted to {{encoding}}." = "Password can't be converted to {{encoding}}.";
 "Longer than {{byteLength}} bytes in {{encoding}} encoding." = "Longer than {{byteLength}} bytes in {{encoding}} encoding.";
 
-
 /* DAV Errors */
 // OCDAVErrorServiceUnavailable
 "Server down for maintenance." = "Server down for maintenance.";
