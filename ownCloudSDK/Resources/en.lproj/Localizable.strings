@@ -223,7 +223,7 @@
 "At least {{min}} special characters: {{specialCharacters}}" = "At least {{min}} special characters: {{specialCharacters}}";
 
 // OCPasswordPolicyRuleByteLength
-"Less than {{byteLength}} bytes." = "Less than {{byteLength}} bytes.";
+"At most {{byteLength}} bytes." = "At most {{byteLength}} bytes.";
 "Password can't be converted to {{encoding}}." = "Password can't be converted to {{encoding}}.";
 "Longer than {{byteLength}} bytes in {{encoding}} encoding." = "Longer than {{byteLength}} bytes in {{encoding}} encoding.";
 

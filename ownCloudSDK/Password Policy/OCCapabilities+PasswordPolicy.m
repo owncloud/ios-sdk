@@ -40,32 +40,32 @@
 	}
 
 	// Minimum and maximum length
-	if ((self.passwordPolicyMinCharacters != nil) ||
+	if (((self.passwordPolicyMinCharacters != nil) && (self.passwordPolicyMinCharacters.intValue > 0)) ||
 	    (self.passwordPolicyMaxCharacters != nil))
 	{
 		[rules addObject:[OCPasswordPolicyRule characterCountMinimum:self.passwordPolicyMinCharacters maximum:self.passwordPolicyMaxCharacters]];
 	}
 
 	// Minimum lower-case characters
-	if (self.passwordPolicyMinLowerCaseCharacters != nil)
+	if ((self.passwordPolicyMinLowerCaseCharacters != nil) && (self.passwordPolicyMinLowerCaseCharacters.intValue > 0))
 	{
 		[rules addObject:[OCPasswordPolicyRule lowercaseCharactersMinimum:self.passwordPolicyMinLowerCaseCharacters maximum:nil]];
 	}
 
 	// Minimum upper-case characters
-	if (self.passwordPolicyMinUpperCaseCharacters != nil)
+	if ((self.passwordPolicyMinUpperCaseCharacters != nil) && (self.passwordPolicyMinUpperCaseCharacters.intValue > 0))
 	{
 		[rules addObject:[OCPasswordPolicyRule uppercaseCharactersMinimum:self.passwordPolicyMinUpperCaseCharacters maximum:nil]];
 	}
 
 	// Minimum digits
-	if (self.passwordPolicyMinDigits != nil)
+	if ((self.passwordPolicyMinDigits != nil) && (self.passwordPolicyMinDigits.intValue > 0))
 	{
 		[rules addObject:[OCPasswordPolicyRule digitsMinimum:self.passwordPolicyMinDigits maximum:nil]];
 	}
 
 	// Minimum special characters
-	if ((self.passwordPolicyMinSpecialCharacters != nil) && (self.passwordPolicySpecialCharacters != nil))
+	if ((self.passwordPolicyMinSpecialCharacters != nil) && (self.passwordPolicyMinSpecialCharacters.intValue > 0) && (self.passwordPolicySpecialCharacters != nil))
 	{
 		[rules addObject:[OCPasswordPolicyRule specialCharacters:self.passwordPolicySpecialCharacters minimum:self.passwordPolicyMinSpecialCharacters]];
 	}

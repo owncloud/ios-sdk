@@ -44,7 +44,7 @@
 		_encoding = encoding;
 		_maximumByteLength = maximumByteLength;
 
-		self.localizedDescription = OCLocalizedFormat(@"Less than {{byteLength}} bytes.", @{ @"byteLength" : @(maximumByteLength).stringValue });
+		self.localizedDescription = OCLocalizedFormat(@"At most {{byteLength}} bytes.", @{ @"byteLength" : @(maximumByteLength).stringValue });
 	}
 
 	return (self);
