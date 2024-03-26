@@ -55,6 +55,8 @@
 			_versionedItemUpdateHandler = [versionedItemUpdateHandler copy];
 		}
 
+		self.trackItemVersions = YES;
+
 		[self registerKVO];
 	}
 

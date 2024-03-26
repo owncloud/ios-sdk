@@ -341,6 +341,7 @@
 - (void)updateCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
 	OCDatabaseTimestamp mdTimestamp = [self _timestampForSyncAnchor:syncAnchor];
+	__block NSMutableSet<OCLocationString> *removedLocations = nil;
 
 	if (_itemFilter != nil)
 	{
@@ -397,9 +398,46 @@
 			OCLogError(@"Item without databaseID can't be used for updating: %@", item);
 		}
 
+		if ((item.type == OCItemTypeCollection) && item.removed)
+		{
+			// Removed folders -> also trigger removal of ALL items inside
+			OCLocationString itemLocationString;
+
+			if ((itemLocationString = item.locationString) != nil)
+			{
+				if (removedLocations == nil) {
+					removedLocations = [NSMutableSet new];
+				}
+
+				[removedLocations addObject:itemLocationString];
+			}
+		}
+
 		return (query);
 	} process:^(NSArray<OCSQLiteQuery *> *queries, NSUInteger processed, NSUInteger total, BOOL * _Nonnull stop) {
-		[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:queries type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
+		// If removedLocations has entries, add SQL entries for them
+		NSMutableArray<OCSQLiteQuery *> *combinedQueries = (removedLocations != nil) ? [[NSMutableArray alloc] initWithArray:queries] : (NSMutableArray *)queries;
+
+		if (removedLocations != nil)
+		{
+			for (OCLocationString locationString in removedLocations)
+			{
+				// Update removed and syncAnchor for all items inside removed folders
+				OCSQLiteQuery *removalQuery = [OCSQLiteQuery queryUpdatingRowsWhere:@{
+					@"locationString" : [OCSQLiteQueryCondition queryConditionWithOperator:@" LIKE " value:[locationString stringByAppendingString:@"%"] apply:YES]
+				} inTable:OCDatabaseTableNameMetaData withRowValues:@{
+					@"removed"	: @(YES),
+					@"syncAnchor"	: syncAnchor,
+					@"mdTimestamp"	: mdTimestamp
+				} completionHandler:nil];
+
+				[combinedQueries addObject:removalQuery];
+			}
+
+			removedLocations = nil;
+		}
+
+		[self.sqlDB executeTransaction:[OCSQLiteTransaction transactionWithQueries:combinedQueries type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
 			if (error != nil)
 			{
 				*stop = YES;
@@ -419,12 +457,12 @@
 - (void)removeCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler
 {
 	// TODO: Update parent directories with new sync anchor value (not sure if necessary, as a change in eTag should also trigger an update of the parent directory sync anchor)
-
 	if (_itemFilter != nil)
 	{
 		items = _itemFilter(items);
 	}
 
+	// Set .removed on all items
 	for (OCItem *item in items)
 	{
 		item.removed = YES;
@@ -435,6 +473,7 @@
 		}
 	}
 
+	// Update cache items
 	[self updateCacheItems:items syncAnchor:syncAnchor completionHandler:completionHandler];
 }
 

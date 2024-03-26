@@ -264,10 +264,40 @@
 				{
 					OCItem *removeItem;
 
+					// Remove removed item itself
 					if ((removeItem = fullQueryResultsItemList.itemsByLocalID[removedItem.localID]) != nil)
 					{
 						[fullQueryResults removeObject:removeItem];
 						madeChanges = YES;
+					}
+
+					// In case of a removed folder, remove all items in the folder and its subfolders, too
+					if (removedItem.type == OCItemTypeCollection)
+					{
+						NSMutableArray<OCItem *> *containedItems = nil;
+
+						// Find all contained items
+						for (OCItem *item in fullQueryResults)
+						{
+							if (OCNAIsEqual(item.driveID, removeItem.driveID) && 	// item in same drive
+							    [item.path hasPrefix:removedItem.path])		// item below removed folder
+							{
+								if (containedItems == nil) {
+									containedItems = [NSMutableArray new];
+								}
+
+								[containedItems addObject:item];
+							}
+						}
+
+						// Remove contained items
+						if (containedItems != nil)
+						{
+							[fullQueryResults removeObjectsInArray:containedItems];
+							madeChanges = YES;
+
+							// OCLogDebug(@"Recursive removal of %@ removed: %@", removedItem.location, containedItems);
+						}
 					}
 				}
 			}
