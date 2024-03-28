@@ -128,6 +128,11 @@
 				[remainingRules addObject:rule];
 			}
 		}
+		else if ((minCount == 0) && (rule.maximumCount == nil))
+		{
+			// Optional rules
+			[remainingRules addObject:rule];
+		}
 	}
 
 	// - fill up the remaining empty space with randomly picked characters of randomly picked rules that have not yet reached their maximum count (if any)

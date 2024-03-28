@@ -1045,7 +1045,7 @@
 	XCTAssert((capabilities.publicSharingPasswordEnforcedForReadOnly!=nil) && !capabilities.publicSharingPasswordEnforcedForReadOnly.boolValue);
 	XCTAssert((capabilities.publicSharingPasswordEnforcedForReadWrite!=nil) && !capabilities.publicSharingPasswordEnforcedForReadWrite.boolValue);
 	XCTAssert((capabilities.publicSharingPasswordEnforcedForUploadOnly!=nil) && !capabilities.publicSharingPasswordEnforcedForUploadOnly.boolValue);
-	XCTAssert((capabilities.publicSharingExpireDateEnabled!=nil) && !capabilities.publicSharingExpireDateEnabled.boolValue);
+	XCTAssert((capabilities.publicSharingExpireDateAddDefaultDate!=nil) && !capabilities.publicSharingExpireDateAddDefaultDate.boolValue);
 	XCTAssert((capabilities.publicSharingSendMail!=nil) && !capabilities.publicSharingSendMail.boolValue);
 	XCTAssert((capabilities.publicSharingSocialShare!=nil) && capabilities.publicSharingSocialShare.boolValue);
 	XCTAssert((capabilities.publicSharingUpload!=nil) && capabilities.publicSharingUpload.boolValue);

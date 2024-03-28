@@ -109,12 +109,13 @@ typedef NSNumber* OCCapabilityBool;
 
 #pragma mark - Sharing : Public
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingEnabled;
-@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordEnforced;
-@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordEnforcedForReadOnly;
-@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordEnforcedForReadWrite;
-@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordEnforcedForUploadOnly;
-@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingExpireDateEnabled;
-@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingExpireDateEnforced;
+@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordEnforced; //!< Controls whether a password is required for links (catch-all)
+@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordEnforcedForReadOnly; //!< Controls whether a password is required for read-only links
+@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordEnforcedForReadWrite; //!< Controls whether a password is required for read-write links
+@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordEnforcedForReadWriteDelete; //!< Controls whether a password is required for read-write-delete links
+@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordEnforcedForUploadOnly; //!< Controls whether a password is required for upload-only links
+@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingExpireDateAddDefaultDate; //!< Controls whether a *default* expiration date should be set
+@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingExpireDateEnforceDateAndDaysDeterminesLastAllowedDate; //!< Controls whether .publicSharingDefaultExpireDateDays is enforced as maximum expiration date. Also, when set, an expiration date is REQUIRED.
 @property(readonly,nullable,nonatomic) NSNumber *publicSharingDefaultExpireDateDays;
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingSendMail;
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingSocialShare;

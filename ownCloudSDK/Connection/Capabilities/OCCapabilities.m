@@ -99,9 +99,10 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 @dynamic publicSharingPasswordEnforced;
 @dynamic publicSharingPasswordEnforcedForReadOnly;
 @dynamic publicSharingPasswordEnforcedForReadWrite;
+@dynamic publicSharingPasswordEnforcedForReadWriteDelete;
 @dynamic publicSharingPasswordEnforcedForUploadOnly;
-@dynamic publicSharingExpireDateEnabled;
-@dynamic publicSharingExpireDateEnforced;
+@dynamic publicSharingExpireDateAddDefaultDate;
+@dynamic publicSharingExpireDateEnforceDateAndDaysDeterminesLastAllowedDate;
 @dynamic publicSharingDefaultExpireDateDays;
 @dynamic publicSharingSendMail;
 @dynamic publicSharingSocialShare;
@@ -270,38 +271,95 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 	return (OCTypedCast(_capabilities[@"password_policy"], NSDictionary));
 }
 
+- (NSDictionary<NSString *, id> *)_passwordRequirements
+{
+	return (OCTypedCast(self._passwordPolicy[@"password_requirements"],NSDictionary));
+}
+
 - (BOOL)passwordPolicyEnabled
 {
+	if (self._passwordRequirements != nil) {
+		return (self.passwordPolicyMinCharacters.integerValue > 0);
+	}
+
 	return (self._passwordPolicy != nil);
 }
 
 - (NSNumber *)passwordPolicyMinCharacters
 {
-	return (OCTypedCast(self._passwordPolicy[@"min_characters"], NSNumber));
+	NSNumber *minimumCharacters = nil;
+
+	if (self._passwordRequirements != nil) {
+		// OC10-style password policy
+		minimumCharacters = OCTypedCast(self._passwordRequirements[@"minimum_characters"], NSNumber);
+	} else {
+		// ocis-style password policy
+		minimumCharacters = OCTypedCast(self._passwordPolicy[@"min_characters"], NSNumber);
+	}
+
+	if (minimumCharacters == nil)
+	{
+		NSUInteger minimumFromSum =
+			self.passwordPolicyMinLowerCaseCharacters.integerValue +
+			self.passwordPolicyMinUpperCaseCharacters.integerValue +
+			self.passwordPolicyMinDigits.integerValue +
+			self.passwordPolicyMinSpecialCharacters.integerValue;
+
+		if (minimumFromSum > 0) {
+			return (@(minimumFromSum));
+		}
+	}
+
+	return (minimumCharacters);
 }
 
 - (NSNumber *)passwordPolicyMaxCharacters
 {
+	// ocis-style password policy
 	return (OCTypedCast(self._passwordPolicy[@"max_characters"], NSNumber));
 }
 
 - (NSNumber *)passwordPolicyMinLowerCaseCharacters
 {
+	if (self._passwordRequirements != nil) {
+		// OC10-style password policy
+		return (OCTypedCast(OCTypedCast(OCTypedCast(self._passwordRequirements[@"configuration"], NSDictionary)[@"lower_case"], NSDictionary)[@"minimum"], NSNumber));
+	}
+
+	// ocis-style password policy
 	return (OCTypedCast(self._passwordPolicy[@"min_lowercase_characters"], NSNumber));
 }
 
 - (NSNumber *)passwordPolicyMinUpperCaseCharacters
 {
+	if (self._passwordRequirements != nil) {
+		// OC10-style password policy
+		return (OCTypedCast(OCTypedCast(OCTypedCast(self._passwordRequirements[@"configuration"], NSDictionary)[@"upper_case"], NSDictionary)[@"minimum"], NSNumber));
+	}
+
+	// ocis-style password policy
 	return (OCTypedCast(self._passwordPolicy[@"min_uppercase_characters"], NSNumber));
 }
 
 - (NSNumber *)passwordPolicyMinDigits
 {
+	if (self._passwordRequirements != nil) {
+		// OC10-style password policy
+		return (OCTypedCast(OCTypedCast(OCTypedCast(self._passwordRequirements[@"configuration"], NSDictionary)[@"numbers"], NSDictionary)[@"minimum"], NSNumber));
+	}
+
+	// ocis-style password policy
 	return (OCTypedCast(self._passwordPolicy[@"min_digits"], NSNumber));
 }
 
 - (NSNumber *)passwordPolicyMinSpecialCharacters
 {
+	if (self._passwordRequirements != nil) {
+		// OC10-style password policy
+		return (OCTypedCast(OCTypedCast(OCTypedCast(self._passwordRequirements[@"configuration"], NSDictionary)[@"special_characters"], NSDictionary)[@"minimum"], NSNumber));
+	}
+
+	// ocis-style password policy
 	return (OCTypedCast(self._passwordPolicy[@"min_special_characters"], NSNumber));
 }
 
@@ -319,6 +377,26 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 	else
 	{
 		// OC10 special characters, as per https://github.com/owncloud/password_policy/blob/master/lib/Controller/SettingsController.php#L47
+		if (self._passwordRequirements != nil)
+		{
+			// OC10-style password policy
+			NSDictionary<NSString *, id> *specialCharactersGenerateFromDict;
+
+			if ((specialCharactersGenerateFromDict = OCTypedCast(OCTypedCast(OCTypedCast(self._passwordRequirements[@"configuration"], NSDictionary)[@"special_characters"], NSDictionary)[@"generate_from"], NSDictionary)) != nil)
+			{
+				if (OCTypedCast(specialCharactersGenerateFromDict[@"characters"],NSString).length > 0)
+				{
+					return(specialCharactersGenerateFromDict[@"characters"]);
+				}
+
+				if ([OCTypedCast(specialCharactersGenerateFromDict[@"any"],NSNumber) isEqual:@(YES)])
+				{
+					// Return same special chars as for ocis
+					return (@"!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~");
+				}
+			}
+		}
+
 		return (@"#!");
 	}
 }
@@ -569,17 +647,22 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 	return (OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"password"][@"enforced_for"][@"read_write"], NSNumber));
 }
 
+- (OCCapabilityBool)publicSharingPasswordEnforcedForReadWriteDelete
+{
+	return (OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"password"][@"enforced_for"][@"read_write_delete"], NSNumber));
+}
+
 - (OCCapabilityBool)publicSharingPasswordEnforcedForUploadOnly
 {
 	return (OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"password"][@"enforced_for"][@"upload_only"], NSNumber));
 }
 
-- (OCCapabilityBool)publicSharingExpireDateEnabled
+- (OCCapabilityBool)publicSharingExpireDateAddDefaultDate
 {
 	return (OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"expire_date"][@"enabled"], NSNumber));
 }
 
-- (OCCapabilityBool)publicSharingExpireDateEnforced
+- (OCCapabilityBool)publicSharingExpireDateEnforceDateAndDaysDeterminesLastAllowedDate
 {
 	return (OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"expire_date"][@"enforced"], NSNumber));
 }

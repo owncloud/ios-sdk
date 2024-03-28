@@ -32,6 +32,7 @@
 - (OCPasswordPolicy *)passwordPolicy
 {
 	NSMutableArray<OCPasswordPolicyRule *> *rules = [NSMutableArray new];
+	BOOL hasCharacterBasedRule = NO;
 
 	if (!self.passwordPolicyEnabled)
 	{
@@ -50,24 +51,44 @@
 	if ((self.passwordPolicyMinLowerCaseCharacters != nil) && (self.passwordPolicyMinLowerCaseCharacters.intValue > 0))
 	{
 		[rules addObject:[OCPasswordPolicyRule lowercaseCharactersMinimum:self.passwordPolicyMinLowerCaseCharacters maximum:nil]];
+		hasCharacterBasedRule = YES;
 	}
 
 	// Minimum upper-case characters
 	if ((self.passwordPolicyMinUpperCaseCharacters != nil) && (self.passwordPolicyMinUpperCaseCharacters.intValue > 0))
 	{
 		[rules addObject:[OCPasswordPolicyRule uppercaseCharactersMinimum:self.passwordPolicyMinUpperCaseCharacters maximum:nil]];
+		hasCharacterBasedRule = YES;
 	}
 
 	// Minimum digits
 	if ((self.passwordPolicyMinDigits != nil) && (self.passwordPolicyMinDigits.intValue > 0))
 	{
 		[rules addObject:[OCPasswordPolicyRule digitsMinimum:self.passwordPolicyMinDigits maximum:nil]];
+		hasCharacterBasedRule = YES;
 	}
 
 	// Minimum special characters
 	if ((self.passwordPolicyMinSpecialCharacters != nil) && (self.passwordPolicyMinSpecialCharacters.intValue > 0) && (self.passwordPolicySpecialCharacters != nil))
 	{
 		[rules addObject:[OCPasswordPolicyRule specialCharacters:self.passwordPolicySpecialCharacters minimum:self.passwordPolicyMinSpecialCharacters]];
+		hasCharacterBasedRule = YES;
+	}
+
+	// Add character-based rules for generation if missing
+	if (!hasCharacterBasedRule)
+	{
+		// Only lengths provided, no character based rules so far - add rules for generator
+		[rules addObjectsFromArray:@[
+			[OCPasswordPolicyRule lowercaseCharactersMinimum:@(0) maximum:nil],
+			[OCPasswordPolicyRule uppercaseCharactersMinimum:@(0) maximum:nil],
+			[OCPasswordPolicyRule digitsMinimum:@(0) maximum:nil],
+		]];
+
+		if (self.passwordPolicySpecialCharacters.length > 0)
+		{
+			[rules addObject:[OCPasswordPolicyRule specialCharacters:self.passwordPolicySpecialCharacters minimum:@(0)]];
+		}
 	}
 
 	// Limit number of bytes
