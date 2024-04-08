@@ -177,6 +177,12 @@
 	    (matchingItem.removed == NO)						// Not removed
 	   )
 	{
+		if ((matchingItem.driveID != nil) && ([self.core driveWithIdentifier:matchingItem.driveID attachedOnly:YES] == nil))
+		{
+			// Do not trigger available offline file downloads from unknown drives
+			return;
+		}
+
 		if (matchingItem.cloudStatus == OCItemCloudStatusCloudOnly)
 		{
 			[self.core downloadItem:matchingItem options:@{
@@ -213,6 +219,20 @@
 	{
 		[self performPoliciesAutoRemoval]; // Clean up policies when there's a consistent item list in the database
 	}
+}
+
+- (BOOL)shouldAutoRemoveItemPolicy:(OCItemPolicy *)itemPolicy
+{
+	if (itemPolicy.location.driveID != nil)
+	{
+		if ([self.core driveWithIdentifier:itemPolicy.location.driveID attachedOnly:YES] == nil)
+		{
+			// Drive for this policy is no longer attached => remove policy
+			return (YES);
+		}
+	}
+
+	return ([super shouldAutoRemoveItemPolicy:itemPolicy]);
 }
 
 @end

@@ -2220,11 +2220,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	return (self.vault.detachedDrives);
 }
 
-- (OCDrive *)driveWithIdentifier:(OCDriveID)driveID
+- (OCDrive *)driveWithIdentifier:(OCDriveID)driveID attachedOnly:(BOOL)attachedOnly
 {
 	if (driveID == nil) { return (nil); }
 
-	return ([self.vault driveWithIdentifier:driveID]);
+	return ([self.vault driveWithIdentifier:driveID attachedOnly:attachedOnly]);
 }
 
 - (OCDrive *)personalDrive

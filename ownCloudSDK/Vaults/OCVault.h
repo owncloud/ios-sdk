@@ -183,7 +183,7 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 - (void)unsubscribeFromDrives:(NSArray<OCDrive *> *)drives; //!< Removes the drives from the list of subscribed drives
 
 - (void)changeDetachedState:(OCDriveDetachedState)detachedState forDriveID:(OCDriveID)detachedDriveID; //!< Changes the detached state for an already detached drive.
-- (nullable OCDrive *)driveWithIdentifier:(OCDriveID)driveID;
+- (nullable OCDrive *)driveWithIdentifier:(OCDriveID)driveID attachedOnly:(BOOL)attachedOnly;
 
 - (void)startDriveUpdates; //!< Initializes the drive properties and starts observing for changes. This is usually called by -openWithCompletionHandler:. Calling this without opening a vault allows getting access to the drives list and be notified of changes. Useful mostly for VFS implementations.
 - (void)stopDriveUpdates; //!< Stops observing for changes. This is usually called by -closeWithCompletionHandler:.

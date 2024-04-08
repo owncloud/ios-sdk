@@ -120,6 +120,38 @@
 }
 
 #pragma mark - Cleanup polices
+- (BOOL)shouldAutoRemoveItemPolicy:(OCItemPolicy *)policy
+{
+	__block BOOL removePolicy = NO;
+
+	switch (policy.policyAutoRemovalMethod)
+	{
+		case OCItemPolicyAutoRemovalMethodNone:
+		break;
+
+		case OCItemPolicyAutoRemovalMethodNoItems: {
+			OCQueryCondition *autoRemovalCondition;
+
+			if ((autoRemovalCondition = policy.policyAutoRemovalCondition) != nil)
+			{
+				OCSyncExec(retrieveCacheItems, {
+					[self.core.vault.database retrieveCacheItemsForQueryCondition:autoRemovalCondition cancelAction:nil completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
+						if (items.count == 0)
+						{
+							removePolicy = YES;
+						}
+
+						OCSyncExecDone(retrieveCacheItems);
+					}];
+				});
+			}
+		}
+		break;
+	}
+
+	return (removePolicy);
+}
+
 - (void)performPoliciesAutoRemoval
 {
 	NSMutableArray<OCItemPolicy *> *removeItemPolicies = nil;
@@ -128,32 +160,7 @@
 	{
 		for (OCItemPolicy *policy in _policies)
 		{
-			__block BOOL removePolicy = NO;
-
-			switch (policy.policyAutoRemovalMethod)
-			{
-				case OCItemPolicyAutoRemovalMethodNone:
-				break;
-
-				case OCItemPolicyAutoRemovalMethodNoItems: {
-					OCQueryCondition *autoRemovalCondition;
-
-					if ((autoRemovalCondition = policy.policyAutoRemovalCondition) != nil)
-					{
-						OCSyncExec(retrieveCacheItems, {
-							[self.core.vault.database retrieveCacheItemsForQueryCondition:autoRemovalCondition cancelAction:nil completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, NSArray<OCItem *> *items) {
-								if (items.count == 0)
-								{
-									removePolicy = YES;
-								}
-
-								OCSyncExecDone(retrieveCacheItems);
-							}];
-						});
-					}
-				}
-				break;
-			}
+			BOOL removePolicy = [self shouldAutoRemoveItemPolicy:policy];
 
 			if (removePolicy)
 			{

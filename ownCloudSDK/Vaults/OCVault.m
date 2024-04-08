@@ -630,7 +630,7 @@
 	}];
 }
 
-- (nullable OCDrive *)driveWithIdentifier:(OCDriveID)driveID
+- (nullable OCDrive *)driveWithIdentifier:(OCDriveID)driveID attachedOnly:(BOOL)attachedOnly
 {
 	OCDrive *drive;
 
@@ -638,7 +638,10 @@
 	{
 		if ((drive = _activeDrivesByID[driveID]) == nil)
 		{
-			drive = _detachedDrivesByID[driveID];
+			if (!attachedOnly)
+			{
+				drive = _detachedDrivesByID[driveID];
+			}
 		}
 	}
 

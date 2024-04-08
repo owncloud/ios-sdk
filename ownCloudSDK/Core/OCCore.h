@@ -389,7 +389,7 @@ typedef id<NSObject> OCCoreItemTracking;
 
 @property(strong,readonly,nonatomic) NSArray<OCDrive *> *drives; //!< Returns all known drives.
 @property(strong,readonly,nonatomic) NSArray<OCDrive *> *subscribedDrives; //!< Returns all subscribed drives.
-- (nullable OCDrive *)driveWithIdentifier:(OCDriveID)driveID; //!< Returns the OCDrive* instance for an OCDriveID - or nil, if it wasn't found.
+- (nullable OCDrive *)driveWithIdentifier:(OCDriveID)driveID attachedOnly:(BOOL)attachedOnly; //!< Returns the OCDrive* instance for an OCDriveID - or nil, if it wasn't found.
 
 @property(strong,readonly,nullable,nonatomic) OCDrive *personalDrive;
 

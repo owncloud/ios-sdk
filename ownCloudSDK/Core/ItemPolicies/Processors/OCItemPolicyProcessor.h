@@ -76,6 +76,7 @@ typedef NS_OPTIONS(NSUInteger, OCItemPolicyProcessorTrigger)
 
 #pragma mark - Cleanup policies
 - (void)performPoliciesAutoRemoval;
+- (BOOL)shouldAutoRemoveItemPolicy:(OCItemPolicy *)itemPolicy; //!< Return YES if the item policy should be auto-removed
 - (nullable OCItemPolicy *)attemptRecoveryOfPolicy:(OCItemPolicy *)itemPolicy; //!< Return nil to remove the policy, an updated/replacement OCItemPolicy to keep the policy
 
 /*
