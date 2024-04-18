@@ -402,9 +402,15 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 	
 	if ((value==nil) && (unlocalizedString != nil))
 	{
+		static NSBundle *localizationBundle;
+		static dispatch_once_t onceToken;
+		dispatch_once(&onceToken, ^{
+			localizationBundle = [NSBundle bundleForClass:OCAuthenticationMethod.class];
+		});
+
 		if (customErrorDescription != nil)
 		{
-			value = [NSString stringWithFormat:OCLocalizedString(@"%@ (error %ld, %@)", nil), OCLocalizedString(unlocalizedString, nil), (long)error.code, customErrorDescription];
+			value = [NSString stringWithFormat:OCLocalizedViaLocalizationBundle(@"%@ (error %ld, %@)"), OCLocalizedViaLocalizationBundle(unlocalizedString), (long)error.code, customErrorDescription];
 		}
 		else
 		{
@@ -413,11 +419,11 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 			    (!((error.userInfo.count==2) && (error.userInfo[NSDebugDescriptionErrorKey]!=nil) && (error.userInfo[OCErrorDateKey]!=nil))) &&
 			    !forceShortForm)
 			{
-				value = [NSString stringWithFormat:OCLocalizedString(@"%@ (error %ld, %@)", nil), OCLocalizedString(unlocalizedString, nil), (long)error.code, error.userInfo];
+				value = [NSString stringWithFormat:OCLocalizedViaLocalizationBundle(@"%@ (error %ld, %@)"), OCLocalizedViaLocalizationBundle(unlocalizedString), (long)error.code, error.userInfo];
 			}
 			else
 			{
-				value = [NSString stringWithFormat:OCLocalizedString(@"%@ (error %ld)", nil), OCLocalizedString(unlocalizedString, nil), (long)error.code];
+				value = [NSString stringWithFormat:OCLocalizedViaLocalizationBundle(@"%@ (error %ld)"), OCLocalizedViaLocalizationBundle(unlocalizedString), (long)error.code];
 			}
 		}
 	}

@@ -1023,6 +1023,7 @@
 						// Perform standard depth 0 PROPFIND on path to determine type
 						[strongSelf retrieveItemListAtLocation:location depth:0 options:@{ OCConnectionOptionIsNonCriticalKey : @(YES) } completionHandler:^(NSError * _Nullable error, NSArray<OCItem *> * _Nullable items) {
 							OCPath normalizedPath = nil;
+							OCLocation *normalizedLocation = nil;
 
 							if (error == nil)
 							{
@@ -1045,9 +1046,14 @@
 										break;
 									}
 								}
+
+								normalizedLocation = [[OCLocation alloc] initWithDriveID:location.driveID path:normalizedPath];
 							}
 
-							OCLocation *normalizedLocation = [[OCLocation alloc] initWithDriveID:location.driveID path:normalizedPath];
+							if ((error != nil) && [error.domain isEqual:OCHTTPStatusErrorDomain] && (error.code == OCHTTPStatusCodeNOT_FOUND))
+							{
+								error = OCError(OCErrorItemDestinationNotFound);
+							}
 
 							completionHandler(error, normalizedLocation);
 						}];
