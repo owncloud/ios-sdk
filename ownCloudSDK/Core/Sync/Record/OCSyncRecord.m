@@ -23,6 +23,7 @@
 #import "OCProcessManager.h"
 #import "OCWaitConditionIssue.h"
 #import "OCSyncRecordActivity.h"
+#import "OCSignalManager.h"
 
 @implementation OCSyncRecord
 
@@ -36,11 +37,11 @@
 @synthesize state = _state;
 @synthesize inProgressSince = _inProgressSince;
 
-@synthesize resultHandler = _resultHandler;
+@synthesize resultSignalUUID = _resultSignalUUID;
 @synthesize progress = _progress;
 
 #pragma mark - Init & Dealloc
-- (instancetype)initWithAction:(OCSyncAction *)action resultHandler:(OCCoreActionResultHandler)resultHandler
+- (instancetype)initWithAction:(OCSyncAction *)action resultSignalUUID:(OCSignalUUID)resultSignalUUID
 {
 	if ((self = [self init]) != nil)
 	{
@@ -52,7 +53,7 @@
 
 		_state = OCSyncRecordStatePending;
 
-		_resultHandler = [resultHandler copy];
+		_resultSignalUUID = resultSignalUUID;
 	}
 
 	return (self);
@@ -194,13 +195,18 @@
 
 - (void)completeWithError:(nullable NSError *)error core:(OCCore *)core item:(nullable OCItem *)item parameter:(nullable id)parameter
 {
-	OCLogDebug(@"Sync record %@ completed with error=%@ item=%@ parameter=%@, resultHandler=%d", OCLogPrivate(self), OCLogPrivate(error), OCLogPrivate(item), OCLogPrivate(parameter), (_resultHandler!=nil));
+	OCLogDebug(@"Sync record %@ completed with error=%@ item=%@ parameter=%@, resultSignalUUID=%@", OCLogPrivate(self), OCLogPrivate(error), OCLogPrivate(item), OCLogPrivate(parameter), _resultSignalUUID);
 
-	if (_resultHandler != nil)
-	{
-		_resultHandler(error, core, item, parameter);
-		_resultHandler = nil;
-	}
+ 	if ((_resultSignalUUID != nil) && (core.signalManager != nil))
+ 	{
+ 		OCMutableCodableDict payload = [[NSMutableDictionary alloc] initWithCapacity:3];
+
+ 		payload[@"error"] = error;
+ 		payload[@"item"] = item;
+ 		payload[@"parameter"] = parameter;
+
+ 		[core.signalManager postSignal:[[OCSignal alloc] initWithUUID:_resultSignalUUID payload:payload]];
+ 	}
 }
 
 #pragma mark - Secure Coding
@@ -227,6 +233,8 @@
 		_state = (OCSyncRecordState)[decoder decodeIntegerForKey:@"state"];
 		_inProgressSince = [decoder decodeObjectOfClass:[NSDate class] forKey:@"inProgressSince"];
 
+		_resultSignalUUID = [decoder decodeObjectOfClass:NSString.class forKey:@"resultSignalUUID"];
+
 		_isProcessIndependent = [decoder decodeBoolForKey:@"isProcessIndependent"];
 		_progress = [decoder decodeObjectOfClass:[OCProgress class] forKey:@"progress"];
 
@@ -251,6 +259,8 @@
 
 	[coder encodeInteger:(NSInteger)_state forKey:@"state"];
 	[coder encodeObject:_inProgressSince forKey:@"inProgressSince"];
+
+	[coder encodeObject:_resultSignalUUID forKey:@"resultSignalUUID"];
 
 	[coder encodeBool:_isProcessIndependent forKey:@"isProcessIndependent"];
 	[coder encodeObject:_progress forKey:@"progress"];
@@ -302,12 +312,12 @@
 #pragma mark - Description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, recordID: %@, actionID: %@, timestamp: %@, state: %lu, inProgressSince: %@, isProcessIndependent: %d, action: %@>", NSStringFromClass(self.class), self, _recordID, _actionIdentifier, _timestamp, _state, _inProgressSince, _isProcessIndependent, _action]);
+	return ([NSString stringWithFormat:@"<%@: %p, recordID: %@, actionID: %@, timestamp: %@, state: %lu, inProgressSince: %@, isProcessIndependent: %d, signalUUID: %@, action: %@>", NSStringFromClass(self.class), self, _recordID, _actionIdentifier, _timestamp, _state, _inProgressSince, _isProcessIndependent, _resultSignalUUID, _action]);
 }
 
 - (NSString *)privacyMaskedDescription
 {
-	return ([NSString stringWithFormat:@"<%@: %p, recordID: %@, actionID: %@, timestamp: %@, state: %lu, inProgressSince: %@, isProcessIndependent: %d, action: %@>", NSStringFromClass(self.class), self, _recordID, _actionIdentifier, _timestamp, _state, _inProgressSince, _isProcessIndependent, OCLogPrivate(_action)]);
+	return ([NSString stringWithFormat:@"<%@: %p, recordID: %@, actionID: %@, timestamp: %@, state: %lu, inProgressSince: %@, isProcessIndependent: %d, signalUUID: %@, action: %@>", NSStringFromClass(self.class), self, _recordID, _actionIdentifier, _timestamp, _state, _inProgressSince, _isProcessIndependent, _resultSignalUUID, OCLogPrivate(_action)]);
 }
 
 @end

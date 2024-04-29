@@ -23,6 +23,7 @@
 #import "OCCore.h"
 #import "OCLogger.h"
 #import "OCActivity.h"
+#import "OCSignal.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -57,7 +58,7 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 
 	NSMutableArray <OCWaitCondition *> *_newWaitConditions;
 
-	OCCoreActionResultHandler _resultHandler;
+	OCSignalUUID _resultSignalUUID;
 }
 
 #pragma mark - Database ID
@@ -86,13 +87,13 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 
 #pragma mark - Result, cancel and progress handling
 @property(assign) BOOL isProcessIndependent; //!< Indicates that this action can be run on any process, not only .originProcessSession
-@property(copy,nullable) OCCoreActionResultHandler resultHandler; //!< Result handler to call after the sync record has been processed. Execution not guaranteed. (ephermal)
+@property(strong,nullable) OCSignalUUID resultSignalUUID; //!< Result signal to post after the sync record has been processed.
 @property(strong,nonatomic,nullable) OCProgress *progress; //!< Progress object tracking the progress of the action described in the sync record.
 
 + (OCActivityIdentifier)activityIdentifierForSyncRecordID:(OCSyncRecordID)recordID;
 
 #pragma mark - Instantiation
-- (instancetype)initWithAction:(OCSyncAction *)action resultHandler:(OCCoreActionResultHandler)resultHandler;
+- (instancetype)initWithAction:(OCSyncAction *)action resultSignalUUID:(OCSignalUUID)resultSignalUUID;
 
 #pragma mark - Serialization / Deserialization
 + (instancetype)syncRecordFromSerializedData:(NSData *)serializedData;
