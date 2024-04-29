@@ -70,6 +70,7 @@
 #import "OCVault+Internal.h"
 #import "OCLocale+SystemLanguage.h"
 #import "OCCore+DataSources.h"
+#import "OCSignalManager.h"
 
 @interface OCCore ()
 {
@@ -101,6 +102,8 @@
 @synthesize connectionStatus = _connectionStatus;
 @synthesize connectionStatusSignals = _connectionStatusSignals;
 @synthesize connectionStatusShortDescription = _connectionStatusShortDescription;
+
+@synthesize signalManager = _signalManager;
 
 @synthesize activityManager = _activityManager;
 
@@ -327,6 +330,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 		_connectivityQueue = dispatch_queue_create("OCCore connectivity queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 
+		_signalManager = [[OCSignalManager alloc] initWithKeyValueStore:_vault.keyValueStore deliveryQueue:_queue];
+		
 		[OCEvent registerEventHandler:self forIdentifier:_eventHandlerIdentifier];
 
 		_warnedCertificates = [NSMutableArray new];

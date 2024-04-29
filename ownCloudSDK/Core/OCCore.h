@@ -52,6 +52,7 @@
 @class OCRecipientSearchController;
 @class OCCoreQuery;
 @class OCItemPolicyProcessor;
+@class OCSignalManager;
 
 @class OCCoreConnectionStatusSignalProvider;
 @class OCCoreServerStatusSignalProvider;
@@ -225,6 +226,8 @@ typedef id<NSObject> OCCoreItemTracking;
 	BOOL _availableOfflineCacheValid;
 	NSMapTable <OCClaimIdentifier, NSObject *> *_claimTokensByClaimIdentifier;
 
+	OCSignalManager *_signalManager;
+
 	OCCache<OCFileID,OCItemThumbnail *> *_thumbnailCache;
 	NSMutableDictionary <NSString *, NSMutableArray<OCCoreThumbnailRetrieveHandler> *> *_pendingThumbnailRequests;
 
@@ -313,6 +316,8 @@ typedef id<NSObject> OCCoreItemTracking;
 @property(readonly,nonatomic) OCCoreConnectionStatus connectionStatus; //!< Combined connection status computed from different available signals like OCReachabilityMonitor and server responses
 @property(readonly,nonatomic) OCCoreConnectionStatusSignal connectionStatusSignals; //!< Mask of current connection status signals
 @property(readonly,strong,nullable) NSString *connectionStatusShortDescription; //!< Short description of the current connection status.
+
+@property(readonly,strong) OCSignalManager *signalManager;
 
 @property(readonly,strong) OCActivityManager *activityManager;
 
