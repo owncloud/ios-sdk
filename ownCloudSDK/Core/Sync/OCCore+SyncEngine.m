@@ -39,6 +39,7 @@
 #import "OCEventQueue.h"
 #import "OCSQLiteTransaction.h"
 #import "OCBackgroundManager.h"
+#import "OCSignalManager.h"
 
 OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.owncloud.process-sync-records";
 OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.owncloud.update-sync-records";
@@ -71,6 +72,8 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 
 	_remoteSyncEngineTriggerAcknowledgements = [NSMutableDictionary new];
 	_remoteSyncEngineTimedOutSyncRecordIDs = [NSMutableSet new];
+
+	[self.signalManager removeConsumersWithComponentIdentifier:OCAppIdentity.sharedAppIdentity.componentIdentifier];
 
 	_syncResetRateLimiter = [[OCRateLimiter alloc] initWithMinimumTime:2.0];
 
@@ -116,6 +119,8 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	}
 
 	[_remoteSyncEngineTriggerAcknowledgements removeAllObjects];
+
+	[self.signalManager removeConsumersWithComponentIdentifier:OCAppIdentity.sharedAppIdentity.componentIdentifier];
 }
 
 #pragma mark - Sync Anchor
@@ -281,7 +286,27 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 
 	if (action != nil)
 	{
-		syncRecord = [[OCSyncRecord alloc] initWithAction:action resultHandler:resultHandler];
+		OCSignalUUID resultSignalUUID = nil;
+
+		resultHandler = [resultHandler copy];
+
+		if (resultHandler != nil)
+ 		{
+ 			OCSignalManager *signalManager;
+
+ 			if ((signalManager = self.signalManager) != nil)
+ 			{
+ 				resultSignalUUID = OCSignal.generateUUID;
+
+ 				__weak OCCore *weakCore = self;
+
+ 				[signalManager addConsumer:[[OCSignalConsumer alloc] initWithSignalUUID:resultSignalUUID runIdentifier:self.runIdentifier handler:^(OCSignalConsumer * _Nonnull consumer, OCSignal * _Nonnull signal) {
+ 					resultHandler((NSError *)signal.payload[@"error"], weakCore, (OCItem *)signal.payload[@"item"], signal.payload[@"parameter"]);
+ 				}]];
+ 			}
+ 		}
+
+		syncRecord = [[OCSyncRecord alloc] initWithAction:action resultSignalUUID:resultSignalUUID];
 
 		if (syncRecord.progress == nil)
 		{

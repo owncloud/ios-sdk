@@ -62,4 +62,7 @@ typedef NSNumber* OCSyncRecordRevision;
 typedef NSNumber* OCSyncLaneID;
 typedef NSString* OCSyncLaneTag;
 
+typedef NSDictionary<NSString*,id<NSSecureCoding>>* OCCodableDict;
+typedef NSMutableDictionary<NSString*,id<NSSecureCoding>>* OCMutableCodableDict;
+
 #endif /* OCTypes_h */
