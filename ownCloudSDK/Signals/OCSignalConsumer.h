@@ -28,18 +28,26 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NSString* OCSignalConsumerUUID;
 typedef void(^OCSignalHandler)(OCSignalConsumer *consumer, OCSignal *signal);
 
+typedef NS_ENUM(NSUInteger, OCSignalDeliveryBehaviour) {
+	OCSignalDeliveryBehaviourOnce, //!< Deliver the signal only once, then remove the consumer
+	OCSignalDeliveryBehaviourUntilTerminated //!< Deliver the signal as often as it changes - until it indicates the consumers should be removed ("terminated")
+};
+
 @interface OCSignalConsumer : NSObject <NSSecureCoding>
 
 @property(readonly) OCSignalConsumerUUID uuid;
 
 @property(strong,nullable) OCSignalUUID signalUUID;
 
+@property(assign) OCSignalDeliveryBehaviour deliveryBehaviour;
+@property(assign) OCSignalRevision lastDeliveredSignalRevision;
+
 @property(strong,nullable) OCCoreRunIdentifier runIdentifier;
 @property(strong,nullable) OCAppComponentIdentifier componentIdentifier;;
 
 @property(copy,nullable) OCSignalHandler signalHandler;
 
-- (instancetype)initWithSignalUUID:(OCSignalUUID)signalUUID runIdentifier:(nullable OCCoreRunIdentifier)runIdentifier handler:(OCSignalHandler)handler;
+- (instancetype)initWithSignalUUID:(OCSignalUUID)signalUUID runIdentifier:(nullable OCCoreRunIdentifier)runIdentifier deliveryBehaviour:(OCSignalDeliveryBehaviour)deliveryBehaviour handler:(OCSignalHandler)handler;
 
 @end
 
