@@ -32,6 +32,8 @@
 	{
 		_uuid = uuid;
 		_payload = payload;
+		_revision = OCSignalRevisionInitial;
+		_terminatesConsumersAfterDelivery = YES;
 	}
 
 	return (self);
@@ -49,6 +51,8 @@
 	{
 		_uuid = [coder decodeObjectOfClass:NSString.class forKey:@"uuid"];
 		_payload = [coder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"payload"];
+		_revision = [coder decodeIntegerForKey:@"revision"];
+		_terminatesConsumersAfterDelivery = [coder decodeBoolForKey:@"terminatesConsumersAfterDelivery"];
 	}
 
 	return (self);
@@ -58,6 +62,8 @@
 {
 	[coder encodeObject:_uuid forKey:@"uuid"];
 	[coder encodeObject:_payload forKey:@"payload"];
+	[coder encodeInteger:_revision forKey:@"revision"];
+	[coder encodeBool:_terminatesConsumersAfterDelivery forKey:@"terminatesConsumersAfterDelivery"];
 }
 
 @end

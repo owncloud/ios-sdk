@@ -300,7 +300,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 
  				__weak OCCore *weakCore = self;
 
- 				[signalManager addConsumer:[[OCSignalConsumer alloc] initWithSignalUUID:resultSignalUUID runIdentifier:self.runIdentifier handler:^(OCSignalConsumer * _Nonnull consumer, OCSignal * _Nonnull signal) {
+ 				[signalManager addConsumer:[[OCSignalConsumer alloc] initWithSignalUUID:resultSignalUUID runIdentifier:self.runIdentifier deliveryBehaviour:OCSignalDeliveryBehaviourOnce handler:^(OCSignalConsumer * _Nonnull consumer, OCSignal * _Nonnull signal) {
  					resultHandler((NSError *)signal.payload[@"error"], weakCore, (OCItem *)signal.payload[@"item"], signal.payload[@"parameter"]);
  				}]];
  			}

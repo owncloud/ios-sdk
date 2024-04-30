@@ -20,6 +20,10 @@
 #import "OCTypes.h"
 
 typedef NSString* OCSignalUUID;
+typedef NSInteger OCSignalRevision;
+
+#define OCSignalRevisionInitial 0
+#define OCSignalRevisionNone -1
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -29,6 +33,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(readonly,strong) OCSignalUUID uuid;
 @property(readonly,nullable,strong) OCCodableDict payload;
+
+@property(assign) OCSignalRevision revision; //!< The revision of the signal. Increments with every update of the signal.
+@property(assign) BOOL terminatesConsumersAfterDelivery; //!< Indicating if this signal should "terminate" (remove) the consumers after the signal has been delivered, f.ex. for one-time calls. Defaults to YES. For status updates, this should be set to NO until the final status is reached (f.ex. progress reaching 100%).
 
 - (instancetype)initWithUUID:(OCSignalUUID)uuid payload:(nullable OCCodableDict)payload;
 

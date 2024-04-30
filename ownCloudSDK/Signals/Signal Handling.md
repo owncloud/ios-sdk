@@ -1,4 +1,4 @@
-#  Signal Handling
+# Signal Handling
 
 ## Introduction
 
@@ -25,3 +25,18 @@ A dedicated Signal subsystem provides a solution to this by decoupling Sync Acti
 - clean up when core is stopped, removing entries for that `OCCoreRunIdentifier` 
 - clean up when core is started, removing entries with same process bundle ID but different `OCCoreRunIdentifier` 
 - if last consumer is removed, remove record altogether
+
+### Signals firing a single or multiple times
+Signals can fire
+	- only once (to signal one-time events like the completion of a task)
+	- multiple times (to signal f.ex. progress updates) until eventually signalling termination of a task
+
+A signal can indicate if it is terminating the singal via `OCSignal.terminatesConsumersAfterDelivery`, which defaults to `YES` by default.
+If a signal will be used to deliver updates, that property should be set to `NO` until the final update, which should then be set to `YES`.
+
+Consumers themselves can also exercise control over how many times they want to consume a signal through `OCSignalConsumer.deliveryBehaviour`:
+- if set to `OCSignalDeliveryBehaviourOnce` the consumer will only receive the signal once and then be removed.
+- if set to `OCSignalDeliveryBehaviourUntilTerminated` the consumer will receive signals whenever they change, until `terminatesConsumersAfterDelivery` is `YES`, at which point the consumer weill be removed.
+
+### Signal versioning
+Since signals can fire more than once, they are versioned to ensure each version is only delivered once. The `OCSignalManager` takes care of incrementing the version with every update, whereas `OCSignalConsumer` tracks the last delivered version and will only be signalled if a signal's version differs from the last delivered one.

@@ -21,7 +21,7 @@
 
 @implementation OCSignalConsumer
 
-- (instancetype)initWithSignalUUID:(OCSignalUUID)signalUUID runIdentifier:(OCCoreRunIdentifier)runIdentifier handler:(OCSignalHandler)handler
+- (instancetype)initWithSignalUUID:(OCSignalUUID)signalUUID runIdentifier:(OCCoreRunIdentifier)runIdentifier deliveryBehaviour:(OCSignalDeliveryBehaviour)deliveryBehaviour handler:(OCSignalHandler)handler
 {
 	if ((self = [super init]) != nil)
 	{
@@ -30,6 +30,9 @@
 
 		_runIdentifier = runIdentifier;
 		_componentIdentifier = OCAppIdentity.sharedAppIdentity.componentIdentifier;
+
+		_deliveryBehaviour = deliveryBehaviour;
+		_lastDeliveredSignalRevision = OCSignalRevisionNone;
 
 		_signalHandler = [handler copy];
 	}
@@ -53,6 +56,9 @@
 
 		_runIdentifier = [coder decodeObjectOfClass:NSUUID.class forKey:@"runIdentifier"];
 		_componentIdentifier = [coder decodeObjectOfClass:NSString.class forKey:@"componentIdentifier"];
+
+		_deliveryBehaviour = [coder decodeIntegerForKey:@"deliveryBehaviour"];
+		_lastDeliveredSignalRevision = [coder decodeIntegerForKey:@"lastDeliveredSignalRevision"];
 	}
 
 	return (self);
@@ -65,6 +71,9 @@
 
 	[coder encodeObject:_runIdentifier forKey:@"runIdentifier"];
 	[coder encodeObject:_componentIdentifier forKey:@"componentIdentifier"];
+
+	[coder encodeInteger:_deliveryBehaviour forKey:@"deliveryBehaviour"];
+	[coder encodeInteger:_lastDeliveredSignalRevision forKey:@"lastDeliveredSignalRevision"];
 }
 
 @end
