@@ -46,7 +46,7 @@ switch command {
 		exit(-1)
 }
 
-//MARK: - Commands
+// MARK: - Commands
 func commandNormalize(rootPath locRootPath: String) {
 	let locRootURL = NSURL(fileURLWithPath: locRootPath)
 	var convertedFilesCount = 0
