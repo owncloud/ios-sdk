@@ -360,7 +360,7 @@ typedef id<NSObject> OCCoreItemTracking;
 - (void)registerProgress:(NSProgress *)progress forItem:(OCItem *)item;   //!< Registers a progress object for an item. Once the progress is finished, it's unregistered automatically.
 - (void)unregisterProgress:(NSProgress *)progress forItem:(OCItem *)item; //!< Unregisters a progress object for an item
 
-- (nullable NSArray <NSProgress *> *)progressForItem:(OCItem *)item matchingEventType:(OCEventType)eventType; //!< Returns the registered progress objects for a specific eventType for an item. Specifying eventType OCEventTypeNone will return all registered progress objects for the item.
+- (nullable NSArray<NSProgress *> *)progressForItemWithLocalID:(nullable OCLocalID)localID matchingEventType:(OCEventType)eventType; //!< Returns the registered progress objects for a specific eventType for an item. Specifying eventType OCEventTypeNone will return all registered progress objects for the item.
 
 #pragma mark - Error handling
 - (BOOL)sendError:(nullable NSError *)error issue:(nullable OCIssue *)issue; //!< If YES is returned, the error was sent to the OCCoreDelegate. If NO is returned, the error was not sent to the OCCoreDelegate.
