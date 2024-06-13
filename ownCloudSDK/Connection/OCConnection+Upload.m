@@ -587,9 +587,37 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 			if (tusHeader.uploadOffset != nil)
 			{
+				// Update upload offset to latest value and upload next part
 				OCTLogDebug(@[@"TUS"], @"TUS upload response indicates uploadOffset of %@ / %@", tusHeader.uploadOffset, tusJob.fileSize);
 
 				tusJob.uploadOffset = tusHeader.uploadOffset;
+				[self _continueTusJob:tusJob lastTask:task];
+			}
+			else
+			{
+				// Expected upload offset not found in response header - attempt a recovery
+				OCTLogDebug(@[@"TUS"], @"TUS upload response lacks expected upload offset in header, trying to recover with HEAD");
+
+				tusJob.uploadOffset = nil; // Force HEAD request
+				[self _continueTusJob:tusJob lastTask:task];
+			}
+		}
+		else
+		{
+			// Handle errors
+			if (error != nil)
+			{
+				// Upload stopped by an error
+				OCTLogDebug(@[@"TUS"], @"TUS upload error %@", error);
+				[self _errorEventFromRequest:request error:error send:YES];
+			}
+			else
+			{
+				// Try resuming
+				// (also runs on non-connection errors like f.ex. 502 BAD GATEWAY)
+				OCTLogDebug(@[@"TUS"], @"TUS upload request received a non-success response, trying to recover with HEAD");
+
+				tusJob.uploadOffset = nil; // Force HEAD request
 				[self _continueTusJob:tusJob lastTask:task];
 			}
 		}
