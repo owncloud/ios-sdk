@@ -466,6 +466,9 @@ extern OCConnectionOptionKey OCConnectionOptionForceReplaceKey; //!< If YES, for
 extern OCConnectionOptionKey OCConnectionOptionResponseDestinationURL; //!< NSURL of where to store a (raw) response
 extern OCConnectionOptionKey OCConnectionOptionResponseStreamHandler; //!< Response stream handler (OCHTTPRequestEphermalStreamHandler) to receive the response body stream
 extern OCConnectionOptionKey OCConnectionOptionDriveID; //!< Drive ID (OCDriveID) to target.
+extern OCConnectionOptionKey OCConnectionOptionParentItem; //!< Parent item (OCItem)
+extern OCConnectionOptionKey OCConnectionOptionSyncRecordID; //!< Sync Record ID (OCSyncRecordID), typically of the sync record performing the operation.
+extern OCConnectionOptionKey OCConnectionOptionAlternativeEventType; //!< Type (OCEventType) of the event a PROPFIND response belongs to and should undergo specific handling (internal)
 
 extern OCConnectionSetupOptionKey OCConnectionSetupOptionUserName; //!< User name to feed to OCConnectionServerLocator to determine server.
 

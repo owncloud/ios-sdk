@@ -1534,13 +1534,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	}
 }
 
-- (NSArray <NSProgress *> *)progressForItem:(OCItem *)item matchingEventType:(OCEventType)eventType
+- (NSArray<NSProgress *> *)progressForItemWithLocalID:(OCLocalID)localID matchingEventType:(OCEventType)eventType
 {
 	NSMutableArray <NSProgress *> *resultProgressObjects = nil;
 
-	OCLocalID localID;
-
-	if ((localID = item.localID) != nil)
+	if (localID != nil)
 	{
 		@synchronized(_progressByLocalID)
 		{
