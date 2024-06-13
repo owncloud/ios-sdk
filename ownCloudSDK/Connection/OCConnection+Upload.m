@@ -421,7 +421,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 				// Retrieve item information
 				[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:tusJob.fileDriveID path:tusJob.futureItemPath] depth:0 options:@{
-					@"alternativeEventType"  		: @(OCEventTypeUpload),
+					OCConnectionOptionAlternativeEventType	: @(OCEventTypeUpload),
 					OCConnectionOptionRequiredSignalsKey 	: self.actionSignals
 				} resultTarget:tusJob.eventTarget];
 			}
@@ -764,7 +764,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 		// Retrieve item information
 		[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:parentItem.driveID path:[parentItem.path stringByAppendingPathComponent:fileName]] depth:0 options:@{
-			@"alternativeEventType"  		: @(OCEventTypeUpload),
+			OCConnectionOptionAlternativeEventType	: @(OCEventTypeUpload),
 			OCConnectionOptionRequiredSignalsKey 	: self.actionSignals
 		} resultTarget:request.eventTarget];
 	}
@@ -803,7 +803,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 								// check and compare the checksums
 
 								[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:parentItem.driveID path:[parentItem.path stringByAppendingPathComponent:fileName]] depth:0 options:@{
-									@"alternativeEventType"  		: @(OCEventTypeUpload),
+									OCConnectionOptionAlternativeEventType	: @(OCEventTypeUpload),
 									OCConnectionOptionRequiredSignalsKey 	: self.actionSignals,
 
 									// Return an error if checksum of local and remote file mismatch
