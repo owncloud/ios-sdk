@@ -44,6 +44,8 @@
 @class OCXMLNode;
 @class OCAppProviderFileType;
 @class OCServerInstance;
+@class OCTUSJobSegment;
+@class OCTUSJob;
 
 typedef NSString* OCConnectionEndpointID NS_TYPED_ENUM;
 typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
@@ -51,6 +53,9 @@ typedef NSString* OCConnectionSetupOptionKey NS_TYPED_ENUM;
 typedef NSString* OCConnectionEndpointURLOption NS_TYPED_ENUM;
 typedef NSString* OCConnectionValidatorFlag NS_TYPED_ENUM;
 typedef NSDictionary<OCItemPropertyName,OCHTTPStatus*>* OCConnectionPropertyUpdateResult;
+
+typedef NSString* OCConnectionActionUpdateKey NS_TYPED_ENUM;
+typedef NSDictionary<OCConnectionActionUpdateKey,id>* OCConnectionActionUpdate;
 
 typedef NS_ENUM(NSUInteger, OCConnectionState)
 {
@@ -90,6 +95,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (OCHTTPRequestInstruction)connection:(OCConnection *)connection instructionForFinishedRequest:(OCHTTPRequest *)request withResponse:(OCHTTPResponse *)response error:(NSError *)error defaultsTo:(OCHTTPRequestInstruction)defaultInstruction;
 
 - (nullable OCTUSHeader *)connection:(OCConnection *)connection tusHeader:(nullable OCTUSHeader *)tusHeader forChildrenOf:(OCItem *)parentItem;
+
+- (nullable NSError *)connection:(OCConnection *)connection continueActionForTrackingID:(OCActionTrackingID)trackingID; //!< Return an error (incl. OCErrorCancelled) if the connection should not carry on performing the action, identified by a OCActionTrackingID that was provided as option to the action
+
+- (void)connection:(OCConnection *)connection hasUpdate:(OCConnectionActionUpdate)update forTrackingID:(OCActionTrackingID)trackingID; //!< Called by actions to provide a status or progress update to an action, identified by a OCActionTrackingID that was provided as option  to the action.
 
 @end
 
@@ -145,6 +154,8 @@ NS_ASSUME_NONNULL_BEGIN
 	NSCountedSet<NSString *> *_connectionValidationTriggeringURLs;
 
 	NSMutableArray <OCConnectionAuthenticationAvailabilityHandler> *_pendingAuthenticationAvailabilityHandlers;
+
+	NSMutableDictionary<OCActionTrackingID, NSProgress *> *_progressByActionTrackingID;
 }
 
 @property(class,readonly,nonatomic) BOOL backgroundURLSessionsAllowed; //!< Indicates whether background URL sessions should be used.
@@ -391,6 +402,15 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 #pragma mark - Safe upgrades
 + (BOOL)isAlternativeBaseURL:(NSURL *)alternativeBaseURL safeUpgradeForPreviousBaseURL:(NSURL *)baseURL;
 
+
+@end
+
+#pragma mark - PROGRESS REPORTING
+@interface OCConnection (ProgressReporting)
+
+- (nullable NSProgress *)progressForActionTrackingID:(nullable OCActionTrackingID)trackingID provider:(nullable NSProgress *(^)(NSProgress *progress))progressProvider; //!< Returns the progress for the provided action tracking ID. If none exists yet, creates a new one and passes it to progressProvider (if provided). Only returns nil if no trackingID is provided or the provider returned nil.
+- (void)finishActionWithTrackingID:(nullable OCActionTrackingID)trackingID; //!< Indicates the action with the provided trackingID has finished and that associated resources can be released. nil is allowed as a value only for convenience and will not have any effect.
+
 @end
 
 #pragma mark - COMPATIBILITY
@@ -469,6 +489,7 @@ extern OCConnectionOptionKey OCConnectionOptionDriveID; //!< Drive ID (OCDriveID
 extern OCConnectionOptionKey OCConnectionOptionParentItem; //!< Parent item (OCItem)
 extern OCConnectionOptionKey OCConnectionOptionSyncRecordID; //!< Sync Record ID (OCSyncRecordID), typically of the sync record performing the operation.
 extern OCConnectionOptionKey OCConnectionOptionAlternativeEventType; //!< Type (OCEventType) of the event a PROPFIND response belongs to and should undergo specific handling (internal)
+extern OCConnectionOptionKey OCConnectionOptionActionTrackingID; //!< Tracking ID (OCActionTrackingID) that should be used when communicating with the delegate about an action.
 
 extern OCConnectionSetupOptionKey OCConnectionSetupOptionUserName; //!< User name to feed to OCConnectionServerLocator to determine server.
 
@@ -476,6 +497,9 @@ extern OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable; //!< Si
 
 extern OCConnectionValidatorFlag OCConnectionValidatorFlagClearCookies; //!< Clear all cookies for the connection when entering connection validation.
 extern OCConnectionValidatorFlag OCConnectionValidatorFlag502Triggers; //!< Trigger connection validation when receiving a responses with 502 status.
+
+extern OCConnectionActionUpdateKey OCConnectionActionUpdateProgressRange; //!< NSRange (from 0-1000) the also provided (via OCConnectionActionUpdateProgress) NSProgress object should be mapped to.
+extern OCConnectionActionUpdateKey OCConnectionActionUpdateProgress; //!< NSProgress object providing information on the current progress, may be mapped to
 
 NS_ASSUME_NONNULL_END
 

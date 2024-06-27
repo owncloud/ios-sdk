@@ -25,6 +25,8 @@
 #import "OCHTTPPipelineManager.h"
 #import "OCHTTPPipelineTask.h"
 #import "OCHTTPResponse+DAVError.h"
+#import "NSProgress+OCExtensions.h"
+#import "OCCore+SyncEngine.h"
 
 typedef NSString* OCUploadInfoKey;
 typedef NSString* OCUploadInfoTask;
@@ -177,6 +179,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 - (OCProgress *)_tusUploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName modificationDate:(NSDate *)modificationDate fileSize:(NSNumber *)fileSize checksum:(OCChecksum *)checksum tusHeader:(OCTUSHeader *)parentTusHeader to:(OCItem *)parentItem replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
+	OCActionTrackingID trackingID = options[OCConnectionOptionActionTrackingID];
 	OCProgress *tusProgress = nil;
 	NSURL *segmentFolderURL = options[OCConnectionOptionTemporarySegmentFolderURLKey];
 	NSError *error = nil;
@@ -221,7 +224,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 	if ((creationURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(parentItem.driveID) }] URLByAppendingPathComponent:parentItem.path]) != nil)
 	{
-		if ((tusJob = [[OCTUSJob alloc] initWithHeader:parentTusHeader segmentFolderURL:segmentFolderURL fileURL:clonedSourceURL creationURL:creationURL]) != nil)
+		if ((tusJob = [[OCTUSJob alloc] initWithHeader:parentTusHeader segmentFolderURL:segmentFolderURL fileURL:clonedSourceURL creationURL:creationURL trackingID:trackingID]) != nil)
 		{
 			tusJob.fileName = fileName;
 			tusJob.fileSize = fileSize;
@@ -261,6 +264,46 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 	BOOL useCreationWithUpload = OCTUSIsSupported(tusJob.header.supportFlags, OCTUSSupportExtensionCreationWithUpload);
 	NSUInteger maxCreationWithUploadSize = NSUIntegerMax;
 	OCHTTPRequest *request = nil;
+
+	// Set up progress
+	NSProgress *actionProgress = nil;
+
+	if (tusJob.trackingID != nil)
+	{
+		actionProgress = [self progressForActionTrackingID:tusJob.trackingID provider:^NSProgress * _Nonnull(NSProgress * _Nonnull progress) {
+			progress.totalUnitCount = tusJob.fileSize.unsignedLongLongValue;
+			progress.completedUnitCount = tusJob.uploadOffset.unsignedLongLongValue;
+
+			return (progress);
+		}];
+
+		if (actionProgress.totalUnitCount == 0) {
+			actionProgress.totalUnitCount = tusJob.fileSize.unsignedLongLongValue;
+			actionProgress.completedUnitCount = tusJob.uploadOffset.unsignedLongLongValue;
+		}
+
+		tusProgress = [[OCProgress alloc] initWithPath:((self.bookmark.uuid != nil) ?
+								@[ OCProgressPathElementIdentifierCoreRoot, self.bookmark.uuid.UUIDString, OCProgressPathElementIdentifierCoreConnectionPath, tusJob.trackingID ] :
+								@[])
+						      progress:actionProgress];
+	}
+
+	// Check if upload should continue
+	if ((tusJob.trackingID != nil) && (self.delegate != nil) && ([self.delegate respondsToSelector:@selector(connection:continueActionForTrackingID:)]))
+	{
+		NSError *error;
+
+		if ((error = [self.delegate connection:self continueActionForTrackingID:tusJob.trackingID]) != nil)
+		{
+			// Stop with provided error if the action should not continue
+			[tusJob.eventTarget handleError:error type:OCEventTypeUpload uuid:nil sender:self];
+			[tusJob destroy];
+
+			[self finishActionWithTrackingID:tusJob.trackingID];
+
+			return (nil);
+		}
+	}
 
 	/*
 		OCTUSJob handling flow:
@@ -422,7 +465,8 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 				// Retrieve item information
 				[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:tusJob.fileDriveID path:tusJob.futureItemPath] depth:0 options:@{
 					OCConnectionOptionAlternativeEventType	: @(OCEventTypeUpload),
-					OCConnectionOptionRequiredSignalsKey 	: self.actionSignals
+					OCConnectionOptionRequiredSignalsKey 	: self.actionSignals,
+					OCConnectionOptionActionTrackingID	: OCNullProtect(tusJob.trackingID) // will trigger a call to -[OCConnection finishActionWithTrackingID:]
 				} resultTarget:tusJob.eventTarget];
 			}
 			else
@@ -439,6 +483,17 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 										tusJob.maxSegmentSize
 									)
 								   error:&error];
+
+				if (error != nil)
+				{
+					// Stop on errors
+					[tusJob.eventTarget handleError:error type:OCEventTypeUpload uuid:nil sender:self];
+					[tusJob destroy];
+
+					[self finishActionWithTrackingID:tusJob.trackingID];
+
+					return (nil);
+				}
 
 				if (segment != nil)
 				{
@@ -457,6 +512,20 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 					OCUploadInfoKeyJob  : tusJob,
 					OCUploadInfoKeySegmentSize : @(segment.size)
 				};
+
+				NSProgress *progress = request.progress.progress;
+
+				if (progress != nil)
+				{
+					[actionProgress addChild:progress withPendingUnitCount:segment.size];
+				}
+
+				if ((tusJob.trackingID != nil) && (self.delegate != nil) && ([self.delegate respondsToSelector:@selector(connection:hasUpdate:forTrackingID:)]) && (progress != nil))
+				{
+					[self.delegate connection:self hasUpdate:@{
+						OCConnectionActionUpdateProgress : progress
+					} forTrackingID:tusJob.trackingID];
+				}
 			}
 		}
 	}
@@ -524,6 +593,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 						{
 							OCTLogDebug(@[@"TUS"], @"TUS CREATE response indicates uploadOffset of %@ / %@", tusHeader.uploadOffset, tusJob.fileSize);
 
+							// Update job's uploadOffset from the header
 							tusJob.uploadOffset = tusHeader.uploadOffset;
 						}
 					}
@@ -539,15 +609,15 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 			else
 			{
 				// Stop upload with an error
-				OCTLogError(@[@"TUS"], @"creation response doesn't indicate success");
-				[self _errorEventFromRequest:request error:error send:YES];
+				OCTLogError(@[@"TUS"], @"creation response doesn't indicate success: %@", error);
+				[self _errorEventFromRequest:request tusJob:tusJob error:error send:YES];
 			}
 		}
 		else
 		{
 			// Stop upload with an error
-			OCTLogError(@[@"TUS"], @"creation response is not a TUS response");
-			[self _errorEventFromRequest:request error:error send:YES];
+			OCTLogError(@[@"TUS"], @"creation response is not a TUS response: %@", error);
+			[self _errorEventFromRequest:request tusJob:tusJob error:error send:YES];
 		}
 	}
 	else if ([task isEqual:OCUploadInfoTaskHead])
@@ -562,6 +632,25 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 			{
 				OCTLogDebug(@[@"TUS"], @"TUS HEAD response indicates uploadOffset of %@ / %@", tusHeader.uploadOffset, tusJob.fileSize);
 
+				// Update base progress.completedUnitCount first
+				if (tusJob.trackingID != nil)
+				{
+					NSProgress *actionProgress = nil;
+
+					actionProgress = [self progressForActionTrackingID:tusJob.trackingID provider:^NSProgress * _Nonnull(NSProgress * _Nonnull progress) {
+						progress.totalUnitCount = tusJob.fileSize.unsignedLongLongValue;
+						progress.completedUnitCount = tusHeader.uploadOffset.unsignedLongLongValue; // Set completedUnitCount directly to new value if progress is initialized
+
+						return (progress);
+					}];
+
+					// Adjust completedUnitCount if the upload offset was previously set to the last known upload offset
+					if (actionProgress.completedUnitCount == tusJob.uploadOffset.unsignedLongLongValue) {
+						actionProgress.completedUnitCount = tusHeader.uploadOffset.unsignedLongLongValue; // use new offset directly
+					}
+				}
+
+				// Update job's uploadOffset from the header
 				tusJob.uploadOffset = tusHeader.uploadOffset;
 				[self _continueTusJob:tusJob lastTask:task];
 			}
@@ -574,7 +663,8 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		else
 		{
 			// Stop upload with an error
-			[self _errorEventFromRequest:request error:error send:YES];
+			OCTLogError(@[@"TUS"], @"head response is not a TUS response: %@", error);
+			[self _errorEventFromRequest:request tusJob:tusJob error:error send:YES];
 		}
 	}
 	else if ([task isEqual:OCUploadInfoTaskUpload])
@@ -608,8 +698,15 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 			if (error != nil)
 			{
 				// Upload stopped by an error
-				OCTLogDebug(@[@"TUS"], @"TUS upload error %@", error);
-				[self _errorEventFromRequest:request error:error send:YES];
+				if ([error isOCErrorWithCode:OCErrorRequestCancelled])
+				{
+					OCTLogDebug(@[@"TUS"], @"TUS upload cancelled: %@", error);
+				}
+				else
+				{
+					OCTLogError(@[@"TUS"], @"TUS upload error %@", error);
+				}
+				[self _errorEventFromRequest:request tusJob:tusJob error:error send:YES];
 			}
 			else
 			{
@@ -624,8 +721,13 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 	}
 }
 
-- (OCEvent *)_errorEventFromRequest:(OCHTTPRequest *)request error:(NSError *)error send:(BOOL)send
+- (OCEvent *)_errorEventFromRequest:(OCHTTPRequest *)request tusJob:(OCTUSJob *)tusJob error:(NSError *)error send:(BOOL)send
 {
+	// Discard any (temporary) data and end action tracking
+	[tusJob destroy];
+	[self finishActionWithTrackingID:tusJob.trackingID];
+
+	// Deliver result / error to event target
 	OCEvent *event;
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpload uuid:request.identifier attributes:nil]) != nil)

@@ -27,6 +27,7 @@ typedef NSString* OCProgressID;
 
 @class OCProgress;
 
+// MARK: - Progress Resolver
 @protocol OCProgressResolver <NSObject>
 
 @optional
@@ -38,12 +39,7 @@ typedef NSString* OCProgressID;
 
 @end
 
-@protocol OCProgressSource <OCProgressResolver>
-
-@property(nonatomic,strong) OCProgressPath progressBasePath; //!< Base path to build the OCProgressPath of new OCProgress objects from.
-
-@end
-
+// MARK: - Progress
 @interface OCProgress : NSObject <NSSecureCoding>
 
 @property(readonly,strong) OCProgressID identifier; //!< Globally unique identifier of the progress object (typically an auto-generated UUID).
@@ -57,9 +53,9 @@ typedef NSString* OCProgressID;
 
 @property(strong) NSDictionary<NSString*, id<NSSecureCoding>> *userInfo; //!< Custom information that helps an OCProgressResolver provide the NSProgress object
 
-- (instancetype)initWithPath:(OCProgressPath)path progress:(nullable NSProgress *)progress; //!< Createa a new OCProgress object from with the provided path. Optionally, an already known NSProgress object can be provided directly to save CPU cycles on resolution.
+- (instancetype)initWithPath:(OCProgressPath)path progress:(nullable NSProgress *)progress; //!< Creates a new OCProgress object with the provided path. Optionally, an already known NSProgress object can be provided directly to save CPU cycles on resolution.
 
-- (instancetype)initWithSource:(id<OCProgressSource>)source pathElementIdentifier:(OCProgressPathElementIdentifier)identifier progress:(nullable NSProgress *)progress; //!< Creates a new OCProgress object from the source's progressBasePath with the specified pathElementIdentifier. Optionally, an already known NSProgress object can be provided directly to save CPU cycles on resolution.
+- (instancetype)initRegisteredWithProgress:(nullable NSProgress *)progress; //!< Creates a new, globally registered OCProgress object with a path pointing to OCProgressManager. Optionally, an already known NSProgress object can be provided directly to save CPU cycles on resolution.
 
 - (BOOL)nextPathElementIsLast; //!< Returns YES if the next path element is the last in the path.
 - (nullable OCProgressPathElementIdentifier)nextPathElement; //!< Returns the next path element and moves the resolutionOffset to the next element.

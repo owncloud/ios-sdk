@@ -114,6 +114,7 @@
 		DC1A7E13266ACA1500CAA695 /* letsencrypt-old-parent.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC1A7E0F266ACA1500CAA695 /* letsencrypt-old-parent.cer */; };
 		DC1A7E14266ACA1500CAA695 /* letsencrypt-new-parent.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC1A7E10266ACA1500CAA695 /* letsencrypt-new-parent.cer */; };
 		DC1A7E15266ACA1500CAA695 /* letsencrypt-old.cer in Resources */ = {isa = PBXBuildFile; fileRef = DC1A7E11266ACA1500CAA695 /* letsencrypt-old.cer */; };
+		DC1BEEEF2C2CA8C90016C94F /* OCConnection+ProgressReporting.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1BEEED2C2CA8C90016C94F /* OCConnection+ProgressReporting.m */; };
 		DC1C7ABE253F3C65002F2B9F /* OCClassSettings+Validation.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1C7ABC253F3C65002F2B9F /* OCClassSettings+Validation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC1C7ABF253F3C65002F2B9F /* OCClassSettings+Validation.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1C7ABD253F3C65002F2B9F /* OCClassSettings+Validation.m */; };
 		DC1C7AC2253F3CD9002F2B9F /* OCClassSettings+Metadata.h in Headers */ = {isa = PBXBuildFile; fileRef = DC1C7AC0253F3CD9002F2B9F /* OCClassSettings+Metadata.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -816,7 +817,7 @@
 		DCE370952099D18100114981 /* OCDatabaseConsistentOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE370932099D18100114981 /* OCDatabaseConsistentOperation.m */; };
 		DCE3D4E42701C40B0074C254 /* OCCoreUpdateScheduleRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE3D4E22701C40B0074C254 /* OCCoreUpdateScheduleRecord.h */; };
 		DCE3D4E52701C40B0074C254 /* OCCoreUpdateScheduleRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE3D4E32701C40B0074C254 /* OCCoreUpdateScheduleRecord.m */; };
-		DCE451A52459AD3F0074363F /* OCTUSJob.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE451A32459AD3F0074363F /* OCTUSJob.h */; };
+		DCE451A52459AD3F0074363F /* OCTUSJob.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE451A32459AD3F0074363F /* OCTUSJob.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCE451A62459AD3F0074363F /* OCTUSJob.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE451A42459AD3F0074363F /* OCTUSJob.m */; };
 		DCE48DD8220E1C7B00839E97 /* OCHTTPPipelineTaskCache.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE48DD6220E1C7A00839E97 /* OCHTTPPipelineTaskCache.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCE48DD9220E1C7B00839E97 /* OCHTTPPipelineTaskCache.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE48DD7220E1C7B00839E97 /* OCHTTPPipelineTaskCache.m */; };
@@ -1165,6 +1166,7 @@
 		DC1A7E0F266ACA1500CAA695 /* letsencrypt-old-parent.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = "letsencrypt-old-parent.cer"; sourceTree = "<group>"; };
 		DC1A7E10266ACA1500CAA695 /* letsencrypt-new-parent.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = "letsencrypt-new-parent.cer"; sourceTree = "<group>"; };
 		DC1A7E11266ACA1500CAA695 /* letsencrypt-old.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = "letsencrypt-old.cer"; sourceTree = "<group>"; };
+		DC1BEEED2C2CA8C90016C94F /* OCConnection+ProgressReporting.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+ProgressReporting.m"; sourceTree = "<group>"; };
 		DC1C7ABC253F3C65002F2B9F /* OCClassSettings+Validation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCClassSettings+Validation.h"; sourceTree = "<group>"; };
 		DC1C7ABD253F3C65002F2B9F /* OCClassSettings+Validation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCClassSettings+Validation.m"; sourceTree = "<group>"; };
 		DC1C7AC0253F3CD9002F2B9F /* OCClassSettings+Metadata.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCClassSettings+Metadata.h"; sourceTree = "<group>"; };
@@ -1977,6 +1979,7 @@
 		DCFC9EDB28003F0D005D9144 /* GARemoteItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GARemoteItem.m; sourceTree = "<group>"; };
 		DCFC9EDF28004791005D9144 /* OCDataSourceComposition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDataSourceComposition.h; sourceTree = "<group>"; };
 		DCFC9EE028004791005D9144 /* OCDataSourceComposition.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDataSourceComposition.m; sourceTree = "<group>"; };
+		DCFD2CF62C1AF2E400DE439E /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		DCFE3B7827A1666B00939415 /* GAGraphObject.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GAGraphObject.h; sourceTree = "<group>"; };
 		DCFE3B7C27A1669300939415 /* GAGraphContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GAGraphContext.h; sourceTree = "<group>"; };
 		DCFE3B7D27A1669300939415 /* GAGraphContext.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GAGraphContext.m; sourceTree = "<group>"; };
@@ -2919,6 +2922,7 @@
 		DC4B11FB220996330062BCDD /* Progress */ = {
 			isa = PBXGroup;
 			children = (
+				DCFD2CF62C1AF2E400DE439E /* README.md */,
 				DC4B11FD220996480062BCDD /* OCProgress.m */,
 				DC4B11FC220996480062BCDD /* OCProgress.h */,
 				DC8FE6FE221CAF280016BDEE /* OCProgressManager.m */,
@@ -3442,6 +3446,7 @@
 				DCDBEE2E2048A71200189B9A /* OCConnection+Tools.m */,
 				DC5B96D424916CF200733594 /* OCConnection+Upload.m */,
 				DC30947220542FA500189B9A /* OCConnection+Users.m */,
+				DC1BEEED2C2CA8C90016C94F /* OCConnection+ProgressReporting.m */,
 				DCFE681F28D857B500091D2A /* NSError+OCISError.m */,
 				DCFE681E28D857B500091D2A /* NSError+OCISError.h */,
 			);
@@ -5249,6 +5254,7 @@
 				DC41C79125EA5F7A0074F23B /* OCResourceSource.m in Sources */,
 				DC30947420542FA500189B9A /* OCConnection+Users.m in Sources */,
 				DC1C7AC7253F8EE3002F2B9F /* NSError+OCClassSettings.m in Sources */,
+				DC1BEEEF2C2CA8C90016C94F /* OCConnection+ProgressReporting.m in Sources */,
 				DC3521792251F15E00BC4F88 /* NSURLSessionTaskMetrics+OCCompactSummary.m in Sources */,
 				DC114A9522A7A87C00CBD597 /* NSData+OCRandom.m in Sources */,
 				DC8556EE204DEA2900189B9A /* OCHTTPDAVRequest.m in Sources */,
