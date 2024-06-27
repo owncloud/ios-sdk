@@ -65,7 +65,7 @@
 	return ([self unpublishActivityForIdentifier:source.activityIdentifier]);
 }
 
-+ (instancetype)updatingActivityFor:(id<OCActivitySource>)source;
++ (instancetype)updatingActivityFor:(id<OCActivitySource>)source
 {
 	return ([self updatingActivityForIdentifier:source.activityIdentifier]);
 }

@@ -31,7 +31,7 @@ Signals can fire
 	- only once (to signal one-time events like the completion of a task)
 	- multiple times (to signal f.ex. progress updates) until eventually signalling termination of a task
 
-A signal can indicate if it is terminating the singal via `OCSignal.terminatesConsumersAfterDelivery`, which defaults to `YES` by default.
+A signal can indicate if it is terminating the signal via `OCSignal.terminatesConsumersAfterDelivery`, which defaults to `YES` by default.
 If a signal will be used to deliver updates, that property should be set to `NO` until the final update, which should then be set to `YES`.
 
 Consumers themselves can also exercise control over how many times they want to consume a signal through `OCSignalConsumer.deliveryBehaviour`:
