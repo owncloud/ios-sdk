@@ -88,7 +88,9 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 #pragma mark - Result, cancel and progress handling
 @property(assign) BOOL isProcessIndependent; //!< Indicates that this action can be run on any process, not only .originProcessSession
 @property(strong,nullable) OCSignalUUID resultSignalUUID; //!< Result signal to post after the sync record has been processed.
+
 @property(strong,nonatomic,nullable) OCProgress *progress; //!< Progress object tracking the progress of the action described in the sync record.
+@property(strong,nullable) OCSignalUUID progressSignalUUID; //!< Signal to post to on progress changes and completion
 
 + (OCActivityIdentifier)activityIdentifierForSyncRecordID:(OCSyncRecordID)recordID;
 

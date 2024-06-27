@@ -2438,12 +2438,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 	if (!progress.nextPathElementIsLast)
 	{
-		if ([progress.nextPathElement isEqual:OCCoreSyncRecordPath])
+		OCProgressPathElementIdentifier nextPathElement = progress.nextPathElement;
+		OCProgress *sourceProgress = nil;
+
+		if ([nextPathElement isEqual:OCProgressPathElementIdentifierCoreSyncRecordPath])
 		{
 			if (progress.nextPathElementIsLast)
 			{
 				// OCSyncRecordID syncRecordID = @([progress.nextPathElement integerValue]);
-				OCProgress *sourceProgress = nil;
 				__weak OCCore *weakCore = self;
 
 				resolvedProgress = [NSProgress indeterminateProgress];
@@ -2454,19 +2456,34 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 					[weakCore setNeedsToProcessSyncRecords];
 				};
 
-				if ((sourceProgress = OCTypedCast((id)progress.userInfo[OCSyncRecordProgressUserInfoKeySource], OCProgress)) != nil)
+				sourceProgress = OCTypedCast((id)progress.userInfo[OCSyncRecordProgressUserInfoKeySource], OCProgress);
+			}
+		}
+
+		if ([nextPathElement isEqual:OCProgressPathElementIdentifierCoreConnectionPath])
+		{
+			if (progress.nextPathElementIsLast)
+			{
+				OCActionTrackingID actionTrackingID;
+
+				if ((actionTrackingID = progress.nextPathElement) != nil)
 				{
-					NSProgress *sourceNSProgress;
-
-					if ((sourceNSProgress = [sourceProgress resolveWith:nil]) != nil)
-					{
-						resolvedProgress.localizedDescription = sourceNSProgress.localizedDescription;
-						resolvedProgress.localizedAdditionalDescription = sourceNSProgress.localizedAdditionalDescription;
-
-						resolvedProgress.totalUnitCount += 200;
-						[resolvedProgress addChild:[OCProxyProgress cloneProgress:sourceNSProgress] withPendingUnitCount:200];
-					}
+					resolvedProgress = [self.connection progressForActionTrackingID:actionTrackingID provider:nil];
 				}
+			}
+		}
+
+		if (sourceProgress != nil)
+		{
+			NSProgress *sourceNSProgress;
+
+			if ((sourceNSProgress = [sourceProgress resolveWith:nil]) != nil)
+			{
+				resolvedProgress.localizedDescription = sourceNSProgress.localizedDescription;
+				resolvedProgress.localizedAdditionalDescription = sourceNSProgress.localizedAdditionalDescription;
+
+				resolvedProgress.totalUnitCount += 200;
+				[resolvedProgress addChild:[OCProxyProgress cloneProgress:sourceNSProgress] withPendingUnitCount:200];
 			}
 		}
 	}

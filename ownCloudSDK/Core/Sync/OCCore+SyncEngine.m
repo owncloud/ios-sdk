@@ -361,7 +361,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 		OCLogDebug(@"record %@ added to database with error %@", record, blockError);
 
 		// Set sync record's progress path
-		record.progress.path = @[OCCoreGlobalRootPath, self.bookmark.uuid.UUIDString, OCCoreSyncRecordPath, [record.recordID stringValue]];
+		record.progress.path = @[OCProgressPathElementIdentifierCoreRoot, self.bookmark.uuid.UUIDString, OCProgressPathElementIdentifierCoreSyncRecordPath, [record.recordID stringValue]];
 
 		// Pre-flight
 		BOOL recordRemovedSelf = NO;
@@ -1986,5 +1986,6 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 
 OCEventUserInfoKey OCEventUserInfoKeySyncRecordID = @"syncRecordID";
 
-OCProgressPathElementIdentifier OCCoreGlobalRootPath = @"_core";
-OCProgressPathElementIdentifier OCCoreSyncRecordPath = @"_syncRecord";
+OCProgressPathElementIdentifier OCProgressPathElementIdentifierCoreRoot = @"_core";
+OCProgressPathElementIdentifier OCProgressPathElementIdentifierCoreSyncRecordPath = @"_syncRecord";
+OCProgressPathElementIdentifier OCProgressPathElementIdentifierCoreConnectionPath = @"_connection";

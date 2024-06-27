@@ -25,6 +25,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(class,readonly,nonatomic,strong) OCProgressManager *sharedProgressManager;
 
+#pragma mark - Registered progress objects
+- (nullable OCProgress *)registeredProgressWithIdentifier:(OCProgressID)progressID;
+
+- (void)registerProgress:(OCProgress *)progress;
+- (void)unregisterProgress:(OCProgress *)progress;
+
 @end
+
+extern OCProgressPathElementIdentifier OCProgressPathElementIdentifierManagerRoot;
 
 NS_ASSUME_NONNULL_END

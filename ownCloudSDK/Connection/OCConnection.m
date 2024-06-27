@@ -458,6 +458,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 		_drivesByID = [NSMutableDictionary new];
 
+		_progressByActionTrackingID = [NSMutableDictionary new];
+
 		[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_connectionCertificateUserApproved) name:self.bookmark.certificateUserApprovalUpdateNotificationName object:nil];
 
 		// Get pipelines
@@ -1830,6 +1832,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	NSURL *endpointURL;
 	OCDriveID driveID = options[OCConnectionOptionDriveID];
 	OCPath path = location.path;
+	OCActionTrackingID trackingID = OCNullResolved(options[OCConnectionOptionActionTrackingID]);
 
 	if (path == nil)
 	{
@@ -1872,7 +1875,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				@"depth" : @(depth),
 				@"endpointURL" : endpointURL,
 				@"driveID" : OCNullProtect(driveID),
-				@"options" : OCNullProtect(options)
+				@"options" : OCNullProtect(options),
+				@"trackingID" : OCNullProtect(trackingID)
 			};
 			davRequest.eventTarget = eventTarget;
 			davRequest.downloadRequest = YES;
@@ -1960,6 +1964,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	OCEventType eventType = OCEventTypeRetrieveItemList;
 	NSURL *responseDestinationURL = options[OCConnectionOptionResponseDestinationURL];
 	OCDriveID driveID = OCNullResolved(request.userInfo[@"driveID"]);
+	OCActionTrackingID trackingID = OCNullResolved(request.userInfo[@"trackingID"]);
 
 	if ((options!=nil) && (options[OCConnectionOptionAlternativeEventType]!=nil))
 	{
@@ -2117,6 +2122,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 		[request.eventTarget handleEvent:event sender:self];
 	}
+
+	[self finishActionWithTrackingID:trackingID];
 }
 
 #pragma mark - Estimates
@@ -3379,6 +3386,7 @@ OCConnectionOptionKey OCConnectionOptionDriveID = @"drive-id";
 OCConnectionOptionKey OCConnectionOptionParentItem = @"parent-item";
 OCConnectionOptionKey OCConnectionOptionSyncRecordID = @"sync-record-id";
 OCConnectionOptionKey OCConnectionOptionAlternativeEventType = @"alternativeEventType";
+OCConnectionOptionKey OCConnectionOptionActionTrackingID = @"action-tracking-id";
 
 OCConnectionSetupOptionKey OCConnectionSetupOptionUserName = @"user-name";
 
@@ -3386,3 +3394,6 @@ OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable = @"authAvailab
 
 OCConnectionValidatorFlag OCConnectionValidatorFlagClearCookies = @"clear-cookies";
 OCConnectionValidatorFlag OCConnectionValidatorFlag502Triggers = @"502-triggers";
+
+OCConnectionActionUpdateKey OCConnectionActionUpdateProgressRange = @"progressRange";
+OCConnectionActionUpdateKey OCConnectionActionUpdateProgress = @"progress";

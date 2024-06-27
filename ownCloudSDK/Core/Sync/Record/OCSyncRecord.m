@@ -54,6 +54,7 @@
 		_state = OCSyncRecordStatePending;
 
 		_resultSignalUUID = resultSignalUUID;
+		_progressSignalUUID = OCSignal.generateUUID;
 	}
 
 	return (self);
@@ -234,6 +235,7 @@
 		_inProgressSince = [decoder decodeObjectOfClass:[NSDate class] forKey:@"inProgressSince"];
 
 		_resultSignalUUID = [decoder decodeObjectOfClass:NSString.class forKey:@"resultSignalUUID"];
+		_progressSignalUUID = [decoder decodeObjectOfClass:NSString.class forKey:@"progressSignalUUID"];
 
 		_isProcessIndependent = [decoder decodeBoolForKey:@"isProcessIndependent"];
 		_progress = [decoder decodeObjectOfClass:[OCProgress class] forKey:@"progress"];
@@ -261,6 +263,8 @@
 	[coder encodeObject:_inProgressSince forKey:@"inProgressSince"];
 
 	[coder encodeObject:_resultSignalUUID forKey:@"resultSignalUUID"];
+
+	[coder encodeObject:_progressSignalUUID forKey:@"progressSignalUUID"];
 
 	[coder encodeBool:_isProcessIndependent forKey:@"isProcessIndependent"];
 	[coder encodeObject:_progress forKey:@"progress"];
