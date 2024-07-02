@@ -54,6 +54,9 @@
 #import "OCMessage.h"
 #import "OCCoreUpdateScheduleRecord.h"
 #import "OCDrive.h"
+#import "OCSignal.h"
+#import "OCSignalConsumer.h"
+#import "OCSignalRecord.h"
 
 @implementation OCEvent
 
@@ -122,6 +125,9 @@
 				OCCoreUpdateScheduleRecord.class,
 				OCLocation.class,
 				OCDrive.class,
+				OCSignal.class,
+				OCSignalConsumer.class,
+				OCSignalRecord.class,
 
 				// Foundation classes
 				NSArray.class,

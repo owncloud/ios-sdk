@@ -345,6 +345,7 @@
 			NSError *enumerationError = [self.backend enumerateTasksForPipeline:self enumerator:^(OCHTTPPipelineTask *pipelineTask, BOOL *stop) {
 				if (([pipelineTask.urlSessionID isEqual:urlSessionIdentifier] || ((pipelineTask.urlSessionID == nil) && (urlSessionIdentifier == nil))) && // URL Session ID identical, or both not having any
 				    (pipelineTask.urlSessionTask == nil) && // No URL Session task known for this pipeline task
+				    [pipelineTask.bundleID isEqual:self.backend.bundleIdentifier] && // Task belongs to this process (avoid dropping requests running in other processes)
 				    (pipelineTask.state == OCHTTPPipelineTaskStateRunning)) // pipeline task is running (so there should be one)
 				{
 					OCLogDebug(@"Stored task dropped: %@", pipelineTask);

@@ -26,6 +26,8 @@
 #import <openssl/conf.h>
 #import <openssl/x509v3.h>
 #import <openssl/pkcs12.h>
+#import <openssl/evp.h>
+#import <openssl/core_names.h>
 
 @implementation OCCertificate (OpenSSL)
 
@@ -278,32 +280,30 @@
 						switch (EVP_PKEY_base_id(evpPKey))
 						{
 							case EVP_PKEY_RSA: {
-								RSA *rsa;
+								BIGNUM *n = NULL, *e = NULL;
+								int keyBitLen = 0;
 
-								if ((rsa = EVP_PKEY_get1_RSA(evpPKey)) != NULL)
+								if ((EVP_PKEY_get_bn_param(evpPKey, OSSL_PKEY_PARAM_RSA_EXPONENT, &e) == 1) && (e != NULL))
 								{
-									const BIGNUM *n, *e, *d;
-									RSA_get0_key(rsa, &n, &e, &d);
-									if (e != NULL)
-									{
-										publicKeyDict[OCCertificateMetadataKeyExponentKey] = @(BN_get_word(e)); // Exponent
-									}
+									publicKeyDict[OCCertificateMetadataKeyExponentKey] = @(BN_get_word(e)); // Exponent
+								}
 
-									if (n != NULL)
-									{
-										publicKeyDict[OCCertificateMetadataKeyBytesKey] = [self _hexStringFromBigNum:n]; // Modulus
-									}
+								if ((EVP_PKEY_get_bn_param(evpPKey, OSSL_PKEY_PARAM_RSA_N, &n) == 1) && (n != NULL))
+								{
+									publicKeyDict[OCCertificateMetadataKeyBytesKey] = [self _hexStringFromBigNum:n]; // Modulus
+								}
 
-									publicKeyDict[OCCertificateMetadataKeySizeInBitsKey] = @(RSA_size(rsa)*8); // Key size in bits
+								if ((keyBitLen = EVP_PKEY_get_security_bits(evpPKey)) != 0)
+								{
+									publicKeyDict[OCCertificateMetadataKeySizeInBitsKey] = @(keyBitLen); // Key size in bits
 								}
 							}
-								break;
+							break;
 
 							case EVP_PKEY_DSA:
 							case EVP_PKEY_DH:
 							case EVP_PKEY_EC:
 							default: {
-
 								if (EVP_PKEY_print_public(bio, evpPKey, 0, NULL) > 0)
 								{
 									long availableBytes;
@@ -320,7 +320,7 @@
 									}
 								}
 							}
-								break;
+							break;
 						}
 
 						BIO_free(bio);
@@ -444,7 +444,7 @@
 	{
 		*error = OCError(OCErrorCertificateInvalid);
 	}
-	
+
 	return (metaData);
 }
 

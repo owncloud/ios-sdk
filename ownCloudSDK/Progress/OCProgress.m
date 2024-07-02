@@ -51,9 +51,17 @@
 	return (self);
 }
 
-- (instancetype)initWithSource:(id<OCProgressSource>)source pathElementIdentifier:(OCProgressPathElementIdentifier)identifier progress:(nullable NSProgress *)progress
+- (instancetype)initRegisteredWithProgress:(nullable NSProgress *)progress
 {
-	return ([self initWithPath:[[source progressBasePath] arrayByAddingObject:identifier] progress:progress]);
+	if ((self = [self init]) != nil)
+	{
+		_path = @[ OCProgressPathElementIdentifierManagerRoot, _identifier ];
+		_progress = progress;
+
+		[OCProgressManager.sharedProgressManager registerProgress:self];
+	}
+
+	return (self);
 }
 
 - (BOOL)nextPathElementIsLast

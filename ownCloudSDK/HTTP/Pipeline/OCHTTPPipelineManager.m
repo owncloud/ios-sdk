@@ -571,7 +571,7 @@
 
 	if (!progress.nextPathElementIsLast)
 	{
-		if (![progress.nextPathElement isEqual:OCHTTPRequestGlobalPath])
+		if (![progress.nextPathElement isEqual:OCProgressPathElementIdentifierHTTPRequestRoot])
 		{
 			return (nil);
 		}

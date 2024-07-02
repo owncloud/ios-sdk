@@ -53,7 +53,7 @@
 			[weakSelf cancel];
 		};
 
-		self.progress = [[OCProgress alloc] initWithPath:@[OCHTTPRequestGlobalPath, _identifier] progress:progress];
+		self.progress = [[OCProgress alloc] initWithPath:@[OCProgressPathElementIdentifierHTTPRequestRoot, _identifier] progress:progress];
 
 		self.priority = NSURLSessionTaskPriorityDefault;
 	}
@@ -756,7 +756,7 @@ OCHTTPHeaderFieldName OCHTTPHeaderFieldNameXOCMTime = @"X-OC-MTime";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOCChecksum = @"OC-Checksum";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOCConnectionValidator = @"OC-Connection-Validator";
 
-OCProgressPathElementIdentifier OCHTTPRequestGlobalPath = @"_httpRequest";
+OCProgressPathElementIdentifier OCProgressPathElementIdentifierHTTPRequestRoot = @"_httpRequest";
 
 OCHTTPRequestResumeInfoKey OCHTTPRequestResumeInfoKeySystemResumeData = @"_systemResumeData";
 

@@ -28,7 +28,7 @@
 
 @implementation OCTUSJob
 
-- (instancetype)initWithHeader:(OCTUSHeader *)header segmentFolderURL:(NSURL *)segmentFolder fileURL:(NSURL *)fileURL creationURL:(NSURL *)creationURL
+- (instancetype)initWithHeader:(OCTUSHeader *)header segmentFolderURL:(NSURL *)segmentFolder fileURL:(NSURL *)fileURL creationURL:(NSURL *)creationURL trackingID:(nullable OCActionTrackingID)trackingID
 {
 	if ((self = [super init]) != nil)
 	{
@@ -39,6 +39,8 @@
 
 		_segmentFolderURL = segmentFolder;
 		_fileURL = fileURL;
+
+		_trackingID = trackingID;
 	}
 
 	return (self);
@@ -277,6 +279,8 @@
 		_eventTarget = [coder decodeObjectOfClass:OCEventTarget.class forKey:@"eventTarget"];
 
 		_lastSegment = [coder decodeObjectOfClass:OCTUSJobSegment.class forKey:@"lastSegment"];
+
+		_trackingID = [coder decodeObjectOfClass:NSString.class forKey:@"trackingID"];
 	}
 
 	return (self);
@@ -307,6 +311,8 @@
 	[coder encodeObject:_eventTarget forKey:@"eventTarget"];
 
 	[coder encodeObject:_lastSegment forKey:@"lastSegment"];
+
+	[coder encodeObject:_trackingID forKey:@"trackingID"];
 }
 
 @end

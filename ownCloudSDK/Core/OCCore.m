@@ -70,6 +70,7 @@
 #import "OCVault+Internal.h"
 #import "OCLocale+SystemLanguage.h"
 #import "OCCore+DataSources.h"
+#import "OCSignalManager.h"
 
 @interface OCCore ()
 {
@@ -101,6 +102,8 @@
 @synthesize connectionStatus = _connectionStatus;
 @synthesize connectionStatusSignals = _connectionStatusSignals;
 @synthesize connectionStatusShortDescription = _connectionStatusShortDescription;
+
+@synthesize signalManager = _signalManager;
 
 @synthesize activityManager = _activityManager;
 
@@ -327,6 +330,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 		_connectivityQueue = dispatch_queue_create("OCCore connectivity queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 
+		_signalManager = [[OCSignalManager alloc] initWithKeyValueStore:_vault.keyValueStore deliveryQueue:_queue];
+		
 		[OCEvent registerEventHandler:self forIdentifier:_eventHandlerIdentifier];
 
 		_warnedCertificates = [NSMutableArray new];
@@ -1529,13 +1534,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	}
 }
 
-- (NSArray <NSProgress *> *)progressForItem:(OCItem *)item matchingEventType:(OCEventType)eventType
+- (NSArray<NSProgress *> *)progressForItemWithLocalID:(OCLocalID)localID matchingEventType:(OCEventType)eventType
 {
 	NSMutableArray <NSProgress *> *resultProgressObjects = nil;
 
-	OCLocalID localID;
-
-	if ((localID = item.localID) != nil)
+	if (localID != nil)
 	{
 		@synchronized(_progressByLocalID)
 		{
@@ -2435,12 +2438,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 	if (!progress.nextPathElementIsLast)
 	{
-		if ([progress.nextPathElement isEqual:OCCoreSyncRecordPath])
+		OCProgressPathElementIdentifier nextPathElement = progress.nextPathElement;
+		OCProgress *sourceProgress = nil;
+
+		if ([nextPathElement isEqual:OCProgressPathElementIdentifierCoreSyncRecordPath])
 		{
 			if (progress.nextPathElementIsLast)
 			{
 				// OCSyncRecordID syncRecordID = @([progress.nextPathElement integerValue]);
-				OCProgress *sourceProgress = nil;
 				__weak OCCore *weakCore = self;
 
 				resolvedProgress = [NSProgress indeterminateProgress];
@@ -2451,19 +2456,34 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 					[weakCore setNeedsToProcessSyncRecords];
 				};
 
-				if ((sourceProgress = OCTypedCast((id)progress.userInfo[OCSyncRecordProgressUserInfoKeySource], OCProgress)) != nil)
+				sourceProgress = OCTypedCast((id)progress.userInfo[OCSyncRecordProgressUserInfoKeySource], OCProgress);
+			}
+		}
+
+		if ([nextPathElement isEqual:OCProgressPathElementIdentifierCoreConnectionPath])
+		{
+			if (progress.nextPathElementIsLast)
+			{
+				OCActionTrackingID actionTrackingID;
+
+				if ((actionTrackingID = progress.nextPathElement) != nil)
 				{
-					NSProgress *sourceNSProgress;
-
-					if ((sourceNSProgress = [sourceProgress resolveWith:nil]) != nil)
-					{
-						resolvedProgress.localizedDescription = sourceNSProgress.localizedDescription;
-						resolvedProgress.localizedAdditionalDescription = sourceNSProgress.localizedAdditionalDescription;
-
-						resolvedProgress.totalUnitCount += 200;
-						[resolvedProgress addChild:[OCProxyProgress cloneProgress:sourceNSProgress] withPendingUnitCount:200];
-					}
+					resolvedProgress = [self.connection progressForActionTrackingID:actionTrackingID provider:nil];
 				}
+			}
+		}
+
+		if (sourceProgress != nil)
+		{
+			NSProgress *sourceNSProgress;
+
+			if ((sourceNSProgress = [sourceProgress resolveWith:nil]) != nil)
+			{
+				resolvedProgress.localizedDescription = sourceNSProgress.localizedDescription;
+				resolvedProgress.localizedAdditionalDescription = sourceNSProgress.localizedAdditionalDescription;
+
+				resolvedProgress.totalUnitCount += 200;
+				[resolvedProgress addChild:[OCProxyProgress cloneProgress:sourceNSProgress] withPendingUnitCount:200];
 			}
 		}
 	}

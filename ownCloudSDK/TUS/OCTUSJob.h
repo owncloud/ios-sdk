@@ -51,7 +51,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong,nullable) OCEventTarget *eventTarget;
 
-- (instancetype)initWithHeader:(OCTUSHeader *)header segmentFolderURL:(NSURL *)segmentFolder fileURL:(NSURL *)fileURL creationURL:(NSURL *)creationURL;
+@property(strong,nullable) OCActionTrackingID trackingID;
+
+- (instancetype)initWithHeader:(OCTUSHeader *)header segmentFolderURL:(NSURL *)segmentFolder fileURL:(NSURL *)fileURL creationURL:(NSURL *)creationURL trackingID:(nullable OCActionTrackingID)trackingID;
 
 - (nullable OCTUSJobSegment *)requestSegmentFromOffset:(NSUInteger)offset withSize:(NSUInteger)size error:(NSError * _Nullable * _Nullable)outError;
 

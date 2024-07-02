@@ -62,4 +62,9 @@ typedef NSNumber* OCSyncRecordRevision;
 typedef NSNumber* OCSyncLaneID;
 typedef NSString* OCSyncLaneTag;
 
+typedef NSDictionary<NSString*,id<NSSecureCoding>>* OCCodableDict;
+typedef NSMutableDictionary<NSString*,id<NSSecureCoding>>* OCMutableCodableDict;
+
+typedef NSString* OCActionTrackingID; //!< Identifier used to track a triggered action's progress / state
+
 #endif /* OCTypes_h */

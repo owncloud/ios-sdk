@@ -458,6 +458,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 		_drivesByID = [NSMutableDictionary new];
 
+		_progressByActionTrackingID = [NSMutableDictionary new];
+
 		[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_connectionCertificateUserApproved) name:self.bookmark.certificateUserApprovalUpdateNotificationName object:nil];
 
 		// Get pipelines
@@ -1830,6 +1832,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	NSURL *endpointURL;
 	OCDriveID driveID = options[OCConnectionOptionDriveID];
 	OCPath path = location.path;
+	OCActionTrackingID trackingID = OCNullResolved(options[OCConnectionOptionActionTrackingID]);
 
 	if (path == nil)
 	{
@@ -1872,7 +1875,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				@"depth" : @(depth),
 				@"endpointURL" : endpointURL,
 				@"driveID" : OCNullProtect(driveID),
-				@"options" : OCNullProtect(options)
+				@"options" : OCNullProtect(options),
+				@"trackingID" : OCNullProtect(trackingID)
 			};
 			davRequest.eventTarget = eventTarget;
 			davRequest.downloadRequest = YES;
@@ -1919,7 +1923,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			[self attachToPipelines];
 
 			// Enqueue request
-			if ((options[@"alternativeEventType"] != nil) || [options[@"longLived"] boolValue])
+			if ((options[OCConnectionOptionAlternativeEventType] != nil) || [options[@"longLived"] boolValue])
 			{
 				if (OCConnection.backgroundURLSessionsAllowed)
 				{
@@ -1960,10 +1964,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	OCEventType eventType = OCEventTypeRetrieveItemList;
 	NSURL *responseDestinationURL = options[OCConnectionOptionResponseDestinationURL];
 	OCDriveID driveID = OCNullResolved(request.userInfo[@"driveID"]);
+	OCActionTrackingID trackingID = OCNullResolved(request.userInfo[@"trackingID"]);
 
-	if ((options!=nil) && (options[@"alternativeEventType"]!=nil))
+	if ((options!=nil) && (options[OCConnectionOptionAlternativeEventType]!=nil))
 	{
-		eventType = (OCEventType)[options[@"alternativeEventType"] integerValue];
+		eventType = (OCEventType)[options[OCConnectionOptionAlternativeEventType] integerValue];
 	}
 
 	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:eventType uuid:request.identifier attributes:nil]) != nil)
@@ -2046,6 +2051,39 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 					}
 				break;
 
+				case OCEventTypeCopy:
+				case OCEventTypeMove:
+				case OCEventTypeCreateFolder:
+					// Use returned item, but update it with the file and local IDs of the parent item contained in options[OCConnectionOptionParentItem]
+					{
+						if (error == nil)
+						{
+							OCItem *newItem = items.firstObject;
+
+							if (newItem != nil)
+							{
+								OCItem *parentItem;
+
+								if ((parentItem = OCTypedCast(OCNullResolved(options[OCConnectionOptionParentItem]), OCItem)) != nil)
+								{
+									newItem.parentFileID = parentItem.fileID;
+									newItem.parentLocalID  = parentItem.localID;
+								}
+							}
+
+							event.result = newItem;
+						}
+						else
+						{
+							event.error = error;
+						}
+
+						// Post event
+						OCErrorAddDateFromResponse(event.error, request.httpResponse);
+						[request.eventTarget handleEvent:event sender:self];
+					}
+				break;
+
 				default: {
 					event.path = request.userInfo[@"path"];
 					event.depth = [(NSNumber *)request.userInfo[@"depth"] unsignedIntegerValue];
@@ -2084,6 +2122,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 		[request.eventTarget handleEvent:event sender:self];
 	}
+
+	[self finishActionWithTrackingID:trackingID];
 }
 
 #pragma mark - Estimates
@@ -2579,25 +2619,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				postEvent = NO; // Wait until all info on the new item has been received
 
 				// Retrieve all details on the new folder (OC server returns an "Oc-Fileid" in the HTTP headers, but we really need the full set here)
-				[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:parentItem.driveID path:fullFolderPath] depth:0 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-					OCItem *newFolderItem = items.firstObject;
-
-					newFolderItem.parentFileID = parentItem.fileID;
-					newFolderItem.parentLocalID = parentItem.localID;
-
-					if (error == nil)
-					{
-						event.result = newFolderItem;
-					}
-					else
-					{
-						event.error = error;
-					}
-
-					// Post event
-					OCErrorAddDateFromResponse(event.error, request.httpResponse);
-					[request.eventTarget handleEvent:event sender:self];
-				}];
+				[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:parentItem.driveID path:fullFolderPath] depth:0 options:@{
+					OCConnectionOptionAlternativeEventType	: @(OCEventTypeCreateFolder), // make _handleRetrieveItemListAtPathResult: combine the returned item & parentItem and then send the event to the target
+					OCConnectionOptionParentItem		: OCNullProtect(parentItem),
+					OCConnectionOptionRequiredSignalsKey 	: self.actionSignals
+				} resultTarget:request.eventTarget];
 			}
 			else
 			{
@@ -2784,25 +2810,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				postEvent = NO; // Wait until all info on the new item has been received
 
 				// Retrieve all details on the new item
-				[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:parentItem.driveID path:newFullPath] depth:0 options:nil completionHandler:^(NSError *error, NSArray<OCItem *> *items) {
-					OCItem *newItem = items.firstObject;
-
-					newItem.parentFileID = parentItem.fileID;
-					newItem.parentLocalID  = parentItem.localID;
-
-					if (error == nil)
-					{
-						event.result = newItem;
-					}
-					else
-					{
-						event.error = error;
-					}
-
-					// Post event
-					OCErrorAddDateFromResponse(event.error, request.httpResponse);
-					[request.eventTarget handleEvent:event sender:self];
-				}];
+				[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:parentItem.driveID path:newFullPath] depth:0 options:@{
+					OCConnectionOptionAlternativeEventType	: @(OCEventTypeMove), // make _handleRetrieveItemListAtPathResult: combine the returned item & parentItem and then send the event to the target (usage of OCEventTypeMove or OCEventTypeCopy doesn't really matter here, since the code is the same)
+					OCConnectionOptionRequiredSignalsKey 	: self.actionSignals,
+					OCConnectionOptionParentItem		: OCNullProtect(parentItem)
+				} resultTarget:request.eventTarget];
 			}
 			else
 			{
@@ -3371,6 +3383,10 @@ OCConnectionOptionKey OCConnectionOptionForceReplaceKey = @"force-replace";
 OCConnectionOptionKey OCConnectionOptionResponseDestinationURL = @"response-destination-url";
 OCConnectionOptionKey OCConnectionOptionResponseStreamHandler = @"response-stream-handler";
 OCConnectionOptionKey OCConnectionOptionDriveID = @"drive-id";
+OCConnectionOptionKey OCConnectionOptionParentItem = @"parent-item";
+OCConnectionOptionKey OCConnectionOptionSyncRecordID = @"sync-record-id";
+OCConnectionOptionKey OCConnectionOptionAlternativeEventType = @"alternativeEventType";
+OCConnectionOptionKey OCConnectionOptionActionTrackingID = @"action-tracking-id";
 
 OCConnectionSetupOptionKey OCConnectionSetupOptionUserName = @"user-name";
 
@@ -3378,3 +3394,6 @@ OCConnectionSignalID OCConnectionSignalIDAuthenticationAvailable = @"authAvailab
 
 OCConnectionValidatorFlag OCConnectionValidatorFlagClearCookies = @"clear-cookies";
 OCConnectionValidatorFlag OCConnectionValidatorFlag502Triggers = @"502-triggers";
+
+OCConnectionActionUpdateKey OCConnectionActionUpdateProgressRange = @"progressRange";
+OCConnectionActionUpdateKey OCConnectionActionUpdateProgress = @"progress";

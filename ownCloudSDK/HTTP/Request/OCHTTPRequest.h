@@ -201,6 +201,6 @@ extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameXOCMTime;
 extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOCChecksum;
 extern OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOCConnectionValidator;
 
-extern OCProgressPathElementIdentifier OCHTTPRequestGlobalPath;
+extern OCProgressPathElementIdentifier OCProgressPathElementIdentifierHTTPRequestRoot;
 
 extern OCHTTPRequestResumeInfoKey OCHTTPRequestResumeInfoKeySystemResumeData; //!< NSURLSessionDownloadTaskResumeData data provided by the OS

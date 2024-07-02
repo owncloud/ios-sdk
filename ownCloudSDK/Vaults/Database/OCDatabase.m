@@ -45,7 +45,6 @@
 @interface OCDatabase ()
 {
 	NSMutableDictionary <OCSyncRecordID, NSProgress *> *_progressBySyncRecordID;
-	NSMutableDictionary <OCSyncRecordID, OCCoreActionResultHandler> *_resultHandlersBySyncRecordID;
 	NSMutableDictionary <OCSyncRecordID, NSDictionary<OCSyncActionParameter,id> *> *_ephermalParametersBySyncRecordID;
 	NSMutableDictionary <OCSyncRecordID, OCSyncRecord *> *_syncRecordsByID;
 
@@ -81,7 +80,6 @@
 		_memoryConfiguration = OCCoreManager.sharedCoreManager.memoryConfiguration;
 
 		_progressBySyncRecordID = [NSMutableDictionary new];
-		_resultHandlersBySyncRecordID = [NSMutableDictionary new];
 		_ephermalParametersBySyncRecordID = [NSMutableDictionary new];
 		_eventsByDatabaseID = [NSMutableDictionary new];
 
@@ -1304,11 +1302,6 @@
 							self->_progressBySyncRecordID[recordID] = syncRecord.progress.progress;
 						}
 
-						if (syncRecord.resultHandler != nil)
-						{
-							self->_resultHandlersBySyncRecordID[recordID] = syncRecord.resultHandler;
-						}
-
 						if (syncRecord.action.ephermalParameters != nil)
 						{
 							self->_ephermalParametersBySyncRecordID[recordID] = syncRecord.action.ephermalParameters;
@@ -1354,15 +1347,6 @@
 					else
 					{
 						[self->_progressBySyncRecordID removeObjectForKey:syncRecord.recordID];
-					}
-
-					if (syncRecord.resultHandler != nil)
-					{
-						self->_resultHandlersBySyncRecordID[syncRecord.recordID] = syncRecord.resultHandler;
-					}
-					else
-					{
-						[self->_resultHandlersBySyncRecordID removeObjectForKey:syncRecord.recordID];
 					}
 
 					if (syncRecord.action.ephermalParameters != nil)
@@ -1421,7 +1405,6 @@
 						syncRecord.removed = YES;
 
 						[self->_progressBySyncRecordID removeObjectForKey:syncRecordID];
-						[self->_resultHandlersBySyncRecordID removeObjectForKey:syncRecordID];
 						[self->_ephermalParametersBySyncRecordID removeObjectForKey:syncRecordID];
 
 						if (self->_syncRecordsByID != nil)
@@ -1520,7 +1503,6 @@
 			@synchronized(self.sqlDB)
 			{
 				syncRecord.progress.progress = _progressBySyncRecordID[recordID];
-				syncRecord.resultHandler = _resultHandlersBySyncRecordID[recordID];
 				syncRecord.action.ephermalParameters = _ephermalParametersBySyncRecordID[recordID];
 			}
 		}
