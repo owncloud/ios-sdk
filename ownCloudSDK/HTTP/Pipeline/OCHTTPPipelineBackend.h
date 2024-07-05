@@ -67,6 +67,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSNumber *)numberOfRequestsWithState:(OCHTTPPipelineTaskState)state inPipeline:(OCHTTPPipeline *)pipeline partition:(nullable OCHTTPPipelinePartitionID)partitionID error:(NSError * _Nullable *)outDBError;
 - (NSNumber *)numberOfRequestsInPipeline:(OCHTTPPipeline *)pipeline partition:(OCHTTPPipelinePartitionID)partitionID error:(NSError * _Nullable *)outDBError;
 
+- (void)retrieveActionTrackingIDsForPartition:(OCHTTPPipelinePartitionID)partitionID resultHandler:(void(^)(NSError * _Nullable error, NSSet<OCActionTrackingID> * _Nullable trackingIDs, NSNumber * _Nullable totalNumberOfRequestsInBackend))resultHandler;
+
 #pragma mark - Debugging
 - (void)dumpDBTable;
 

@@ -54,6 +54,8 @@ typedef NSString* OCConnectionEndpointURLOption NS_TYPED_ENUM;
 typedef NSString* OCConnectionValidatorFlag NS_TYPED_ENUM;
 typedef NSDictionary<OCItemPropertyName,OCHTTPStatus*>* OCConnectionPropertyUpdateResult;
 
+typedef NSDictionary<OCConnectionOptionKey,id>* OCConnectionOptions;
+
 typedef NSString* OCConnectionActionUpdateKey NS_TYPED_ENUM;
 typedef NSDictionary<OCConnectionActionUpdateKey,id>* OCConnectionActionUpdate;
 
@@ -211,20 +213,20 @@ NS_ASSUME_NONNULL_BEGIN
 + (BOOL)shouldConsiderMaintenanceModeIndicationFromResponse:(OCHTTPResponse *)response;
 
 #pragma mark - Metadata actions
-- (nullable NSProgress *)retrieveItemListAtLocation:(OCLocation *)location depth:(NSUInteger)depth options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options completionHandler:(void(^)(NSError * _Nullable error, NSArray <OCItem *> * _Nullable items))completionHandler; //!< Retrieves the items at the specified path with options
-- (nullable NSProgress *)retrieveItemListAtLocation:(OCLocation *)location depth:(NSUInteger)depth options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget; //!< Retrieves the items at the specified path, with options to schedule on the background queue and with a "not before" date.
+- (nullable NSProgress *)retrieveItemListAtLocation:(OCLocation *)location depth:(NSUInteger)depth options:(nullable OCConnectionOptions)options completionHandler:(void(^)(NSError * _Nullable error, NSArray <OCItem *> * _Nullable items))completionHandler; //!< Retrieves the items at the specified path with options
+- (nullable NSProgress *)retrieveItemListAtLocation:(OCLocation *)location depth:(NSUInteger)depth options:(nullable OCConnectionOptions)options resultTarget:(OCEventTarget *)eventTarget; //!< Retrieves the items at the specified path, with options to schedule on the background queue and with a "not before" date.
 
 #pragma mark - Actions
-- (nullable OCProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
+- (nullable OCProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(nullable OCConnectionOptions)options resultTarget:(OCEventTarget *)eventTarget;
 
-- (nullable OCProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
-- (nullable OCProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
+- (nullable OCProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(nullable OCConnectionOptions)options resultTarget:(OCEventTarget *)eventTarget;
+- (nullable OCProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(nullable OCConnectionOptions)options resultTarget:(OCEventTarget *)eventTarget;
 
 - (nullable OCProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultTarget:(OCEventTarget *)eventTarget;
 
-- (nullable OCProgress *)downloadItem:(OCItem *)item to:(nullable NSURL *)targetURL options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
+- (nullable OCProgress *)downloadItem:(OCItem *)item to:(nullable NSURL *)targetURL options:(nullable OCConnectionOptions)options resultTarget:(OCEventTarget *)eventTarget;
 
-- (nullable OCProgress *)updateItem:(OCItem *)item properties:(nullable NSArray <OCItemPropertyName> *)properties options:(nullable NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+- (nullable OCProgress *)updateItem:(OCItem *)item properties:(nullable NSArray <OCItemPropertyName> *)properties options:(nullable OCConnectionOptions)options resultTarget:(OCEventTarget *)eventTarget;
 
 - (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item to:(nullable NSURL *)localThumbnailURL maximumSize:(CGSize)size resultTarget:(OCEventTarget *)eventTarget;
 - (nullable NSProgress *)retrieveThumbnailFor:(OCItem *)item to:(nullable NSURL *)localThumbnailURL maximumSize:(CGSize)size waitForConnectivity:(BOOL)waitForConnectivity resultTarget:(OCEventTarget *)eventTarget;
@@ -244,7 +246,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Action: Upload
 @interface OCConnection (Upload)
-- (nullable OCProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(nullable NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(nullable OCItem *)replacedItem options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
+- (nullable OCProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(nullable NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(nullable OCItem *)replacedItem options:(nullable OCConnectionOptions)options resultTarget:(OCEventTarget *)eventTarget;
 @end
 
 #pragma mark - SIGNALS
@@ -502,6 +504,9 @@ extern OCConnectionActionUpdateKey OCConnectionActionUpdateProgressRange; //!< N
 extern OCConnectionActionUpdateKey OCConnectionActionUpdateProgress; //!< NSProgress object providing information on the current progress, may be mapped to
 
 NS_ASSUME_NONNULL_END
+
+// This macro infers (extracts) an OCActionTrackingID from the provided options and eventTarget
+#define OCConnectionInferActionTrackingID(options,eventTarget) (((options != nil) && (options[OCConnectionOptionActionTrackingID] != nil)) ? options[OCConnectionOptionActionTrackingID] : (((eventTarget != nil) && (eventTarget.userInfo[OCEventUserInfoKeyActionTrackingID] != nil)) ? eventTarget.userInfo[OCEventUserInfoKeyActionTrackingID] : nil))
 
 #import "OCClassSettings.h"
 

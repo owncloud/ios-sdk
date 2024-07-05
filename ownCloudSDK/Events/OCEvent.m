@@ -330,3 +330,4 @@ OCEventUserInfoKey OCEventUserInfoKeyItem = @"item";
 OCEventUserInfoKey OCEventUserInfoKeyItemVersionIdentifier = @"itemVersionIdentifier";
 OCEventUserInfoKey OCEventUserInfoKeySelector = @"selector";
 OCEventUserInfoKey OCEventUserInfoDriveID = @"drive-id";
+OCEventUserInfoKey OCEventUserInfoKeyActionTrackingID = @"actionTrackingID";
