@@ -148,6 +148,7 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (void)numberOfSyncRecordsOnSyncLaneID:(OCSyncLaneID)laneID completionHandler:(OCDatabaseRetrieveSyncRecordCountCompletionHandler)completionHandler;
 
 - (void)retrieveSyncRecordIDsWithCompletionHandler:(OCDatabaseRetrieveSyncRecordIDsCompletionHandler)completionHandler;
+- (void)retrieveSyncRecordIDsWithPendingEventsWithCompletionHandler:(OCDatabaseRetrieveSyncRecordIDsCompletionHandler)completionHandler;
 
 - (void)retrieveSyncRecordForID:(OCSyncRecordID)recordID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler;
 - (void)retrieveSyncRecordAfterID:(OCSyncRecordID)recordID onLaneID:(OCSyncLaneID)laneID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler;

@@ -500,6 +500,9 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 				});
 			}
 
+			// Find and restart stuck sync records
+			[self restartStuckSyncRecordsWithFilter:nil];
+
 			// Get latest sync anchor
 			if (startError == nil)
 			{

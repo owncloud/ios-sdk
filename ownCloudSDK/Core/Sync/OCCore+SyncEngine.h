@@ -80,6 +80,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)removeSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(nullable OCDatabaseCompletionHandler)completionHandler;
 - (void)updatePublishedSyncRecordActivities;
 
+#pragma mark - Auto-Healing
+- (void)restartStuckSyncRecordsWithFilter:(nullable NSArray<OCSyncRecord *> * _Nullable (^)(NSError * _Nullable error, NSArray<OCSyncRecord *> * _Nullable stuckRecords))filter;
+
 @end
 
 extern OCEventUserInfoKey OCEventUserInfoKeySyncRecordID;

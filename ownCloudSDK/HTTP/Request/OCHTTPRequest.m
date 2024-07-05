@@ -600,7 +600,7 @@
 
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, method: %@, url: %@, effectiveURL: %@%@%@>", NSStringFromClass(self.class), self, self.identifier, self.method, self.url, self.effectiveURL, ((self.bodyData != nil) ? [NSString stringWithFormat:@", bodyData=%lu bytes", self.bodyData.length] : @""), ((self.bodyURL != nil) ? [NSString stringWithFormat:@", bodyURL=%@", self.bodyURL.absoluteString] : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, method: %@, ATID: %@, url: %@, effectiveURL: %@%@%@>", NSStringFromClass(self.class), self, self.identifier, self.method, self.actionTrackingID, self.url, self.effectiveURL, ((self.bodyData != nil) ? [NSString stringWithFormat:@", bodyData=%lu bytes", self.bodyData.length] : @""), ((self.bodyURL != nil) ? [NSString stringWithFormat:@", bodyURL=%@", self.bodyURL.absoluteString] : @"")]);
 }
 
 #pragma mark - Secure Coding
@@ -660,6 +660,8 @@
 		self.isNonCritial 	= [decoder decodeBoolForKey:@"isNonCritial"];
 		self.cancelled		= [decoder decodeBoolForKey:@"cancelled"];
 
+		self.actionTrackingID	= [decoder decodeObjectOfClass:NSString.class forKey:@"actionTrackingID"];
+
 		if ((resultHandlerActionString = [decoder decodeObjectOfClass:[NSString class] forKey:@"resultHandlerAction"]) != nil)
 		{
 			self.resultHandlerAction = NSSelectorFromString(resultHandlerActionString);
@@ -716,6 +718,8 @@
 
 	[coder encodeBool:_isNonCritial 	forKey:@"isNonCritial"];
 	[coder encodeBool:_cancelled 		forKey:@"cancelled"];
+
+	[coder encodeObject:_actionTrackingID	forKey:@"actionTrackingID"];
 
 	[coder encodeObject:NSStringFromSelector(_resultHandlerAction) forKey:@"resultHandlerAction"];
 }

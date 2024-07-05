@@ -1536,6 +1536,31 @@
 	}]];
 }
 
+- (void)retrieveSyncRecordIDsWithPendingEventsWithCompletionHandler:(OCDatabaseRetrieveSyncRecordIDsCompletionHandler)completionHandler
+{
+	[self.sqlDB executeQuery:[OCSQLiteQuery querySelectingColumns:@[ @"recordID" ] fromTable:OCDatabaseTableNameEvents where:nil orderBy:nil resultHandler:^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {
+		NSError *iterationError = error;
+		NSMutableSet<OCSyncRecordID> *syncRecordIDs = [NSMutableSet new];
+
+		if (error == nil)
+		{
+			[resultSet iterateUsing:^(OCSQLiteResultSet *resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> *rowDictionary, BOOL *stop) {
+				OCSyncRecordID syncRecordID;
+
+				if ((syncRecordID = OCTypedCast(rowDictionary[@"recordID"], NSNumber)) != nil)
+				{
+					[syncRecordIDs addObject:syncRecordID];
+				}
+			} error:&iterationError];
+		}
+
+		if (completionHandler != nil)
+		{
+			completionHandler(self, iterationError, syncRecordIDs);
+		}
+	}]];
+}
+
 - (void)retrieveSyncRecordForID:(OCSyncRecordID)recordID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler
 {
 	if (recordID == nil)

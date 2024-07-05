@@ -1811,7 +1811,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	return (davRequest);
 }
 
-- (NSProgress *)retrieveItemListAtLocation:(OCLocation *)location depth:(NSUInteger)depth options:(NSDictionary<OCConnectionOptionKey,id> *)options completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
+- (NSProgress *)retrieveItemListAtLocation:(OCLocation *)location depth:(NSUInteger)depth options:(OCConnectionOptions)options completionHandler:(void(^)(NSError *error, NSArray <OCItem *> *items))completionHandler
 {
 	return ([self retrieveItemListAtLocation:location depth:depth options:options resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 			if (event.error != nil)
@@ -1825,7 +1825,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		} userInfo:nil ephermalUserInfo:nil]]);
 }
 
-- (NSProgress *)retrieveItemListAtLocation:(OCLocation *)location depth:(NSUInteger)depth options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
+- (NSProgress *)retrieveItemListAtLocation:(OCLocation *)location depth:(NSUInteger)depth options:(OCConnectionOptions)options resultTarget:(OCEventTarget *)eventTarget
 {
 	OCHTTPDAVRequest *davRequest;
 	NSProgress *progress = nil;
@@ -1833,6 +1833,10 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	OCDriveID driveID = options[OCConnectionOptionDriveID];
 	OCPath path = location.path;
 	OCActionTrackingID trackingID = OCNullResolved(options[OCConnectionOptionActionTrackingID]);
+
+	if (trackingID == nil) {
+		trackingID = OCConnectionInferActionTrackingID(options, eventTarget);
+	}
 
 	if (path == nil)
 	{
@@ -1878,6 +1882,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				@"options" : OCNullProtect(options),
 				@"trackingID" : OCNullProtect(trackingID)
 			};
+			davRequest.actionTrackingID = trackingID;
 			davRequest.eventTarget = eventTarget;
 			davRequest.downloadRequest = YES;
 			davRequest.priority = NSURLSessionTaskPriorityHigh;
@@ -2186,9 +2191,10 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 // => please see OCConnection+Upload
 
 #pragma mark - File transfer: download
-- (OCProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
+- (OCProgress *)downloadItem:(OCItem *)item to:(NSURL *)targetURL options:(OCConnectionOptions)options resultTarget:(OCEventTarget *)eventTarget
 {
 	OCProgress *requestProgress = nil;
+	OCActionTrackingID actionTrackingID = OCConnectionInferActionTrackingID(options, eventTarget);
 	NSURL *downloadURL;
 
 	if (item == nil)
@@ -2220,6 +2226,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		request.downloadedFileURL = targetURL;
 		request.forceCertificateDecisionDelegation = YES;
 		request.autoResume = YES;
+		request.actionTrackingID = actionTrackingID;
 
 		[request setValue:item.eTag forHeaderField:OCHTTPHeaderFieldNameIfMatch];
 
@@ -2359,8 +2366,9 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 }
 
 #pragma mark - Action: Item update
-- (OCProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (OCProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(OCConnectionOptions)options resultTarget:(OCEventTarget *)eventTarget
 {
+	OCActionTrackingID actionTrackingID = OCConnectionInferActionTrackingID(options, eventTarget);
 	OCProgress *requestProgress = nil;
 	NSURL *itemURL;
 
@@ -2440,6 +2448,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				patchRequest.eventTarget = eventTarget;
 				patchRequest.priority = NSURLSessionTaskPriorityHigh;
 				patchRequest.forceCertificateDecisionDelegation = YES;
+				patchRequest.actionTrackingID = actionTrackingID;
 
 				OCLogDebug(@"PROPPATCH XML: %@", patchRequest.xmlRequest.XMLString);
 
@@ -2537,8 +2546,9 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 }
 
 #pragma mark - Action: Create Directory
-- (OCProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget;
+- (OCProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(OCConnectionOptions)options resultTarget:(OCEventTarget *)eventTarget
 {
+	OCActionTrackingID actionTrackingID = OCConnectionInferActionTrackingID(options, eventTarget);
 	OCProgress *requestProgress = nil;
 	NSURL *createFolderURL;
 	OCPath fullFolderPath = nil;
@@ -2574,6 +2584,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		request.eventTarget = eventTarget;
 		request.priority = NSURLSessionTaskPriorityHigh;
 		request.forceCertificateDecisionDelegation = YES;
+
+		request.actionTrackingID = actionTrackingID;
 
 		// Attach to pipelines
 		[self attachToPipelines];
@@ -2622,7 +2634,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				[self retrieveItemListAtLocation:[[OCLocation alloc] initWithDriveID:parentItem.driveID path:fullFolderPath] depth:0 options:@{
 					OCConnectionOptionAlternativeEventType	: @(OCEventTypeCreateFolder), // make _handleRetrieveItemListAtPathResult: combine the returned item & parentItem and then send the event to the target
 					OCConnectionOptionParentItem		: OCNullProtect(parentItem),
-					OCConnectionOptionRequiredSignalsKey 	: self.actionSignals
+					OCConnectionOptionRequiredSignalsKey 	: self.actionSignals,
+					OCConnectionOptionActionTrackingID	: OCNullProtect(request.actionTrackingID)
 				} resultTarget:request.eventTarget];
 			}
 			else
@@ -2670,7 +2683,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 }
 
 #pragma mark - Action: Copy Item + Move Item
-- (OCProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (OCProgress *)moveItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(OCConnectionOptions)options resultTarget:(OCEventTarget *)eventTarget
 {
 	OCProgress *requestProgress;
 
@@ -2691,7 +2704,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	return (requestProgress);
 }
 
-- (OCProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (OCProgress *)copyItem:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(OCConnectionOptions)options resultTarget:(OCEventTarget *)eventTarget
 {
 	OCProgress *requestProgress;
 
@@ -2704,8 +2717,9 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	return (requestProgress);
 }
 
-- (OCProgress *)_copyMoveMethod:(OCHTTPMethod)requestMethod type:(OCEventType)eventType item:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(NSDictionary *)options resultTarget:(OCEventTarget *)eventTarget
+- (OCProgress *)_copyMoveMethod:(OCHTTPMethod)requestMethod type:(OCEventType)eventType item:(OCItem *)item to:(OCItem *)parentItem withName:(NSString *)newName options:(OCConnectionOptions)options resultTarget:(OCEventTarget *)eventTarget
 {
+	OCActionTrackingID actionTrackingID = OCConnectionInferActionTrackingID(options, eventTarget);
 	OCProgress *requestProgress = nil;
 	NSURL *sourceItemURL, *destinationURL;
 	NSURL *sourceWebDAVRootURL = [self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(item.driveID) }];
@@ -2745,6 +2759,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			}
 
 			request.forceCertificateDecisionDelegation = YES;
+			request.actionTrackingID = actionTrackingID;
 
 			[request setValue:[destinationURL absoluteString] forHeaderField:OCHTTPHeaderFieldNameDestination];
 			[request setValue:@"infinity" forHeaderField:OCHTTPHeaderFieldNameDepth];
@@ -2859,6 +2874,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 #pragma mark - Action: Delete Item
 - (OCProgress *)deleteItem:(OCItem *)item requireMatch:(BOOL)requireMatch resultTarget:(OCEventTarget *)eventTarget
 {
+	OCActionTrackingID actionTrackingID = OCConnectionInferActionTrackingID(((OCConnectionOptions)nil), eventTarget);
 	OCProgress *requestProgress = nil;
 	NSURL *deleteItemURL;
 
@@ -2881,6 +2897,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		request.eventTarget = eventTarget;
 		request.priority = NSURLSessionTaskPriorityHigh;
 		request.forceCertificateDecisionDelegation = YES;
+		request.actionTrackingID = actionTrackingID;
 
 		if (requireMatch && (item.eTag!=nil))
 		{

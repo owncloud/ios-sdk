@@ -42,7 +42,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 @implementation OCConnection (Upload)
 
 #pragma mark - File transfer: upload
-- (OCProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
+- (OCProgress *)uploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName to:(OCItem *)newParentDirectory replacingItem:(OCItem *)replacedItem options:(OCConnectionOptions)options resultTarget:(OCEventTarget *)eventTarget
 {
 	if ((sourceURL == nil) || (newParentDirectory == nil))
 	{
@@ -179,7 +179,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 - (OCProgress *)_tusUploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName modificationDate:(NSDate *)modificationDate fileSize:(NSNumber *)fileSize checksum:(OCChecksum *)checksum tusHeader:(OCTUSHeader *)parentTusHeader to:(OCItem *)parentItem replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
-	OCActionTrackingID trackingID = options[OCConnectionOptionActionTrackingID];
+	OCActionTrackingID actionTrackingID = OCConnectionInferActionTrackingID(options, eventTarget);
 	OCProgress *tusProgress = nil;
 	NSURL *segmentFolderURL = options[OCConnectionOptionTemporarySegmentFolderURLKey];
 	NSError *error = nil;
@@ -224,7 +224,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 	if ((creationURL = [[self URLForEndpoint:OCConnectionEndpointIDWebDAVRoot options:@{ OCConnectionEndpointURLOptionDriveID : OCNullProtect(parentItem.driveID) }] URLByAppendingPathComponent:parentItem.path]) != nil)
 	{
-		if ((tusJob = [[OCTUSJob alloc] initWithHeader:parentTusHeader segmentFolderURL:segmentFolderURL fileURL:clonedSourceURL creationURL:creationURL trackingID:trackingID]) != nil)
+		if ((tusJob = [[OCTUSJob alloc] initWithHeader:parentTusHeader segmentFolderURL:segmentFolderURL fileURL:clonedSourceURL creationURL:creationURL trackingID:actionTrackingID]) != nil)
 		{
 			tusJob.fileName = fileName;
 			tusJob.fileSize = fileSize;
@@ -443,6 +443,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 			// Determine .uploadOffset
 			request = [OCHTTPRequest requestWithURL:tusJob.uploadURL];
 			request.method = OCHTTPMethodHEAD;
+			request.actionTrackingID = tusJob.trackingID;
 
 			// Compose header
 			[request addHeaderFields:reqTusHeader.httpHeaderFields];
@@ -474,6 +475,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 				// Continue upload from .uploadOffset
 				request = [OCHTTPRequest requestWithURL:tusJob.uploadURL];
 				request.method = OCHTTPMethodPATCH;
+				request.actionTrackingID = tusJob.trackingID;
 
 				// Compose body
 				NSError *error;
@@ -537,6 +539,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		request.resultHandlerAction = @selector(_handleUploadTusJobResult:error:);
 		request.eventTarget = tusJob.eventTarget;
 		request.forceCertificateDecisionDelegation = YES;
+		request.actionTrackingID = tusJob.trackingID;
 
 		// Attach to pipelines
 		[self attachToPipelines];
@@ -766,6 +769,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 #pragma mark - File transfer: direct upload (PUT)
 - (OCProgress *)_directUploadFileFromURL:(NSURL *)sourceURL withName:(NSString *)fileName modificationDate:(NSDate *)modDate fileSize:(NSNumber *)fileSize checksum:(OCChecksum *)checksum to:(OCItem *)newParentDirectory replacingItem:(OCItem *)replacedItem options:(NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget
 {
+	OCActionTrackingID actionTrackingID = OCConnectionInferActionTrackingID(options, eventTarget);
 	OCProgress *requestProgress = nil;
 	NSURL *uploadURL;
 
@@ -822,6 +826,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		request.eventTarget = eventTarget;
 		request.bodyURL = sourceURL;
 		request.forceCertificateDecisionDelegation = YES;
+		request.actionTrackingID = actionTrackingID;
 
 		if (options[OCConnectionOptionRequiredCellularSwitchKey] != nil)
 		{

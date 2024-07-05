@@ -61,6 +61,8 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 @property(strong) NSArray<OCSyncActionCategory> *categories; //!< Categories this action belongs to.
 
 #pragma mark - Persisted properties
+@property(strong,nullable) OCActionTrackingID actionTrackingID; //!< Action tracking ID used to identify requests, responses and events belonging to this action.
+
 @property(strong) OCItem *localItem; //!< Locally managed OCItem that this action is performed on (persisted)
 @property(readonly,nonatomic,nullable) OCItem *latestVersionOfLocalItem; //!< The latest version of the item, retrieved from the database
 @property(readonly,nonatomic,nullable) OCItem *archivedServerItem; //!< Archived OCItem describing the (known) server item at the time the action was committed. (persisted)

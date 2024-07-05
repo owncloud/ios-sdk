@@ -69,6 +69,8 @@ typedef NSDictionary<OCHTTPRequestResumeInfoKey,id>* OCHTTPRequestResumeInfo;
 
 @property(strong,readonly) OCHTTPRequestID identifier; //!< Unique ID (auto-generated) for every request
 
+@property(strong) OCActionTrackingID actionTrackingID; 	//!< Action tracking ID that can be used to associate a request to an action / activity
+
 @property(strong) OCProgress *progress;			//!< Resolvable progress object that tracks progress and provides cancellation ability/status
 
 @property(strong) OCHTTPMethod method;			//!< The HTTP method to use to request the URL
