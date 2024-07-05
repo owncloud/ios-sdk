@@ -51,4 +51,13 @@ typedef NS_ENUM(NSUInteger, OCSQLiteTransactionType) //!< See https://www.sqlite
 
 extern NSErrorUserInfoKey OCSQLiteTransactionFailedRequestKey;
 
+#define INSTALL_TRANSACTION_ERROR_COLLECTION_RESULT_HANDLER \
+	__block NSError *transactionError = nil;  \
+	OCSQLiteDBResultHandler resultHandler = ^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {  \
+		if (error != nil)  \
+		{  \
+			transactionError = error;  \
+		}  \
+	};
+
 NS_ASSUME_NONNULL_END

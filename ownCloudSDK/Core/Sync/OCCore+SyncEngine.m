@@ -40,6 +40,7 @@
 #import "OCSQLiteTransaction.h"
 #import "OCBackgroundManager.h"
 #import "OCSignalManager.h"
+#import "OCHTTPPipelineManager.h"
 
 OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.owncloud.process-sync-records";
 OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.owncloud.update-sync-records";
@@ -1588,6 +1589,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	 */
 
 	OCSyncRecordID recordID;
+	// OCActionTrackingID actionTrackingID = OCTypedCast(event.userInfo[OCEventUserInfoKeyActionTrackingID], NSString);
 
 	if ((recordID = OCTypedCast(event.userInfo[OCEventUserInfoKeySyncRecordID], NSNumber)) != nil)
 	{
@@ -1710,6 +1712,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 - (OCEventTarget *)_eventTargetWithSyncRecord:(OCSyncRecord *)syncRecord userInfo:(nullable NSDictionary *)userInfo ephermal:(nullable NSDictionary *)ephermalUserInfo
 {
 	OCSyncRecordID syncRecordID;
+	OCActionTrackingID actionTrackingID;
 	NSMutableDictionary *syncRecordUserInfo = [NSMutableDictionary new];
 
 	if ((syncRecordID = syncRecord.recordID) != nil)
@@ -1719,6 +1722,11 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	else
 	{
 		OCLogError(@"Event target for Sync Record lacks recordID - response events will likely be leaking and lead to a hang: %@", syncRecord);
+	}
+
+	if ((actionTrackingID = syncRecord.action.actionTrackingID) != nil)
+	{
+		syncRecordUserInfo[OCEventUserInfoKeyActionTrackingID] = actionTrackingID;
 	}
 
 	if (userInfo != nil)
@@ -1954,6 +1962,121 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 		} completionHandler:^(NSError * _Nullable error) {
 			[self endActivity:@"Scrub item sync status"];
 			OCLogDebug(@"Finished item sync status scrub with error=%@", error);
+		}];
+	}];
+}
+
+#pragma mark - Auto-Healing
+- (void)restartStuckSyncRecordsWithFilter:(nullable NSArray<OCSyncRecord *> * _Nullable (^)(NSError * _Nullable error, NSArray<OCSyncRecord *> * _Nullable stuckRecords))filter
+{
+	[self beginActivity:@"Perform sync queue health check"];
+
+	[self queueBlock:^{
+		[self performProtectedSyncBlock:^NSError *{
+			__block NSError *error = nil;
+			NSMutableSet<OCSyncRecordID> *syncRecordIDsWithPendingEvents = [NSMutableSet new];
+			__block NSSet<OCActionTrackingID> *httpActionTrackingIDs = nil;
+			__block NSNumber *totalNumberOfRequestsInBackendForPartition = nil;
+			NSMutableArray<OCSyncRecord *> *stuckRecords = [NSMutableArray new];
+
+			// Retrieve tracking IDs and total number of requests (incl. without tracking ID) from HTTP pipeline backend
+			OCSyncExec(trackingIDsRetrieved, {
+				[OCHTTPPipelineManager.sharedPipelineManager.backend retrieveActionTrackingIDsForPartition:self.connection.bookmark.uuid.UUIDString resultHandler:^(NSError * _Nullable error, NSSet<OCActionTrackingID> * _Nullable trackingIDs, NSNumber * _Nullable totalNumberOfRequestsInBackend) {
+					httpActionTrackingIDs = trackingIDs;
+					totalNumberOfRequestsInBackendForPartition = totalNumberOfRequestsInBackend;
+					OCTLogDebug(@[@"Health"], @"Found HTTP requests with trackingIDs=%@ total=%@ error=%@ (1)", trackingIDs, totalNumberOfRequestsInBackend, error);
+					OCSyncExecDone(trackingIDsRetrieved);
+				}];
+			});
+
+			// Retrieve sync record IDs with pending events
+			// - include (possibly as-of-yet in-delivery) events
+			OCEventQueue *eventQueue = [self.vault.keyValueStore readObjectForKey:OCKeyValueStoreKeyOCCoreSyncEventsQueue];
+
+			for (OCEventRecord *eventRecord in eventQueue.records)
+			{
+				if (eventRecord.syncRecordID != nil)
+				{
+					[syncRecordIDsWithPendingEvents addObject:eventRecord.syncRecordID];
+				}
+			}
+
+			OCTLogDebug(@[@"Health"], @"Pending events (KVS) for sync record IDs: %@", syncRecordIDsWithPendingEvents);
+
+			// - include queued events from the database
+			[self.database retrieveSyncRecordIDsWithPendingEventsWithCompletionHandler:^(OCDatabase *db, NSError *error, NSSet<OCSyncRecordID> *syncRecordIDs) {
+				OCTLogDebug(@[@"Health"], @"Pending events (DB) for sync record IDs: %@", syncRecordIDs);
+
+				if ((error == nil) && (syncRecordIDs.count > 0))
+				{
+					[syncRecordIDsWithPendingEvents addObjectsFromArray:syncRecordIDs.allObjects];
+				}
+			}];
+
+			// Retrieve all sync records and check their health
+			[self.database retrieveSyncRecordsForPath:nil action:nil inProgressSince:nil completionHandler:^(OCDatabase *db, NSError *error, NSArray<OCSyncRecord *> *syncRecords) {
+				for (OCSyncRecord *record in syncRecords)
+				{
+					if ((record.state == OCSyncRecordStateProcessing) && 	// Record is processing
+					    (record.waitConditions.count == 0) &&		// Record has no wait conditions
+					    ((record.recordID != nil ) && (![syncRecordIDsWithPendingEvents containsObject:record.recordID])) && // Record has no pending events
+					    (
+					    	((record.action.actionTrackingID != nil) && (![httpActionTrackingIDs containsObject:record.action.actionTrackingID])) || // Record has no active HTTP requests (determined by tracking ID)
+					    	((record.action.actionTrackingID == nil) && (totalNumberOfRequestsInBackendForPartition != nil) && (totalNumberOfRequestsInBackendForPartition.integerValue == 0)) // Legacy (from pre-ATID era): Record has no ATID, but there are no requests in general, so also no active or pending HTTP requests for this sync action
+					    )
+					   )
+					{
+						[stuckRecords addObject:record];
+					}
+				}
+			}];
+
+			if (stuckRecords.count > 0)
+			{
+				OCTLogWarning(@[@"Health"], @"Found stuck sync records: %@", stuckRecords);
+			}
+			else
+			{
+				OCTLogDebug(@[@"Health"], @"Found no stuck sync records");
+			}
+
+			NSArray<OCSyncRecord *> *rescheduleRecords = (error != nil) ? nil : stuckRecords;
+
+			if (filter != nil)
+			{
+				rescheduleRecords = filter(error, rescheduleRecords);
+			}
+
+			if (rescheduleRecords.count > 0)
+			{
+				OCTLogWarning(@[@"Health"], @"Rescheduling stuck sync records: %@", rescheduleRecords);
+
+				for (OCSyncRecord *rescheduleRecord in rescheduleRecords)
+				{
+					[self rescheduleSyncRecord:rescheduleRecord withUpdates:^NSError * _Nullable(OCSyncRecord * _Nonnull record) {
+						if (record.action.actionTrackingID == nil)
+						{
+							// Since we're restarting this action anyway, we can also add a tracking ID at this point
+							record.action.actionTrackingID = NSUUID.UUID.UUIDString;
+						}
+
+						return (nil);
+					}];
+				}
+			}
+
+			return (error);
+		} completionHandler:^(NSError * _Nullable error) {
+			[self endActivity:@"Perform sync queue health check"];
+
+			if (error == nil)
+			{
+				OCTLogDebug(@[@"Health"], @"Health check completed");
+			}
+			else
+			{
+				OCTLogError(@[@"Health"], @"Health check completed with error=%@", error);
+			}
 		}];
 	}];
 }

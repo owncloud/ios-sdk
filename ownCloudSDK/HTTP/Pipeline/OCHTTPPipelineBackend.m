@@ -19,6 +19,7 @@
 #import "OCHTTPPipelineBackend.h"
 #import "OCSQLiteDB.h"
 #import "OCSQLiteTableSchema.h"
+#import "OCSQLiteTransaction.h"
 #import "OCSQLiteQueryCondition.h"
 #import "OCHTTPPipelineTask.h"
 #import "OCMacros.h"
@@ -30,7 +31,7 @@
 // #define TaskDescription(task) task
 
 // Medium verbosity
-#define TaskDescription(task) [NSString stringWithFormat:@"taskID=%@, requestID=%@, request.identifier=%@", task.taskID, task.requestID, task.request.identifier]
+#define TaskDescription(task) [NSString stringWithFormat:@"taskID=%@, requestID=%@, request.ATID=%@, request.identifier=%@", task.taskID, task.requestID, task.request.actionTrackingID, task.request.identifier]
 
 // Low verbosity
 // #define TaskDescription(task) task.taskID
@@ -230,13 +231,57 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 				responseData : BLOB		- data of serialized OCHTTPResponse
 			*/
 			@"CREATE TABLE httpPipelineTasks (taskID INTEGER PRIMARY KEY AUTOINCREMENT, pipelineID TEXT NOT NULL, bundleID TEXT NOT NULL, urlSessionID TEXT, urlSessionTaskID INTEGER, partitionID TEXT NOT NULL, groupID TEXT, state INTEGER NOT NULL, requestID TEXT NOT NULL, requestData BLOB NOT NULL, requestFinal INTEGER NOT NULL, responseData BLOB)",
-
-			// Create indexes over urlSessionID, taskID, jobID
-//			@"CREATE INDEX idx_httpRequests_urlSessionID ON httpRequests (urlSessionID)",
-//			@"CREATE INDEX idx_httpRequests_urlSessionTaskID ON httpRequests (urlSessionTaskID)"
 		]
 		openStatements:nil
 		upgradeMigrator:nil]
+	];
+
+	// Version 2
+	[_sqlDB addTableSchema:[OCSQLiteTableSchema
+		schemaWithTableName:OCHTTPPipelineTasksTableName
+		version:2
+		creationQueries:@[
+			/*
+				taskID : INTEGER		- unique ID used to uniquely identify and efficiently update a row
+
+				pipelineID : TEXT		- ID of the pipeline
+				bundleID : TEXT			- bundle identifier of the process from which the record originated
+
+				urlSessionID : TEXT		- ID of the pipeline's URL session
+				urlSessionTaskID : INTEGER	- the NSURLSessionTask.taskIdentifier of this request
+
+				partitionID : TEXT		- ID of the partition for which this request was scheduled
+				groupID : TEXT			- group ID this request belongs to
+
+				state : INTEGER			- status of request: pending, inProcess, completed
+
+				requestID : TEXT		- the OCHTTPRequestID of this request
+				actionTrackingID : TEXT		- the OCActionTrackingID of this request (if any)
+
+				requestData : BLOB		- data of serialized OCHTTPRequest
+				requestFinal : INTEGER 		- Boolean indicating whether the request is final, i.e. can be sent "as-is" (without going through the delegate)
+
+				responseData : BLOB		- data of serialized OCHTTPResponse
+			*/
+			@"CREATE TABLE httpPipelineTasks (taskID INTEGER PRIMARY KEY AUTOINCREMENT, pipelineID TEXT NOT NULL, bundleID TEXT NOT NULL, urlSessionID TEXT, urlSessionTaskID INTEGER, partitionID TEXT NOT NULL, groupID TEXT, state INTEGER NOT NULL, requestID TEXT NOT NULL, actionTrackingID TEXT, requestData BLOB NOT NULL, requestFinal INTEGER NOT NULL, responseData BLOB)",
+		]
+		openStatements:nil
+		upgradeMigrator:^(OCSQLiteDB *db, OCSQLiteTableSchema *schema, void (^completionHandler)(NSError *error)) {
+			// Migrate to version 2
+			[db executeTransaction:[OCSQLiteTransaction transactionWithBlock:^NSError *(OCSQLiteDB *db, OCSQLiteTransaction *transaction) {
+				INSTALL_TRANSACTION_ERROR_COLLECTION_RESULT_HANDLER
+
+				// Add actionTrackingID column
+				[db executeQuery:[OCSQLiteQuery query:@"ALTER TABLE httpPipelineTasks ADD COLUMN actionTrackingID TEXT" resultHandler:resultHandler]];
+				if (transactionError != nil) { return(transactionError); }
+
+				return (transactionError);
+
+			} type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB *db, OCSQLiteTransaction *transaction, NSError *error) {
+				completionHandler(error);
+			}]];
+		}]
+
 	];
 }
 
@@ -259,6 +304,8 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 			@"groupID"		: OCSQLiteNullProtect(task.groupID),
 
 			@"state"		: @(task.state),
+
+			@"actionTrackingID"	: OCSQLiteNullProtect(task.request.actionTrackingID),
 
 			@"requestID"		: task.requestID,
 			@"requestData"		: task.requestData,
@@ -629,6 +676,49 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 	}
 
 	return (numberOfRequests);
+}
+
+- (void)retrieveActionTrackingIDsForPartition:(OCHTTPPipelinePartitionID)partitionID resultHandler:(void (^)(NSError * _Nullable error, NSSet<OCActionTrackingID> * _Nullable trackingsIDs, NSNumber * _Nullable totalNumberOfRequestsInBackend))resultHandler
+{
+	__block NSMutableSet<OCActionTrackingID> *actionTrackingIDs = nil;
+	__block NSNumber *numberOfRequests = nil;
+	__block NSError *retrieveError = nil;
+
+	[_sqlDB executeTransaction:[OCSQLiteTransaction
+		transactionWithQueries:@[
+			// Retrieve http tasks who have actionTrackingIDs
+			[OCSQLiteQuery query:@"SELECT actionTrackingID FROM httpPipelineTasks WHERE partitionID=:partitionID AND actionTrackingID IS NOT NULL" withNamedParameters:@{
+				@"partitionID" : partitionID
+			} resultHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error, OCSQLiteTransaction * _Nullable transaction, OCSQLiteResultSet * _Nullable resultSet) {
+				if (error == nil)
+				{
+					actionTrackingIDs = [NSMutableSet new];
+
+					[resultSet iterateUsing:^(OCSQLiteResultSet * _Nonnull resultSet, NSUInteger line, NSDictionary<NSString *,id<NSObject>> * _Nonnull rowDictionary, BOOL * _Nonnull stop) {
+						OCActionTrackingID actionTrackingID;
+
+						if ((actionTrackingID = (OCActionTrackingID)rowDictionary[@"actionTrackingID"]) != nil) {
+							[actionTrackingIDs addObject:actionTrackingID];
+						}
+					} error:&retrieveError];
+				}
+			}],
+
+			// Retrieve number of pipeline tasks
+			[OCSQLiteQuery query:@"SELECT COUNT(*) AS cnt FROM httpPipelineTasks WHERE partitionID=:partitionID" withNamedParameters:@{
+				@"partitionID" : partitionID
+			} resultHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error, OCSQLiteTransaction * _Nullable transaction, OCSQLiteResultSet * _Nullable resultSet) {
+				numberOfRequests = (NSNumber *)[resultSet nextRowDictionaryWithError:&retrieveError][@"cnt"];
+			}]
+		]
+		type:OCSQLiteTransactionTypeExclusive
+		completionHandler:^(OCSQLiteDB * _Nonnull db, OCSQLiteTransaction * _Nonnull transaction, NSError * _Nullable error) {
+			if (resultHandler != nil)
+			{
+				resultHandler(error, actionTrackingIDs, numberOfRequests);
+			}
+		}]
+	];
 }
 
 - (BOOL)isOnQueueThread

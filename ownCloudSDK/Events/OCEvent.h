@@ -135,6 +135,7 @@ extern OCEventUserInfoKey OCEventUserInfoKeyItem;
 extern OCEventUserInfoKey OCEventUserInfoKeyItemVersionIdentifier;
 extern OCEventUserInfoKey OCEventUserInfoKeySelector;
 extern OCEventUserInfoKey OCEventUserInfoDriveID;
+extern OCEventUserInfoKey OCEventUserInfoKeyActionTrackingID;
 
 NS_ASSUME_NONNULL_END
 

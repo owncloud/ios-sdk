@@ -56,6 +56,8 @@
 			OCLogError(@"BUG: sync action %@ has a nil +identifier", self.class);
 		}
 
+		_actionTrackingID = NSUUID.UUID.UUIDString;
+
 		_localItem = item;
 		_archivedServerItem = ((item.remoteItem != nil) ? item.remoteItem : item);
 
@@ -370,6 +372,8 @@
 	[coder encodeInteger:_actionEventType forKey:@"actionEventType"];
 	[coder encodeObject:_categories forKey:@"categories"];
 
+	[coder encodeObject:_actionTrackingID forKey:@"trackingID"];
+
 	[self encodeActionData:coder];
 }
 
@@ -389,6 +393,8 @@
 		_localizedDescription = [decoder decodeObjectOfClass:[NSString class] forKey:@"localizedDescription"];
 		_actionEventType = [decoder decodeIntegerForKey:@"actionEventType"];
 		_categories = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSArray class], [NSString class], nil] forKey:@"categories"];
+
+		_actionTrackingID = [decoder decodeObjectOfClass:NSString.class forKey:@"trackingID"];
 
 		[self decodeActionData:decoder];
 	}
@@ -420,12 +426,12 @@
 {
 	NSString *internals = self.internalsDescription;
 
-	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@%@, description: %@>", NSStringFromClass(self.class), self, _identifier, ((internals != nil) ? [NSString stringWithFormat:@", %@", internals] : @""), self.localizedDescription]);
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@%@, ATID: %@, description: %@>", NSStringFromClass(self.class), self, _identifier, ((internals != nil) ? [NSString stringWithFormat:@", %@", internals] : @""), _actionTrackingID, self.localizedDescription]);
 }
 
 - (NSString *)privacyMaskedDescription
 {
-	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, description: %@>", NSStringFromClass(self.class), self, _identifier, OCLogPrivate(self.localizedDescription)]);
+	return ([NSString stringWithFormat:@"<%@: %p, identifier: %@, ATID: %@, description: %@>", NSStringFromClass(self.class), self, _identifier, _actionTrackingID, OCLogPrivate(self.localizedDescription)]);
 }
 
 - (NSString *)internalsDescription

@@ -24,16 +24,6 @@
 #import "OCItem+OCTypeAlias.h"
 #import "OCDatabase+Scans.h"
 
-#define INSTALL_TRANSACTION_ERROR_COLLECTION_RESULT_HANDLER \
-	__block NSError *transactionError = nil;  \
-	OCSQLiteDBResultHandler resultHandler = ^(OCSQLiteDB *db, NSError *error, OCSQLiteTransaction *transaction, OCSQLiteResultSet *resultSet) {  \
-		if (error != nil)  \
-		{  \
-			transactionError = error;  \
-		}  \
-	};
-
-
 @implementation OCDatabase (Schemas)
 
 #pragma mark - Schemas
