@@ -41,6 +41,7 @@
 #import "OCBackgroundManager.h"
 #import "OCSignalManager.h"
 #import "OCHTTPPipelineManager.h"
+#import "OCCore+ConnectionStatus.h"
 
 OCIPCNotificationName OCIPCNotificationNameProcessSyncRecordsBase = @"org.owncloud.process-sync-records";
 OCIPCNotificationName OCIPCNotificationNameUpdateSyncRecordsBase = @"org.owncloud.update-sync-records";
@@ -2079,6 +2080,25 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 			}
 		}];
 	}];
+}
+
+#pragma mark - Sync/TUS integration
+- (NSError *)connection:(OCConnection *)connection continueActionForTrackingID:(OCActionTrackingID)trackingID
+{
+	OCSyncRecordID syncRecordID;
+
+	// Check if the tracking ID encapsulates a sync record ID
+	if ((syncRecordID = OCSyncRecordIDFromActionTrackingID(trackingID)) != nil)
+	{
+		// Check if the sync record ID is valid (sync action is active or queued)
+		if (![self.database isValidSyncRecordID:syncRecordID considerCacheValid:YES])
+		{
+			// Not valid - indicate the action is cancelled
+			return (OCError(OCErrorCancelled));
+		}
+	}
+
+	return(nil);
 }
 
 #pragma mark - Sync debugging
