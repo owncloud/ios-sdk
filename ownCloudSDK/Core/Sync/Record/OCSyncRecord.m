@@ -24,6 +24,7 @@
 #import "OCWaitConditionIssue.h"
 #import "OCSyncRecordActivity.h"
 #import "OCSignalManager.h"
+#import "OCProxyProgress.h"
 
 @implementation OCSyncRecord
 
@@ -88,31 +89,31 @@
 	return ([NSKeyedArchiver archivedDataWithRootObject:self]);
 }
 
-- (void)addProgress:(OCProgress *)progress
+- (void)addProgress:(OCProgress *)progressToAdd
 {
-	if (progress != nil)
+	if (progressToAdd != nil)
 	{
 		if (_progress == nil)
 		{
-			self.progress = progress;
+			self.progress = progressToAdd;
 		}
 		else
 		{
-			_progress.userInfo = @{ OCSyncRecordProgressUserInfoKeySource : progress };
+			_progress.userInfo = @{ OCSyncRecordProgressUserInfoKeySource : progressToAdd };
 
-			if (progress.progress != nil)
+			if (progressToAdd.progress != nil)
 			{
 				if (_progress.progress == nil)
 				{
-					_progress.progress = progress.progress;
+					_progress.progress = progressToAdd.progress;
 				}
 				else
 				{
-					_progress.progress.localizedDescription = progress.progress.localizedDescription;
-					_progress.progress.localizedAdditionalDescription = progress.progress.localizedAdditionalDescription;
+					_progress.progress.localizedDescription = progressToAdd.progress.localizedDescription;
+					_progress.progress.localizedAdditionalDescription = progressToAdd.progress.localizedAdditionalDescription;
 
 					_progress.progress.totalUnitCount += 200;
-					[_progress.progress addChild:progress.progress withPendingUnitCount:200];
+					[_progress.progress addChild:[OCProxyProgress cloneProgress:progressToAdd.progress] withPendingUnitCount:200]; // Clone progress to avoid possibility of exception "NSProgress 0x... was already the child of another progress 0x..."
 				}
 			}
 		}
