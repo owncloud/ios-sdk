@@ -51,6 +51,8 @@
 	OCAsyncSequentialQueue *_openQueue;
 	NSInteger _openCount;
 	OCCoreMemoryConfiguration _memoryConfiguration;
+
+	NSMutableSet<OCSyncRecordID> *_knownInvalidSyncRecordIDs;
 }
 
 @end
@@ -82,6 +84,7 @@
 		_progressBySyncRecordID = [NSMutableDictionary new];
 		_ephermalParametersBySyncRecordID = [NSMutableDictionary new];
 		_eventsByDatabaseID = [NSMutableDictionary new];
+		_knownInvalidSyncRecordIDs = [NSMutableSet new];
 
 		if (![OCProcessManager isProcessExtension])
 		{
@@ -1427,6 +1430,76 @@
 			completionHandler(self, error);
 		}
 	}]];
+}
+
+- (BOOL)isValidSyncRecordID:(OCSyncRecordID)syncRecordID considerCacheValid:(BOOL)considerCacheValid
+{
+	// Non-existent IDs are never valid
+	if (syncRecordID == nil)
+	{
+		return (NO);
+	}
+
+	// Check if the sync record ID is _known_ to be invalid
+	@synchronized(_knownInvalidSyncRecordIDs)
+	{
+		if ([_knownInvalidSyncRecordIDs containsObject:syncRecordID])
+		{
+			return (NO);
+		}
+	}
+
+	// Check cached sync records
+	if (considerCacheValid && (_syncRecordsByID != nil))
+	{
+		OCSyncRecord *cachedSyncRecord;
+
+		@synchronized(self.sqlDB)
+		{
+			if ((cachedSyncRecord = _syncRecordsByID[syncRecordID]) != nil)
+			{
+				// Sync record found in cache..
+				if (cachedSyncRecord.removed)
+				{
+					// .. and it is not marked as removed.
+					return (NO);
+				}
+
+				return (YES);
+			}
+		}
+	}
+
+	// Check database
+	__block OCSyncRecord *dbSyncRecord = nil;
+
+	OCSyncExec(retrieveSyncRecordFromDB, {
+		// By retrieving the sync record, it is also added to the cache (if it exists) and speeds up further invocations
+		[self retrieveSyncRecordForID:syncRecordID completionHandler:^(OCDatabase *db, NSError *error, OCSyncRecord *syncRecord) {
+			dbSyncRecord = syncRecord;
+			OCSyncExecDone(retrieveSyncRecordFromDB);
+		}];
+	});
+
+	if ((dbSyncRecord != nil) && !dbSyncRecord.removed)
+	{
+		// Sync record found. It has also not been marked as removed.
+		return (YES);
+	}
+	else
+	{
+		// The sync record ID is known to be definitely invalid as it does
+		// not exist in the database and all sync record IDs are generated
+		// by the database. We therefore save it in a set as to not have to
+		// consult the cache or database again
+		@synchronized(_knownInvalidSyncRecordIDs)
+		{
+			[_knownInvalidSyncRecordIDs addObject:syncRecordID];
+		}
+	}
+
+	// No sync record found for record ID
+	return (NO);
 }
 
 - (void)numberOfSyncRecordsOnSyncLaneID:(OCSyncLaneID)laneID completionHandler:(OCDatabaseRetrieveSyncRecordCountCompletionHandler)completionHandler

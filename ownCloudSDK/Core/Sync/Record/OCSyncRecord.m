@@ -327,6 +327,26 @@
 
 @end
 
+static NSString *SyncRecordIDActionTrackingIDPrefix = @"syncRecordID:";
+
+OCSyncRecordID _Nullable OCSyncRecordIDFromActionTrackingID(OCActionTrackingID _Nullable actionTrackingID)
+{
+	if (actionTrackingID == nil) { return(nil); }
+
+	if ([actionTrackingID hasPrefix:SyncRecordIDActionTrackingIDPrefix])
+	{
+		return (@([[actionTrackingID substringFromIndex:SyncRecordIDActionTrackingIDPrefix.length] integerValue]));
+	}
+
+	return (nil);
+}
+
+OCActionTrackingID _Nullable OCActionTrackingIDFromSyncRecordID(OCSyncRecordID _Nullable syncRecordID)
+{
+	if (syncRecordID == nil) { return(nil); }
+	return ([SyncRecordIDActionTrackingIDPrefix stringByAppendingString:syncRecordID.stringValue]);
+}
+
 OCSyncActionIdentifier OCSyncActionIdentifierDeleteLocal = @"deleteLocal";
 OCSyncActionIdentifier OCSyncActionIdentifierDeleteLocalCopy = @"deleteLocalCopy";
 OCSyncActionIdentifier OCSyncActionIdentifierDeleteRemote = @"deleteRemote";

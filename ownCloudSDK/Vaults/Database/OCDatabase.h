@@ -147,6 +147,8 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (void)removeSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(OCDatabaseCompletionHandler)completionHandler;
 - (void)numberOfSyncRecordsOnSyncLaneID:(OCSyncLaneID)laneID completionHandler:(OCDatabaseRetrieveSyncRecordCountCompletionHandler)completionHandler;
 
+- (BOOL)isValidSyncRecordID:(OCSyncRecordID)syncRecordID considerCacheValid:(BOOL)considerCacheValid; //!< Returns whether the sync record ID exists. If considerCacheValid is YES, the sync record is deemed valid already if it exists in the in-memory cache. If NO, the database is always consulted. The cache will typically provide accurate results, unless an action was cancelled from another process and the sync queue has not passed processing from the current process in the meantime.
+
 - (void)retrieveSyncRecordIDsWithCompletionHandler:(OCDatabaseRetrieveSyncRecordIDsCompletionHandler)completionHandler;
 - (void)retrieveSyncRecordIDsWithPendingEventsWithCompletionHandler:(OCDatabaseRetrieveSyncRecordIDsCompletionHandler)completionHandler;
 
