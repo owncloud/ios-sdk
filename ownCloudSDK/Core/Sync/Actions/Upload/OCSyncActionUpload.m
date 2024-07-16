@@ -251,7 +251,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 							lastModificationDate,								OCConnectionOptionLastModificationDateKey,
 							cellularSwitchID,								OCConnectionOptionRequiredCellularSwitchKey,
 							@(((NSNumber *)self.options[OCConnectionOptionForceReplaceKey]).boolValue),	OCConnectionOptionForceReplaceKey,
-							[NSString stringWithFormat:@"sync.upload:%@", syncContext.syncRecord.recordID],	OCConnectionOptionActionTrackingID,
+							OCActionTrackingIDFromSyncRecordID(syncContext.syncRecord.recordID),		OCConnectionOptionActionTrackingID,
 							syncContext.syncRecord.recordID,						OCConnectionOptionSyncRecordID,		// not using @{} syntax here: if recordID is nil for any reason, that'd throw
 							self.importFileChecksum, 	 						OCConnectionOptionChecksumKey,		// not using @{} syntax here: if importFileChecksum is nil for any reason, that'd throw
 						nil];
