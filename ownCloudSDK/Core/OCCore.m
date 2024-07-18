@@ -2560,6 +2560,7 @@ OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable = @"returnImmed
 OCCoreOption OCCoreOptionPlaceholderCompletionHandler = @"placeHolderCompletionHandler";
 OCCoreOption OCCoreOptionAutomaticConflictResolutionNameStyle = @"automaticConflictResolutionNameStyle";
 OCCoreOption OCCoreOptionDownloadTriggerID = @"downloadTriggerID";
+OCCoreOption OCCoreOptionSyncReason = @"syncReason";
 OCCoreOption OCCoreOptionAddFileClaim = @"addFileClaim";
 OCCoreOption OCCoreOptionAddTemporaryClaimForPurpose = @"addTemporaryClaimForPurpose";
 OCCoreOption OCCoreOptionSkipRedundancyChecks = @"skipRedundancyChecks";
@@ -2568,6 +2569,8 @@ OCCoreOption OCCoreOptionLastModifiedDate = @"lastModifiedDate";
 OCCoreOption OCCoreOptionDependsOnCellularSwitch = @"dependsOnCellularSwitch";
 
 OCKeyValueStoreKey OCCoreSkipAvailableOfflineKey = @"core.skip-available-offline";
+
+OCSyncReason OCSyncReasonUserInteraction = @"userInteraction";
 
 NSNotificationName OCCoreItemBeginsHavingProgress = @"OCCoreItemBeginsHavingProgress";
 NSNotificationName OCCoreItemChangedProgress = @"OCCoreItemChangedProgress";

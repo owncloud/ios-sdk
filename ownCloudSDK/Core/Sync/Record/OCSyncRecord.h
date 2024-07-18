@@ -82,6 +82,7 @@ typedef NS_ENUM(NSInteger, OCSyncRecordState)
 @property(readonly,nonatomic) OCSyncRecordState state; //!< Current processing state
 
 @property(strong,nullable) NSDate *inProgressSince; //!< Time since which the action is being executed
+@property(strong,nullable) OCSyncReason syncReason; //!< (optional) reason the action managed by this sync record has been started
 
 @property(strong,nullable) NSArray <OCWaitCondition *> *waitConditions; //!< If state==OCSyncRecordStateProcessing, the conditions that need to be fulfilled before proceeding.
 

@@ -72,6 +72,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 	if ((self = [super initWithItem:item]) != nil)
 	{
 		self.options = options;
+		self.syncReason = options[OCCoreOptionSyncReason];
 
 		self.actionEventType = OCEventTypeDownload;
 		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Downloading %@…"), item.name];

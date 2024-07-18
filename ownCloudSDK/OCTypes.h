@@ -59,6 +59,8 @@ typedef NSString* OCSyncActionCategory NS_TYPED_ENUM;
 typedef NSNumber* OCSyncRecordID;
 typedef NSNumber* OCSyncRecordRevision;
 
+typedef NSString* OCSyncReason NS_TYPED_ENUM; //!< Reason a sync action has been started (f.ex. user, available offline, ..)
+
 typedef NSNumber* OCSyncLaneID;
 typedef NSString* OCSyncLaneTag;
 
