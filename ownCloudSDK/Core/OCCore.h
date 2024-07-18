@@ -531,6 +531,7 @@ extern OCCoreOption OCCoreOptionReturnImmediatelyIfOfflineOrUnavailable; //!< [B
 extern OCCoreOption OCCoreOptionPlaceholderCompletionHandler; //!< [OCCorePlaceholderCompletionHandler] For actions that support it: optional block that's invoked with the placeholder item if one is created by the action.
 extern OCCoreOption OCCoreOptionAutomaticConflictResolutionNameStyle; //!< [OCCoreDuplicateNameStyleNone] Automatically resolves conflicts while performing the action. For import, that means automatic rename of the file to upload if a file with the same name already exists, using the provided naming style.
 extern OCCoreOption OCCoreOptionDownloadTriggerID; //!< [OCItemDownloadTriggerID] An ID of what triggered the download (f.ex. "AvailableOffline" or "User")
+extern OCCoreOption OCCoreOptionSyncReason; //!< [OCCoreOptionSyncReason] The reason the sync action was triggered. Becomes available on the OCSyncRecord.syncReason level.
 extern OCCoreOption OCCoreOptionAddFileClaim; //!< [OCClaim] A claim to add to an item as part of an action (typically upload/download)
 extern OCCoreOption OCCoreOptionAddTemporaryClaimForPurpose; //!< [OCCoreClaimPurpose] Adds a temporary claim to the returned OCFile object (download) generated for the provided purpose. Makes sure the claim is automatically removed if the OCCore is still running when the object is deallocated. (default is OCCoreClaimPurposeNone)
 extern OCCoreOption OCCoreOptionSkipRedundancyChecks; //!< [BOOL] Determines whether AvailableOffline should skip redundancy checks.
@@ -539,6 +540,8 @@ extern OCCoreOption OCCoreOptionLastModifiedDate; //!< [NSDate] For uploads, the
 extern OCCoreOption OCCoreOptionDependsOnCellularSwitch; //!< [OCCellularSwitchIdentifier] Tells the core to set the permission for cellular access according to the status of the provided OCCellularSwitchIdentifier (currently only supported for up- and downloads).
 
 extern OCKeyValueStoreKey OCCoreSkipAvailableOfflineKey; //!< Vault.KVS-key with a NSNumber Boolean value. If the value is YES, available offline item policies are skipped.
+
+extern OCSyncReason OCSyncReasonUserInteraction; //!< Sync Action was triggered by a user interaction;
 
 extern NSNotificationName OCCoreItemBeginsHavingProgress; //!< Notification sent when an item starts having progress. The object is the localID of the item.
 extern NSNotificationName OCCoreItemChangedProgress; //!< Notification sent when an item's progress changed. The object is the localID of the item.

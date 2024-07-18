@@ -69,6 +69,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Uploading %@…"), ((filename!=nil) ? filename : uploadItem.name)];
 
 		self.options = options;
+		self.syncReason = options[OCCoreOptionSyncReason];
 
 		self.categories = @[
 			OCSyncActionCategoryAll, OCSyncActionCategoryTransfer,

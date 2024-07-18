@@ -56,6 +56,8 @@
 
 		_resultSignalUUID = resultSignalUUID;
 		_progressSignalUUID = OCSignal.generateUUID;
+
+		_syncReason = action.syncReason;
 	}
 
 	return (self);
@@ -221,25 +223,26 @@
 {
 	if ((self = [self init]) != nil)
 	{
-		_recordID = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"recordID"];
+		_recordID = [decoder decodeObjectOfClass:NSNumber.class forKey:@"recordID"];
 
-		_laneID = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"laneID"];
+		_laneID = [decoder decodeObjectOfClass:NSNumber.class forKey:@"laneID"];
 
-		_originProcessSession = [decoder decodeObjectOfClass:[OCProcessSession class] forKey:@"originProcessSession"];
+		_originProcessSession = [decoder decodeObjectOfClass:OCProcessSession.class forKey:@"originProcessSession"];
 
-		_actionIdentifier = [decoder decodeObjectOfClass:[NSString class] forKey:@"actionID"];
-		_action = [decoder decodeObjectOfClass:[OCSyncRecord class] forKey:@"action"];
+		_actionIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"actionID"];
+		_action = [decoder decodeObjectOfClass:OCSyncRecord.class forKey:@"action"];
 
 		_timestamp = [decoder decodeObjectOfClass:[NSDate class] forKey:@"timestamp"];
 
 		_state = (OCSyncRecordState)[decoder decodeIntegerForKey:@"state"];
-		_inProgressSince = [decoder decodeObjectOfClass:[NSDate class] forKey:@"inProgressSince"];
+		_inProgressSince = [decoder decodeObjectOfClass:NSDate.class forKey:@"inProgressSince"];
+		_syncReason = [decoder decodeObjectOfClass:NSString.class forKey:@"syncReason"];
 
 		_resultSignalUUID = [decoder decodeObjectOfClass:NSString.class forKey:@"resultSignalUUID"];
 		_progressSignalUUID = [decoder decodeObjectOfClass:NSString.class forKey:@"progressSignalUUID"];
 
 		_isProcessIndependent = [decoder decodeBoolForKey:@"isProcessIndependent"];
-		_progress = [decoder decodeObjectOfClass:[OCProgress class] forKey:@"progress"];
+		_progress = [decoder decodeObjectOfClass:OCProgress.class forKey:@"progress"];
 
 		_waitConditions = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:NSArray.class, OCWaitCondition.class, nil] forKey:@"waitConditions"];
 	}
@@ -262,6 +265,7 @@
 
 	[coder encodeInteger:(NSInteger)_state forKey:@"state"];
 	[coder encodeObject:_inProgressSince forKey:@"inProgressSince"];
+	[coder encodeObject:_syncReason forKey:@"syncReason"];
 
 	[coder encodeObject:_resultSignalUUID forKey:@"resultSignalUUID"];
 

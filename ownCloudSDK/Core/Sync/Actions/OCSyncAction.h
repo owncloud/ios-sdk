@@ -62,6 +62,7 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 
 #pragma mark - Persisted properties
 @property(strong,nullable) OCActionTrackingID actionTrackingID; //!< Action tracking ID used to identify requests, responses and events belonging to this action.
+@property(strong,nullable) OCSyncReason syncReason; //!< Reason this action is being run.
 
 @property(strong) OCItem *localItem; //!< Locally managed OCItem that this action is performed on (persisted)
 @property(readonly,nonatomic,nullable) OCItem *latestVersionOfLocalItem; //!< The latest version of the item, retrieved from the database

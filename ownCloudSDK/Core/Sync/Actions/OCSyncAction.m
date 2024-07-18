@@ -373,6 +373,7 @@
 	[coder encodeObject:_categories forKey:@"categories"];
 
 	[coder encodeObject:_actionTrackingID forKey:@"trackingID"];
+	[coder encodeObject:_syncReason forKey:@"syncReason"];
 
 	[self encodeActionData:coder];
 }
@@ -395,6 +396,7 @@
 		_categories = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSArray class], [NSString class], nil] forKey:@"categories"];
 
 		_actionTrackingID = [decoder decodeObjectOfClass:NSString.class forKey:@"trackingID"];
+		_syncReason = [decoder decodeObjectOfClass:NSString.class forKey:@"syncReason"];
 
 		[self decodeActionData:decoder];
 	}
