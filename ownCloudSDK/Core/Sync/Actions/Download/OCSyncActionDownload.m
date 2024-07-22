@@ -30,6 +30,8 @@ static OCMessageTemplateIdentifier OCMessageTemplateIdentifierDownloadCancel = @
 
 @implementation OCSyncActionDownload
 
+@synthesize options;
+
 OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 + (OCSyncActionIdentifier)identifier
@@ -786,13 +788,13 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 #pragma mark - NSCoding
 - (void)decodeActionData:(NSCoder *)decoder
 {
-	_options = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"options"];
+	self.options = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"options"];
 	_resolutionRetries = (NSUInteger)[decoder decodeIntForKey:@"resolutionRetries"];
 }
 
 - (void)encodeActionData:(NSCoder *)coder
 {
-	[coder encodeObject:_options forKey:@"options"];
+	[coder encodeObject:self.options forKey:@"options"];
 	[coder encodeInteger:_resolutionRetries forKey:@"resolutionRetries"];
 }
 

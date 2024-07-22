@@ -18,7 +18,7 @@
 
 #import "OCSyncAction.h"
 
-@interface OCSyncActionUpload : OCSyncAction
+@interface OCSyncActionUpload : OCSyncAction <OCSyncActionOptions>
 
 @property(strong) OCItem *parentItem;
 
@@ -31,8 +31,6 @@
 @property(strong) NSString *filename;
 
 @property(strong) NSURL *uploadCopyFileURL; //!< COW-clone of the file to import, made just before upload, so the file *can* be updated while uploading
-
-@property(strong) NSDictionary<OCCoreOption,id> *options;
 
 - (instancetype)initWithUploadItem:(OCItem *)uploadItem parentItem:(OCItem *)parentItem filename:(NSString *)filename importFileURL:(NSURL *)importFileURL isTemporaryCopy:(BOOL)isTemporaryCopy options:(NSDictionary<OCCoreOption,id> *)options;
 

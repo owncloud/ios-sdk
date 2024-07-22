@@ -29,6 +29,8 @@ static OCMessageTemplateIdentifier OCMessageTemplateIdentifierUploadRetry = @"up
 
 @implementation OCSyncActionUpload
 
+@synthesize options;
+
 OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 + (OCSyncActionIdentifier)identifier
@@ -502,7 +504,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		if ([choice.identifier isEqual:@"replaceExisting"])
 		{
 			// Replace existing (force replace)
-			NSMutableDictionary<OCCoreOption,id> *options = (_options != nil) ? [_options mutableCopy] : [NSMutableDictionary new];
+			NSMutableDictionary<OCCoreOption,id> *options = (self.options != nil) ? [self.options mutableCopy] : [NSMutableDictionary new];
 			options[OCConnectionOptionForceReplaceKey] = @(YES);
 			self.options = options;
 
@@ -546,7 +548,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 	_uploadCopyFileURL = [decoder decodeObjectOfClass:[NSURL class] forKey:@"uploadCopyFileURL"];
 
-	_options = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"options"];
+	self.options = [decoder decodeObjectOfClasses:OCEvent.safeClasses forKey:@"options"];
 }
 
 - (void)encodeActionData:(NSCoder *)coder
@@ -562,7 +564,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 	[coder encodeObject:_uploadCopyFileURL forKey:@"uploadCopyFileURL"];
 
-	[coder encodeObject:_options forKey:@"options"];
+	[coder encodeObject:self.options forKey:@"options"];
 }
 
 @end

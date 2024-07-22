@@ -46,6 +46,10 @@ typedef NS_ENUM(NSUInteger, OCCoreSyncInstruction)
 	OCCoreSyncInstructionProcessNext	//!< Process next
 };
 
+@protocol OCSyncActionOptions <NSObject>
+@property(strong,nullable) NSDictionary<OCCoreOption,id> *options;
+@end
+
 @interface OCSyncAction : NSObject <NSSecureCoding, OCLogTagging, OCLogPrivacyMasking>
 {
 	OCItem *_archivedServerItem;

@@ -18,9 +18,8 @@
 
 #import "OCSyncAction.h"
 
-@interface OCSyncActionDownload : OCSyncAction
+@interface OCSyncActionDownload : OCSyncAction <OCSyncActionOptions>
 
-@property(strong) NSDictionary<OCCoreOption,id> *options;
 @property(assign) NSUInteger resolutionRetries;
 
 - (instancetype)initWithItem:(OCItem *)item options:(NSDictionary<OCCoreOption,id> *)options;

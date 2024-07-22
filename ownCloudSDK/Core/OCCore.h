@@ -538,6 +538,7 @@ extern OCCoreOption OCCoreOptionSkipRedundancyChecks; //!< [BOOL] Determines whe
 extern OCCoreOption OCCoreOptionConvertExistingLocalDownloads; //!< [BOOL] Determines whether AvailableOffline should convert existing local copies to Available Offline managed items if they fall under a new Available Offline rule
 extern OCCoreOption OCCoreOptionLastModifiedDate; //!< [NSDate] For uploads, the date that should be used as last modified date for the uploaded file.
 extern OCCoreOption OCCoreOptionDependsOnCellularSwitch; //!< [OCCellularSwitchIdentifier] Tells the core to set the permission for cellular access according to the status of the provided OCCellularSwitchIdentifier (currently only supported for up- and downloads).
+extern OCCoreOption OCCoreOptionWaitConditions; //!< [OCWaitCondition] Wait conditions that must be met before the sync record should be scheduled.
 
 extern OCKeyValueStoreKey OCCoreSkipAvailableOfflineKey; //!< Vault.KVS-key with a NSNumber Boolean value. If the value is YES, available offline item policies are skipped.
 
