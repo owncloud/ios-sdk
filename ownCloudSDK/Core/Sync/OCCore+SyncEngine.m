@@ -387,6 +387,23 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 							[action preflightWithContext:syncContext];
 						}
 
+						if ([action conformsToProtocol:@protocol(OCSyncActionOptions)])
+						{
+							// Implement globally managed options
+							OCSyncAction<OCSyncActionOptions> *actionWithOptions = (OCSyncAction<OCSyncActionOptions> *)action;
+
+							// Check for and add wait conditions
+							NSArray<OCWaitCondition *> *waitConditions;
+							if ((waitConditions = actionWithOptions.options[OCCoreOptionWaitConditions]) != nil)
+							{
+								// Add wait conditions
+								for (OCWaitCondition *waitCondition in waitConditions)
+								{
+									[syncContext addWaitCondition:waitCondition];
+								}
+							}
+						}
+
 						if (syncContext.error == nil)
 						{
 							// Pre-flight successful, so this can progress to ready
@@ -974,9 +991,10 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	[self dumpSyncJournalWithTags:@[@"AfterProc"]];
 }
 
-- (BOOL)processWaitConditionsOfSyncRecord:(OCSyncRecord *)syncRecord error:(NSError **)outError
+- (BOOL)processWaitConditionsOfSyncRecord:(OCSyncRecord *)syncRecord error:(NSError **)outError descedule:(BOOL *)outDeschedule
 {
 	__block BOOL canContinue = YES;
+	__block BOOL doDeschedule = NO;
 	__block NSError *error = nil;
 
 	if (syncRecord.waitConditions.count > 0)
@@ -1066,6 +1084,13 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 								updateSyncRecordInDB = YES;
 							}
 						break;
+
+						case OCWaitConditionStateDeschedule:
+							// The condition is not met permanently. Deschedule action.
+							*stop = YES;
+							canContinue = NO;
+							doDeschedule = YES;
+						break;
 					}
 
 					OCLogDebug(@"evaluated wait condition %@ with state=%lu, error=%@, canContinue=%d", OCLogPrivate(waitCondition), waitConditionState, waitConditionError, canContinue);
@@ -1081,7 +1106,45 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 		}
 	}
 
+	if (outDeschedule != NULL)
+	{
+		*outDeschedule = doDeschedule;
+	}
+
 	return (canContinue);
+}
+
+- (OCCoreSyncInstruction)_cancelSyncRecord:(OCSyncRecord *)syncRecord error:(NSError **)outError
+{
+	NSError *error;
+	__block OCCoreSyncInstruction doNext = OCCoreSyncInstructionProcessNext;
+
+	OCLogDebug(@"record %@ has been cancelled - notifying", OCLogPrivate(syncRecord));
+
+	_nextSchedulingDate = nil;
+
+	if (syncRecord.action != nil)
+	{
+		OCSyncContext *syncContext = [OCSyncContext descheduleContextWithSyncRecord:syncRecord];
+
+		OCLogDebug(@"record %@ will be cancelled", OCLogPrivate(syncRecord));
+
+		syncContext.error = OCError(OCErrorCancelled); // consumed by -cancelWithContext:
+
+		error = [self processWithContext:syncContext block:^NSError *(OCSyncAction *action) {
+			doNext = [action cancelWithContext:syncContext];
+			return(nil);
+		}];
+
+		OCLogDebug(@"record %@ cancelled with error %@", OCLogPrivate(syncRecord), OCLogPrivate(syncContext.error));
+	}
+	else
+	{
+		// Deschedule & call resultHandler
+		[self _descheduleSyncRecord:syncRecord completeWithError:OCError(OCErrorCancelled) parameter:nil];
+	}
+
+	return (doNext);
 }
 
 - (OCCoreSyncInstruction)processSyncRecord:(OCSyncRecord *)syncRecord error:(NSError **)outError
@@ -1211,43 +1274,29 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	// Process sync record cancellation
 	if (syncRecord.progress.cancelled)
 	{
-		OCLogDebug(@"record %@ has been cancelled - notifying", OCLogPrivate(syncRecord));
-
-		_nextSchedulingDate = nil;
-
-		if (syncRecord.action != nil)
-		{
-			OCSyncContext *syncContext = [OCSyncContext descheduleContextWithSyncRecord:syncRecord];
-
-			OCLogDebug(@"record %@ will be cancelled", OCLogPrivate(syncRecord));
-
-			syncContext.error = OCError(OCErrorCancelled); // consumed by -cancelWithContext:
-
-			error = [self processWithContext:syncContext block:^NSError *(OCSyncAction *action) {
-				doNext = [action cancelWithContext:syncContext];
-				return(nil);
-			}];
-
-			OCLogDebug(@"record %@ cancelled with error %@", OCLogPrivate(syncRecord), OCLogPrivate(syncContext.error));
-		}
-		else
-		{
-			// Deschedule & call resultHandler
-			[self _descheduleSyncRecord:syncRecord completeWithError:OCError(OCErrorCancelled) parameter:nil];
-		}
-
-		return (doNext);
+		// Cancel sync record
+		return ([self _cancelSyncRecord:syncRecord error:outError]);
 	}
 
 	// Process sync record's wait conditions
-	if (![self processWaitConditionsOfSyncRecord:syncRecord error:outError])
+	BOOL descheduleSyncRecord = NO;
+	if (![self processWaitConditionsOfSyncRecord:syncRecord error:outError descedule:&descheduleSyncRecord])
 	{
 		OCLogDebug(@"record %@, waitConditions=%@ blocking further Sync Journal processing", OCLogPrivate(syncRecord), syncRecord.waitConditions);
 
-		[self _scheduleNextWaitConditionRunForRecord:syncRecord];
+		if (descheduleSyncRecord)
+		{
+			// Cancel sync record
+			return ([self _cancelSyncRecord:syncRecord error:outError]);
+		}
+		else
+		{
+			// Stop processing and try again at a later time
+			[self _scheduleNextWaitConditionRunForRecord:syncRecord];
 
-		// Stop processing
-		return (OCCoreSyncInstructionStopAndSideline);
+			// Meanwhile make room for other actions to proceed
+			return (OCCoreSyncInstructionStopAndSideline);
+		}
 	}
 
 	// Process sync record

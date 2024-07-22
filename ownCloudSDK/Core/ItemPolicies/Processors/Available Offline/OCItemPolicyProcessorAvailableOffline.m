@@ -23,6 +23,10 @@
 #import "OCCore+ItemUpdates.h"
 #import "OCLogger.h"
 #import "OCCellularManager.h"
+#import "OCSyncRecord.h"
+#import "OCCore+SyncEngine.h"
+#import "NSError+OCError.h"
+#import "OCWaitConditionAvailableOffline.h"
 
 @implementation OCItemPolicyProcessorAvailableOffline
 
@@ -187,7 +191,9 @@
 		{
 			[self.core downloadItem:matchingItem options:@{
 				OCCoreOptionDownloadTriggerID : OCItemDownloadTriggerIDAvailableOffline,
-				OCCoreOptionDependsOnCellularSwitch : OCCellularSwitchIdentifierAvailableOffline
+				OCCoreOptionSyncReason : OCSyncReasonAvailableOffline,
+				OCCoreOptionDependsOnCellularSwitch : OCCellularSwitchIdentifierAvailableOffline,
+				OCCoreOptionWaitConditions : @[[OCWaitConditionAvailableOffline new]] // cancels downloads before they start if they are no longer in the AO policy locations
 			} resultHandler:nil];
 		}
 		else if (matchingItem.cloudStatus == OCItemCloudStatusLocalCopy)
@@ -238,3 +244,4 @@
 @end
 
 OCItemPolicyKind OCItemPolicyKindAvailableOffline = @"availableOffline";
+OCSyncReason OCSyncReasonAvailableOffline = @"availableOffline";

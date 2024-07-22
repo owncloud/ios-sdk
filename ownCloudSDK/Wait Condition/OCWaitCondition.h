@@ -25,7 +25,8 @@ typedef NS_ENUM(NSInteger, OCWaitConditionState)
 {
 	OCWaitConditionStateWait,	//!< The condition has not yet been made. Continue to wait.
 	OCWaitConditionStateProceed,	//!< The condition has been met permanently. Proceed.
-	OCWaitConditionStateFail	//!< The condition has failed with an error. Resolve.
+	OCWaitConditionStateFail,	//!< The condition has failed with an error. Resolve.
+	OCWaitConditionStateDeschedule	//!< The condition is not met permanently. Deschedule action.
 };
 
 typedef NSString* OCWaitConditionOption;

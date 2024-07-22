@@ -28,4 +28,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 extern OCItemPolicyKind OCItemPolicyKindAvailableOffline; //!< Available Offline: items covered by this policy are pre-downloaded to be available offline.
 
+extern OCSyncReason OCSyncReasonAvailableOffline; //!< Reason for Sync: available offline
+
 NS_ASSUME_NONNULL_END
