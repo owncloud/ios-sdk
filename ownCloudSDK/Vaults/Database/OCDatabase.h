@@ -50,6 +50,7 @@ typedef void(^OCDatabaseRetrieveSyncRecordCountCompletionHandler)(OCDatabase *db
 typedef void(^OCDatabaseRetrieveSyncRecordIDsCompletionHandler)(OCDatabase *db, NSError *error, NSSet<OCSyncRecordID> *syncRecordIDs);
 typedef void(^OCDatabaseRetrieveSyncLaneCompletionHandler)(OCDatabase *db, NSError *error, OCSyncLane *syncRecord);
 typedef void(^OCDatabaseRetrieveSyncLanesCompletionHandler)(OCDatabase *db, NSError *error, NSArray <OCSyncLane *> *syncLanes);
+typedef void(^OCDatabaseRetrieveSyncReasonCountsCompletionHandler)(OCDatabase *db, NSError *error, NSDictionary<OCSyncReason, NSNumber *> *syncReasonCounts);
 typedef void(^OCDatabaseDirectoryUpdateJobCompletionHandler)(OCDatabase *db, NSError *error, OCCoreDirectoryUpdateJob *updateJob);
 typedef void(^OCDatabaseRetrieveDirectoryUpdateJobsCompletionHandler)(OCDatabase *db, NSError *error, NSArray<OCCoreDirectoryUpdateJob *> *updateJobs);
 typedef void(^OCDatabaseProtectedBlockCompletionHandler)(NSError *error, NSNumber *previousCounterValue, NSNumber *newCounterValue);
@@ -155,6 +156,7 @@ typedef NSString* OCDatabaseCounterIdentifier;
 - (void)retrieveSyncRecordForID:(OCSyncRecordID)recordID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler;
 - (void)retrieveSyncRecordAfterID:(OCSyncRecordID)recordID onLaneID:(OCSyncLaneID)laneID completionHandler:(OCDatabaseRetrieveSyncRecordCompletionHandler)completionHandler;
 - (void)retrieveSyncRecordsForPath:(OCPath)path action:(OCSyncActionIdentifier)action inProgressSince:(NSDate *)inProgressSince completionHandler:(OCDatabaseRetrieveSyncRecordsCompletionHandler)completionHandler;
+- (void)retrieveSyncReasonCountsWithCompletionHandler:(OCDatabaseRetrieveSyncReasonCountsCompletionHandler)completionHandler;
 
 #pragma mark - Event interface
 - (void)queueEvent:(OCEvent *)event forSyncRecordID:(OCSyncRecordID)syncRecordID processSession:(OCProcessSession *)processSession completionHandler:(OCDatabaseCompletionHandler)completionHandler; //!< Queues an event for a OCSyncRecordID. Under the hood, adds this to the events table while keeping it cached in memory (to preserve ephermal data).

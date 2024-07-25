@@ -1284,6 +1284,7 @@
 				@"action"		: syncRecord.actionIdentifier,
 				@"path"			: path,
 				@"localID"		: syncRecord.localID,
+				@"syncReason"		: OCSQLiteNullProtect(syncRecord.syncReason),
 				@"recordData"		: [syncRecord serializedData]
 			} resultHandler:^(OCSQLiteDB *db, NSError *error, NSNumber *rowID) {
 				syncRecord.recordID = rowID;
@@ -1339,6 +1340,7 @@
 				@"inProgressSinceDate"	: OCSQLiteNullProtect(syncRecord.inProgressSince),
 				@"recordData"		: [syncRecord serializedData],
 				@"localID"		: syncRecord.localID,
+				@"syncReason"		: OCSQLiteNullProtect(syncRecord.syncReason),
 				@"revision"		: syncRecord.revision
 			} completionHandler:^(OCSQLiteDB *db, NSError *error) {
 				@synchronized(db)
@@ -1505,14 +1507,15 @@
 - (void)numberOfSyncRecordsOnSyncLaneID:(OCSyncLaneID)laneID completionHandler:(OCDatabaseRetrieveSyncRecordCountCompletionHandler)completionHandler
 {
 	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT COUNT(*) AS cnt FROM syncJournal WHERE laneID=:laneID" withNamedParameters:@{ @"laneID" : laneID } resultHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error, OCSQLiteTransaction * _Nullable transaction, OCSQLiteResultSet * _Nullable resultSet) {
-		[resultSet iterateUsing:^(OCSQLiteResultSet * _Nonnull resultSet, NSUInteger line, OCSQLiteRowDictionary  _Nonnull rowDictionary, BOOL * _Nonnull stop) {
-			NSError *retrieveError = nil;
-			NSNumber *numberOfSyncRecordsOnLane = nil;
+		NSError *retrieveError = error;
+		NSNumber *numberOfSyncRecordsOnLane = nil;
 
+		if (retrieveError == nil)
+		{
 			numberOfSyncRecordsOnLane = (NSNumber *)[resultSet nextRowDictionaryWithError:&retrieveError][@"cnt"];
+		}
 
-			completionHandler(self, error, numberOfSyncRecordsOnLane);
-		} error:nil];
+		completionHandler(self, retrieveError, numberOfSyncRecordsOnLane);
 	}]];
 }
 
@@ -1711,6 +1714,25 @@
 		{
 			completionHandler(self, iterationError, syncRecord);
 		}
+	}]];
+}
+
+- (void)retrieveSyncReasonCountsWithCompletionHandler:(OCDatabaseRetrieveSyncReasonCountsCompletionHandler)completionHandler
+{
+	[self.sqlDB executeQuery:[OCSQLiteQuery query:@"SELECT syncReason, COUNT(*) AS cnt FROM syncJournal GROUP BY syncReason" resultHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error, OCSQLiteTransaction * _Nullable transaction, OCSQLiteResultSet * _Nullable resultSet) {
+		__block NSMutableDictionary<OCSyncReason, NSNumber *> *syncReasonCounts = [NSMutableDictionary new];
+
+		[resultSet iterateUsing:^(OCSQLiteResultSet * _Nonnull resultSet, NSUInteger line, OCSQLiteRowDictionary  _Nonnull rowDictionary, BOOL * _Nonnull stop) {
+			NSNumber *countForReason = (NSNumber *)rowDictionary[@"cnt"];
+			OCSyncReason reason = (NSString *)rowDictionary[@"syncReason"];
+
+			if ((countForReason != nil) && (reason != nil))
+			{
+				syncReasonCounts[reason] = countForReason;
+			}
+		} error:nil];
+
+		completionHandler(self, error, syncReasonCounts);
 	}]];
 }
 

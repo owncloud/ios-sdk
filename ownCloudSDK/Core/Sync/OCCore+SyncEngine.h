@@ -55,6 +55,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)rescheduleSyncRecord:(OCSyncRecord *)syncRecord withUpdates:(NSError * _Nullable (^ _Nullable)(OCSyncRecord *record))applyUpdates;
 - (void)descheduleSyncRecord:(OCSyncRecord *)syncRecord completeWithError:(nullable NSError *)completionError parameter:(nullable id)parameter;
 
+#pragma mark - Sync Action Scheduling Flow Control
+- (void)addSyncReasonCountChangeObserver:(OCCoreSyncReasonCountChangeObserver)changeObserver forSyncReason:(nullable OCSyncReason)syncReason withInitial:(BOOL)withInitial;
+
 @end
 
 @interface OCCore (SyncPrivate)

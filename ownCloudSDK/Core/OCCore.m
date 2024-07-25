@@ -290,6 +290,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 		_fetchUpdatesCompletionHandlers = [NSMutableArray new];
 
+		_syncReasonCountChangeObservers = [NSMutableArray new];
+
 		_progressByLocalID = [NSMutableDictionary new];
 
 		_drives = [NSMutableArray new];

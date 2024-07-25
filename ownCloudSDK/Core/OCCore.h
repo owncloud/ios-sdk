@@ -122,6 +122,7 @@ typedef void(^OCCoreItemPoliciesCompletionHandler)(NSError * _Nullable error, NS
 typedef void(^OCCoreClaimCompletionHandler)(NSError * _Nullable error, OCItem * _Nullable item);
 typedef void(^OCCoreCompletionHandler)(NSError * _Nullable error);
 typedef void(^OCCoreStateChangedHandler)(OCCore *core);
+typedef void(^OCCoreSyncReasonCountChangeObserver)(OCCore *core, BOOL initial, NSDictionary<OCSyncReason, NSNumber *> * _Nullable countBySyncReason);
 
 typedef void(^OCCoreBusyStatusHandler)(NSProgress * _Nullable progress);
 
@@ -288,6 +289,9 @@ typedef id<NSObject> OCCoreItemTracking;
 	OCQuery *_availableOfflineFilesQuery;
 	BOOL _availableOfflineFilesDataSourceHasSubscribers;
 	OCDataSourceComposition *_availableOfflineFilesDataSource;
+
+	NSMutableArray<OCCoreSyncReasonCountChangeObserver> *_syncReasonCountChangeObservers;
+	NSDictionary<OCSyncReason, NSNumber *> *_lastSyncReasonCounts;
 
 	__weak id <OCCoreDelegate> _delegate;
 

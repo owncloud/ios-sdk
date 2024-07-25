@@ -44,6 +44,9 @@
 			[OCQueryCondition where:OCItemPropertyNameCloudStatus isEqualTo:@(OCItemCloudStatusLocalCopy)]
 			// [OCQueryCondition where:OCItemPropertyNameDownloadTrigger isEqualTo:OCItemDownloadTriggerIDAvailableOffline]
 		]];
+
+		self.syncReason = OCSyncReasonAvailableOffline;
+		self.maximumActiveSyncActions = @(2);
 	}
 
 	return (self);
@@ -59,7 +62,8 @@
 
 	return (OCItemPolicyProcessorTriggerItemsChanged |
 		OCItemPolicyProcessorTriggerItemListUpdateCompleted |
-		OCItemPolicyProcessorTriggerPoliciesChanged);
+		OCItemPolicyProcessorTriggerPoliciesChanged|
+		OCItemPolicyProcessorTriggerSyncReason);
 }
 
 - (void)performPreflightOnPoliciesWithTrigger:(OCItemPolicyProcessorTrigger)trigger withItems:(NSArray<OCItem *> *)newUpdatedAndRemovedItems
@@ -149,6 +153,7 @@
 		// Download if: !removed && (cloudOnly || (localCopy && downloadTrigger!=availableOffline)) && policyCondition
 		self.matchCondition = [OCQueryCondition require:@[
 			[OCQueryCondition where:OCItemPropertyNameRemoved isEqualTo:@(NO)],
+			[OCQueryCondition where:OCItemPropertyNameType isEqualTo:@(OCItemTypeFile)],
 			[OCQueryCondition anyOf:@[
 				// Cloud only
 				[OCQueryCondition where:OCItemPropertyNameCloudStatus isEqualTo:@(OCItemCloudStatusCloudOnly)],
@@ -189,6 +194,11 @@
 
 		if (matchingItem.cloudStatus == OCItemCloudStatusCloudOnly)
 		{
+			if (self.activeSyncActionCount != nil)
+			{
+				self.activeSyncActionCount = @(self.activeSyncActionCount.integerValue + 1);
+			}
+
 			[self.core downloadItem:matchingItem options:@{
 				OCCoreOptionDownloadTriggerID : OCItemDownloadTriggerIDAvailableOffline,
 				OCCoreOptionSyncReason : OCSyncReasonAvailableOffline,

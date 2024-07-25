@@ -171,6 +171,39 @@
 		[_itemPolicyProcessors addObject:processor];
 
 		[processor updateWithPolicies:_itemPolicies];
+
+		OCSyncReason syncReason;
+
+		if ((syncReason = processor.syncReason) != nil)
+		{
+			__weak OCItemPolicyProcessor *weakProcessor = processor;
+			__weak OCCore *weakSelf = self;
+
+			if (processor.maximumActiveSyncActions != nil)
+			{
+				// Start a Policy Processor run on initial sync reason count change observer invocation
+				processor.hasPendingActionItems = YES;
+			}
+
+			[self addSyncReasonCountChangeObserver:^(OCCore * _Nonnull core, BOOL initial, NSDictionary<OCSyncReason,NSNumber *> * _Nullable countBySyncReason) {
+				OCItemPolicyProcessor *processor;
+
+				if ((processor = weakProcessor) != nil)
+				{
+					NSNumber *maximumActiveSyncActions = processor.maximumActiveSyncActions;
+					NSNumber *activeSyncActionCount = countBySyncReason[syncReason];
+
+					processor.activeSyncActionCount = activeSyncActionCount;
+
+					if ((maximumActiveSyncActions != nil) && (activeSyncActionCount != nil) &&
+					    (activeSyncActionCount.integerValue < maximumActiveSyncActions.integerValue) &&
+					    processor.hasPendingActionItems)
+					{
+						[core runPolicyProcessor:processor forTrigger:OCItemPolicyProcessorTriggerSyncReason];
+					}
+				}
+			} forSyncReason:syncReason withInitial:YES];
+		}
 	}
 }
 
@@ -218,64 +251,113 @@
 	{
 		for (OCItemPolicyProcessor *policyProcessor in _itemPolicyProcessors)
 		{
-			if ((policyProcessor.triggerMask & triggerMask) != 0)
+			[self runPolicyProcessor:policyProcessor forTrigger:triggerMask];
+		}
+	}
+}
+
+- (void)_performActionOfPolicyProcessor:(OCItemPolicyProcessor *)policyProcessor onItem:(OCItem *)item forTrigger:(OCItemPolicyProcessorTrigger)triggerMask foundMatch:(BOOL *)inOutFoundMatch stop:(BOOL *)inOutStop
+{
+	// Enforce Sync Reason / maximumActiveSyncActions
+	if ((policyProcessor.syncReason != nil) && (policyProcessor.maximumActiveSyncActions != nil))
+	{
+		if ((policyProcessor.activeSyncActionCount != nil) &&
+		    (policyProcessor.activeSyncActionCount.integerValue >= policyProcessor.maximumActiveSyncActions.integerValue))
+		{
+			policyProcessor.hasPendingActionItems = YES;
+
+			if (inOutStop != NULL)
 			{
-				OCQueryCondition *matchCondition;
-				OCQueryCondition *cleanupCondition;
+				*inOutStop = YES;
+			}
+			return;
+		}
+	}
 
-				[policyProcessor performPreflightOnPoliciesWithTrigger:triggerMask withItems:nil];
+	// Run Policy Processor
+	if (!*inOutFoundMatch)
+	{
+		*inOutFoundMatch = YES;
+		[policyProcessor beginMatchingWithTrigger:triggerMask];
+	}
 
-				[policyProcessor willEnterTrigger:triggerMask];
+	[policyProcessor performActionOn:item withTrigger:triggerMask];
+}
 
-				if ((matchCondition = policyProcessor.matchCondition) != nil)
+- (void)runPolicyProcessor:(OCItemPolicyProcessor *)policyProcessor forTrigger:(OCItemPolicyProcessorTrigger)triggerMask
+{
+	OCItemPolicyProcessorTrigger policyProcessorTriggerMask = policyProcessor.triggerMask;
+
+	if ((policyProcessorTriggerMask & triggerMask) != 0)
+	{
+		OCQueryCondition *matchCondition;
+		OCQueryCondition *cleanupCondition;
+
+		[policyProcessor performPreflightOnPoliciesWithTrigger:triggerMask withItems:nil];
+
+		[policyProcessor willEnterTrigger:triggerMask];
+
+		if ((matchCondition = policyProcessor.matchCondition) != nil)
+		{
+			__block BOOL foundMatch = NO;
+			__block BOOL foundItems = NO;
+			NSNumber *storedMaxResultCount = matchCondition.maxResultCount;
+			BOOL limitQueriedItemResultCount = (
+				(policyProcessor.maximumQueriedItems.integerValue > 0) &&
+			    	(policyProcessor.syncReason != nil) && (policyProcessor.maximumActiveSyncActions != nil)
+			);
+
+			if (limitQueriedItemResultCount)
+			{
+				// Limiting the result count only works
+				matchCondition.maxResultCount = policyProcessor.maximumQueriedItems;
+			}
+
+			[self.database iterateCacheItemsForQueryCondition:matchCondition excludeRemoved:NO withIterator:^(NSError *error, OCSyncAnchor syncAnchor, OCItem *item, BOOL *stop) {
+				if (item != nil)
 				{
-					__block BOOL foundMatch = NO;
-
-					[self.database iterateCacheItemsForQueryCondition:matchCondition excludeRemoved:NO withIterator:^(NSError *error, OCSyncAnchor syncAnchor, OCItem *item, BOOL *stop) {
-						if (item != nil)
-						{
-							if (!foundMatch)
-							{
-								foundMatch = YES;
-								[policyProcessor beginMatchingWithTrigger:triggerMask];
-							}
-
-							[policyProcessor performActionOn:item withTrigger:triggerMask];
-						}
-					}];
-
-					if (foundMatch)
-					{
-						[policyProcessor endMatchingWithTrigger:triggerMask];
-					}
+					foundItems = YES;
+					[self _performActionOfPolicyProcessor:policyProcessor onItem:item forTrigger:triggerMask foundMatch:&foundMatch stop:stop];
 				}
+			}];
 
-				if ((cleanupCondition = policyProcessor.cleanupCondition) != nil)
-				{
-					__block BOOL foundMatch = NO;
+			if (foundMatch)
+			{
+				[policyProcessor endMatchingWithTrigger:triggerMask];
+			}
 
-					[self.database iterateCacheItemsForQueryCondition:cleanupCondition excludeRemoved:NO withIterator:^(NSError *error, OCSyncAnchor syncAnchor, OCItem *item, BOOL *stop) {
-						if (item != nil)
-						{
-							if (!foundMatch)
-							{
-								foundMatch = YES;
-								[policyProcessor beginCleanupWithTrigger:triggerMask];
-							}
+			policyProcessor.hasPendingActionItems = foundItems;
 
-							[policyProcessor performCleanupOn:item withTrigger:triggerMask];
-						}
-					}];
-
-					if (foundMatch)
-					{
-						[policyProcessor endCleanupWithTrigger:triggerMask];
-					}
-				}
-
-				[policyProcessor didPassTrigger:triggerMask];
+			if (limitQueriedItemResultCount)
+			{
+				matchCondition.maxResultCount = storedMaxResultCount;
 			}
 		}
+
+		if ((cleanupCondition = policyProcessor.cleanupCondition) != nil)
+		{
+			__block BOOL foundMatch = NO;
+
+			[self.database iterateCacheItemsForQueryCondition:cleanupCondition excludeRemoved:NO withIterator:^(NSError *error, OCSyncAnchor syncAnchor, OCItem *item, BOOL *stop) {
+				if (item != nil)
+				{
+					if (!foundMatch)
+					{
+						foundMatch = YES;
+						[policyProcessor beginCleanupWithTrigger:triggerMask];
+					}
+
+					[policyProcessor performCleanupOn:item withTrigger:triggerMask];
+				}
+			}];
+
+			if (foundMatch)
+			{
+				[policyProcessor endCleanupWithTrigger:triggerMask];
+			}
+		}
+
+		[policyProcessor didPassTrigger:triggerMask];
 	}
 }
 
@@ -302,13 +384,11 @@
 					{
 						if ([matchCondition fulfilledByItem:item])
 						{
-							if (!foundMatch)
-							{
-								foundMatch = YES;
-								[policyProcessor beginMatchingWithTrigger:triggerMask];
-							}
+							BOOL stop = NO;
 
-							[policyProcessor performActionOn:item withTrigger:triggerMask];
+							[self _performActionOfPolicyProcessor:policyProcessor onItem:item forTrigger:triggerMask foundMatch:&foundMatch stop:&stop];
+
+							if (stop) { break; }
 						}
 					}
 
