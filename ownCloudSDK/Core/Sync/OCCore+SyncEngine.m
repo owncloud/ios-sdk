@@ -602,6 +602,79 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	}];
 }
 
+
+#pragma mark - Sync Action Scheduling Flow Control
+- (void)addSyncReasonCountChangeObserver:(OCCoreSyncReasonCountChangeObserver)changeObserver forSyncReason:(nullable OCSyncReason)syncReason withInitial:(BOOL)withInitial
+{
+	if (syncReason != nil)
+	{
+		__block NSNumber *lastCount = nil;
+		__block OCCore *weakSelf = self;
+
+		changeObserver = [^(OCCore *core, BOOL initial, NSDictionary<OCSyncReason, NSNumber *> * _Nullable countBySyncReason) {
+			// Build an effective count for the sync reason... if it is not included in the result set, it is effectively zero
+			NSNumber *effectiveCount = countBySyncReason[syncReason];
+			if (effectiveCount == nil) { effectiveCount = @(0); }
+
+			if (initial || // Always make call for initial
+			    ((lastCount != nil) && (lastCount.integerValue != effectiveCount.integerValue))
+			   ) {
+			   	lastCount = effectiveCount;
+
+				// Afford the luxury to always provide a value for targeted sync reasons
+			   	changeObserver(core, initial, @{ syncReason : effectiveCount });
+			}
+		} copy];
+	}
+
+	@synchronized(_syncReasonCountChangeObservers) {
+		[_syncReasonCountChangeObservers addObject:changeObserver];
+	}
+
+	[self _assessSyncReasonCountsAndInitialNotifyObserver:(withInitial ? changeObserver : nil)];
+}
+
+- (void)_assessSyncReasonCountsAndInitialNotifyObserver:(nullable OCCoreSyncReasonCountChangeObserver)initialNotifyObserver
+{
+	__weak OCCore *weakCore = self;
+
+	[self.database retrieveSyncReasonCountsWithCompletionHandler:^(OCDatabase *db, NSError *error, NSDictionary<OCSyncReason,NSNumber *> *syncReasonCounts) {
+		OCCore *core;
+
+		if ((core = weakCore) != nil)
+		{
+			BOOL notify = NO;
+
+			@synchronized(core->_syncReasonCountChangeObservers) // not _lastSyncReasonCounts, because that can be nil
+			{
+				if ((syncReasonCounts != nil) && (core->_lastSyncReasonCounts == nil))
+				{
+					notify = YES;
+				}
+				else if ((syncReasonCounts != nil) && (core->_lastSyncReasonCounts != nil))
+				{
+					notify = ![syncReasonCounts isEqualToDictionary:core->_lastSyncReasonCounts];
+				}
+
+				core->_lastSyncReasonCounts = syncReasonCounts;
+
+				if (notify)
+				{
+					for (OCCoreSyncReasonCountChangeObserver changeObserver in core->_syncReasonCountChangeObservers)
+					{
+					   	changeObserver(core, (changeObserver == initialNotifyObserver), syncReasonCounts);
+					}
+				}
+			}
+
+			if ((initialNotifyObserver != nil) && !notify)
+			{
+			   	initialNotifyObserver(core, YES, syncReasonCounts);
+			}
+		}
+	}];
+}
+
 #pragma mark - Sync Engine Processing Optimization
 - (void)setNeedsToProcessSyncRecords
 {
@@ -972,6 +1045,8 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 				}
 			}];
 		}
+
+		[self _assessSyncReasonCountsAndInitialNotifyObserver:nil];
 
 		return (nil);
 	} completionHandler:^(NSError *error) {
@@ -1795,7 +1870,14 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 #pragma mark - Sync record persistence
 - (void)addSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(nullable OCDatabaseCompletionHandler)completionHandler
 {
-	[self.database addSyncRecords:syncRecords completionHandler:completionHandler];
+	[self.database addSyncRecords:syncRecords completionHandler:^(OCDatabase *db, NSError *error) {
+		if (completionHandler != nil)
+		{
+			completionHandler(db, error);
+		}
+
+		[self _assessSyncReasonCountsAndInitialNotifyObserver:nil];
+	}];
 
 	for (OCSyncRecord *syncRecord in syncRecords)
 	{
@@ -1817,7 +1899,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 		}
 	}
 
-	[self setNeedsToBroadcastSyncRecordActivityUpdate];
+	[self setNeedsToBroadcastSyncRecordActivityUpdateAndAssessSyncReasonCounts];
 }
 
 - (void)updateSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(nullable OCDatabaseCompletionHandler)completionHandler;
@@ -1832,9 +1914,16 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 		}
 	}
 
-	[self.database updateSyncRecords:syncRecords completionHandler:completionHandler];
+	[self.database updateSyncRecords:syncRecords completionHandler:^(OCDatabase *db, NSError *error) {
+		if (completionHandler != nil)
+		{
+			completionHandler(db, error);
+		}
 
-	[self setNeedsToBroadcastSyncRecordActivityUpdate];
+		[self _assessSyncReasonCountsAndInitialNotifyObserver:nil];
+	}];
+
+	[self setNeedsToBroadcastSyncRecordActivityUpdateAndAssessSyncReasonCounts];
 }
 
 - (void)removeSyncRecords:(NSArray <OCSyncRecord *> *)syncRecords completionHandler:(nullable OCDatabaseCompletionHandler)completionHandler;
@@ -1844,9 +1933,16 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
  		[self.activityManager update:[OCActivityUpdate unpublishActivityFor:syncRecord]];
 	}
 
-	[self.database removeSyncRecords:syncRecords completionHandler:completionHandler];
+	[self.database removeSyncRecords:syncRecords completionHandler:^(OCDatabase *db, NSError *error) {
+		if (completionHandler != nil)
+		{
+			completionHandler(db, error);
+		}
 
-	[self setNeedsToBroadcastSyncRecordActivityUpdate];
+		[self _assessSyncReasonCountsAndInitialNotifyObserver:nil];
+	}];
+
+	[self setNeedsToBroadcastSyncRecordActivityUpdateAndAssessSyncReasonCounts];
 }
 
 - (void)updatePublishedSyncRecordActivities
@@ -1914,7 +2010,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	}];
 }
 
-- (void)setNeedsToBroadcastSyncRecordActivityUpdate
+- (void)setNeedsToBroadcastSyncRecordActivityUpdateAndAssessSyncReasonCounts
 {
 	BOOL scheduleBroadcast = NO;
 

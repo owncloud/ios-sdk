@@ -29,6 +29,7 @@ typedef NS_OPTIONS(NSUInteger, OCItemPolicyProcessorTrigger)
 	OCItemPolicyProcessorTriggerItemListUpdateCompleted = (1<<1),	//!< Triggered whenever an item list update was completed with changes and the database of cache items is considered consistent with server contents
 	OCItemPolicyProcessorTriggerItemListUpdateCompletedWithoutChanges = (1<<2),	//!< Triggered whenever an item list update was completed without changes and the database of cache items is considered consistent with server contents
 	OCItemPolicyProcessorTriggerPoliciesChanged = (1<<3),		//!< Triggered whenever an item policy was added, removed or updated
+	OCItemPolicyProcessorTriggerSyncReason = (1<<4),		//!< Triggered whenever the amount of actions with the provided Sync Reason has changed and is below maximumActiveSyncActions.
 
 	OCItemPolicyProcessorTriggerAll = NSUIntegerMax
 };
@@ -52,6 +53,13 @@ typedef NS_OPTIONS(NSUInteger, OCItemPolicyProcessorTrigger)
 
 @property(nullable,strong) NSString *localizedName; //!< Localized name of the policy
 @property(nullable,strong,nonatomic) OCQueryCondition *customQueryCondition;	//!< Query condition that can be used to present items matched by the policy (typically equals .matchCondition). nil if it shouldn't.
+
+@property(nullable,strong) OCSyncReason syncReason; //!< The Sync Reason that Sync Actions started from this policy use. If there's no longer any action with this Sync Reason;
+@property(nullable,strong) NSNumber *maximumActiveSyncActions; //!< The maximum number of Sync Actions
+@property(nullable,strong) NSNumber *maximumQueriedItems; //!< Limits queries into the database to .maximumQueriedItems in advance. Should only be used if -performActionOn: ALWAYS schedules an action in the Sync Engine. Otherwise, the active Sync Action count for the Sync Reason will not change - and the Policy Processor not be triggered again. Also, the Policy Processor may be fed with the same items that do not trigger any Sync Action again, effectively preventing the necessary handling to take place.
+
+@property(assign) BOOL hasPendingActionItems; //!< Internal, tracks if there are (possibly) pending items if .syncReason != nil, maximumActiveSyncActions != nil AND the number of active sync actions with this Sync Reason is less than .maximumActiveSyncActions
+@property(nullable,strong) NSNumber *activeSyncActionCount; //!< Internal, if .syncReason != nil, tracks the number of active sync actions with that Sync Reason
 
 - (instancetype)initWithKind:(OCItemPolicyKind)kind core:(OCCore *)core;
 
