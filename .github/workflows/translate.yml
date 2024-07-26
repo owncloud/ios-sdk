@@ -4,9 +4,6 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 3 * * *"
-  push:
-    branches:
-      - master
     
 permissions: {}
 
@@ -29,13 +26,18 @@ jobs:
           submodules: recursive
           ref: ${{ github.ref }}
 
-      - name: l10n-push
+      - name: l10n-push-sdk
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         # we need to use a different docker image for those two, this appears to be a bit tricky with github actions out of the box
-        run:  bash .github/workflows/run-in-docker.sh owncloudci/transifex:latest "cd ownCloud/Resources/en.lproj && tx push -s --skip"
+        run:  bash .github/workflows/run-in-docker.sh owncloudci/transifex:latest "cd ownCloudSDK/Resources/en.lproj && tx push -s --skip"
+      
+      - name: l10n-push-ui
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        # we need to use a different docker image for those two, this appears to be a bit tricky with github actions out of the box
+        run:  bash .github/workflows/run-in-docker.sh owncloudci/transifex:latest "cd ownCloudUI/Resources/en.lproj && tx push -s --skip"
 
       - name: l10n-pull
-        run: bash .github/workflows/run-in-docker.sh owncloudci/transifex:latest "tx pull -a --skip --minimum-perc=75 -f"
+        run: bash .github/workflows/run-in-docker.sh owncloudci/transifex:latest "tx pull --all --skip --minimum-perc=75 --force"
       
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y clang libpython2.7 libpython2.7-dev
@@ -59,15 +61,14 @@ jobs:
         run: swiftc tools/normalizestrings/main.swift -o ocstringstool
       
       - name: Run compiled Swift program
-        run: ./ocstringstool normalize ownCloudSDK/Resources/ ownCloudUI/Resources/ 
+        run: ./ocstringstool normalize ownCloudSDK/Resources/ ownCloudUI/Resources/
 
       - name: update-repo-before-commit
         run: |
-          git status
-          git add ownCloud/Resources/*.strings
+          git add ownCloudSDK/Resources/**/*.strings
+          git add ownCloudUI/Resources/**/*.strings
           git status
           git stash
-          git pull --ff-only origin
 
       - name: commit and push
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
@@ -82,7 +83,8 @@ jobs:
               chmod 0600 ~/.ssh/id_ed25519
               git config user.name "ownClouders"
               git config user.email "devops@owncloud.com"
-              git add translations/
+              git add ownCloudSDK/Resources/**/*.strings
+              git add ownCloudUI/Resources/**/*.strings
               git commit -m "[tx] updated client translations from transifex [skip ci]"
               git push git@github.com:owncloud/ios-app.git
           }
