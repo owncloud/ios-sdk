@@ -1,9 +1,11 @@
 name: "Update translations"
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: "0 3 * * *"
+  push:
+    branches:
+      - transifex-github-action
+    
+permissions: {}
     
 permissions: {}
 
@@ -86,5 +88,5 @@ jobs:
               git add ownCloudSDK/Resources/**/*.strings
               git add ownCloudUI/Resources/**/*.strings
               git commit -m "[tx] updated client translations from transifex [skip ci]"
-              git push git@github.com:owncloud/ios-app.git
+              git push git@github.com:owncloud/ios-sdk.git
           }
