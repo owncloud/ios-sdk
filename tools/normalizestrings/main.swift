@@ -46,7 +46,7 @@ switch command {
 		exit(-1)
 }
 
-//MARK: - Commands
+// MARK: - Commands
 func commandNormalize(rootPath locRootPath: String) {
 	let locRootURL = NSURL(fileURLWithPath: locRootPath)
 	var convertedFilesCount = 0
@@ -66,7 +66,7 @@ func commandNormalize(rootPath locRootPath: String) {
 
 			if !isDirectory, fileName.hasSuffix(".strings"),
 			   let strings = try? String(contentsOf: fileURL, usedEncoding: &encoding), encoding != .utf8 {
-				print("[normalize] converting \(fileURL.path(percentEncoded: false)) to UTF-8…")
+				print("[normalize] converting \(fileURL.absoluteString) to UTF-8…")
 				if let utf8Data = strings.data(using: .utf8, allowLossyConversion: false) {
 					try? utf8Data.write(to: fileURL)
 					convertedFilesCount += 1
