@@ -27,6 +27,7 @@
 #import "OCHTTPResponse+DAVError.h"
 #import "NSProgress+OCExtensions.h"
 #import "OCCore+SyncEngine.h"
+#import "OCCoreManager.h"
 
 typedef NSString* OCUploadInfoKey;
 typedef NSString* OCUploadInfoTask;
@@ -143,7 +144,8 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 	// Start upload
 	if ((parentTusHeader != nil) && OCTUSIsAvailable(parentTusHeader.supportFlags) && // TUS support available
-	    OCTUSIsSupported(parentTusHeader.supportFlags, OCTUSSupportExtensionCreation)) // TUS creation extension available
+	    OCTUSIsSupported(parentTusHeader.supportFlags, OCTUSSupportExtensionCreation) && // TUS creation extension available
+	    (OCCoreManager.sharedCoreManager.memoryConfiguration != OCCoreMemoryConfigurationMinimum)) // Memory configuration is NOT minimum (splitting up the file into chunks for TUS transfer might otherwise go over the limit and lead to a crash)
 	{
 		// Use TUS
 		return ([self _tusUploadFileFromURL:sourceURL withName:fileName modificationDate:modDate fileSize:fileSize checksum:checksum tusHeader:parentTusHeader to:newParentDirectory replacingItem:replacedItem options:options resultTarget:eventTarget]);
