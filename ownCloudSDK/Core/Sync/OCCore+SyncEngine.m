@@ -609,7 +609,6 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	if (syncReason != nil)
 	{
 		__block NSNumber *lastCount = nil;
-		__block OCCore *weakSelf = self;
 
 		changeObserver = [^(OCCore *core, BOOL initial, NSDictionary<OCSyncReason, NSNumber *> * _Nullable countBySyncReason) {
 			// Build an effective count for the sync reason... if it is not included in the result set, it is effectively zero
