@@ -177,7 +177,6 @@
 		if ((syncReason = processor.syncReason) != nil)
 		{
 			__weak OCItemPolicyProcessor *weakProcessor = processor;
-			__weak OCCore *weakSelf = self;
 
 			if (processor.maximumActiveSyncActions != nil)
 			{
