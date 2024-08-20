@@ -21,6 +21,7 @@
 #import "NSString+OCPath.h"
 #import "OCVFSCore.h"
 #import "OCLocation.h"
+#import "OCFeatureAvailability.h"
 
 @interface OCVFSNode ()
 {
@@ -160,7 +161,11 @@
 
 	if ([vfsItemID isEqual:OCVFSItemIDRoot])
 	{
+		#if OC_FEATURE_AVAILABLE_FILEPROVIDER
 		return (NSFileProviderRootContainerItemIdentifier);
+		#else
+		return (OCVFSItemIDRoot);
+		#endif
 	}
 
 	return (vfsItemID);
