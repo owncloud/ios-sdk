@@ -416,7 +416,7 @@
 
 - (OCActivity *)provideActivity
 {
-	OCActivity *activity = [OCActivity withIdentifier:self.activityIdentifier description:[NSString stringWithFormat:OCLocalized(@"Retrieving items for %@"), self.location.path] statusMessage:nil ranking:0];
+	OCActivity *activity = [OCActivity withIdentifier:self.activityIdentifier description:[NSString stringWithFormat:OCLocalizedString(@"Retrieving items for %@",nil), self.location.path] statusMessage:nil ranking:0];
 
 	activity.progress = NSProgress.indeterminateProgress;
 

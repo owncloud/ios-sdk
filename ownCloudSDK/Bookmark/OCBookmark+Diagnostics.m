@@ -35,8 +35,8 @@
 	for (OCCertificateStoreRecord *record in self.certificateStore.allRecords)
 	{
 		[certificateChildren addObject:[OCDiagnosticNode withLabel:record.hostname children:@[
-			[OCDiagnosticNode withLabel:OCLocalized(@"Certificate Date") content:record.lastModifiedDate.description],
-			[OCDiagnosticNode withLabel:OCLocalized(@"Invalidate") action:^(OCDiagnosticContext * _Nullable context) {
+			[OCDiagnosticNode withLabel:OCLocalizedString(@"Certificate Date",nil) content:record.lastModifiedDate.description],
+			[OCDiagnosticNode withLabel:OCLocalizedString(@"Invalidate",nil) action:^(OCDiagnosticContext * _Nullable context) {
 				OCCertificate *invalidCertificate = [OCCertificate certificateWithCertificateData:[NSData new] hostName:record.hostname];
 				[weakSelf.certificateStore storeCertificate:invalidCertificate forHostname:record.hostname];
 			}]
@@ -44,11 +44,11 @@
 	}
 
 	return (@[
-		[OCDiagnosticNode withLabel:OCLocalized(@"UUID") 			content:self.uuid.UUIDString],
-		[OCDiagnosticNode withLabel:OCLocalized(@"Name") 			content:self.name],
-		[OCDiagnosticNode withLabel:OCLocalized(@"URL") 			content:self.url.absoluteString],
-		[OCDiagnosticNode withLabel:OCLocalized(@"Origin URL")			content:self.originURL.absoluteString],
-		[OCDiagnosticNode withLabel:OCLocalized(@"Use Origin URL as URL") 	action:^(OCDiagnosticContext * _Nullable context) {
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"UUID",nil) 			content:self.uuid.UUIDString],
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"Name",nil) 			content:self.name],
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"URL",nil) 			content:self.url.absoluteString],
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"Origin URL",nil)			content:self.originURL.absoluteString],
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"Use Origin URL as URL",nil) 	action:^(OCDiagnosticContext * _Nullable context) {
 			if (self.originURL != nil)
 			{
 				self.url = self.originURL;
@@ -58,17 +58,17 @@
 			}
 		}],
 
-		[OCDiagnosticNode withLabel:OCLocalized(@"Certificates") 		children:certificateChildren],
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"Certificates",nil) 		children:certificateChildren],
 
-		[OCDiagnosticNode withLabel:OCLocalized(@"User Name")			content:self.userName],
-		[OCDiagnosticNode withLabel:OCLocalized(@"Auth Method")			content:self.authenticationMethodIdentifier],
-		[OCDiagnosticNode withLabel:OCLocalized(@"Auth Data")			content:[NSString stringWithFormat:@"%lu bytes", (unsigned long)self.authenticationData.length]],
-		[OCDiagnosticNode withLabel:OCLocalized(@"Auth Validation Date")	content:self.authenticationValidationDate.description],
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"User Name",nil)			content:self.userName],
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"Auth Method",nil)			content:self.authenticationMethodIdentifier],
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"Auth Data",nil)			content:[NSString stringWithFormat:@"%lu bytes", (unsigned long)self.authenticationData.length]],
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"Auth Validation Date",nil)	content:self.authenticationValidationDate.description],
 
-		[OCDiagnosticNode withLabel:OCLocalized(@"Database Version")		content:@(self.databaseVersion).stringValue],
-		[OCDiagnosticNode withLabel:OCLocalized(@"UserInfo")			content:self.userInfo.description],
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"Database Version",nil)		content:@(self.databaseVersion).stringValue],
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"UserInfo",nil)			content:self.userInfo.description],
 
-		[OCDiagnosticNode withLabel:OCLocalized(@"Invalidate Login Data") 	action:^(OCDiagnosticContext * _Nullable context) {
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"Invalidate Login Data",nil) 	action:^(OCDiagnosticContext * _Nullable context) {
 			if ([self.authenticationMethodIdentifier isEqual:OCAuthenticationMethodIdentifierBasicAuth])
 			{
 				self.authenticationData = [OCAuthenticationMethodBasicAuth authenticationDataForUsername:self.userName passphrase:NSUUID.UUID.UUIDString authenticationHeaderValue:NULL error:NULL];
@@ -91,16 +91,16 @@
 			}
 		}],
 
-		[OCDiagnosticNode withLabel:OCLocalized(@"Delete Authentication Data") 	action:^(OCDiagnosticContext * _Nullable context) {
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"Delete Authentication Data",nil) 	action:^(OCDiagnosticContext * _Nullable context) {
 			self.authenticationData = nil;
 		}],
 
-		[OCDiagnosticNode withLabel:OCLocalized(@"Remove Database Version") 	action:^(OCDiagnosticContext * _Nullable context) {
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"Remove Database Version",nil) 	action:^(OCDiagnosticContext * _Nullable context) {
 			self.databaseVersion = OCDatabaseVersionUnknown;
 			[[NSNotificationCenter defaultCenter] postNotificationName:OCBookmarkUpdatedNotification object:self];
 		}],
 
-		[OCDiagnosticNode withLabel:OCLocalized(@"Delete Database") action:^(OCDiagnosticContext * _Nullable context) {
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"Delete Database",nil) action:^(OCDiagnosticContext * _Nullable context) {
 			[OCCoreManager.sharedCoreManager scheduleOfflineOperation:^(OCBookmark * _Nonnull bookmark, dispatch_block_t  _Nonnull completionHandler) {
 				OCVault *vault = [[OCVault alloc] initWithBookmark:bookmark];
 				NSError *error = nil;

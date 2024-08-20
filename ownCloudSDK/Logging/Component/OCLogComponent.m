@@ -50,7 +50,7 @@
 
 - (NSString *)name
 {
-	return (OCLocalized(@"Standard error output"));
+	return (OCLocalizedString(@"Standard error output",nil));
 }
 
 - (OCIPCNotificationName)_enabledNotificationName

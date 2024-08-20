@@ -846,7 +846,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 		requestProgress = request.progress;
 		requestProgress.progress.eventType = OCEventTypeUpload;
-		requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Uploading %@…"), fileName];
+		requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Uploading %@…",nil), fileName];
 	}
 	else
 	{
@@ -927,7 +927,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 							NSString *errorDescription = nil;
 							OCChecksum *expectedChecksum = OCTypedCast(request.userInfo[@"checksum"], OCChecksum);
 
-							errorDescription = [NSString stringWithFormat:OCLocalized(@"Another item named %@ already exists in %@."), fileName, parentItem.name];
+							errorDescription = [NSString stringWithFormat:OCLocalizedString(@"Another item named %@ already exists in %@.",nil), fileName, parentItem.name];
 							event.error = OCErrorWithDescription(OCErrorItemAlreadyExists, errorDescription);
 
 							if (expectedChecksum != nil)
@@ -954,7 +954,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 						case OCHTTPStatusCodeINSUFFICIENT_STORAGE: {
 							NSString *errorDescription = nil;
 
-							errorDescription = [NSString stringWithFormat:OCLocalized(@"Not enough space left on the server to upload %@."), fileName];
+							errorDescription = [NSString stringWithFormat:OCLocalizedString(@"Not enough space left on the server to upload %@.",nil), fileName];
 							event.error = OCErrorWithDescription(OCErrorInsufficientStorage, errorDescription);
 						}
 						break;
@@ -964,7 +964,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 							if (errorDescription == nil)
 							{
-								errorDescription = OCLocalized(@"Uploads to this folder are not allowed.");
+								errorDescription = OCLocalizedString(@"Uploads to this folder are not allowed.",nil);
 							}
 
 							event.error = OCErrorWithDescription(OCErrorItemOperationForbidden, errorDescription);

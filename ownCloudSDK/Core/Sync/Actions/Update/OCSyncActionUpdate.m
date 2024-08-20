@@ -47,7 +47,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		self.updateProperties = properties;
 
 		self.actionEventType = OCEventTypeUpdate;
-		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Updating metadata for '%@'…"), item.name];
+		self.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Updating metadata for '%@'…",nil), item.name];
 	}
 
 	return (self);
@@ -182,7 +182,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 	else if (event.error != nil)
 	{
 		// Create issue for cancellation for any errors
-		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Error updating %@ metadata", nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
+		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Error updating %@ metadata",nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
 		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 	}
 

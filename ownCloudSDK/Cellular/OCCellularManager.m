@@ -40,8 +40,8 @@
 	dispatch_once(&onceToken, ^{
 		sharedManager = [OCCellularManager new];
 
-		[sharedManager registerSwitch:[[OCCellularSwitch alloc] initWithIdentifier:OCCellularSwitchIdentifierMain localizedName:OCLocalized(@"Allow cellular access") defaultValue:YES maximumTransferSize:0]];
-		[sharedManager registerSwitch:[[OCCellularSwitch alloc] initWithIdentifier:OCCellularSwitchIdentifierAvailableOffline localizedName:OCLocalized(@"Available Offline") defaultValue:YES maximumTransferSize:0]];
+		[sharedManager registerSwitch:[[OCCellularSwitch alloc] initWithIdentifier:OCCellularSwitchIdentifierMain localizedName:OCLocalizedString(@"Allow cellular access",nil) defaultValue:YES maximumTransferSize:0]];
+		[sharedManager registerSwitch:[[OCCellularSwitch alloc] initWithIdentifier:OCCellularSwitchIdentifierAvailableOffline localizedName:OCLocalizedString(@"Available Offline",nil) defaultValue:YES maximumTransferSize:0]];
 	});
 
 	return (sharedManager);

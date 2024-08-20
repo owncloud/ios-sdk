@@ -387,11 +387,11 @@
 						if (inLocation.driveID == nil)
 						{
 							// Identical to ocis
-							// presentable.title = OCLocalized(@"Personal");
+							// presentable.title = OCLocalizedString(@"Personal",nil);
 							// presentable.image = [OCSymbol iconForSymbolName:@"person"];
 
 							// OC10 style
-							presentable.title = OCLocalized(@"Files");
+							presentable.title = OCLocalizedString(@"Files",nil);
 							presentable.image = [OCSymbol iconForSymbolName:@"folder"];
 						}
 						else

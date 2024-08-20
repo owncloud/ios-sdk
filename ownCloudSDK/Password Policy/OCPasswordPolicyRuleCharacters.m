@@ -138,7 +138,7 @@
 	if ((self.minimumCount == nil) && (self.maximumCount == nil))
 	{
 		// A rule without minimum and maximum count has to be considered invalid
-		return (OCLocalized(@"Invalid rule without minimum and maximum count"));
+		return (OCLocalizedString(@"Invalid rule without minimum and maximum count",nil));
 	}
 
 	// Validation passed

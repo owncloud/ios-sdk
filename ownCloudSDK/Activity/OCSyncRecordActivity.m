@@ -113,7 +113,7 @@
 		case OCSyncRecordStatePending:
 		case OCSyncRecordStateReady:
 			self.state = OCActivityStatePending;
-			self.localizedStatusMessage = (_waitConditionDescription != nil) ? _waitConditionDescription : OCLocalized(@"Pending");
+			self.localizedStatusMessage = (_waitConditionDescription != nil) ? _waitConditionDescription : OCLocalizedString(@"Pending",nil);
 		break;
 
 		case OCSyncRecordStateProcessing:
@@ -121,18 +121,18 @@
 			if (self.waitingForUser)
 			{
 				self.state = OCActivityStatePaused;
-				self.localizedStatusMessage = (_waitConditionDescription != nil) ? _waitConditionDescription : OCLocalized(@"Waiting for user");
+				self.localizedStatusMessage = (_waitConditionDescription != nil) ? _waitConditionDescription : OCLocalizedString(@"Waiting for user",nil);
 			}
 			else
 			{
 				self.state = OCActivityStateRunning;
-				self.localizedStatusMessage = OCLocalized(@"Running");
+				self.localizedStatusMessage = OCLocalizedString(@"Running",nil);
 			}
 		break;
 
 		case OCSyncRecordStateFailed:
 			self.state = OCActivityStateFailed;
-			self.localizedStatusMessage = OCLocalized(@"Failed");
+			self.localizedStatusMessage = OCLocalizedString(@"Failed",nil);
 		break;
 	}
 }

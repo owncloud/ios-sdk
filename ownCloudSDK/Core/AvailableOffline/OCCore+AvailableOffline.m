@@ -165,11 +165,11 @@
 
 									if (redundantPolicies.count == 1)
 									{
-										errorMessage = [NSString stringWithFormat:OCLocalized(@"Making %@ available offline also covers %@, which was previously requested as being available offline."), item.path, itemPolicies.firstObject.location.path];
+										errorMessage = [NSString stringWithFormat:OCLocalizedString(@"Making %@ available offline also covers %@, which was previously requested as being available offline.",nil), item.path, itemPolicies.firstObject.location.path];
 									}
 									else if (redundantPolicies.count > 1)
 									{
-										errorMessage = [NSString stringWithFormat:OCLocalized(@"Making %@ available offline also covers %@, whose offline availability has previously been requested."), item.path, [itemPolicies componentsJoinedByString:@", "]];
+										errorMessage = [NSString stringWithFormat:OCLocalizedString(@"Making %@ available offline also covers %@, whose offline availability has previously been requested.",nil), item.path, [itemPolicies componentsJoinedByString:@", "]];
 									}
 
 									completionHandler((redundantPolicies.count > 0) ?
@@ -201,7 +201,7 @@
 				{
 					completionHandler(OCErrorWithDescriptionAndUserInfo(
 								OCErrorItemPolicyRedundant,
-								([NSString stringWithFormat:OCLocalized(@"Offline availability of %@ is already ensured by having made %@ available offline."), item.location, itemPolicies.firstObject.location]),
+								([NSString stringWithFormat:OCLocalizedString(@"Offline availability of %@ is already ensured by having made %@ available offline.",nil), item.location, itemPolicies.firstObject.location]),
 								OCErrorItemPoliciesKey,
 								itemPolicies),
 							  nil);

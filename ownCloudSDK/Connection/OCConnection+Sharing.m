@@ -420,7 +420,7 @@
 
 	requestProgress = request.progress;
 	requestProgress.progress.eventType = OCEventTypeCreateShare;
-	requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Creating share for %@…"), share.itemLocation.path.lastPathComponent];
+	requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Creating share for %@…",nil), share.itemLocation.path.lastPathComponent];
 
 	return (requestProgress);
 }
@@ -433,7 +433,7 @@
 	{
 		if (error.isNetworkFailureError)
 		{
-			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalized(@"Sharing requires an active connection."), error);
+			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalizedString(@"Sharing requires an active connection.",nil), error);
 		}
 		else if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
@@ -623,7 +623,7 @@
 
 		requestProgress = request.progress;
 		requestProgress.progress.eventType = OCEventTypeUpdateShare;
-		requestProgress.progress.localizedDescription = OCLocalized(@"Updating share…");
+		requestProgress.progress.localizedDescription = OCLocalizedString(@"Updating share…",nil);
 	}
 	else
 	{
@@ -641,7 +641,7 @@
 	{
 		if (error.isNetworkFailureError)
 		{
-			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalized(@"Sharing requires an active connection."), error);
+			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalizedString(@"Sharing requires an active connection.",nil), error);
 		}
 		else if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
@@ -750,7 +750,7 @@
 
 	requestProgress = request.progress;
 	requestProgress.progress.eventType = OCEventTypeDeleteShare;
-	requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Deleting share for %@…"), share.itemLocation.path.lastPathComponent];
+	requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Deleting share for %@…",nil), share.itemLocation.path.lastPathComponent];
 
 	return (requestProgress);
 }
@@ -763,7 +763,7 @@
 	{
 		if (error.isNetworkFailureError)
 		{
-			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalized(@"Sharing requires an active connection."), error);
+			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalizedString(@"Sharing requires an active connection.",nil), error);
 		}
 		else if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
@@ -857,7 +857,7 @@
 
 	requestProgress = request.progress;
 	requestProgress.progress.eventType = OCEventTypeDecideOnShare;
-	requestProgress.progress.localizedDescription = (accept ? OCLocalized(@"Accepting share…") : OCLocalized(@"Rejecting share…"));
+	requestProgress.progress.localizedDescription = (accept ? OCLocalizedString(@"Accepting share…",nil) : OCLocalizedString(@"Rejecting share…",nil));
 
 	return (requestProgress);
 }

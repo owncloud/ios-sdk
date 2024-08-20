@@ -28,7 +28,7 @@
 {
 	if ((minimum != nil) || (maximum != nil))
 	{
-		return ([[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:nil characterSet:nil minimumCount:minimum maximumCount:maximum localizedDescription:nil localizedName:OCLocalized(@"characters")]);
+		return ([[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:nil characterSet:nil minimumCount:minimum maximumCount:maximum localizedDescription:nil localizedName:OCLocalizedString(@"characters",nil)]);
 	}
 
 	return (nil);
@@ -38,7 +38,7 @@
 {
 	if ((minimum != nil) || (maximum != nil))
 	{
-		return ([[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:@"abcdefghijklmnopqrstuvwxyz" characterSet:NSCharacterSet.lowercaseLetterCharacterSet minimumCount:minimum maximumCount:maximum localizedDescription:nil localizedName:OCLocalized(@"lower-case characters")]);
+		return ([[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:@"abcdefghijklmnopqrstuvwxyz" characterSet:NSCharacterSet.lowercaseLetterCharacterSet minimumCount:minimum maximumCount:maximum localizedDescription:nil localizedName:OCLocalizedString(@"lower-case characters",nil)]);
 	}
 
 	return (nil);
@@ -48,7 +48,7 @@
 {
 	if ((minimum != nil) || (maximum != nil))
 	{
-		return ([[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:@"ABCDEFGHIJKLMNOPQRSTUVWXYZ" characterSet:NSCharacterSet.uppercaseLetterCharacterSet minimumCount:minimum maximumCount:maximum localizedDescription:nil localizedName:OCLocalized(@"upper-case characters")]);
+		return ([[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:@"ABCDEFGHIJKLMNOPQRSTUVWXYZ" characterSet:NSCharacterSet.uppercaseLetterCharacterSet minimumCount:minimum maximumCount:maximum localizedDescription:nil localizedName:OCLocalizedString(@"upper-case characters",nil)]);
 	}
 
 	return (nil);
@@ -58,7 +58,7 @@
 {
 	if ((minimum != nil) || (maximum != nil))
 	{
-		return ([[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:@"1234567890" characterSet:NSCharacterSet.decimalDigitCharacterSet minimumCount:minimum maximumCount:maximum localizedDescription:nil localizedName:OCLocalized(@"digits")]);
+		return ([[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:@"1234567890" characterSet:NSCharacterSet.decimalDigitCharacterSet minimumCount:minimum maximumCount:maximum localizedDescription:nil localizedName:OCLocalizedString(@"digits",nil)]);
 	}
 
 	return (nil);
@@ -71,7 +71,7 @@
 		return ([[OCPasswordPolicyRuleCharacters alloc] initWithCharacters:specialCharacters characterSet:nil minimumCount:minimum maximumCount:nil localizedDescription:OCLocalizedFormat(@"At least {{min}} special characters: {{specialCharacters}}", (@{
 			@"min" : minimum.stringValue,
 			@"specialCharacters" : specialCharacters
-		})) localizedName:OCLocalized(@"special characters")]);
+		})) localizedName:OCLocalizedString(@"special characters",nil)]);
 	}
 
 	return (nil);

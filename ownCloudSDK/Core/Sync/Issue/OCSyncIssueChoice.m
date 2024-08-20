@@ -35,17 +35,17 @@
 
 + (instancetype)okChoice
 {
-	return ([self choiceOfType:OCIssueChoiceTypeRegular impact:OCSyncIssueChoiceImpactNonDestructive identifier:OCSyncIssueChoiceIdentifierOK label:OCLocalized(@"OK") metaData:nil]);
+	return ([self choiceOfType:OCIssueChoiceTypeRegular impact:OCSyncIssueChoiceImpactNonDestructive identifier:OCSyncIssueChoiceIdentifierOK label:OCLocalizedString(@"OK",nil) metaData:nil]);
 }
 
 + (instancetype)retryChoice
 {
-	return ([self choiceOfType:OCIssueChoiceTypeDefault impact:OCSyncIssueChoiceImpactNonDestructive identifier:OCSyncIssueChoiceIdentifierRetry label:OCLocalized(@"Retry") metaData:nil]);
+	return ([self choiceOfType:OCIssueChoiceTypeDefault impact:OCSyncIssueChoiceImpactNonDestructive identifier:OCSyncIssueChoiceIdentifierRetry label:OCLocalizedString(@"Retry",nil) metaData:nil]);
 }
 
 + (instancetype)cancelChoiceWithImpact:(OCSyncIssueChoiceImpact)impact
 {
-	return ([self choiceOfType:OCIssueChoiceTypeCancel impact:impact identifier:OCSyncIssueChoiceIdentifierCancel label:OCLocalized(@"Cancel") metaData:nil]);
+	return ([self choiceOfType:OCIssueChoiceTypeCancel impact:impact identifier:OCSyncIssueChoiceIdentifierCancel label:OCLocalizedString(@"Cancel",nil) metaData:nil]);
 }
 
 - (instancetype)withAutoChoiceForError:(NSError *)error

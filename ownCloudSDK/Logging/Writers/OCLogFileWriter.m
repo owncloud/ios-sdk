@@ -59,7 +59,7 @@ static NSURL *sDefaultLogFileURL;
 
 - (NSString *)name
 {
-	return (OCLocalized(@"Log file"));
+	return (OCLocalizedString(@"Log file",nil));
 }
 
 - (instancetype)initWithLogFileURL:(NSURL *)url

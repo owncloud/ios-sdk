@@ -162,7 +162,7 @@ static OCAuthenticationBrowserSessionCustomSchemeBusyPresenter sBusyPresenter;
 			[sharedApplication openURL:customSchemeURL options:@{} completionHandler:^(BOOL success) {
 				if (!success)
 				{
-					[self completedWithCallbackURL:nil error:OCErrorWithDescription(OCErrorAuthorizationCantOpenCustomSchemeURL, ([NSString stringWithFormat:OCLocalized(@"Can't open custom scheme URL %@."), customSchemeURL]))];
+					[self completedWithCallbackURL:nil error:OCErrorWithDescription(OCErrorAuthorizationCantOpenCustomSchemeURL, ([NSString stringWithFormat:OCLocalizedString(@"Can't open custom scheme URL %@.",nil), customSchemeURL]))];
 				}
 				else
 				{
@@ -177,11 +177,11 @@ static OCAuthenticationBrowserSessionCustomSchemeBusyPresenter sBusyPresenter;
 			OCLogError(@"Can't open URL %@", customSchemeURL);
 		}
 
-		[self completedWithCallbackURL:nil error:OCErrorWithDescription(OCErrorAuthorizationCantOpenCustomSchemeURL, ([NSString stringWithFormat:OCLocalized(@"Can't open custom scheme URL %@."), customSchemeURL]))];
+		[self completedWithCallbackURL:nil error:OCErrorWithDescription(OCErrorAuthorizationCantOpenCustomSchemeURL, ([NSString stringWithFormat:OCLocalizedString(@"Can't open custom scheme URL %@.",nil), customSchemeURL]))];
 	}
 	else
 	{
-		[self completedWithCallbackURL:nil error:OCErrorWithDescription(OCErrorAuthorizationCantOpenCustomSchemeURL, ([NSString stringWithFormat:OCLocalized(@"Can't build custom scheme URL from %@."), self.url]))];
+		[self completedWithCallbackURL:nil error:OCErrorWithDescription(OCErrorAuthorizationCantOpenCustomSchemeURL, ([NSString stringWithFormat:OCLocalizedString(@"Can't build custom scheme URL from %@.",nil), self.url]))];
 	}
 
 	return (NO);

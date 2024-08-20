@@ -159,7 +159,7 @@
 
 	if ((self.compareCertificate != nil) && ![self.compareCertificate isEqual:self.certificate])
 	{
-		self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:OCLocalizedString(@"Show ±", nil) style:UIBarButtonItemStylePlain target:self action:@selector(toggleShowDifferences:)];
+		self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:OCLocalizedString(@"Show ±",nil) style:UIBarButtonItemStylePlain target:self action:@selector(toggleShowDifferences:)];
 		[self _updateDiffLabel];
 	}
 
@@ -387,11 +387,11 @@
 {
 	if (_showDifferences)
 	{
-		self.navigationItem.rightBarButtonItem.title = OCLocalizedString(@"Hide ±", nil);
+		self.navigationItem.rightBarButtonItem.title = OCLocalizedString(@"Hide ±",nil);
 	}
 	else
 	{
-		self.navigationItem.rightBarButtonItem.title = OCLocalizedString(@"Show ±", nil);
+		self.navigationItem.rightBarButtonItem.title = OCLocalizedString(@"Show ±",nil);
 	}
 }
 
