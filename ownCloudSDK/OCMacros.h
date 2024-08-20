@@ -22,7 +22,6 @@
 #import "OCLocale.h"
 
 #define OCLocalizedString(key,comment) [OCLocale localizeString:key bundleOfClass:[self class]]
-#define OCLocalized(key) [OCLocale localizeString:key bundleOfClass:[self class]]
 #define OCLocalizedViaLocalizationBundle(key) [OCLocale localizeString:key bundle:localizationBundle]
 #define OCLocalizedFormat(key,variables) [OCLocale localizeString:key bundleOfClass:[self class] options:@{ OCLocaleOptionKeyVariables : variables }]
 

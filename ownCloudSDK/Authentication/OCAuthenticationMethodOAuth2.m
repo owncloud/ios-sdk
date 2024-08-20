@@ -637,7 +637,7 @@ OCAuthenticationMethodAutoRegister
 	if (self.authenticationDataKnownInvalidDate != nil)
 	{
 		// Authentication data known to be invalid
-		availabilityHandler(OCErrorWithDescription(OCErrorAuthorizationFailed, OCLocalized(@"Previous token refresh attempts indicated an invalid refresh token.")), NO);
+		availabilityHandler(OCErrorWithDescription(OCErrorAuthorizationFailed, OCLocalizedString(@"Previous token refresh attempts indicated an invalid refresh token.",nil)), NO);
 		return (NO);
 	}
 
@@ -1004,12 +1004,12 @@ OCAuthenticationMethodAutoRegister
 								{
 									if (![requiredUserID isEqual:newUserID])
 									{
-										error = OCErrorWithDescription(OCErrorAuthorizationNotMatchingRequiredUserID, ([NSString stringWithFormat:OCLocalized(@"You logged in as user %@, but must log in as user %@. Please retry."), newUserID, requiredUserID]));
+										error = OCErrorWithDescription(OCErrorAuthorizationNotMatchingRequiredUserID, ([NSString stringWithFormat:OCLocalizedString(@"You logged in as user %@, but must log in as user %@. Please retry.",nil), newUserID, requiredUserID]));
 									}
 								}
 								else if (!tolerateMissingUserID)
 								{
-									error = OCErrorWithDescription(OCErrorAuthorizationNotMatchingRequiredUserID, ([NSString stringWithFormat:OCLocalized(@"Login as user %@ required. Please retry."), requiredUserID]));
+									error = OCErrorWithDescription(OCErrorAuthorizationNotMatchingRequiredUserID, ([NSString stringWithFormat:OCLocalizedString(@"Login as user %@ required. Please retry.",nil), requiredUserID]));
 								}
 
 								if (error != nil)

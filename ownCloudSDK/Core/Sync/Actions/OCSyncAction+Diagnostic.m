@@ -23,10 +23,10 @@
 - (NSArray<OCDiagnosticNode *> *)diagnosticNodesWithContext:(OCDiagnosticContext *)context
 {
 	return (@[
-		[OCDiagnosticNode withLabel:OCLocalized(@"Class") content:NSStringFromClass(self.class)],
-		[OCDiagnosticNode withLabel:OCLocalized(@"Identifier") content:self.identifier],
-		[OCDiagnosticNode withLabel:OCLocalized(@"Localized Description") content:self.localizedDescription],
-		[OCDiagnosticNode withLabel:OCLocalized(@"Item") content:self.localItem.description]
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"Class",nil) content:NSStringFromClass(self.class)],
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"Identifier",nil) content:self.identifier],
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"Localized Description",nil) content:self.localizedDescription],
+		[OCDiagnosticNode withLabel:OCLocalizedString(@"Item",nil) content:self.localItem.description]
 	]);
 }
 

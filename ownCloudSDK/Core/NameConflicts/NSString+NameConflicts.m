@@ -93,7 +93,7 @@
 
 	if (duplicateStyle == OCCoreDuplicateNameStyleNone)
 	{
-		NSString *localizedCopy = OCLocalized(@"copy");
+		NSString *localizedCopy = OCLocalizedString(@"copy",nil);
 		AttemptDuplicateSplit([NSString stringWithFormat:@" %@ ", localizedCopy], [NSString stringWithFormat:@" %@", localizedCopy], @"", OCCoreDuplicateNameStyleCopyLocalized);
 	}
 
@@ -159,11 +159,11 @@
 		case OCCoreDuplicateNameStyleCopyLocalized:
 			if (duplicateCount.unsignedIntegerValue == 1)
 			{
-				baseName = [baseName stringByAppendingFormat:@" %@", OCLocalized(@"copy")];
+				baseName = [baseName stringByAppendingFormat:@" %@", OCLocalizedString(@"copy",nil)];
 			}
 			else
 			{
-				baseName = [baseName stringByAppendingFormat:@" %@ %lu", OCLocalized(@"copy"), duplicateCount.unsignedIntegerValue];
+				baseName = [baseName stringByAppendingFormat:@" %@ %lu", OCLocalizedString(@"copy",nil), duplicateCount.unsignedIntegerValue];
 			}
 		break;
 

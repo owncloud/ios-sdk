@@ -31,7 +31,7 @@
 	if ((self = [super initWithItem:item]) != nil)
 	{
 		self.actionEventType = OCEventTypeDelete;
-		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Removing local copy of %@…"), item.name];
+		self.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Removing local copy of %@…",nil), item.name];
 	}
 
 	return (self);

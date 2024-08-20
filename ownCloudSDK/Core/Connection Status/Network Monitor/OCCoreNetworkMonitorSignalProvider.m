@@ -58,7 +58,7 @@
 				    ![[OCCellularManager.sharedManager switchWithIdentifier:OCCellularSwitchIdentifierMain] allowsTransferOfSize:1]) // Main cellular switch
 				{
 					// Cellular is not allowed -> indicate network is unavailable
-					shortDescription = OCLocalized(@"Offline (no WiFi connection)");
+					shortDescription = OCLocalizedString(@"Offline (no WiFi connection)",nil);
 					state = OCCoreConnectionStatusSignalStateFalse;
 				}
 				else

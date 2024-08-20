@@ -60,7 +60,7 @@
 		{
 			if (error.isNetworkFailureError)
 			{
-				self.shortDescription = OCLocalized(@"Network unavailable");
+				self.shortDescription = OCLocalizedString(@"Network unavailable",nil);
 			}
 			else if (error.userInfo[NSLocalizedDescriptionKey] != nil)
 			{
@@ -96,11 +96,11 @@
 	{
 		if ([error.domain isEqual:OCHTTPStatusErrorDomain])
 		{
-			self.shortDescription = [NSString stringWithFormat:OCLocalized(@"Server returns status %ld"), (long)error.code];
+			self.shortDescription = [NSString stringWithFormat:OCLocalizedString(@"Server returns status %ld",nil), (long)error.code];
 		}
 		else
 		{
-			self.shortDescription = (error.isNetworkFailureError ? OCLocalized(@"Network unavailable") : ((error != nil) && (error.localizedDescription!=nil)) ? error.localizedDescription : OCLocalized(@"Connection refused"));
+			self.shortDescription = (error.isNetworkFailureError ? OCLocalizedString(@"Network unavailable",nil) : ((error != nil) && (error.localizedDescription!=nil)) ? error.localizedDescription : OCLocalizedString(@"Connection refused",nil));
 		}
 		self.state = OCCoreConnectionStatusSignalStateFalse;
 

@@ -276,7 +276,7 @@
 				switch (response.status.code)
 				{
 					case OCHTTPStatusCodeTOO_EARLY:
-						error = fallbackError = OCErrorWithDescription(OCErrorItemProcessing, OCLocalized(@"This file is currently being processed and is not yet available for use. Please try again shortly."));
+						error = fallbackError = OCErrorWithDescription(OCErrorItemProcessing, OCLocalizedString(@"This file is currently being processed and is not yet available for use. Please try again shortly.",nil));
 					break;
 
 					default:
@@ -396,7 +396,7 @@
 				switch (response.status.code)
 				{
 					case OCHTTPStatusCodeTOO_EARLY:
-						error = fallbackError = OCErrorWithDescription(OCErrorItemProcessing, OCLocalized(@"This file is currently being processed and is not yet available for use. Please try again shortly."));
+						error = fallbackError = OCErrorWithDescription(OCErrorItemProcessing, OCLocalizedString(@"This file is currently being processed and is not yet available for use. Please try again shortly.",nil));
 					break;
 
 					default:

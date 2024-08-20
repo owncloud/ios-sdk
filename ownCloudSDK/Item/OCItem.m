@@ -75,7 +75,7 @@
 #pragma mark - Property localization
 + (NSString *)localizedNameForProperty:(OCItemPropertyName)propertyName
 {
-	return (OCLocalized([@"itemProperty.%@" stringByAppendingString:propertyName]));
+	return (OCLocalizedString([@"itemProperty.%@" stringByAppendingString:propertyName], nil));
 }
 
 #pragma mark - Secure Coding

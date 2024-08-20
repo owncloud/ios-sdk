@@ -1946,7 +1946,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 			progress = davRequest.progress.progress;
 			progress.eventType = OCEventTypeRetrieveItemList;
-			progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Retrieving file list for %@…"), path];
+			progress.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Retrieving file list for %@…",nil), path];
 		}
 		else
 		{
@@ -2249,7 +2249,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 		requestProgress = request.progress;
 		requestProgress.progress.eventType = OCEventTypeDownload;
-		requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Downloading %@…"), item.name];
+		requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Downloading %@…",nil), item.name];
 	}
 	else
 	{
@@ -2324,7 +2324,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 							if (itemName == nil)
 							{
-								itemName = OCLocalized(@"File");
+								itemName = OCLocalizedString(@"File",nil);
 							}
 
 							event.error = OCErrorWithDescriptionFromError(OCErrorItemProcessing, OCLocalizedFormat(@"{{itemName}} is currently processed on the server and can't be downloaded until it finishes processing.", @{
@@ -2460,7 +2460,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 				requestProgress = patchRequest.progress;
 				requestProgress.progress.eventType = OCEventTypeUpdate;
-				requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Updating metadata for '%@'…"), item.name];
+				requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Updating metadata for '%@'…",nil), item.name];
 			}
 		}
 		else
@@ -2595,7 +2595,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 		requestProgress = request.progress;
 		requestProgress.progress.eventType = OCEventTypeCreateFolder;
-		requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Creating folder %@…"), folderName];
+		requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Creating folder %@…",nil), folderName];
 	}
 	else
 	{
@@ -2693,11 +2693,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 		if ([item.parentFileID isEqualToString:parentItem.fileID])
 		{
-			requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Renaming %@ to %@…"), item.name, newName];
+			requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Renaming %@ to %@…",nil), item.name, newName];
 		}
 		else
 		{
-			requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Moving %@ to %@…"), item.name, parentItem.name];
+			requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Moving %@ to %@…",nil), item.name, parentItem.name];
 		}
 	}
 
@@ -2711,7 +2711,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 	if ((requestProgress = [self _copyMoveMethod:OCHTTPMethodCOPY type:OCEventTypeCopy item:item to:parentItem withName:newName options:options resultTarget:eventTarget]) != nil)
 	{
 		requestProgress.progress.eventType = OCEventTypeCopy;
-		requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Copying %@ to %@…"), item.name, parentItem.name];
+		requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Copying %@ to %@…",nil), item.name, parentItem.name];
 	}
 
 	return (requestProgress);
@@ -2916,7 +2916,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		requestProgress = request.progress;
 
 		requestProgress.progress.eventType = OCEventTypeDelete;
-		requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Deleting %@…"), item.name];
+		requestProgress.progress.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Deleting %@…",nil), item.name];
 	}
 	else
 	{

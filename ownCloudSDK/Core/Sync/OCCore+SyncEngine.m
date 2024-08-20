@@ -904,11 +904,11 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 						OCLogError(@"Exception processing sync record:\nReason: %@\nCall stack symbols:\n%@", exception.reason, exception.callStackSymbols);
 						OCLogError(@"REMOVING sync record due to exception: %@", syncRecord);
 
-						NSString *errorDescription = [NSString stringWithFormat:OCLocalized(@"An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed. If logging is enabled, the exception has been logged."), syncRecord.action.localizedDescription];
+						NSString *errorDescription = [NSString stringWithFormat:OCLocalizedString(@"An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed. If logging is enabled, the exception has been logged.",nil), syncRecord.action.localizedDescription];
 
 						[self descheduleSyncRecord:syncRecord completeWithError:OCError(OCErrorException) parameter:nil];
 
-						[self sendError:OCError(OCErrorException) issue:[OCIssue issueWithLocalizedTitle:OCLocalized(@"Exception occured performing action") localizedDescription:errorDescription level:OCIssueLevelError issueHandler:^(OCIssue * _Nonnull issue, OCIssueDecision decision) {
+						[self sendError:OCError(OCErrorException) issue:[OCIssue issueWithLocalizedTitle:OCLocalizedString(@"Exception occured performing action",nil) localizedDescription:errorDescription level:OCIssueLevelError issueHandler:^(OCIssue * _Nonnull issue, OCIssueDecision decision) {
 						}]];
 
 						nextInstruction = OCCoreSyncInstructionProcessNext;

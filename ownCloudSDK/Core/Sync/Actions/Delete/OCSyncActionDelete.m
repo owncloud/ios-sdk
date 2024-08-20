@@ -58,7 +58,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		self.requireMatch = requireMatch;
 
 		self.actionEventType = OCEventTypeDelete;
-		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Deleting %@…"), item.name];
+		self.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Deleting %@…",nil), item.name];
 	}
 
 	return (self);
@@ -323,7 +323,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 			default:
 				// Create issue for cancellation for any other errors
-				title = [NSString stringWithFormat:OCLocalizedString(@"Error deleting %@", nil), self.localItem.name];
+				title = [NSString stringWithFormat:OCLocalizedString(@"Error deleting %@",nil), self.localItem.name];
 				description = event.error.localizedDescription;
 			break;
 		}
@@ -342,7 +342,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 	else if (event.error != nil)
 	{
 		// Create issue for cancellation for all other errors
-		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't delete %@", nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
+		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't delete %@",nil), self.localItem.name] description:[event.error localizedDescription] impact:OCSyncIssueChoiceImpactDataLoss]; // queues a new wait condition with the issue
 		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 
 		// Reschedule for all other errors
