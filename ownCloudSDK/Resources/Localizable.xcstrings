@@ -1123,6 +1123,12 @@
     },
     "%@ couldn't be renamed to %@." : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ konnte nicht in %2$@ umbenannt werden."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -1930,7 +1936,14 @@
       }
     },
     "Accepting share…" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akzeptiere Freigabe…"
+          }
+        }
+      }
     },
     "Action" : {
       "localizations" : {
@@ -2108,7 +2121,14 @@
       }
     },
     "An error occured trying to validate the certificate for %@." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei der Überprüfung des Zertifikats für %@ ist ein Fehler aufgetreten."
+          }
+        }
+      }
     },
     "An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed." : {
       "comment" : "Sync errors",
@@ -2171,7 +2191,14 @@
       }
     },
     "An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed. If logging is enabled, the exception has been logged." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beim Ausführen einer Aktion (\"%@\") ist ein Problem aufgetreten. Die Aktion wurde aus der Warteschlange für die Synchronisation entfernt und wurde eventuell nicht vollständig durchgeführt. Falls Logging aktiviert ist, wurde das Problem protokolliert."
+          }
+        }
+      }
     },
     "An exception occured." : {
       "comment" : "OCErrorException",
@@ -3938,7 +3965,14 @@
       }
     },
     "Certificate" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikat"
+          }
+        }
+      }
     },
     "Certificate changed" : {
       "comment" : "Certificate checks",
@@ -4052,10 +4086,24 @@
       }
     },
     "Certificate for %@ passed validation." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikat für %@ hat die Überprüfung bestanden."
+          }
+        }
+      }
     },
     "Certificates" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikate"
+          }
+        }
+      }
     },
     "characters" : {
       "comment" : "OCPasswordPolicyRule+StandardRules",
@@ -4345,7 +4393,14 @@
       }
     },
     "Connecting" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinde"
+          }
+        }
+      }
     },
     "Connecting…" : {
       "comment" : "Connection Progress",
@@ -4449,7 +4504,14 @@
       }
     },
     "Connection refused" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung abgelehnt"
+          }
+        }
+      }
     },
     "Connection validation failed." : {
       "comment" : "OCErrorServerConnectionValidationFailed",
@@ -4919,10 +4981,24 @@
       }
     },
     "Couldn't create %@" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konnte %@ nicht erstellen"
+          }
+        }
+      }
     },
     "Couldn't delete %@" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konnte %@ nicht löschen"
+          }
+        }
+      }
     },
     "Couldn't download %@" : {
       "localizations" : {
@@ -5129,7 +5205,14 @@
       }
     },
     "Couldn't upload %@" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konnte %@ nicht hochladen"
+          }
+        }
+      }
     },
     "Creating folder %@…" : {
       "comment" : "Create folder",
@@ -5227,7 +5310,14 @@
       }
     },
     "Creating share for %@…" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstelle Freigabe für %@…"
+          }
+        }
+      }
     },
     "Custom" : {
       "localizations" : {
@@ -5751,7 +5841,14 @@
       }
     },
     "Deleting share for %@…" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lösche Freigabe für %@…"
+          }
+        }
+      }
     },
     "Deschedule (remove)" : {
       "localizations" : {
@@ -6319,7 +6416,14 @@
       }
     },
     "Error deleting %@" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehler beim Löschen von %@"
+          }
+        }
+      }
     },
     "Error moving %@" : {
       "localizations" : {
@@ -6562,7 +6666,14 @@
       }
     },
     "Error uploading %@" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehler beim Hochladen von %@"
+          }
+        }
+      }
     },
     "Events" : {
       "localizations" : {
@@ -6885,7 +6996,14 @@
       }
     },
     "File" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datei"
+          }
+        }
+      }
     },
     "File modified locally" : {
       "localizations" : {
@@ -7920,7 +8038,14 @@
       }
     },
     "Invalidate" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalidieren"
+          }
+        }
+      }
     },
     "Invalidate Certificate" : {
       "extractionState" : "manual",
@@ -8087,10 +8212,24 @@
       }
     },
     "Issues were found while validating the certificate for %@." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei der Überprüfung des Zertifikats für %@ wurden Probleme gefunden."
+          }
+        }
+      }
     },
     "Item" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Element"
+          }
+        }
+      }
     },
     "Item is currently processing." : {
       "comment" : "OCErrorItemProcessing",
@@ -9249,6 +9388,12 @@
     },
     "Making %@ available offline also covers %@, which was previously requested as being available offline." : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durch die Offline-Verfügbarkeit von %1$@ wird auch %2$@ abgedeckt, für das zuvor Offline-Verfügbarkeit angefordert wurde."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -9259,6 +9404,12 @@
     },
     "Making %@ available offline also covers %@, whose offline availability has previously been requested." : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Offline-Verfügbarkeit von %1$@ gilt auch für %2$@, dessen Offline-Verfügbarkeit zuvor angefordert wurde."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -10138,6 +10289,12 @@
     },
     "Offline availability of %@ is already ensured by having made %@ available offline." : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Offline-Verfügbarkeit von %1$@ ist bereits dadurch gewährleistet, dass %2$@ offline verfügbar gemacht wurde."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -10363,7 +10520,14 @@
       }
     },
     "Opening vault…" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffne Vault…"
+          }
+        }
+      }
     },
     "Operation forbidden" : {
       "comment" : "Move/Rename/Copy",
@@ -10695,7 +10859,14 @@
       }
     },
     "Overwrite modified file" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überschreibe geänderte Datei"
+          }
+        }
+      }
     },
     "Password can't be converted to {{encoding}}." : {
       "extractionState" : "manual",
@@ -11576,10 +11747,24 @@
       }
     },
     "Redirection" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umleitung"
+          }
+        }
+      }
     },
     "Rejecting share…" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weise Freigabe ab…"
+          }
+        }
+      }
     },
     "Remove Database Version" : {
       "localizations" : {
@@ -11810,7 +11995,14 @@
       }
     },
     "Removing local copy of %@…" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entferne lokale Kopie von %@…"
+          }
+        }
+      }
     },
     "Renaming %@ to %@…" : {
       "localizations" : {
@@ -13049,7 +13241,14 @@
       }
     },
     "Retrieving capabilities…" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empfange Fähigkeiten…"
+          }
+        }
+      }
     },
     "Retrieving file list for %@…" : {
       "comment" : "Retrieving file list",
@@ -13199,7 +13398,14 @@
       }
     },
     "Retrieving metadata…" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empfange Metadaten…"
+          }
+        }
+      }
     },
     "Retrieving thumbnail…" : {
       "extractionState" : "manual",
@@ -14108,7 +14314,14 @@
       }
     },
     "Server software %@ not supported." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server software %@ nicht unterstützt"
+          }
+        }
+      }
     },
     "Set detailed permissions" : {
       "localizations" : {
@@ -14767,6 +14980,12 @@
             "value" : "The action couldn't be performed on the targeted item because the client lacks permisssions."
           }
         },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Aktion konnte für das Zielelement nicht ausgeführt werden, da dem Client die entsprechenden Berechtigungen fehlen."
+          }
+        },
         "mk" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14788,10 +15007,23 @@
       }
     },
     "The certificate for %@ has previously been rejected by the user." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Zertifikat für %@ wurde zuvor vom Benutzer abgelehnt."
+          }
+        }
+      }
     },
     "The certificate for %@ passes TLS validation but doesn't pass the acceptance rule to replace the certificate for %@." : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Zertifikat für %1$@ besteht die TLS-Validierung aber erfüllt nicht die Akzeptanzregeln zum Ersetzen des Zertifikats für %2$@."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -14904,6 +15136,12 @@
     },
     "The connection is redirected from %@ to %@." : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Verbindung wird von %1$@ nach %2$@ umgeleitet."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -14978,6 +15216,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The destination item has not been found."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Ziel-Element wurde nicht gefunden."
           }
         },
         "fr" : {
@@ -15077,7 +15321,14 @@
       }
     },
     "The file no longer exists on the server in this location." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei existiert auf dem Server nicht mehr an diesem Ort."
+          }
+        }
+      }
     },
     "The logged in user is not matching the required user ID." : {
       "comment" : "OCErrorAuthorizationNotMatchingRequiredUserID",
@@ -16982,13 +17233,34 @@
       }
     },
     "Update failed with status code %lu" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update mit Status-Code %lu fehlgeschlagen."
+          }
+        }
+      }
     },
     "Updating metadata for '%@'…" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktualisiere Metadaten für ‚%@‘…"
+          }
+        }
+      }
     },
     "Updating share…" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Freigabe aktualisieren…"
+          }
+        }
+      }
     },
     "Upgrading database…" : {
       "comment" : "Database upgrades",
@@ -17206,7 +17478,14 @@
       }
     },
     "Uploading %@…" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lade %@ hoch…"
+          }
+        }
+      }
     },
     "Uploads to this folder are not allowed." : {
       "localizations" : {
