@@ -15,10 +15,10 @@
 "Issuer" = "Aussteller";
 "Public Key" = "Öffentlicher Schlüssel";
 "Extensions" = "Erweiterungen";
-"Fingerprints" = "Fingerabdruck";
+"Fingerprints" = "Fingerabdrücke";
 
 "Validation Status" = "Validierungsstatus";
-"Hostname" = "Host-Name";
+"Hostname" = "Hostname";
 "Validation Error" = "Validierungsfehler";
 "User-rejected." = "Vom Benutzer abgelehnt.";
 "Certificate has issues." = "Es gibt Probleme mit dem Zertifikat.";
@@ -43,7 +43,7 @@
 "serialNumber" = "Seriennummer";
 "signatureAlgorithm" = "Signaturalgorithmus";
 
-"validFrom" = "Gültig von";
+"validFrom" = "Gültig ab";
 "validUntil" = "Gültig bis";
 
 "keyBytes" = "Schlüsselbytes";

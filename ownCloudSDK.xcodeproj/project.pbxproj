@@ -1875,6 +1875,8 @@
 		DCDD9B1B22298D050052A001 /* OCGroup.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCGroup.m; sourceTree = "<group>"; };
 		DCDD9B2922312ED80052A001 /* OCRateLimiter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCRateLimiter.h; sourceTree = "<group>"; };
 		DCDD9B2A22312ED80052A001 /* OCRateLimiter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCRateLimiter.m; sourceTree = "<group>"; };
+		DCE0FEAB2C77CC66005E4423 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/Localizable.strings; sourceTree = "<group>"; };
+		DCE0FEAC2C77CC7D005E4423 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		DCE17BBF26B5A7E400B7C7DD /* OCHTTPRequest+Stream.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCHTTPRequest+Stream.h"; sourceTree = "<group>"; };
 		DCE17BC026B5A7E400B7C7DD /* OCHTTPRequest+Stream.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCHTTPRequest+Stream.m"; sourceTree = "<group>"; };
 		DCE227CD22D60CF4000BE0A5 /* OCCore+AvailableOffline.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCCore+AvailableOffline.m"; sourceTree = "<group>"; };
@@ -5031,6 +5033,7 @@
 				"th-TH",
 				"zh-Hans",
 				fr,
+				tr,
 			);
 			mainGroup = DCC8F9A1202852A200EB6701;
 			packageReferences = (
@@ -5720,6 +5723,7 @@
 				59AAD97221F77CD500D15F07 /* th-TH */,
 				59AAD97421F780D800D15F07 /* zh-Hans */,
 				3999BD3025FA2C8100DB7C47 /* fr */,
+				DCE0FEAB2C77CC66005E4423 /* tr */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
@@ -5743,6 +5747,7 @@
 				59AAD97321F77CD600D15F07 /* th-TH */,
 				59AAD97521F780D800D15F07 /* zh-Hans */,
 				3999BD3125FA2C8200DB7C47 /* fr */,
+				DCE0FEAC2C77CC7D005E4423 /* tr */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
