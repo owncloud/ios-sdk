@@ -180,10 +180,24 @@
       }
     },
     "Certificate chain" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikatskette"
+          }
+        }
+      }
     },
     "Certificate Details" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikat-Details"
+          }
+        }
+      }
     },
     "Certificate has issues." : {
       "localizations" : {
@@ -870,7 +884,14 @@
       }
     },
     "Intermediate Certificate" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwischenzertifikat"
+          }
+        }
+      }
     },
     "Issuer" : {
       "localizations" : {
@@ -2313,7 +2334,14 @@
       }
     },
     "Root Certificate" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root-Zertifikat"
+          }
+        }
+      }
     },
     "serialNumber" : {
       "extractionState" : "manual",
@@ -3009,7 +3037,14 @@
       }
     },
     "Validating…" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validiere…"
+          }
+        }
+      }
     },
     "Validation Error" : {
       "localizations" : {
