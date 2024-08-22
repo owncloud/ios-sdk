@@ -113,13 +113,13 @@
 
 /* Download */
 "Downloading %@…" = "%@ herunterladen…";
-"\"%@\" has been modified locally" = "\"%@\" wurde lokal geändert";
+"\"%@\" has been modified locally" = "\"%@\" wurde lokal geändert.";
 "A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost." = "Eine geänderte, unsynchronisierte Version von \"%@\" ist auf Ihrem Gerät vorhanden. Wenn Sie die Datei vom Server herunterladen, wird die lokale Datei überschrieben und die Änderungen gehen verloren.";
 "Invalid checksum" = "Ungültige Prüfsumme";
 "The downloaded file's checksum does not match the checksum provided by the server." = "Die Prüfsumme der heruntergeladenen Datei stimmt nicht mit der vom Server bereitgestellten Prüfsumme überein.";
 "File modified locally" = "Datei lokal geändert";
 "\"%@\" was modified locally before the download completed." = "\"%@\" wurde lokal geändert, bevor der Download abgeschlossen war.";
-"Couldn't download %@" = "%@ konnte nicht heruntergeladen werden";
+"Couldn't download %@" = "%@ konnte nicht heruntergeladen werden.";
 "The contents of the file on the server has changed since initiating download - or the file is no longer available on the server." = "Der Inhalt der Datei auf dem Server hat sich seit dem Start des Downloads geändert - oder die Datei ist auf dem Server nicht mehr verfügbar.";
 "{{itemName}} is currently processed on the server and can't be downloaded until it finishes processing." = "{{itemName}} wird auf dem Server verarbeitet und kann bis zum Ende der Verarbeitung nicht heruntergeladen werden.";
 
@@ -280,7 +280,7 @@
 "Server doesn't seem to support any authentication method supported by this app." = "Der Server scheint keine Authentifizierungsmethoden dieser Anwendung zu unterstützen.";
 
 // OCErrorCertificateInvalid
-"The certificate is invalid or contains errors" = "Das Zertifikat ist ungültig oder enthält Fehler";
+"The certificate is invalid or contains errors" = "Das Zertifikat ist ungültig oder enthält Fehler.";
 
 // OCErrorCertificateMissing
 "No certificate was returned for a request despite this being a HTTPS connection (should never occur in production, but only if you forgot to provide a certificate during simulated responses to HTTPS requests)." = "Für eine Anfrage wurde trotz HTTPS-Verbindung kein Zertifikat zurückgegeben (sollte niemals in der Produktion auftreten, sondern nur, wenn Sie vergessen haben, ein Zertifikat bei simulierten Antworten auf HTTPS-Anfragen anzugeben).";
@@ -349,7 +349,7 @@
 "Public upload was disabled by the administrator." = "Das öffentliche Hochladen ist durch den Administrator/die Administratorin deaktiviert.";
 
 // OCErrorNotAvailableOffline
-"Not available offline." = "Nicht offline verfügbar.";
+"Not available offline." = "Nicht offline verfügbar";
 
 // OCErrorAuthorizationRetry
 "Authorization needs to be retried." = "Die Autorisierung muss erneut versucht werden.";

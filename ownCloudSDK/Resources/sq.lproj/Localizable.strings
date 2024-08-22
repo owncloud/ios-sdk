@@ -47,20 +47,20 @@
 "Server down for maintenance" = "Shërbyesi jashtë funksionimi, për mirëmbajtje";
 "Network unavailable" = "Rrjet i pakapshëm";
 "Online" = "Në linjë";
-"Previous token refresh attempts indicated an invalid refresh token." = "Previous token refresh attempts indicated an invalid refresh token.";
+"Previous token refresh attempts indicated an invalid refresh token." = "Përpjekje të mëparshme rifreskimi token-i treguan një token të pavlefshëm freskimi.";
 "Server returns status %ld" = "Shërbyesi u përgjigj me gjendje %ld";
 
 /* Account prepopulation */
-"Populating database…" = "Populating database…";
-"%lu files in %lu folders" = "%lu files in %lu folders";
-"Closing vault…" = "Closing vault…";
+"Populating database…" = "Po popullohet baza e të dhënave…";
+"%lu files in %lu folders" = "%lu kartela në %lu dosje";
+"Closing vault…" = "Po mbyllet kasaforta…";
 
 /* Copies */
 "copy" = "kopjoje";
 
 /* Sync errors */
-"An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed." = "An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed. If logging is enabled, the exception has been logged.";
-"Exception occured performing action" = "Exception occured performing action";
+"An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed." = "Ndodhi një përjashtim teksa provohej të kryhej një veprim (“%@”). Veprimi është hequr nga radha e njëkohësimeve dhe mund të mos jetë plotësuar. Nëse regjistrimi është i aktivizuar, përjashtimi është regjistruar.";
+"Exception occured performing action" = "Ndodhi një përjashtim teksa kryhej veprimi";
 
 /* Delete */
 "%@ changed on the server. Really delete it?" = "%@ ndryshoi te shërbyesi. Të fshihet vërtet?";
@@ -83,26 +83,26 @@
 "%@ already exists" = "%@ ekziston tashmë";
 "Couldn't copy %@ to %@, because an item called %@ already exists there." = "S’u kopjua dot %@ te %@, ngaqë atje ka tashmë një objekt të quajtur %@.";
 "Couldn't move %@ to %@, because an item called %@ already exists there." = "S’u kalua dot %@ te %@, ngaqë atje ka tashmë një objekt të quajtur %@.";
-"Couldn't rename %@ to %@, because another item with that name already exists." = "Couldn't rename %@ to %@, because another item with that name already exists.";
+"Couldn't rename %@ to %@, because another item with that name already exists." = "S’u riemërtua dot %@ në %@, ngaqë ekziston tashmë një tjetër objekt me atë emër.";
 
 "Insufficient permissions" = "Leje të pamjaftueshme";
 "%@ can't be copied to %@." = "%@ s’mund të kopjohet te %@.";
 "%@ can't be moved to %@." = "%@ s’mund të kalohet te %@.";
-"%@ can't be renamed to %@." = "%@ couldn't be renamed to %@.";
+"%@ can't be renamed to %@." = "%@ s’u emërtua dot si %@.";
 
 "%@ not found on the server" = "%@ s’u gjet te shërbyesi";
 "%@ may have been renamed, moved or deleted remotely." = "%@ mund të jetë riemërtuar, lëvizur ose  fshirë së largëti.";
 
 "Error copying %@" = "Gabim teksa kopjohej %@";
 "Error moving %@" = "Gabim teksa lëvizej %@";
-"Error renaming %@" = "Error renaming %@";
+"Error renaming %@" = "Gabim në riemërtimin %@";
 
 "Renaming %@ to %@…" = "Po riemërtohet %@ si %@…";
 "Moving %@ to %@…" = "Po shpihet %@ te %@…";
 "Copying %@ to %@…" = "Po kopjohet %@ te %@…";
 
-"{{itemName}} can't be copied into itself." = "{{itemName}} can't be copied into itself.";
-"{{itemName}} can't be moved into itself." = "{{itemName}} can't be moved into itself.";
+"{{itemName}} can't be copied into itself." = "{{itemName}} s’mund të kopjohet te vetja.";
+"{{itemName}} can't be moved into itself." = "{{itemName}} s’mund të kalohet te vetvetja.";
 
 /* Upload */
 "Another item named %@ already exists in %@." = "Një tjetër objekt i quajtur %@ ekziston tashmë në %@.";
@@ -121,7 +121,7 @@
 "\"%@\" was modified locally before the download completed." = "\"%@\" qe ndryshuar lokalisht përpara se të plotësohej shkarkimi.";
 "Couldn't download %@" = "S’u shkarkua dot %@";
 "The contents of the file on the server has changed since initiating download - or the file is no longer available on the server." = "Lënda e kartelës te shërbyesi ka ndryshuar që nga fillimi i shkarkimit - ose kartela s’është më e passhme që prej shërbyesit.";
-"{{itemName}} is currently processed on the server and can't be downloaded until it finishes processing." = "{{itemName}} is currently processed on the server and can't be downloaded until it finishes processing.";
+"{{itemName}} is currently processed on the server and can't be downloaded until it finishes processing." = "{{itemName}} aktualisht po përpunohet te shërbyesi dhe s’mund të shkarkohet, deri sa të përfundojë procesi.";
 
 /* Create folder */
 "Creating folder %@…" = "Po krijohet dosja %@…";
@@ -154,36 +154,36 @@
 "Log internal file operations" = "Regjistro veprime të brendshme kartelash";
 
 /* Custom Scheme Browser Sessions */
-"Can't open custom scheme URL %@." = "Can't open custom scheme URL %@.";
-"Can't build custom scheme URL from %@." = "Can't build custom scheme URL from %@.";
+"Can't open custom scheme URL %@." = "S’mund të hapet URL skeme %@.";
+"Can't build custom scheme URL from %@." = "S’mund të ndërtohet URL skeme vetjake nga %@.";
 
 /* Share roles */
-"Invited persons" = "Invited persons";
-"Only invited persons have access. Login required." = "Only invited persons have access. Login required.";
+"Invited persons" = "Persona të ftuar";
+"Only invited persons have access. Login required." = "Vetëm personat e ftuar kanë hyrje. Lypset të bëhet hyrja.";
 
-"Viewer" = "Viewer";
-"Download and preview" = "Download and preview";
-"Download, preview and share" = "Download, preview and share";
-"Recipients can view and download contents." = "Recipients can view and download contents.";
+"Viewer" = "Parës";
+"Download and preview" = "Shkarkojeni dhe bëjini paraparje";
+"Download, preview and share" = "Shkarkojeni, bëjini paraparje dhe ndajeni me të tjerë";
+"Recipients can view and download contents." = "Marrësit mund të shohin dhe shkarkojnë lëndë.";
 
-"Uploader" = "Uploader";
-"Recipients can upload but existing contents are not revealed." = "Recipients can upload but existing contents are not revealed.";
+"Uploader" = "Ngarkues";
+"Recipients can upload but existing contents are not revealed." = "Marrësit mund të ngarkojnë, por lënda ekzistuese nuk shfaqet.";
 
-"Contributor" = "Contributor";
+"Contributor" = "Kontribues";
 "Recipients can view, download and upload contents." = "Marrësit mund të shohin, shkarkojnë dhe ngarkojnë lëndë.";
 
-"Editor" = "Editor";
-"Edit, download, preview and share" = "Edit, download, preview and share";
-"Upload, edit, delete, download and preview" = "Upload, edit, delete, download and preview";
-"Upload, edit, delete, download, preview and share" = "Upload, edit, delete, download, preview and share";
+"Editor" = "Përpunues";
+"Edit, download, preview and share" = "Përpunoni, shkarkoni, bëni paraparje dhe ndani me të tjerë";
+"Upload, edit, delete, download and preview" = "Ngarkoni, përpunoni, fshini, shkarkoni dhe bëni paraparje";
+"Upload, edit, delete, download, preview and share" = "Ngarkoni, përpunoni, fshini, shkarkoni, bëni paraparje dhe ndani me të tjerë";
 "Recipients can view, download and edit contents." = "Marrësit mund të shohin, shkarkojnë dhe përpunojnë lëndë.";
 "Recipients can view, download, edit, delete and upload contents." = "Marrësit mund të shohin shkarkojnë, përpunojnë, fshijnë dhe ngarkojnë lëndë.";
 
-"Manager" = "Manager";
-"Upload, edit, delete, download, preview and share" = "Upload, edit, delete, download, preview and share";
+"Manager" = "Përgjegjës";
+"Upload, edit, delete, download, preview and share" = "Ngarkoni, përpunoni, fshini, shkarkoni, bëni paraparje dhe ndani me të tjerë";
 
 "Custom" = "E përshtatur";
-"Set detailed permissions" = "Set detailed permissions";
+"Set detailed permissions" = "Caktoni leje të hollësishme";
 
 /* Sharing */
 "Sharing requires an active connection." = "Ndarja me të tjerë lyp një lidhje aktive";
@@ -201,7 +201,7 @@
 "This server runs an unsupported version (%@). Version %@ or later is required by this app." = "Ky shërbyes  xhiron një version të pambuluar (%@). Ky aplikacion lyp versionin %@ ose të mëvonshëm.";
 
 /* App Provider */
-"This file is currently being processed and is not yet available for use. Please try again shortly." = "This file is currently being processed and is not yet available for use. Please try again shortly.";
+"This file is currently being processed and is not yet available for use. Please try again shortly." = "Kjo kartelë aktualisht po përpunohet dhe s’është ende e lirë për përdorim. Ju lutemi, riprovoni pas pak.";
 
 /* DAV Errors */
 // OCDAVErrorServiceUnavailable
@@ -226,7 +226,7 @@
 "Authorization failed because the server returned a redirect. Authorization may be successful when retried with the redirect URL." = "Mirëfilltësimi dështoi, ngaqë shërbyesi u përgjigj me një ridrejtim. Mirëfilltësimi mund të jetë i suksesshëm kur riprovohet me URL ridrejtimi.";
 
 // OCErrorAuthorizationNoMethodData
-"Authorization failed because no authorization data was set for the authentication method." = "Authorization failed because no authorization data was set for the authentication method.";
+"Authorization failed because no authorization data was set for the authentication method." = "Autorizimi dështoi, ngaqë për metodën e mirëfilltësimit s’qenë caktuar të dhëna autorizimi.";
 
 // OCErrorAuthorizationMissingData
 "Authorization failed because data was missing from the secret data for the authentication method." = "Mirëfilltësimi dështoi, ngaqë te të dhënat e fshehta mungojnë të dhëna për metodën e mirëfilltësimit.";
@@ -298,7 +298,7 @@
 "The targeted item has not been found." = "Objekti i synuar nuk u gjet.";
 
 // OCErrorItemDestinationNotFound
-"The target location has not been found." = "The target location has not been found.";
+"The target location has not been found." = "Vendndodhja e synuar nuk u gjet.";
 
 // OCErrorItemChanged
 "The targeted item has changed." = "Objekti i synuar ka ndryshuar.";
@@ -393,16 +393,16 @@
 "Bookmark created with a newer app version. Please update the app." = "Faqerojtës i krijuar me një version më të ri të aplikacionit. Ju lutemi, përditësoni aplikacionin.";
 
 // OCErrorAuthorizationCantOpenCustomSchemeURL
-"Can't open authorization URL with custom scheme." = "Can't open authorization URL with custom scheme.";
+"Can't open authorization URL with custom scheme." = "S’mund të hapë URL autorizimi me skemë vetjake.";
 
 // OCErrorLockInvalidated
-"Lock invalidated." = "Lock invalidated.";
+"Lock invalidated." = "Kyçja u shfuqizua.";
 
 // OCErrorRequestTimeout
 "Request timed out" = "Kërkesës i mbaroi koha";
 
 // OCErrorResourceDoesNotExist
-"Resource does not exist." = "Resource does not exist.";
+"Resource does not exist." = "Burimi s’ekziston.";
 
 // OCErrorWebFingerLacksServerInstanceRelation
 "Web finger response lacks server instance relation." = "Web finger response lacks server instance relation.";
@@ -411,31 +411,31 @@
 "Unknown user" = "Përdorues i panjohur";
 
 // OCErrorInvalidType
-"Invalid type." = "Invalid type.";
+"Invalid type." = "Lloj i pavlefshëm.";
 
 // OCErrorRequiredValueMissing
-"Required value missing." = "Required value missing.";
+"Required value missing." = "Mungon vlerë e domosdoshme";
 
 // OCErrorGraphError
-"Generic graph error." = "Generic graph error.";
+"Generic graph error." = "Gabim elementar grafik.";
 
 // OCErrorDataItemTypeUnavailable
-"Object does not return DataItemType." = "Object does not return DataItemType.";
+"Object does not return DataItemType." = "Objekti s’përgjigjet me DataItemType.";
 
 // OCErrorDataConverterUnavailable
-"No data converter available for conversion." = "No data converter available for conversion.";
+"No data converter available for conversion." = "S’ka shndërrues të gatshëm për shndërrimin.";
 
 // OCErrorMissingDriveID
-"Missing Drive ID." = "Missing Drive ID.";
+"Missing Drive ID." = "Mungon ID Disku.";
 
 // OCErrorResourceNotFound
 "Resource not found." = "Burimi s’u gjet.";
 
 // OCErrorInvalidParameter
-"Invalid parameter." = "Invalid parameter.";
+"Invalid parameter." = "Parametër i pavlefshëm.";
 
 // OCErrorItemProcessing
-"Item is currently processing." = "Item is currently processing.";
+"Item is currently processing." = "Objekti është duke u përpunuar.";
 
 /* Diagnostic */
 "Files" = "Kartela";
