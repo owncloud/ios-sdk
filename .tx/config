@@ -7,6 +7,7 @@ lang_map = cs_CZ: cs, de: de, de_DE: de-DE, en_GB: en-GB, nb_NO: nb-NO, nn_NO: n
 source_file = ownCloudSDK/Resources/en.lproj/Localizable.strings
 source_lang = en
 type = STRINGS
+minimum_perc = 75
 
 [o:owncloud-org:p:owncloud:r:mobile-ios-ui]
 file_filter = ownCloudUI/Resources/<lang>.lproj/Localizable.strings
@@ -14,3 +15,4 @@ lang_map = cs_CZ: cs, de: de, de_DE: de-DE, en_GB: en-GB, nb_NO: nb-NO, nn_NO: n
 source_file = ownCloudUI/Resources/en.lproj/Localizable.strings
 source_lang = en
 type = STRINGS
+minimum_perc = 75

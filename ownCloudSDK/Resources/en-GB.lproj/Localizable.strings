@@ -226,7 +226,7 @@
 "Authorization failed because the server returned a redirect. Authorization may be successful when retried with the redirect URL." = "Authorisation failed because the server returned a redirect. Authorisation may be successful when retried with the redirect URL.";
 
 // OCErrorAuthorizationNoMethodData
-"Authorization failed because no authorization data was set for the authentication method." = "Authorization failed because no authorization data was set for the authentication method.";
+"Authorization failed because no authorization data was set for the authentication method." = "Authorisation failed because no authorisation data was set for the authentication method.";
 
 // OCErrorAuthorizationMissingData
 "Authorization failed because data was missing from the secret data for the authentication method." = "Authorisation failed because data was missing from the secret data for the authentication method.";
@@ -393,7 +393,7 @@
 "Bookmark created with a newer app version. Please update the app." = "Bookmark created with a newer app version. Please update the app.";
 
 // OCErrorAuthorizationCantOpenCustomSchemeURL
-"Can't open authorization URL with custom scheme." = "Can't open authorization URL with custom scheme.";
+"Can't open authorization URL with custom scheme." = "Can't open authorisation URL with custom scheme.";
 
 // OCErrorLockInvalidated
 "Lock invalidated." = "Lock invalidated.";

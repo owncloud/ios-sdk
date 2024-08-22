@@ -1,0 +1,485 @@
+/* 
+  Localizable.strings
+  ownCloudSDK
+
+  Created by Felix Schwarz on 03.03.18.
+  Copyright © 2018 ownCloud GmbH. All rights reserved.
+*/
+
+/* Item property names */
+"itemProperty.lastModified" = "Последнее изменение";
+"itemProperty.isFavorite" = "Избранный";
+"itemProperty.localAttributes" = "Локальные атрибуты";
+
+/* Item policy */
+"Available Offline" = "Доступно без сети";
+
+/* Cellular Switches */
+"Allow cellular access" = "Разрешить доступ к сотовой связи";
+
+/* Connection Progress */
+"Connecting…" = "Соединение…";
+"Authenticating…" = "Авторизация…";
+"Error" = "Ошибка";
+"Fetching user information…" = "Получение информации о пользователе…";
+"Connected" = "Подключено";
+
+"Retrieving thumbnail…" = "Получение миниатюр…";
+
+"Cancel" = "Отмена";
+"Proceed" = "Продолжить";
+"Retry" = "Повторить";
+"OK" = "OK";
+
+/* Database upgrades */
+"Upgrading database…" = "обновления баз данны";
+
+/* Connection setup */
+"Insecure HTTP URL" = "Небезопасный HTTP-URL";
+"The URL you provided uses the HTTP rather than the HTTPS scheme. If you continue, your communication will not be encrypted." = "Указанный вами URL-адрес использует схему HTTP, а не HTTPS. Если вы продолжите, ваше сообщение не будет зашифровано.";
+
+"Insecure HTTP URL forbidden" = "Небезопасный HTTP-адрес не допускается.";
+"The URL you provided uses the HTTP rather than the HTTPS scheme, so your communication would not be encrypted." = "Указанный вами URL-адрес использует схему HTTP, а не HTTPS, поэтому ваше сообщение не будет зашифровано.";
+
+/* Connection status */
+"Offline" = "Оффлайн";
+"Offline (no WiFi connection)" = "Нет сети (нет соединения WiFi)";
+"Server down for maintenance" = "Сервер не работает, находится на обслуживании";
+"Network unavailable" = "Сеть недоступна";
+"Online" = "В сети";
+"Previous token refresh attempts indicated an invalid refresh token." = "Предыдущие попытки обновления токена указывали на недопустимый токен обновления";
+"Server returns status %ld" = "Сервер возвращает статус %ld";
+
+/* Account prepopulation */
+"Populating database…" = "Наполнение базы данных...";
+"%lu files in %lu folders" = "файлы %lu в папках %lu";
+"Closing vault…" = "Закрытие хранилища...";
+
+/* Copies */
+"copy" = "копия";
+
+/* Sync errors */
+"An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed." = "При попытке выполнить действие («%@») возникло исключение. Действие было удалено из очереди синхронизации и могло не завершиться. Если включена запись в журнал, исключение было записано в журнал.";
+"Exception occured performing action" = "При выполнении действия возникло исключение";
+
+/* Delete */
+"%@ changed on the server. Really delete it?" = "%@ изменилось на сервере. Действительно удалить?";
+"%@ has changed on the server since you requested its deletion." = "%@ изменилось на сервер с того момента, как вы запросили его удаление.";
+"Delete" = "Удалить";
+
+"%@ couldn't be deleted" = "%@ удалить не удалось";
+"Please check if you have sufficient permissions to delete %@." = "Пожалуйста, проверьте что у вас есть достаточные права для удаления %@.";
+
+/* Move/Rename/Copy */
+"Operation forbidden" = "Операция запрещена";
+"%@ can't be copied to %@." = "%@ невозможно скопировать в %@.";
+"%@ can't be moved to %@." = "%@ невозможно переместить в  %@.";
+
+"%@ not found" = "%@ не найдено";
+"%@ wasn't found at %@." = "%@ не найдено в %@.";
+
+"The target directory %@ doesn't seem to exist." = "Похоже, целевой каталог %@ не существует.";
+
+"%@ already exists" = "%@ уже существует";
+"Couldn't copy %@ to %@, because an item called %@ already exists there." = "Не удалось скопировать %@ в %@, потому что элемент под названием %@ там уже существует.";
+"Couldn't move %@ to %@, because an item called %@ already exists there." = "Не удалось переместить %@ в %@, потому что элемент под названием %@ уже существует.";
+"Couldn't rename %@ to %@, because another item with that name already exists." = "Не удалось переименовать %@ в %@, поскольку другой элемент с таким именем уже существует.";
+
+"Insufficient permissions" = "Недостаточно прав доступа";
+"%@ can't be copied to %@." = "%@ невозможно скопировать в %@.";
+"%@ can't be moved to %@." = "%@ невозможно переместить в  %@.";
+"%@ can't be renamed to %@." = "%@ Не удалось переименовать в %@";
+
+"%@ not found on the server" = "%@ не найдено на сервере";
+"%@ may have been renamed, moved or deleted remotely." = "%@ возможно было удалённо переименовано, перемещено или удалено.";
+
+"Error copying %@" = "Ошибка при копировании %@";
+"Error moving %@" = "Ошибка при перемещении %@";
+"Error renaming %@" = "Ошибка при открытии %@";
+
+"Renaming %@ to %@…" = "Переименование %@ в %@…";
+"Moving %@ to %@…" = "Перемещение %@ в %@…";
+"Copying %@ to %@…" = "Копирование %@ в %@…";
+
+"{{itemName}} can't be copied into itself." = "{{itemName}} нельзя скопировать в себя.";
+"{{itemName}} can't be moved into itself." = "{{itemName}} нельзя переместить в себя.";
+
+/* Upload */
+"Another item named %@ already exists in %@." = "Другой элемент с именем%@ уже существует в %@.";
+"Not enough space left on the server to upload %@." = "На сервере осталось недостаточно места для загрузки %@.";
+"Uploads to this folder are not allowed." = "Загрузка в эту папку запрещена.";
+"Replace" = "отмена";
+"Keep both" = "Сохранить оба";
+
+/* Download */
+"Downloading %@…" = "Скачивание %@…";
+"\"%@\" has been modified locally" = "«%@» было изменено локально";
+"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost." = "На вашем устройстве находится измененная, несинхронизированная версия файла «%@». Загрузка файла с сервера перезапишет его, и изменения будут потеряны.";
+"Invalid checksum" = "Неверная контрольная сумма";
+"The downloaded file's checksum does not match the checksum provided by the server." = "Контрольная сумма загруженного файла не совпадает с контрольной суммой, предоставленной сервером.";
+"File modified locally" = "Файл изменен локально";
+"\"%@\" was modified locally before the download completed." = "«%@» было изменено локально до завершения загрузки.";
+"Couldn't download %@" = "Невозможно загрузить %@";
+"The contents of the file on the server has changed since initiating download - or the file is no longer available on the server." = "Содержимое файла на сервере изменилось с момента начала загрузки - или файл больше недоступен на сервере.";
+"{{itemName}} is currently processed on the server and can't be downloaded until it finishes processing." = "{{itemName}} в настоящее время обрабатывается на сервере и не может быть загружен до завершения обработки.";
+
+/* Create folder */
+"Creating folder %@…" = "Создание папки %@…";
+
+/* Delete */
+"Deleting %@…" = "Удаление %@…";
+
+/* Retrieving file list */
+"Retrieving file list for %@…" = "Получение списка файлов для %@…";
+
+/* Status */
+"Pending" = "Ожидание";
+"Running" = "Бег";
+"Failed" = "Ошибка";
+"Waiting for user" = "Ожидание пользователя";
+"Waiting for metadata refresh" = "Ожидание обновления метаданных";
+"Waiting to retry (%ld of %ld)" = "Ожидание повторной попытки (%ld из %ld)";
+"Fetching updates…" = "Получение обновлений…";
+"Retrieving items for %@" = "Получение предметов за %@";
+
+/* Update */
+"\"%@\" metadata for %@ couldn't be updated" = "Не удалсоь обновить метаданные \"%@\" для %@";
+"Update failed with status code %d" = "Обновление не прошло, код состояния %d";
+"Error updating %@ metadata" = "Ошибка при обновлении метаданных %@";
+
+/* Logging */
+"Standard error output" = "Вывод на стандартную диагностику";
+"Log file" = "Файл журнала";
+"Log HTTP requests and responses" = "Записывать в лог-файл HTTP запросы и ответы";
+"Log internal file operations" = "Журналировать внутренние файловые операции";
+
+/* Custom Scheme Browser Sessions */
+"Can't open custom scheme URL %@." = "Невозможно открыть URL-адрес пользовательской схемы %@.";
+"Can't build custom scheme URL from %@." = "Невозможно создать URL-адрес пользовательской схемы из %@.";
+
+/* Share roles */
+"Invited persons" = "Приглашенные лица";
+"Only invited persons have access. Login required." = "Доступ имеют только приглашенные лица. Требуется вход.";
+
+"Viewer" = "Зритель";
+"Download and preview" = "Загрузите и просмотрите";
+"Download, preview and share" = "Скачивайте, просматривайте и делитесь";
+"Recipients can view and download contents." = "Получатели могут просматривать и загружать контент.";
+
+"Uploader" = "Загружатель";
+"Recipients can upload but existing contents are not revealed." = "Получатели могут загружать файлы, но существующее содержимое не отображается.";
+
+"Contributor" = "участник";
+"Recipients can view, download and upload contents." = "Получатели могут просматривать, скачивать и закачивать содержимое.";
+
+"Editor" = "редактор";
+"Edit, download, preview and share" = "Редактируйте, скачивайте, просматривайте и делитесь";
+"Upload, edit, delete, download and preview" = "Загружать, редактировать, удалять, скачивать и просматривать";
+"Upload, edit, delete, download, preview and share" = "Загружайте, редактируйте, удаляйте, скачивайте, просматривайте и делитесь";
+"Recipients can view, download and edit contents." = "Получатели могут просматривать, скачиать или править содержимое.";
+"Recipients can view, download, edit, delete and upload contents." = "Получатели могут просматривать, скачивать, править, удалять и закачивать содержимое.";
+
+"Manager" = "Менеджер";
+"Upload, edit, delete, download, preview and share" = "Загружайте, редактируйте, удаляйте, скачивайте, просматривайте и делитесь";
+
+"Custom" = "Другое";
+"Set detailed permissions" = "Установите подробные разрешения";
+
+/* Sharing */
+"Sharing requires an active connection." = "Sharing requires an active connection.";
+
+/* Drives */
+"Personal" = "Персональный";
+"Shares" = "События обмена файлами";
+"Shared with me" = "Поделился со мной";
+
+/* Certificate checks */
+"Certificate changed" = "Сертификат изменен";
+
+/* Errors */
+"Server doesn't seem to support any authentication method supported by this app." = "Похоже, сервер не поддерживает ни один из методов аутентификации, которые поддерживает данное приложение.";
+"This server runs an unsupported version (%@). Version %@ or later is required by this app." = "На сервере работает неподдерживаемая версия (%@). Для данного приложения требуется версия  %@ или позже.";
+
+/* App Provider */
+"This file is currently being processed and is not yet available for use. Please try again shortly." = "Этот файл в настоящее время обрабатывается и пока недоступен для использования. Пожалуйста, повторите попытку в ближайшее время.";
+
+/* DAV Errors */
+// OCDAVErrorServiceUnavailable
+"Server down for maintenance." = "Сервер не работает, находится на обслуживании.";
+// OCDAVErrorNotFound
+"Resource not found." = "Ресурс не найден.";
+
+/* OC Errors */
+"%@ (error %ld, %@)" = "%@ (ошибка %ld, %@)";
+"%@ (error %ld)" = "%@ (ошибка %ld)";
+
+// OCErrorInternal
+"Internal error." = "Внутренняя ошибка.";
+
+// OCErrorInsufficientParameters
+"Insufficient parameters." = "Недостаточно параметров.";
+
+// OCErrorAuthorizationFailed
+"Authorization failed." = "Авторизация не прошла.";
+
+// OCErrorAuthorizationRedirect
+"Authorization failed because the server returned a redirect. Authorization may be successful when retried with the redirect URL." = "Авторизация не прошла, так как сервер вернул перенаправление. Авторизация может пройти успешно, если попробовать повторно с перенаправленной ссылкой.";
+
+// OCErrorAuthorizationNoMethodData
+"Authorization failed because no authorization data was set for the authentication method." = "Авторизация не удалась, поскольку для метода аутентификации не были установлены данные авторизации.";
+
+// OCErrorAuthorizationMissingData
+"Authorization failed because data was missing from the secret data for the authentication method." = "Авторизация не прошла, так как не хватило части секретных данных для метода аутентификации.";
+
+// OCErrroAuthorizationCancelled
+"Authorization was cancelled by the user." = "Авторизация была отменена пользователем.";
+
+// OCErrorRequestURLSessionTaskConstructionFailed
+"Construction of URL Session Task failed." = "Формирование задачи ссылочного сеанса не прошло.";
+
+// OCErrorNewerVersionExists
+"A newer version already exists." = "Уже существует более свежая версия.";
+
+// OCErrorRequestCancelled
+"Request was cancelled." = "Запрос был отменён.";
+
+// OCErrorRequestRemovedBeforeScheduling
+"Request was removed before scheduling." = "Запрос был отменён до постановки на выполнение.";
+
+// OCErrorRequestServerCertificateRejected
+"Request was cancelled because the server certificate was rejected." = "Запрос был отменён, так как сертификат сервера был отклонён.";
+
+// OCErrorRequestDroppedByURLSession
+"Request was dropped by the NSURLSession." = "Запрос был отброшен NSURLSession.";
+
+// OCErrorRequestCompletedWithError
+"Request completed with error." = "Запрос завершился с ошибкой.";
+
+// OCErrorRequestURLSessionInvalidated
+"Request couldn't be scheduled because the underlying URL session has been invalidated." = "Не удалось поставить запрос на исполнение, так как нижележащий ссылочный сеанс был сброшен.";
+
+// OCErrorException
+"An exception occured." = "Произошло исключение.";
+
+// OCErrorResponseUnknownFormat
+"Response was in an unknown format." = "Ответ был в неизвестном формате.";
+
+// OCErrorServerDetectionFailed
+"Server detection failed, i.e. when the server at a URL is not an ownCloud instance." = "Не прошло определение сервера, то есть сервер по ссылке не является экземпляром ownCloud.";
+
+// OCErrorServerTooManyRedirects
+"Server detection failed because of too many redirects." = "Определение сервера не прошло из-за слишком большого количества перенаправлений.";
+
+// OCErrorServerBadRedirection
+"Server redirection to bad/invalid URL." = "Пенерапнавление сервера на плохую или недопустимую ссылку.";
+
+// OCErrorServerVersionNotSupported
+"This server version is not supported." = "Эта версия сервера не поддерживается.";
+
+// OCErrorServerNoSupportedAuthMethods
+"Server doesn't seem to support any authentication method supported by this app." = "Похоже, сервер не поддерживает ни один из методов аутентификации, которые поддерживает данное приложение.";
+
+// OCErrorCertificateInvalid
+"The certificate is invalid or contains errors" = "Сертификат неверен или содержит ошибки.";
+
+// OCErrorCertificateMissing
+"No certificate was returned for a request despite this being a HTTPS connection (should never occur in production, but only if you forgot to provide a certificate during simulated responses to HTTPS requests)." = "Не смотря на использование соединения HTTPS, для запроса не был получен сертификат (при эксплуатации такого быть не должно, только если вы забыли задать сертификат  при симуляции ответа на запрос HTTPS).";
+
+// OCErrorFeatureNotSupportedForItem
+"This feature is not supported for this item." = "Эта возможность не поддерживается для данного элемента.";
+
+// OCErrorFeatureNotSupportedByServer
+"This feature is not supported for this server (version)." = "Эта возможность не поддерживается для данного сервера (версия).";
+
+// OCErrorFeatureNotImplemented
+"This feature is currently not implemented" = "Эта возможность в настоящий момент не реализована";
+
+// OCErrorItemNotFound
+"The targeted item has not been found." = "Не найден указанный элемент.";
+
+// OCErrorItemDestinationNotFound
+"The target location has not been found." = "Целевое местоположение не найдено.";
+
+// OCErrorItemChanged
+"The targeted item has changed." = "Указанный элемент изменился.";
+
+// OCErrorItemInsufficientPermissions
+"The action couldn't be performed on the targeted item because the client lacks permissions." = "Не удалось выполнить действие над указанным элементом, так как у клиента не хватает разрешений.";
+
+// OCErrorItemOperationForbidden
+"The operation on the targeted item is not allowed." = "Операция над указанным элементом не разрешена.";
+
+// OCErrorItemAlreadyExists
+"There already is an item at the destination of this action." = "В месте назначения этого действия уже есть элемент.";
+
+// OCErrorItemNotAvailableOffline
+"Item not available offline." = "Элемент не доступен без сети.";
+
+// OCErrorFileNotFound:
+"File not found." = "Файл не найден.";
+
+// OCErrorCancelled
+"The operation was cancelled." = "Операция была отменена.";
+
+// OCErrorOutdatedCache
+"An operation failed due to outdated cache information." = "Операция не прошла из-за устаревшей информации в кэше.";
+
+// OCErrorRunningOperation
+"A running operation prevents execution." = "Запуску мешает выполняемая операция.";
+
+// OCErrorShareUnauthorized:
+"Not authorized to access shares." = "Не авторизован для доступа к общим ресурсам.";
+
+// OCErrorShareUnavailable
+"Shares are unavailable." = "Акции недоступны.";
+
+// OCErrorShareItemNotADirectory:
+"Item is not a directory." = "Элемент не является каталогом.";
+
+// OCErrorShareItemNotFound
+"Item not found." = "предмет не найден";
+
+// OCErrorShareNotFound
+"Share not found." = "Поделиться не найдено.";
+
+// OCErrorShareUnknownType
+"Unknown share type." = "Неизвестный тип общего ресурса.";
+
+// OCErrorSharePublicUploadDisabled
+"Public upload was disabled by the administrator." = "Публичная загрузка отключена администратором.";
+
+// OCErrorNotAvailableOffline
+"Not available offline." = "Не доступно автономно.";
+
+// OCErrorAuthorizationRetry
+"Authorization needs to be retried." = "Необходимо повторить авторизацию.";
+
+// OCErrorItemPolicyRedundant
+"Another item policy of the same kind already includes the item, making the addition of this item policy redundant." = "Другая политика элемента того же типа уже включает этот элемент, поэтому добавление этой политики элемента является излишним.";
+
+// OCErrorItemPolicyMakesRedundant
+"Other item policies of the same kind covering subsets of this item policy become redundant by the addition of this item policy." = "Другие политики элементов того же типа, охватывающие подмножества этой политики элементов, становятся излишними после добавления этой политики элементов.";
+
+// OCErrorUnnormalizedPath
+"The provided path is not normalized." = "Указанный путь не нормализован.";
+
+// OCErrorPrivateLinkInvalidFormat
+"Private link format invalid." = "Недопустимый формат частной ссылки.";
+
+// OCErrorPrivateLinkResolutionFailed
+"Resolution of private link failed." = "Не удалось разрешить частную ссылку.";
+
+// OCErrorAuthorizationMethodNotAllowed
+"Authentication method not allowed. Re-authentication needed." = "Метод аутентификации не разрешен. Требуется повторная аутентификация.";
+
+// OCErrorAuthorizationMethodUnknown
+"Authentication method unknown." = "Метод аутентификации неизвестен";
+
+// OCErrorServerConnectionValidationFailed
+"Connection validation failed." = "Проверка соединения не удалась.";
+
+// OCErrorAuthorizationClientRegistrationFailed
+"Client registration failed." = "Регистрация клиента не удалась.";
+
+// OCErrorAuthorizationNotMatchingRequiredUserID
+"The logged in user is not matching the required user ID." = "Вошедший в систему пользователь не соответствует требуемому идентификатору пользователя.";
+"You logged in as user %@, but must log in as user %@. Please retry." = "Вы вошли в систему как пользователь %@, но должны войти в систему как пользователь %@ Пожалуйста, повторите попытку.";
+"Login as user %@ required. Please retry." = "Требуется войти в систему под именем пользователя %@. Пожалуйста, попробуйте еще раз.";
+
+// OCErrorDatabaseMigrationRequired
+"Database upgrade required. Please open the app to perform the upgrade." = "Требуется обновление базы данных. Пожалуйста, откройте приложение, чтобы выполнить обновление.";
+
+// OCErrorHostUpdateRequired
+"Bookmark created with a newer app version. Please update the app." = "Закладка создана в более новой версии приложения. Пожалуйста, обновите приложение.";
+
+// OCErrorAuthorizationCantOpenCustomSchemeURL
+"Can't open authorization URL with custom scheme." = "Невозможно открыть URL-адрес авторизации, использующий пользовательскую схему.";
+
+// OCErrorLockInvalidated
+"Lock invalidated." = "Замок признан недействительным.";
+
+// OCErrorRequestTimeout
+"Request timed out" = "Превышено время ожидания запроса";
+
+// OCErrorResourceDoesNotExist
+"Resource does not exist." = "Ресурс не существует.";
+
+// OCErrorWebFingerLacksServerInstanceRelation
+"Web finger response lacks server instance relation." = "В ответе веб-пальца отсутствует связь с экземпляром сервера.";
+
+// OCErrorUnknownUser
+"Unknown user" = "Неизвестный пользователь";
+
+// OCErrorInvalidType
+"Invalid type." = "Неверный тип.";
+
+// OCErrorRequiredValueMissing
+"Required value missing." = "Необходимое значение отсутствует.";
+
+// OCErrorGraphError
+"Generic graph error." = "Общая ошибка графика.";
+
+// OCErrorDataItemTypeUnavailable
+"Object does not return DataItemType." = "Объект не возвращает DataItemType.";
+
+// OCErrorDataConverterUnavailable
+"No data converter available for conversion." = "Конвертер данных не доступен для преобразования.";
+
+// OCErrorMissingDriveID
+"Missing Drive ID." = "Идентификатор диска отсутствует.";
+
+// OCErrorResourceNotFound
+"Resource not found." = "Ресурс не найден.";
+
+// OCErrorInvalidParameter
+"Invalid parameter." = "Недопустимый параметр.";
+
+// OCErrorItemProcessing
+"Item is currently processing." = "Товар в настоящее время находится в обработке.";
+
+/* Diagnostic */
+"Files" = "Файлы";
+"Folders" = "папки";
+"Total Items" = "Всего предметов";
+"Removed Items" = "Удаленные объекты";
+"Scheduled folder scans" = "Сканирование папок по расписанию";
+"Sync Record ID"  = "Идентификатор записи синхронизации";
+"State" = "Состояние";
+"In progress since" = "В процессе с";
+"Origin Process" = "Процесс происхождения";
+"Origin Process Valid" = "Процесс происхождения действителен";
+"Timestamp" = "Временная метка";
+"Lane ID" = "Идентификатор полосы";
+"Local ID" = "Локальный идентификатор";
+"Action ID" = "Идентификатор действия";
+"Process Sync Records" = "Обработка записей синхронизации";
+"Reschedule" = "перенести";
+"Deschedule (remove)" = "Снять с расписания (удалить)";
+"Action" = "Действие";
+"Wait Conditions" = "Условия ожидания";
+"Events" = "События";
+"Class" = "Класс";
+"Identifier" = "Идентификатор";
+"Localized Description" = "Локализованное описание";
+"Database size" = "Размер базы данных";
+"Thumbnail database size" = "Размер базы данных миниатюр";
+"Vacuum" = "Вакуум";
+"UUID" = "UUID";
+"Name" = "Имя";
+"URL" = "URL";
+"Origin URL" = "URL-адрес происхождения";
+"Use Origin URL as URL" = "Используйте URL-адрес происхождения в качестве URL-адреса происхождения";
+"Certificate Date" = "Дата сертификата";
+"Invalidate Certificate" = "Неверный сертификат";
+"User Name" = "Имя пользователя";
+"Auth Method" = "Метод аутентификации";
+"Auth Data" = "Данные аутентификации";
+"Auth Validation Date" = "Дата установления подлинности";
+"Database Version" = "Версия базы данных";
+"UserInfo" = "информация о пользователе";
+"Invalidate Login Data" = "Недействительные данные для входа";
+"Delete Authentication Data" = "Удалить данные аутентификации";
+"Remove Database Version" = "Удалить версию базы данных";
+"Delete Database" = "Удалить базу данных";
+"Removed database at %@" = "Удалена база данных %@";
+"Removed thumbnail database at %@" = "Удалена база данных миниатюр в %@";
