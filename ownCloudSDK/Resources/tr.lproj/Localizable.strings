@@ -158,7 +158,7 @@
 "Can't build custom scheme URL from %@." = "Can't build custom scheme URL from %@.";
 
 /* Share roles */
-"Invited persons" = "Invited persons";
+"Invited persons" = "Davetli kişiler";
 "Only invited persons have access. Login required." = "Only invited persons have access. Login required.";
 
 "Viewer" = "Viewer";
@@ -179,7 +179,7 @@
 "Recipients can view, download and edit contents." = "Alıcılar içeriği görüntüleyebilir, indirebilir ve düzenleyebilir.";
 "Recipients can view, download, edit, delete and upload contents." = "Alıcılar içerik görüntüleyebilir, düzenleyebilir, silebilir ve karşı tarafa yükleyebilir.";
 
-"Manager" = "Manager";
+"Manager" = "Yönetici";
 "Upload, edit, delete, download, preview and share" = "Upload, edit, delete, download, preview and share";
 
 "Custom" = "Özel";
@@ -411,7 +411,7 @@
 "Unknown user" = "Bilinmeyen kullanıcı";
 
 // OCErrorInvalidType
-"Invalid type." = "Invalid type.";
+"Invalid type." = "Geçersiz tür.";
 
 // OCErrorRequiredValueMissing
 "Required value missing." = "Required value missing.";
@@ -432,7 +432,7 @@
 "Resource not found." = "Kaynak bulunamadı.";
 
 // OCErrorInvalidParameter
-"Invalid parameter." = "Invalid parameter.";
+"Invalid parameter." = "Geçersiz parametre.";
 
 // OCErrorItemProcessing
 "Item is currently processing." = "Item is currently processing.";
