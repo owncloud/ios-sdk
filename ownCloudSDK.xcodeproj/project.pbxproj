@@ -259,7 +259,6 @@
 		DC3E6E7F2609473200D7D847 /* OCBookmark+DBMigration.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3E6E7D2609473200D7D847 /* OCBookmark+DBMigration.h */; };
 		DC3E6E802609473200D7D847 /* OCBookmark+DBMigration.m in Sources */ = {isa = PBXBuildFile; fileRef = DC3E6E7E2609473200D7D847 /* OCBookmark+DBMigration.m */; };
 		DC3E6E9226094EE200D7D847 /* OCDatabase+Versions.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3E6E9026094EE200D7D847 /* OCDatabase+Versions.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DC3F2B4D204AED1900189B9A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DC3F2B4F204AED1900189B9A /* Localizable.strings */; };
 		DC3F2B51204AED8400189B9A /* OCMacros.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3F2B50204AED8300189B9A /* OCMacros.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC3FE4BA229BD424002E009C /* OCCoreDirectoryUpdateJob.h in Headers */ = {isa = PBXBuildFile; fileRef = DC3FE4B8229BD424002E009C /* OCCoreDirectoryUpdateJob.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC3FE4BB229BD424002E009C /* OCCoreDirectoryUpdateJob.m in Sources */ = {isa = PBXBuildFile; fileRef = DC3FE4B9229BD424002E009C /* OCCoreDirectoryUpdateJob.m */; };
@@ -492,7 +491,6 @@
 		DC76500D2404703A00201812 /* OCWaitConditionMetaDataRefresh.m in Sources */ = {isa = PBXBuildFile; fileRef = DC76500B2404703A00201812 /* OCWaitConditionMetaDataRefresh.m */; };
 		DC772E9126FC90E2002C0015 /* OCAuthenticationBrowserSessionAWBrowser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC772E8F26FC90E2002C0015 /* OCAuthenticationBrowserSessionAWBrowser.h */; };
 		DC772E9226FC90E2002C0015 /* OCAuthenticationBrowserSessionAWBrowser.m in Sources */ = {isa = PBXBuildFile; fileRef = DC772E9026FC90E2002C0015 /* OCAuthenticationBrowserSessionAWBrowser.m */; };
-		DC79E1A42058725700189B9A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A62058725700189B9A /* Localizable.strings */; };
 		DC79E1A92058747100189B9A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A72058747000189B9A /* LaunchScreen.storyboard */; };
 		DC79E1AA2058747100189B9A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DC79E1A82058747100189B9A /* Main.storyboard */; };
 		DC79E1AD205888F800189B9A /* OCCertificateDetailsViewNode.h in Headers */ = {isa = PBXBuildFile; fileRef = DC79E1AB205888F800189B9A /* OCCertificateDetailsViewNode.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -802,6 +800,8 @@
 		DCDD9B1D22298D050052A001 /* OCGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDD9B1B22298D050052A001 /* OCGroup.m */; };
 		DCDD9B2B22312ED80052A001 /* OCRateLimiter.h in Headers */ = {isa = PBXBuildFile; fileRef = DCDD9B2922312ED80052A001 /* OCRateLimiter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCDD9B2C22312ED80052A001 /* OCRateLimiter.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDD9B2A22312ED80052A001 /* OCRateLimiter.m */; };
+		DCE0FEAE2C77CEFA005E4423 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DCE0FEAD2C77CEFA005E4423 /* Localizable.xcstrings */; };
+		DCE0FEB02C77CEFA005E4423 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DCE0FEAF2C77CEFA005E4423 /* Localizable.xcstrings */; };
 		DCE17BC126B5A7E400B7C7DD /* OCHTTPRequest+Stream.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE17BBF26B5A7E400B7C7DD /* OCHTTPRequest+Stream.h */; };
 		DCE17BC226B5A7E400B7C7DD /* OCHTTPRequest+Stream.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE17BC026B5A7E400B7C7DD /* OCHTTPRequest+Stream.m */; };
 		DCE227CF22D60CF5000BE0A5 /* OCCore+AvailableOffline.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE227CD22D60CF4000BE0A5 /* OCCore+AvailableOffline.m */; };
@@ -1031,42 +1031,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		3999BD3025FA2C8100DB7C47 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
-		3999BD3125FA2C8200DB7C47 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCLogFileRecord.m; sourceTree = "<group>"; };
 		4C7295E9228DAD8400FA4E68 /* OCLogFileRecord.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCLogFileRecord.h; sourceTree = "<group>"; };
-		590CCF3D20C7FAC100BA75E4 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
-		590CCF3E20C7FAC100BA75E4 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		5966C8D32195A11600C8875E /* OCCoreManager+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCoreManager+OCMocking.h"; sourceTree = "<group>"; };
 		5966C8D42195A11600C8875E /* OCCoreManager+OCMocking.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCoreManager+OCMocking.m"; sourceTree = "<group>"; };
 		599A45A8218C566C003CAB00 /* OCConnection+OCMocking.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+OCMocking.m"; sourceTree = "<group>"; };
 		599A45A9218C566C003CAB00 /* OCConnection+OCMocking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OCConnection+OCMocking.h"; sourceTree = "<group>"; };
-		59AAD95221F76B5000D15F07 /* cs */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = cs; path = cs.lproj/Localizable.strings; sourceTree = "<group>"; };
-		59AAD95321F76B5000D15F07 /* cs */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = cs; path = cs.lproj/Localizable.strings; sourceTree = "<group>"; };
-		59AAD95C21F7717C00D15F07 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
-		59AAD95D21F7717D00D15F07 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
-		59AAD96021F7743100D15F07 /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en-GB"; path = "en-GB.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		59AAD96121F7743200D15F07 /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en-GB"; path = "en-GB.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		59AAD96221F774AA00D15F07 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
-		59AAD96321F774AA00D15F07 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
-		59AAD96421F774FE00D15F07 /* mk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = mk; path = mk.lproj/Localizable.strings; sourceTree = "<group>"; };
-		59AAD96521F774FF00D15F07 /* mk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = mk; path = mk.lproj/Localizable.strings; sourceTree = "<group>"; };
-		59AAD96621F7762A00D15F07 /* nb-NO */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "nb-NO"; path = "nb-NO.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		59AAD96721F7762A00D15F07 /* nb-NO */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "nb-NO"; path = "nb-NO.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		59AAD96821F7768B00D15F07 /* nn-NO */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "nn-NO"; path = "nn-NO.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		59AAD96921F7768B00D15F07 /* nn-NO */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "nn-NO"; path = "nn-NO.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		59AAD96A21F777DD00D15F07 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		59AAD96B21F777DE00D15F07 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		59AAD96C21F777E900D15F07 /* pt-PT */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-PT"; path = "pt-PT.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		59AAD96D21F777E900D15F07 /* pt-PT */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-PT"; path = "pt-PT.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		59AAD96E21F7798100D15F07 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
-		59AAD96F21F7798100D15F07 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
-		59AAD97021F77BFD00D15F07 /* sq */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sq; path = sq.lproj/Localizable.strings; sourceTree = "<group>"; };
-		59AAD97121F77BFE00D15F07 /* sq */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sq; path = sq.lproj/Localizable.strings; sourceTree = "<group>"; };
-		59AAD97221F77CD500D15F07 /* th-TH */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "th-TH"; path = "th-TH.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		59AAD97321F77CD600D15F07 /* th-TH */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "th-TH"; path = "th-TH.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		59AAD97421F780D800D15F07 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		59AAD97521F780D800D15F07 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		59F6476B219AD11600C016FD /* OCQuery+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCQuery+OCMocking.h"; sourceTree = "<group>"; };
 		59F6476C219AD11600C016FD /* OCQuery+OCMocking.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCQuery+OCMocking.m"; sourceTree = "<group>"; };
 		DC00DB1B219B120300C82737 /* OCHTTPDAVMultistatusResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPDAVMultistatusResponse.h; sourceTree = "<group>"; };
@@ -1313,7 +1283,6 @@
 		DC3E6E7D2609473200D7D847 /* OCBookmark+DBMigration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCBookmark+DBMigration.h"; sourceTree = "<group>"; };
 		DC3E6E7E2609473200D7D847 /* OCBookmark+DBMigration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCBookmark+DBMigration.m"; sourceTree = "<group>"; };
 		DC3E6E9026094EE200D7D847 /* OCDatabase+Versions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCDatabase+Versions.h"; sourceTree = "<group>"; };
-		DC3F2B4E204AED1900189B9A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		DC3F2B50204AED8300189B9A /* OCMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCMacros.h; sourceTree = "<group>"; };
 		DC3FE4B8229BD424002E009C /* OCCoreDirectoryUpdateJob.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCoreDirectoryUpdateJob.h; sourceTree = "<group>"; };
 		DC3FE4B9229BD424002E009C /* OCCoreDirectoryUpdateJob.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCCoreDirectoryUpdateJob.m; sourceTree = "<group>"; };
@@ -1549,7 +1518,6 @@
 		DC76500B2404703A00201812 /* OCWaitConditionMetaDataRefresh.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCWaitConditionMetaDataRefresh.m; sourceTree = "<group>"; };
 		DC772E8F26FC90E2002C0015 /* OCAuthenticationBrowserSessionAWBrowser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCAuthenticationBrowserSessionAWBrowser.h; sourceTree = "<group>"; };
 		DC772E9026FC90E2002C0015 /* OCAuthenticationBrowserSessionAWBrowser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCAuthenticationBrowserSessionAWBrowser.m; sourceTree = "<group>"; };
-		DC79E1A52058725700189B9A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		DC79E1A72058747000189B9A /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		DC79E1A82058747100189B9A /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
 		DC79E1AB205888F800189B9A /* OCCertificateDetailsViewNode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCCertificateDetailsViewNode.h; sourceTree = "<group>"; };
@@ -1875,8 +1843,8 @@
 		DCDD9B1B22298D050052A001 /* OCGroup.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCGroup.m; sourceTree = "<group>"; };
 		DCDD9B2922312ED80052A001 /* OCRateLimiter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCRateLimiter.h; sourceTree = "<group>"; };
 		DCDD9B2A22312ED80052A001 /* OCRateLimiter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCRateLimiter.m; sourceTree = "<group>"; };
-		DCE0FEAB2C77CC66005E4423 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/Localizable.strings; sourceTree = "<group>"; };
-		DCE0FEAC2C77CC7D005E4423 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/Localizable.strings; sourceTree = "<group>"; };
+		DCE0FEAD2C77CEFA005E4423 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		DCE0FEAF2C77CEFA005E4423 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		DCE17BBF26B5A7E400B7C7DD /* OCHTTPRequest+Stream.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCHTTPRequest+Stream.h"; sourceTree = "<group>"; };
 		DCE17BC026B5A7E400B7C7DD /* OCHTTPRequest+Stream.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCHTTPRequest+Stream.m"; sourceTree = "<group>"; };
 		DCE227CD22D60CF4000BE0A5 /* OCCore+AvailableOffline.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OCCore+AvailableOffline.m"; sourceTree = "<group>"; };
@@ -3268,7 +3236,7 @@
 		DC79E1A2205871B800189B9A /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				DC79E1A62058725700189B9A /* Localizable.strings */,
+				DCE0FEAD2C77CEFA005E4423 /* Localizable.xcstrings */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -3612,7 +3580,7 @@
 			isa = PBXGroup;
 			children = (
 				DCC8F9AF202852A200EB6701 /* Info.plist */,
-				DC3F2B4F204AED1900189B9A /* Localizable.strings */,
+				DCE0FEAF2C77CEFA005E4423 /* Localizable.xcstrings */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -5059,7 +5027,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC31BAE22A82445200BFF393 /* OpenSSL.LICENSE in Resources */,
-				DC79E1A42058725700189B9A /* Localizable.strings in Resources */,
+				DCE0FEAE2C77CEFA005E4423 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5092,8 +5060,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC31816D2BDF882500E70392 /* Signal Handling.md in Resources */,
+				DCE0FEB02C77CEFA005E4423 /* Localizable.xcstrings in Resources */,
 				DCC8F9CA202853B300EB6701 /* LICENSE in Resources */,
-				DC3F2B4D204AED1900189B9A /* Localizable.strings in Resources */,
 				DC446C8A206B8FBF00189B9A /* ISRunLoopThread.LICENSE in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -5702,57 +5670,6 @@
 			targetProxy = DCEEB2DE2044064C00189B9A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
-
-/* Begin PBXVariantGroup section */
-		DC3F2B4F204AED1900189B9A /* Localizable.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				DC3F2B4E204AED1900189B9A /* en */,
-				590CCF3D20C7FAC100BA75E4 /* es */,
-				59AAD95221F76B5000D15F07 /* cs */,
-				59AAD95C21F7717C00D15F07 /* de */,
-				59AAD96021F7743100D15F07 /* en-GB */,
-				59AAD96221F774AA00D15F07 /* ko */,
-				59AAD96421F774FE00D15F07 /* mk */,
-				59AAD96621F7762A00D15F07 /* nb-NO */,
-				59AAD96821F7768B00D15F07 /* nn-NO */,
-				59AAD96A21F777DD00D15F07 /* pt-BR */,
-				59AAD96C21F777E900D15F07 /* pt-PT */,
-				59AAD96E21F7798100D15F07 /* ru */,
-				59AAD97021F77BFD00D15F07 /* sq */,
-				59AAD97221F77CD500D15F07 /* th-TH */,
-				59AAD97421F780D800D15F07 /* zh-Hans */,
-				3999BD3025FA2C8100DB7C47 /* fr */,
-				DCE0FEAB2C77CC66005E4423 /* tr */,
-			);
-			name = Localizable.strings;
-			sourceTree = "<group>";
-		};
-		DC79E1A62058725700189B9A /* Localizable.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				DC79E1A52058725700189B9A /* en */,
-				590CCF3E20C7FAC100BA75E4 /* es */,
-				59AAD95321F76B5000D15F07 /* cs */,
-				59AAD95D21F7717D00D15F07 /* de */,
-				59AAD96121F7743200D15F07 /* en-GB */,
-				59AAD96321F774AA00D15F07 /* ko */,
-				59AAD96521F774FF00D15F07 /* mk */,
-				59AAD96721F7762A00D15F07 /* nb-NO */,
-				59AAD96921F7768B00D15F07 /* nn-NO */,
-				59AAD96B21F777DE00D15F07 /* pt-BR */,
-				59AAD96D21F777E900D15F07 /* pt-PT */,
-				59AAD96F21F7798100D15F07 /* ru */,
-				59AAD97121F77BFE00D15F07 /* sq */,
-				59AAD97321F77CD600D15F07 /* th-TH */,
-				59AAD97521F780D800D15F07 /* zh-Hans */,
-				3999BD3125FA2C8200DB7C47 /* fr */,
-				DCE0FEAC2C77CC7D005E4423 /* tr */,
-			);
-			name = Localizable.strings;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		DC30948D2057358800189B9A /* Debug */ = {
