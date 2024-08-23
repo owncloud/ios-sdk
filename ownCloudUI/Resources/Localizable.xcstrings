@@ -9,6 +9,12 @@
             "value" : "Automatisch akzeptiert."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-accepted."
+          }
+        },
         "en-GB" : {
           "stringUnit" : {
             "state" : "translated",
@@ -186,6 +192,12 @@
             "state" : "translated",
             "value" : "Zertifikatskette"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain"
+          }
         }
       }
     },
@@ -195,6 +207,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zertifikat-Details"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate Details"
           }
         }
       }
@@ -211,6 +229,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Es gibt Probleme mit dem Zertifikat."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate has issues."
           }
         },
         "en-GB" : {
@@ -527,6 +551,12 @@
             "value" : "Erweiterungen"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensions"
+          }
+        },
         "en-GB" : {
           "stringUnit" : {
             "state" : "translated",
@@ -627,6 +657,12 @@
             "value" : "Fingerabdrücke"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fingerprints"
+          }
+        },
         "en-GB" : {
           "stringUnit" : {
             "state" : "translated",
@@ -721,6 +757,12 @@
             "value" : "Ausblenden ±"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide ±"
+          }
+        },
         "en-GB" : {
           "stringUnit" : {
             "state" : "translated",
@@ -792,6 +834,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostname"
+          }
+        },
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hostname"
@@ -890,6 +938,12 @@
             "state" : "translated",
             "value" : "Zwischenzertifikat"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intermediate Certificate"
+          }
         }
       }
     },
@@ -905,6 +959,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aussteller"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuer"
           }
         },
         "en-GB" : {
@@ -1863,6 +1923,12 @@
             "value" : "Keine Probleme gefunden."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No issues found."
+          }
+        },
         "en-GB" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2177,6 +2243,12 @@
             "value" : "Öffentlicher Schlüssel"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public Key"
+          }
+        },
         "en-GB" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2271,6 +2343,12 @@
             "value" : "Grund"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reason"
+          }
+        },
         "en-GB" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2339,6 +2417,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Root-Zertifikat"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root Certificate"
           }
         }
       }
@@ -2457,6 +2541,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anzeigen ±"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show ±"
           }
         },
         "en-GB" : {
@@ -2750,6 +2840,12 @@
             "value" : "Betreff"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subject"
+          }
+        },
         "en-GB" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2848,6 +2944,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vom Benutzer akzeptiert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-accepted."
           }
         },
         "en-GB" : {
@@ -2950,6 +3052,12 @@
             "value" : "Vom Benutzer abgelehnt."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-rejected."
+          }
+        },
         "en-GB" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3043,6 +3151,12 @@
             "state" : "translated",
             "value" : "Validiere…"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validating…"
+          }
         }
       }
     },
@@ -3058,6 +3172,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Validierungsfehler"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Error"
           }
         },
         "en-GB" : {
@@ -3158,6 +3278,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Validierungsstatus"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Status"
           }
         },
         "en-GB" : {
