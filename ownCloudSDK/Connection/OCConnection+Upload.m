@@ -144,8 +144,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 	// Start upload
 	if ((parentTusHeader != nil) && OCTUSIsAvailable(parentTusHeader.supportFlags) && // TUS support available
-	    OCTUSIsSupported(parentTusHeader.supportFlags, OCTUSSupportExtensionCreation) && // TUS creation extension available
-	    (OCCoreManager.sharedCoreManager.memoryConfiguration != OCCoreMemoryConfigurationMinimum)) // Memory configuration is NOT minimum (splitting up the file into chunks for TUS transfer might otherwise go over the limit and lead to a crash)
+	    OCTUSIsSupported(parentTusHeader.supportFlags, OCTUSSupportExtensionCreation)) // TUS creation extension available
 	{
 		// Use TUS
 		return ([self _tusUploadFileFromURL:sourceURL withName:fileName modificationDate:modDate fileSize:fileSize checksum:checksum tusHeader:parentTusHeader to:newParentDirectory replacingItem:replacedItem options:options resultTarget:eventTarget]);
@@ -242,9 +241,16 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 			{
 				NSNumber *capabilitiesTusMaxChunkSize;
 
-				if ((capabilitiesTusMaxChunkSize = self.capabilities.tusMaxChunkSize) != nil)
+				if (OCCoreManager.sharedCoreManager.memoryConfiguration != OCCoreMemoryConfigurationMinimum)
 				{
-					tusJob.maxSegmentSize = capabilitiesTusMaxChunkSize.unsignedIntegerValue;
+					// Memory configuration is NOT minimum, so avoid splitting up files into chunks if
+					// possible, which requires additional memory and could mean going over a tight memory
+					// limit and lead to a crash eventually.
+
+					if ((capabilitiesTusMaxChunkSize = self.capabilities.tusMaxChunkSize) != nil)
+					{
+						tusJob.maxSegmentSize = capabilitiesTusMaxChunkSize.unsignedIntegerValue;
+					}
 				}
 			}
 
@@ -266,6 +272,14 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 	BOOL useCreationWithUpload = OCTUSIsSupported(tusJob.header.supportFlags, OCTUSSupportExtensionCreationWithUpload);
 	NSUInteger maxCreationWithUploadSize = NSUIntegerMax;
 	OCHTTPRequest *request = nil;
+
+	if (OCCoreManager.sharedCoreManager.memoryConfiguration == OCCoreMemoryConfigurationMinimum)
+	{
+		// Memory configuration is minimum, so use just Creation instead of Creation-With-Upload
+		// to avoid splitting up files into chunks if possible, which requires additional memory
+		// and could mean going over a tight memory limit and lead to a crash eventually.
+		useCreationWithUpload = NO;
+	}
 
 	// Set up progress
 	NSProgress *actionProgress = nil;
