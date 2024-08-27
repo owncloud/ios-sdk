@@ -67,7 +67,7 @@
 
 		if (_fileURL != nil)
 		{
-			NSError *error = nil;
+			NSError *error = nil, *returnError = nil;
 			NSURL *segmentFileURL = [_segmentFolderURL URLByAppendingPathComponent:NSUUID.UUID.UUIDString];
 			NSFileHandle *srcFile = nil;
 			NSFileHandle *dstFile = nil;
@@ -173,23 +173,10 @@
 				copySuccessful = YES;
 			}while(false);
 
-			if (@available(iOS 13, *))
-			{
-				[srcFile closeAndReturnError:&error];
-				[dstFile closeAndReturnError:&error];
-			}
-			else
-			{
-				@try
-				{
-					[srcFile closeFile];
-					[dstFile closeFile];
-				}
-				@catch(NSException *exception)
-				{
-					OCLogError(@"Exception closing %@ + %@: %@", _fileURL, segmentFileURL, OCLogPrivate(exception));
-				}
-			}
+			returnError = error;
+
+			[srcFile closeAndReturnError:&error];
+			[dstFile closeAndReturnError:&error];
 
 			srcFile = nil;
 			dstFile = nil;
@@ -211,7 +198,7 @@
 			{
 				if (outError != NULL)
 				{
-					*outError = error;
+					*outError = (error == nil) ? returnError : error;
 				}
 			}
 		}

@@ -97,6 +97,8 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		uploadItem.lastUsed = [NSDate new];
 		[uploadItem addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityUploading];
 
+		self.actionTrackingID = OCActionTrackingIDFromSyncRecordID(syncContext.syncRecord.recordID); // achieve consistency with generated ActionTrackingID in -scheduleWithContext: options dictionary
+
 		if (uploadItem.isPlaceholder && (uploadItem.databaseID == nil))
 		{
 			syncContext.addedItems = @[ uploadItem ];

@@ -2121,6 +2121,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 			__block NSError *error = nil;
 			NSMutableSet<OCSyncRecordID> *syncRecordIDsWithPendingEvents = [NSMutableSet new];
 			__block NSSet<OCActionTrackingID> *httpActionTrackingIDs = nil;
+			NSMutableSet<OCSyncRecordID> *syncRecordIDsFoundInHTTPRequests = [NSMutableSet new];
 			__block NSNumber *totalNumberOfRequestsInBackendForPartition = nil;
 			NSMutableArray<OCSyncRecord *> *stuckRecords = [NSMutableArray new];
 
@@ -2133,6 +2134,17 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 					OCSyncExecDone(trackingIDsRetrieved);
 				}];
 			});
+
+			// - extract sync record IDs from HTTP ActionTrackingIDs (in case an action is using that instead of its own ActionTrackingID to achieve routing)
+			for (OCActionTrackingID httpActionTrackingID in httpActionTrackingIDs)
+			{
+				OCSyncRecordID syncRecordID;
+
+				if ((syncRecordID = OCSyncRecordIDFromActionTrackingID(httpActionTrackingID)) != nil)
+				{
+					[syncRecordIDsFoundInHTTPRequests addObject:syncRecordID];
+				}
+			}
 
 			// Retrieve sync record IDs with pending events
 			// - include (possibly as-of-yet in-delivery) events
@@ -2165,6 +2177,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 					if ((record.state == OCSyncRecordStateProcessing) && 	// Record is processing
 					    (record.waitConditions.count == 0) &&		// Record has no wait conditions
 					    ((record.recordID != nil ) && (![syncRecordIDsWithPendingEvents containsObject:record.recordID])) && // Record has no pending events
+					    ((record.recordID != nil ) && (![syncRecordIDsFoundInHTTPRequests containsObject:record.recordID])) && // Record has no HTTP requests associated via specially formatted ActionTrackingIDs
 					    (
 					    	((record.action.actionTrackingID != nil) && (![httpActionTrackingIDs containsObject:record.action.actionTrackingID])) || // Record has no active HTTP requests (determined by tracking ID)
 					    	((record.action.actionTrackingID == nil) && (totalNumberOfRequestsInBackendForPartition != nil) && (totalNumberOfRequestsInBackendForPartition.integerValue == 0)) // Legacy (from pre-ATID era): Record has no ATID, but there are no requests in general, so also no active or pending HTTP requests for this sync action
