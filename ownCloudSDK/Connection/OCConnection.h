@@ -98,7 +98,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable OCTUSHeader *)connection:(OCConnection *)connection tusHeader:(nullable OCTUSHeader *)tusHeader forChildrenOf:(OCItem *)parentItem;
 
-- (nullable NSError *)connection:(OCConnection *)connection continueActionForTrackingID:(OCActionTrackingID)trackingID; //!< Return an error (incl. OCErrorCancelled) if the connection should not carry on performing the action, identified by a OCActionTrackingID that was provided as option to the action
+- (void)connection:(OCConnection *)connection continueActionForTrackingID:(OCActionTrackingID)trackingID withResultHandler:(void(^)(NSError * _Nullable error))resultHandler; //!< Return an error (incl. OCErrorCancelled) if the connection should not carry on performing the action, identified by a OCActionTrackingID that was provided as option to the action
 
 - (void)connection:(OCConnection *)connection hasUpdate:(OCConnectionActionUpdate)update forTrackingID:(OCActionTrackingID)trackingID; //!< Called by actions to provide a status or progress update to an action, identified by a OCActionTrackingID that was provided as option  to the action.
 

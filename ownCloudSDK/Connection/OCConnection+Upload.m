@@ -254,7 +254,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 				}
 			}
 
-			tusProgress = [self _continueTusJob:tusJob lastTask:nil];
+			tusProgress = [self _continueTusJob:tusJob lastTask:nil performCheck:NO];
 		}
 	}
 	else
@@ -266,12 +266,35 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 	return (tusProgress);
 }
 
-- (OCProgress *)_continueTusJob:(OCTUSJob *)tusJob lastTask:(NSString *)lastTask
+- (OCProgress *)_continueTusJob:(OCTUSJob *)tusJob lastTask:(NSString *)lastTask performCheck:(BOOL)performCheck
 {
 	OCProgress *tusProgress = nil;
 	BOOL useCreationWithUpload = OCTUSIsSupported(tusJob.header.supportFlags, OCTUSSupportExtensionCreationWithUpload);
 	NSUInteger maxCreationWithUploadSize = NSUIntegerMax;
 	OCHTTPRequest *request = nil;
+
+	// Check if upload should continue
+	if (performCheck &&
+	    (tusJob.trackingID != nil) && (self.delegate != nil) && ([self.delegate respondsToSelector:@selector(connection:continueActionForTrackingID:withResultHandler:)]))
+	{
+		[self.delegate connection:self continueActionForTrackingID:tusJob.trackingID withResultHandler:^(NSError * _Nullable error) {
+			if (error != nil)
+			{
+				// Stop with provided error if the action should not continue
+				[tusJob.eventTarget handleError:error type:OCEventTypeUpload uuid:nil sender:self];
+				[tusJob destroy];
+
+				[self finishActionWithTrackingID:tusJob.trackingID];
+			}
+			else
+			{
+				// Continue
+				[self _continueTusJob:tusJob lastTask:lastTask performCheck:NO];
+			}
+		}];
+
+		return (nil);
+	}
 
 	if (OCCoreManager.sharedCoreManager.memoryConfiguration == OCCoreMemoryConfigurationMinimum)
 	{
@@ -302,23 +325,6 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 								@[ OCProgressPathElementIdentifierCoreRoot, self.bookmark.uuid.UUIDString, OCProgressPathElementIdentifierCoreConnectionPath, tusJob.trackingID ] :
 								@[])
 						      progress:actionProgress];
-	}
-
-	// Check if upload should continue
-	if ((tusJob.trackingID != nil) && (self.delegate != nil) && ([self.delegate respondsToSelector:@selector(connection:continueActionForTrackingID:)]))
-	{
-		NSError *error;
-
-		if ((error = [self.delegate connection:self continueActionForTrackingID:tusJob.trackingID]) != nil)
-		{
-			// Stop with provided error if the action should not continue
-			[tusJob.eventTarget handleError:error type:OCEventTypeUpload uuid:nil sender:self];
-			[tusJob destroy];
-
-			[self finishActionWithTrackingID:tusJob.trackingID];
-
-			return (nil);
-		}
 	}
 
 	/*
@@ -623,7 +629,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 				}
 
 				// Continue
-				[self _continueTusJob:tusJob lastTask:task];
+				[self _continueTusJob:tusJob lastTask:task performCheck:YES];
 			}
 			else
 			{
@@ -671,7 +677,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 
 				// Update job's uploadOffset from the header
 				tusJob.uploadOffset = tusHeader.uploadOffset;
-				[self _continueTusJob:tusJob lastTask:task];
+				[self _continueTusJob:tusJob lastTask:task performCheck:YES];
 			}
 			else
 			{
@@ -700,7 +706,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 				OCTLogDebug(@[@"TUS"], @"TUS upload response indicates uploadOffset of %@ / %@", tusHeader.uploadOffset, tusJob.fileSize);
 
 				tusJob.uploadOffset = tusHeader.uploadOffset;
-				[self _continueTusJob:tusJob lastTask:task];
+				[self _continueTusJob:tusJob lastTask:task performCheck:YES];
 			}
 			else
 			{
@@ -708,7 +714,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 				OCTLogDebug(@[@"TUS"], @"TUS upload response lacks expected upload offset in header, trying to recover with HEAD");
 
 				tusJob.uploadOffset = nil; // Force HEAD request
-				[self _continueTusJob:tusJob lastTask:task];
+				[self _continueTusJob:tusJob lastTask:task performCheck:YES];
 			}
 		}
 		else
@@ -734,7 +740,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 				OCTLogDebug(@[@"TUS"], @"TUS upload request received a non-success response, trying to recover with HEAD");
 
 				tusJob.uploadOffset = nil; // Force HEAD request
-				[self _continueTusJob:tusJob lastTask:task];
+				[self _continueTusJob:tusJob lastTask:task performCheck:YES];
 			}
 		}
 	}
