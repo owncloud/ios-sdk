@@ -2227,7 +2227,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 }
 
 #pragma mark - Sync/TUS integration
-- (NSError *)connection:(OCConnection *)connection continueActionForTrackingID:(OCActionTrackingID)trackingID
+- (void)connection:(OCConnection *)connection continueActionForTrackingID:(OCActionTrackingID)trackingID withResultHandler:(void(^)(NSError * _Nullable error))resultHandler
 {
 	OCSyncRecordID syncRecordID;
 
@@ -2235,14 +2235,24 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	if ((syncRecordID = OCSyncRecordIDFromActionTrackingID(trackingID)) != nil)
 	{
 		// Check if the sync record ID is valid (sync action is active or queued)
-		if (![self.database isValidSyncRecordID:syncRecordID considerCacheValid:YES])
-		{
-			// Not valid - indicate the action is cancelled
-			return (OCError(OCErrorCancelled));
-		}
+		[self queueBlock:^{
+			if (![self.database isValidSyncRecordID:syncRecordID considerCacheValid:YES])
+			{
+				// Not valid - indicate the action is cancelled
+				resultHandler(OCError(OCErrorCancelled));
+			}
+			else
+			{
+				// Valid - continue
+				resultHandler(nil);
+			}
+		} allowInlining:YES];
 	}
-
-	return(nil);
+	else
+	{
+		// Not a tracking ID issued by this core - continue
+		resultHandler(nil);
+	}
 }
 
 #pragma mark - Sync debugging
