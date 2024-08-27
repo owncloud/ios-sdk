@@ -755,24 +755,27 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 					}
 
 					// If app provider is available and enabled
-					OCAppProvider *latestSupportedAppProvider = self.connection.capabilities.latestSupportedAppProvider;
-
-					if ((latestSupportedAppProvider != nil) && latestSupportedAppProvider.enabled)
+					if (OCCoreManager.sharedCoreManager.memoryConfiguration != OCCoreMemoryConfigurationMinimum) // only load app providers in memory configurations other than minimum
 					{
-						[self.connection retrieveAppProviderListWithCompletionHandler:^(NSError * _Nullable error, OCAppProvider * _Nullable appProvider) {
-							OCLogDebug(@"AppProviderList: error=%@, appProvider=%@", error, appProvider);
+						OCAppProvider *latestSupportedAppProvider = self.connection.capabilities.latestSupportedAppProvider;
 
-							if (error == nil)
-							{
-								[self willChangeValueForKey:@"appProvider"];
-								self->_appProvider = appProvider;
-								[self didChangeValueForKey:@"appProvider"];
-							}
-							else
-							{
-								OCLogWarning(@"Error retrieving app provider list: %@", error);
-							}
-						}];
+						if ((latestSupportedAppProvider != nil) && latestSupportedAppProvider.enabled)
+						{
+							[self.connection retrieveAppProviderListWithCompletionHandler:^(NSError * _Nullable error, OCAppProvider * _Nullable appProvider) {
+								OCLogDebug(@"AppProviderList: error=%@, appProvider=%@", error, appProvider);
+
+								if (error == nil)
+								{
+									[self willChangeValueForKey:@"appProvider"];
+									self->_appProvider = appProvider;
+									[self didChangeValueForKey:@"appProvider"];
+								}
+								else
+								{
+									OCLogWarning(@"Error retrieving app provider list: %@", error);
+								}
+							}];
+						}
 					}
 				}
 
