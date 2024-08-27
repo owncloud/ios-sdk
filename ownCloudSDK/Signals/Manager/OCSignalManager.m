@@ -376,7 +376,7 @@ typedef NSMutableDictionary<OCSignalUUID,OCSignalRecord*>* OCSignalManagerStorag
 			// Remove empty records
 			if (signalRecord.consumers.count == 0)
 			{
-				storage[signalUUID] = nil;
+				storage[signalRecord.signalUUID] = nil;
 				madeChanges = YES;
 			}
 		};
