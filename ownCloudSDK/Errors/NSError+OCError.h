@@ -135,7 +135,9 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorResourceNotFound, //!< Resource not found.
 	OCErrorInvalidParameter, //!< Invalid parameter.
 
-	OCErrorItemProcessing //!< Item is currently processing.
+	OCErrorItemProcessing, //!< Item is currently processing.
+
+	OCErrorRequestResponseCorruptedOrDropped //!< Response to request dropped or corrupted.
 };
 
 @class OCIssue;

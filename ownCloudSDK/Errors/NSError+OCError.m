@@ -137,6 +137,10 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 					unlocalizedString = @"Request was dropped by the NSURLSession.";
 				break;
 
+				case OCErrorRequestResponseCorruptedOrDropped:
+					unlocalizedString = @"Response to request dropped or corrupted.";
+				break;
+
 				case OCErrorRequestCompletedWithError:
 					unlocalizedString = @"Request completed with error.";
 				break;

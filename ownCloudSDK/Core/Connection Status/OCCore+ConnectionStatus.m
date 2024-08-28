@@ -420,8 +420,9 @@
 			}
 		}
 
-		// Request dropped error
-		if ([error isOCErrorWithCode:OCErrorRequestDroppedByURLSession])
+		// Request dropped error or response corrupted/dropped
+		if ([error isOCErrorWithCode:OCErrorRequestDroppedByURLSession] ||
+		    [error isOCErrorWithCode:OCErrorRequestResponseCorruptedOrDropped])
 		{
 			if ([request.requiredSignals containsObject:OCConnectionSignalIDCoreOnline])
 			{

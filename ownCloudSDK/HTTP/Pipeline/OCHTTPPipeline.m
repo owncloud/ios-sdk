@@ -288,6 +288,7 @@
 {
 	__block NSArray <NSURLSessionTask *> *urlSessionTasks = nil;
 	__block NSMutableArray <OCHTTPPipelineTask *> *droppedTasks = [NSMutableArray new];
+	__block NSMutableArray <OCHTTPPipelineTask *> *corruptedTasks = [NSMutableArray new];
 	NSString *urlSessionIdentifier = urlSession.configuration.identifier;
 
 	OCLogDebug(@"Recovering queue for urlSession=%@", urlSession);
@@ -344,25 +345,40 @@
 			// Identify tasks that are running, but have no URL session task (=> dropped by NSURLSession)
 			NSError *enumerationError = [self.backend enumerateTasksForPipeline:self enumerator:^(OCHTTPPipelineTask *pipelineTask, BOOL *stop) {
 				if (([pipelineTask.urlSessionID isEqual:urlSessionIdentifier] || ((pipelineTask.urlSessionID == nil) && (urlSessionIdentifier == nil))) && // URL Session ID identical, or both not having any
-				    (pipelineTask.urlSessionTask == nil) && // No URL Session task known for this pipeline task
-				    [pipelineTask.bundleID isEqual:self.backend.bundleIdentifier] && // Task belongs to this process (avoid dropping requests running in other processes)
-				    (pipelineTask.state == OCHTTPPipelineTaskStateRunning)) // pipeline task is running (so there should be one)
+				    (pipelineTask.urlSessionTask == nil) // No URL Session task known for this pipeline task
+				)
 				{
-					OCLogDebug(@"Stored task dropped: %@", pipelineTask);
-			 		[droppedTasks addObject:pipelineTask];
-				}
-				else
-				{
-					OCLogDebug(@"Stored task recovered: %@", pipelineTask);
+					if ([pipelineTask.bundleID isEqual:self.backend.bundleIdentifier] && // Task belongs to this process (avoid dropping requests running in other processes)
+					    (pipelineTask.state == OCHTTPPipelineTaskStateRunning)) // pipeline task is running (so there should be one)
+					{
+						OCLogDebug(@"Stored task dropped: %@", pipelineTask);
+						[droppedTasks addObject:pipelineTask];
+					}
+					else if ([pipelineTask.bundleID isEqual:OCHTTPPipelineTaskAnyBundleID] && // Task response can be delivered on any process (so this request should have a response)
+						 (pipelineTask.responseData == nil) && // Task has no response data
+						 (pipelineTask.state != OCHTTPPipelineTaskStateCompleted)) // Task is NOT marked as completed, although that is the ONLY case where OCHTTPPipelineTaskAnyBundleID should occur
+					{
+						OCLogWarning(@"Corrupted task found (bundle ID is any(*) but state isn't completed and there is no result): %@ %@", pipelineTask, pipelineTask.request);
+						[corruptedTasks addObject:pipelineTask];
+					}
+					else
+					{
+						OCLogDebug(@"Stored task recovered: %@", pipelineTask);
+					}
 				}
 			}];
 
-			OCLogDebug(@"Recovered urlSession=%@: droppedTasks=%@, enumerationError=%@", urlSession, droppedTasks, enumerationError);
+			OCLogDebug(@"Recovered urlSession=%@: droppedTasks=%@, corruptedTasks=%@, enumerationError=%@", urlSession, droppedTasks, corruptedTasks, enumerationError);
 
 			// Drop identified tasks
 			for (OCHTTPPipelineTask *task in droppedTasks)
 			{
 				[self _finishedTask:task withResponse:[OCHTTPResponse responseWithRequest:task.request HTTPError:OCError(OCErrorRequestDroppedByURLSession)]];
+			}
+
+			for (OCHTTPPipelineTask *task in corruptedTasks)
+			{
+				[self _finishedTask:task withResponse:[OCHTTPResponse responseWithRequest:task.request HTTPError:OCError(OCErrorRequestResponseCorruptedOrDropped)]];
 			}
 
 			// Call completionHandler
@@ -1657,6 +1673,7 @@
 			}
 
 			task.state = OCHTTPPipelineTaskStatePending;
+			task.bundleID = self->_bundleIdentifier; // ensure binding to this bundle/component so that a drop of this request can be properly identified
 			task.response = nil;
 
 			[_backend updatePipelineTask:task];
