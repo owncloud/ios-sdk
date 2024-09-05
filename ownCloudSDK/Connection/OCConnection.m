@@ -372,7 +372,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 	if (@available(iOS 13.1, *))
 	{
-		if (OCVault.hostHasFileProvider && !OCProcessManager.isProcessExtension)
+		if (OCVault.hostHasFileProvider)
 		{
 			// Under iOS 13.1.3, the app's background NSURLSession is receiving
 			// penalties (in the form of long delays) despite not meeting the
@@ -380,6 +380,13 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			// this is a bug in general - or background NSURLSession usage of the
 			// FileProvider is assessed as if the FileProvider was the app (always in
 			// background) and then penalties applied to the app's session.
+
+			if ([OCAppIdentity.sharedAppIdentity.componentIdentifier isEqual:OCAppComponentIdentifierFileProviderExtension])
+			{
+				// Only exception: the File Provider itself
+				return (YES);
+			}
+
 			return (NO);
 		}
 	}

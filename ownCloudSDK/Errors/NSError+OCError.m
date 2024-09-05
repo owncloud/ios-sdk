@@ -141,6 +141,10 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 					unlocalizedString = @"Response to request dropped or corrupted.";
 				break;
 
+				case OCErrorRequestDroppedByOriginalProcessTermination:
+					unlocalizedString = @"Request was dropped by the originally responsible process terminating.";
+				break;
+
 				case OCErrorRequestCompletedWithError:
 					unlocalizedString = @"Request completed with error.";
 				break;
