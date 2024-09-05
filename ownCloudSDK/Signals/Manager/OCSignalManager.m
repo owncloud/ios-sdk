@@ -394,7 +394,7 @@ typedef NSMutableDictionary<OCSignalUUID,OCSignalRecord*>* OCSignalManagerStorag
 		else
 		{
 			// Process as many signals as possible
-			for (OCSignalUUID signalUUID in storage)
+			for (OCSignalUUID signalUUID in storage.allKeys)
 			{
 				processRecord(storage[signalUUID]);
 			}

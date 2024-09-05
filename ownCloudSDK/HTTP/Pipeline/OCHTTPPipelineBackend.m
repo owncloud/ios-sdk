@@ -687,7 +687,7 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 	[_sqlDB executeTransaction:[OCSQLiteTransaction
 		transactionWithQueries:@[
 			// Retrieve http tasks who have actionTrackingIDs
-			[OCSQLiteQuery query:@"SELECT actionTrackingID FROM httpPipelineTasks WHERE partitionID=:partitionID AND actionTrackingID IS NOT NULL" withNamedParameters:@{
+			[OCSQLiteQuery query:@"SELECT actionTrackingID, pipelineID FROM httpPipelineTasks WHERE partitionID=:partitionID AND actionTrackingID IS NOT NULL" withNamedParameters:@{
 				@"partitionID" : partitionID
 			} resultHandler:^(OCSQLiteDB * _Nonnull db, NSError * _Nullable error, OCSQLiteTransaction * _Nullable transaction, OCSQLiteResultSet * _Nullable resultSet) {
 				if (error == nil)
@@ -699,6 +699,7 @@ static NSString *OCHTTPPipelineTasksTableName = @"httpPipelineTasks";
 
 						if ((actionTrackingID = (OCActionTrackingID)rowDictionary[@"actionTrackingID"]) != nil) {
 							[actionTrackingIDs addObject:actionTrackingID];
+							OCLogDebug(@"Found request with actionTrackingID %@ in partition %@ pipeline %@", actionTrackingID, partitionID, rowDictionary[@"pipelineID"]);
 						}
 					} error:&retrieveError];
 				}

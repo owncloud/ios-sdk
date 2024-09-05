@@ -422,6 +422,7 @@
 
 		// Request dropped error or response corrupted/dropped
 		if ([error isOCErrorWithCode:OCErrorRequestDroppedByURLSession] ||
+		    [error isOCErrorWithCode:OCErrorRequestDroppedByOriginalProcessTermination] ||
 		    [error isOCErrorWithCode:OCErrorRequestResponseCorruptedOrDropped])
 		{
 			if ([request.requiredSignals containsObject:OCConnectionSignalIDCoreOnline])

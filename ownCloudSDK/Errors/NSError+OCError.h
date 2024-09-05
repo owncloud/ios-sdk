@@ -137,7 +137,8 @@ typedef NS_ENUM(NSUInteger, OCError)
 
 	OCErrorItemProcessing, //!< Item is currently processing.
 
-	OCErrorRequestResponseCorruptedOrDropped //!< Response to request dropped or corrupted.
+	OCErrorRequestResponseCorruptedOrDropped, //!< Response to request dropped or corrupted.
+	OCErrorRequestDroppedByOriginalProcessTermination //!< Request was dropped by the originally responsible process terminating.
 };
 
 @class OCIssue;

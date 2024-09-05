@@ -361,6 +361,32 @@
 						OCLogWarning(@"Corrupted task found (bundle ID is any(*) but state isn't completed and there is no result): %@ %@", pipelineTask, pipelineTask.request);
 						[corruptedTasks addObject:pipelineTask];
 					}
+//					else if ((pipelineTask.state == OCHTTPPipelineTaskStateRunning) &&  // pipeline task is running
+//
+//					 	 (![pipelineTask.bundleID isEqual:self.backend.bundleIdentifier] &&  // not on this process ..
+//						  ![pipelineTask.bundleID isEqual:OCHTTPPipelineTaskAnyBundleID]) &&  // .. and tied to a specific process
+//
+//						 [self.identifier isEqual:OCHTTPPipelineIDLocal]) // task runs on "local" pipeline (for "ephermal" is memory-only and background can run even if the process is not)
+//					{
+//						// Get process session of process
+//						OCProcessSession *processSession;
+//
+//						processSession = [[OCProcessManager sharedProcessManager] findLatestSessionForProcessWithBundleIdentifier:pipelineTask.bundleID];
+//
+//						if (processSession != nil)
+//						{
+//							if (![[OCProcessManager sharedProcessManager] isAnyInstanceOfSessionProcessRunning:processSession]) // Process is no longer around
+//							{
+//								OCLogDebug(@"Stored task from other process dropped(1): %@", pipelineTask);
+//								[droppedTasks addObject:pipelineTask];
+//							}
+//						}
+//						else
+//						{
+//							OCLogDebug(@"Stored task from other process dropped(2): %@", pipelineTask);
+//							[droppedTasks addObject:pipelineTask];
+//						}
+//					}
 					else
 					{
 						OCLogDebug(@"Stored task recovered: %@", pipelineTask);
@@ -640,6 +666,8 @@
 
 	enumerationError = [_backend enumerateTasksForPipeline:self enumerator:^(OCHTTPPipelineTask *task, BOOL *stop) {
 		BOOL isRelevant = YES;
+		BOOL isTiedToOtherProcess = NO;
+		BOOL taskExecutingOtherProcessIsAlive = NO; // only relevant if isTiedToOtherProcess is YES
 		OCHTTPPipelinePartitionID partitionID = nil;
 		id<OCHTTPPipelinePartitionHandler> partitionHandler = nil;
 
@@ -678,12 +706,16 @@
 			if (![task.bundleID isEqual:self->_bundleIdentifier] &&    // not originating from this process ..
 			    ![task.bundleID isEqual:OCHTTPPipelineTaskAnyBundleID]) // .. and tied to a specific process
 			{
+				isTiedToOtherProcess = YES;
+				taskExecutingOtherProcessIsAlive = NO;
+
 				// Task originates from a different process. Only process it, if that other process is no longer around
 				OCProcessSession *processSession;
 
 				if ((processSession = [[OCProcessManager sharedProcessManager] findLatestSessionForProcessWithBundleIdentifier:task.bundleID]) != nil)
 				{
-					isRelevant = ![[OCProcessManager sharedProcessManager] isAnyInstanceOfSessionProcessRunning:processSession];
+					taskExecutingOtherProcessIsAlive = ![[OCProcessManager sharedProcessManager] isAnyInstanceOfSessionProcessRunning:processSession];
+					isRelevant = !taskExecutingOtherProcessIsAlive;
 				}
 			}
 		}
@@ -810,6 +842,23 @@
 						[blockedGroupIDs addObject:task.groupID];
 
 						[schedulableTasksByGroupID removeObjectForKey:task.groupID];
+					}
+
+					// Check if the task should be restarted
+					if (isTiedToOtherProcess && !taskExecutingOtherProcessIsAlive)
+					{
+						// Tied to another process which is no longer alive
+						if ([self.identifier isEqual:OCHTTPPipelineIDLocal])
+						{
+							// Task runs on "local" pipeline (for "ephermal" is memory-only and background can run even if the process is not)
+							if ([OCLogger logsForLevel:OCLogLevelWarning] && (task.request != nil))
+							{
+								OCLogWarning(@"Determined that task has been dropped by process termination of %@ - restarting %@", task.bundleID, task);
+							}
+
+							// All conditions met to restart request
+							[self finishedTask:task withResponse:[OCHTTPResponse responseWithRequest:task.request HTTPError:OCError(OCErrorRequestDroppedByOriginalProcessTermination)]];
+						}
 					}
 
 					return;
