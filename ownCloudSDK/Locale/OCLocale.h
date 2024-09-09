@@ -18,6 +18,7 @@
 
 #import <Foundation/Foundation.h>
 #import "OCLocaleFilter.h"
+#import "OCLocaleFilterVariables.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -41,5 +42,13 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSString *)localizeString:(NSString *)string bundleOfClass:(Class)class table:(NSString *)table options:(nullable OCLocaleOptions)options;
 
 @end
+
+static inline NSString *OCLocalizedString(NSString *key, NSString * _Nullable comment) {
+    return [OCLocale localizeString:key];
+}
+
+static inline NSString *OCLocalizedFormat(NSString *string, OCLocaleOptions _Nullable variables) {
+    return [OCLocale localizeString: string options: @{ OCLocaleOptionKeyVariables : variables }];
+}
 
 NS_ASSUME_NONNULL_END
