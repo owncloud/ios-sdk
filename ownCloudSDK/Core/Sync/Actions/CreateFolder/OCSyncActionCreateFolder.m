@@ -49,7 +49,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		}
 
 		self.actionEventType = OCEventTypeCreateFolder;
-		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Creating folder %@…"), folderName];
+		self.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Creating folder %@…",nil), folderName];
 
 		if (placeholderCompletionHandler != nil)
 		{
@@ -151,7 +151,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 	else if (event.error != nil)
 	{
 		// Create issue for cancellation for any errors
-		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't create %@", nil), self.folderName] description:[event.error localizedDescription]  impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
+		[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't create %@",nil), self.folderName] description:[event.error localizedDescription]  impact:OCSyncIssueChoiceImpactNonDestructive]; // queues a new wait condition with the issue
 		[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 	}
 

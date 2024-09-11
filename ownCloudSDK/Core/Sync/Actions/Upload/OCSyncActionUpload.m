@@ -44,8 +44,8 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		// Keep both
 		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierUploadKeepBoth categoryName:nil choices:@[
 			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactDataLoss],
-			[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDestructive impact:OCSyncIssueChoiceImpactDataLoss identifier:@"replaceExisting" label:OCLocalized(@"Replace") metaData:nil],
-			[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDefault impact:OCSyncIssueChoiceImpactNonDestructive identifier:@"keepBoth" label:OCLocalized(@"Keep both") metaData:nil]
+			[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDestructive impact:OCSyncIssueChoiceImpactDataLoss identifier:@"replaceExisting" label:OCLocalizedString(@"Replace",nil) metaData:nil],
+			[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeDefault impact:OCSyncIssueChoiceImpactNonDestructive identifier:@"keepBoth" label:OCLocalizedString(@"Keep both",nil) metaData:nil]
 		] options:nil],
 
 		// Retry
@@ -68,7 +68,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		self.filename = filename;
 
 		self.actionEventType = OCEventTypeUpload;
-		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Uploading %@…"), ((filename!=nil) ? filename : uploadItem.name)];
+		self.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Uploading %@…",nil), ((filename!=nil) ? filename : uploadItem.name)];
 
 		self.options = options;
 		self.syncReason = options[OCCoreOptionSyncReason];
@@ -193,7 +193,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 					_uploadCopyFileURL = nil;
 
-					[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Error uploading %@", nil), self.localItem.name] description:error.localizedDescription impact:OCSyncIssueChoiceImpactDataLoss];
+					[self _addIssueForCancellationAndDeschedulingToContext:syncContext title:[NSString stringWithFormat:OCLocalizedString(@"Error uploading %@",nil), self.localItem.name] description:error.localizedDescription impact:OCSyncIssueChoiceImpactDataLoss];
 					[syncContext transitionToState:OCSyncRecordStateProcessing withWaitConditions:nil]; // updates the sync record with the issue wait condition
 
 					// Wait for result
@@ -214,7 +214,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 				issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierUploadKeepBoth
 							 forSyncRecord:syncContext.syncRecord
 								 level:OCIssueLevelError
-								 title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.localItem.name]
+								 title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@",nil), self.localItem.name]
 							   description:[NSString stringWithFormat:OCLocalizedString(@"Another item named %@ already exists in %@.",nil), self.localItem.name, self.parentItem.name]
 							      metaData:nil];
 
@@ -392,7 +392,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			issue = [OCSyncIssue issueFromTemplate:(alreadyExists ? OCMessageTemplateIdentifierUploadKeepBoth : OCMessageTemplateIdentifierUploadRetry)
 						 forSyncRecord:syncContext.syncRecord
 							 level:OCIssueLevelError
-							 title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@", nil), self.localItem.name]
+							 title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't upload %@",nil), self.localItem.name]
 						   description:event.error.localizedDescription
 						      metaData:nil];
 

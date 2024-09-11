@@ -46,12 +46,12 @@
 					switch (type)
 					{
 						case OCItemTypeFile:
-							[nodes addObject:[OCDiagnosticNode withLabel:OCLocalized(@"Files") content:@(cnt).stringValue]];
+							[nodes addObject:[OCDiagnosticNode withLabel:OCLocalizedString(@"Files",nil) content:@(cnt).stringValue]];
 						break;
 
 						case OCItemTypeCollection:
 							cnt -= 1; // do not count the root folder
-							[nodes addObject:[OCDiagnosticNode withLabel:OCLocalized(@"Folders") content:@(cnt).stringValue]];
+							[nodes addObject:[OCDiagnosticNode withLabel:OCLocalizedString(@"Folders",nil) content:@(cnt).stringValue]];
 						break;
 					}
 				}
@@ -65,12 +65,12 @@
 
 			if (totalItems > 0)
 			{
-				[nodes addObject:[OCDiagnosticNode withLabel:OCLocalized(@"Total Items") content:@(totalItems).stringValue]];
+				[nodes addObject:[OCDiagnosticNode withLabel:OCLocalizedString(@"Total Items",nil) content:@(totalItems).stringValue]];
 			}
 
 			if (removedItems > 0)
 			{
-				[nodes addObject:[OCDiagnosticNode withLabel:OCLocalized(@"Removed Items") content:@(removedItems).stringValue]];
+				[nodes addObject:[OCDiagnosticNode withLabel:OCLocalizedString(@"Removed Items",nil) content:@(removedItems).stringValue]];
 			}
 		}],
 
@@ -82,7 +82,7 @@
 				updateJobs += OCTypedCast(rowDictionary[@"cnt"], NSNumber).unsignedIntegerValue;
 			} error:NULL];
 
-			[nodes addObject:[OCDiagnosticNode withLabel:OCLocalized(@"Scheduled folder scans") content:@(updateJobs).stringValue]];
+			[nodes addObject:[OCDiagnosticNode withLabel:OCLocalizedString(@"Scheduled folder scans",nil) content:@(updateJobs).stringValue]];
 		}]
 
 	] type:OCSQLiteTransactionTypeDeferred completionHandler:^(OCSQLiteDB * _Nonnull db, OCSQLiteTransaction * _Nonnull transaction, NSError * _Nullable error) {
@@ -97,10 +97,10 @@
 	NSURL *databaseURL = self.databaseURL;
 	NSURL *thumbnailDatabaseURL = self.thumbnailDatabaseURL;
 
-	[nodes addObject:[OCDiagnosticNode withLabel:OCLocalized(@"Database size") content:[NSByteCountFormatter stringFromByteCount:databaseFileSize.longLongValue countStyle:NSByteCountFormatterCountStyleFile]]];
-	[nodes addObject:[OCDiagnosticNode withLabel:OCLocalized(@"Thumbnail database size") content:[NSByteCountFormatter stringFromByteCount:thumbnailDatabaseFileSize.longLongValue countStyle:NSByteCountFormatterCountStyleFile]]];
+	[nodes addObject:[OCDiagnosticNode withLabel:OCLocalizedString(@"Database size",nil) content:[NSByteCountFormatter stringFromByteCount:databaseFileSize.longLongValue countStyle:NSByteCountFormatterCountStyleFile]]];
+	[nodes addObject:[OCDiagnosticNode withLabel:OCLocalizedString(@"Thumbnail database size",nil) content:[NSByteCountFormatter stringFromByteCount:thumbnailDatabaseFileSize.longLongValue countStyle:NSByteCountFormatterCountStyleFile]]];
 
-	[nodes addObject:[OCDiagnosticNode withLabel:OCLocalized(@"Vacuum") action:^(OCDiagnosticContext * _Nullable context) {
+	[nodes addObject:[OCDiagnosticNode withLabel:OCLocalizedString(@"Vacuum",nil) action:^(OCDiagnosticContext * _Nullable context) {
 		if (context.database != nil)
 		{
 			[context.database.sqlDB executeQueryString:@"VACUUM"];

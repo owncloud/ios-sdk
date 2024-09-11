@@ -55,7 +55,7 @@ static NSDateFormatter *jsonDateFormatter;
 
 - (NSString *)name
 {
-	return (OCLocalized(@"Standard error output"));
+	return (OCLocalizedString(@"Standard error output",nil));
 }
 
 - (NSError *)open

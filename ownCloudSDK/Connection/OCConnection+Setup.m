@@ -331,7 +331,7 @@
 				// Warn user about HTTP usage
 				if (self.bookmark.userInfo[OCBookmarkUserInfoKeyAllowHTTPConnection] == nil)
 				{
-					issue = [OCIssue issueWithLocalizedTitle:OCLocalized(@"Insecure HTTP URL") localizedDescription:OCLocalized(@"The URL you provided uses the HTTP rather than the HTTPS scheme. If you continue, your communication will not be encrypted.") level:OCIssueLevelWarning issueHandler:^(OCIssue * _Nonnull issue, OCIssueDecision decision) {
+					issue = [OCIssue issueWithLocalizedTitle:OCLocalizedString(@"Insecure HTTP URL",nil) localizedDescription:OCLocalizedString(@"The URL you provided uses the HTTP rather than the HTTPS scheme. If you continue, your communication will not be encrypted.",nil) level:OCIssueLevelWarning issueHandler:^(OCIssue * _Nonnull issue, OCIssueDecision decision) {
 						switch (decision)
 						{
 							case OCIssueDecisionApprove:
@@ -350,7 +350,7 @@
 				// HTTP forbidden
 				self.bookmark.userInfo[OCBookmarkUserInfoKeyAllowHTTPConnection] = nil;
 
-				issue = [OCIssue issueWithLocalizedTitle:OCLocalized(@"Insecure HTTP URL forbidden") localizedDescription:OCLocalized(@"The URL you provided uses the HTTP rather than the HTTPS scheme, so your communication would not be encrypted.") level:OCIssueLevelError issueHandler:^(OCIssue * _Nonnull issue, OCIssueDecision decision) {
+				issue = [OCIssue issueWithLocalizedTitle:OCLocalizedString(@"Insecure HTTP URL forbidden",nil) localizedDescription:OCLocalizedString(@"The URL you provided uses the HTTP rather than the HTTPS scheme, so your communication would not be encrypted.",nil) level:OCIssueLevelError issueHandler:^(OCIssue * _Nonnull issue, OCIssueDecision decision) {
 					self.bookmark.userInfo[OCBookmarkUserInfoKeyAllowHTTPConnection] = nil;
 				}];
 			break;

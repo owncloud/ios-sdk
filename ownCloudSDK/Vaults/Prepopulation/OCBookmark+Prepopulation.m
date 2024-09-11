@@ -30,7 +30,7 @@
 	NSProgress *rootProgress = NSProgress.indeterminateProgress;
 	OCVault *vault = [[OCVault alloc] initWithBookmark:self];
 
-	rootProgress.localizedDescription = OCLocalized(@"Opening vault…");
+	rootProgress.localizedDescription = OCLocalizedString(@"Opening vault…",nil);
 
 	[vault openWithCompletionHandler:^(id sender, NSError *error) {
 		if (error != nil)
@@ -53,7 +53,7 @@
 
 			OCTLog(@[@"Prepop"], @"Starting to retrieve and prepopulate database with items…");
 
-			rootProgress.localizedDescription = OCLocalized(@"Retrieving metadata…");
+			rootProgress.localizedDescription = OCLocalizedString(@"Retrieving metadata…",nil);
 
 			if ((retrieveProgress = [vault retrieveMetadataWithCompletionHandler:^(NSError * _Nullable retrieveError, OCDAVRawResponse * _Nullable davRawResponse) {
 				if (rootProgress.cancelled || (retrieveError != nil))
@@ -73,15 +73,15 @@
 
 					OCLogDebug (@"Error=%@, rawResponse.url=%@", retrieveError, davRawResponse.responseDataURL);
 
-					rootProgress.localizedDescription = OCLocalized(@"Populating database…");
+					rootProgress.localizedDescription = OCLocalizedString(@"Populating database…",nil);
 
 					OCTLog(@[@"Prepop"], @"Retrieved item metadata in %.0f sec", NSDate.timeIntervalSinceReferenceDate - startTime);
 
 					if ((populateProgress = [vault prepopulateDatabaseWithRawResponse:davRawResponse progressHandler:^(NSUInteger folderCount, NSUInteger fileCount) {
-						rootProgress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"%lu files in %lu folders"), (unsigned long)fileCount, folderCount];
+						rootProgress.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"%lu files in %lu folders",nil), (unsigned long)fileCount, folderCount];
 					} completionHandler:^(NSError * _Nullable parseError) {
 						// Close and return
-						rootProgress.localizedDescription = OCLocalized(@"Closing vault…");
+						rootProgress.localizedDescription = OCLocalizedString(@"Closing vault…",nil);
 
 						[vault closeWithCompletionHandler:^(id sender, NSError *error) {
 							[vault eraseDavRawResponses];
@@ -113,7 +113,7 @@
 	NSProgress *rootProgress = NSProgress.indeterminateProgress;
 	OCVault *vault = [[OCVault alloc] initWithBookmark:self];
 
-	rootProgress.localizedDescription = OCLocalized(@"Opening vault…");
+	rootProgress.localizedDescription = OCLocalizedString(@"Opening vault…",nil);
 
 	[vault openWithCompletionHandler:^(id sender, NSError *error) {
 		if (error != nil)
@@ -136,7 +136,7 @@
 
 			OCTLog(@[@"Prepop"], @"Starting to retrieve and prepopulate database with items…");
 
-			rootProgress.localizedDescription = OCLocalized(@"Retrieving metadata…");
+			rootProgress.localizedDescription = OCLocalizedString(@"Retrieving metadata…",nil);
 
 			if ((retrieveProgress = [vault streamMetadataWithCompletionHandler:^(NSError * _Nullable retrieveError, NSInputStream * _Nullable inputStream, NSString * _Nullable basePath) {
 				if (rootProgress.cancelled || (retrieveError != nil))
@@ -153,15 +153,15 @@
 
 					OCLogDebug (@"Error=%@, inputStream=%@, basePath=%@", retrieveError, inputStream, basePath);
 
-					rootProgress.localizedDescription = OCLocalized(@"Populating database…");
+					rootProgress.localizedDescription = OCLocalizedString(@"Populating database…",nil);
 
 					OCTLog(@[@"Prepop"], @"Retrieved item metadata in %.0f sec", NSDate.timeIntervalSinceReferenceDate - startTime);
 
 					if ((populateProgress = [vault prepopulateDatabaseWithInputStream:inputStream basePath:basePath progressHandler:^(NSUInteger folderCount, NSUInteger fileCount) {
-						rootProgress.localizedDescription = [NSString stringWithFormat:OCLocalized(@"%lu files in %lu folders"), (unsigned long)fileCount, folderCount];
+						rootProgress.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"%lu files in %lu folders",nil), (unsigned long)fileCount, folderCount];
 					} completionHandler:^(NSError * _Nullable parseError) {
 						// Close and return
-						rootProgress.localizedDescription = OCLocalized(@"Closing vault…");
+						rootProgress.localizedDescription = OCLocalizedString(@"Closing vault…",nil);
 
 						[vault closeWithCompletionHandler:^(id sender, NSError *error) {
 							NSTimeInterval completeTime = NSDate.timeIntervalSinceReferenceDate - startTime;

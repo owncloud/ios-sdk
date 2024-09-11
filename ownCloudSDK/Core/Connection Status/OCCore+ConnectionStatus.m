@@ -179,19 +179,19 @@
 		switch (computedConnectionStatus)
 		{
 			case OCCoreConnectionStatusOffline:
-				shortStatusDescription = OCLocalized(@"Offline");
+				shortStatusDescription = OCLocalizedString(@"Offline",nil);
 			break;
 
 			case OCCoreConnectionStatusUnavailable:
-				shortStatusDescription = OCLocalized(@"Server down for maintenance");
+				shortStatusDescription = OCLocalizedString(@"Server down for maintenance",nil);
 			break;
 
 			case OCCoreConnectionStatusConnecting:
-				shortStatusDescription = OCLocalized(@"Connecting");
+				shortStatusDescription = OCLocalizedString(@"Connecting",nil);
 			break;
 
 			case OCCoreConnectionStatusOnline:
-				shortStatusDescription = OCLocalized(@"Online");
+				shortStatusDescription = OCLocalizedString(@"Online",nil);
 			break;
 		}
 	}

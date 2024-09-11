@@ -45,7 +45,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		// Overwrite
 		[OCMessageTemplate templateWithIdentifier:OCMessageTemplateIdentifierDownloadOverwrite categoryName:nil choices:@[
 			// Delete local representation and reschedule download
-			[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeRegular impact:OCSyncIssueChoiceImpactDataLoss identifier:@"overwriteModifiedFile" label:OCLocalized(@"Overwrite modified file") metaData:nil],
+			[OCSyncIssueChoice choiceOfType:OCIssueChoiceTypeRegular impact:OCSyncIssueChoiceImpactDataLoss identifier:@"overwriteModifiedFile" label:OCLocalizedString(@"Overwrite modified file",nil) metaData:nil],
 
 			// Keep local modifications and drop sync record
 			[OCSyncIssueChoice cancelChoiceWithImpact:OCSyncIssueChoiceImpactNonDestructive]
@@ -77,7 +77,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		self.syncReason = options[OCCoreOptionSyncReason];
 
 		self.actionEventType = OCEventTypeDownload;
-		self.localizedDescription = [NSString stringWithFormat:OCLocalized(@"Downloading %@…"), item.name];
+		self.localizedDescription = [NSString stringWithFormat:OCLocalizedString(@"Downloading %@…",nil), item.name];
 
 		self.categories = @[
 			OCSyncActionCategoryAll, OCSyncActionCategoryTransfer,
@@ -251,7 +251,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 				OCLogDebug(@"record %@ download: latest version was locally modified", syncContext.syncRecord);
 
-				issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDownloadOverwrite forSyncRecord:syncContext.syncRecord level:OCIssueLevelWarning title:[NSString stringWithFormat:OCLocalized(@"\"%@\" has been modified locally"), item.name] description:[NSString stringWithFormat:OCLocalized(@"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost."), item.name] metaData:nil];
+				issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDownloadOverwrite forSyncRecord:syncContext.syncRecord level:OCIssueLevelWarning title:[NSString stringWithFormat:OCLocalizedString(@"\"%@\" has been modified locally",nil), item.name] description:[NSString stringWithFormat:OCLocalizedString(@"A modified, unsynchronized version of \"%@\" is present on your device. Downloading the file from the server will overwrite it and modifications be lost.",nil), item.name] metaData:nil];
 
 				issue.muted = isTriggeredDownload;
 
@@ -418,7 +418,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 				useDownloadedFile = NO;
 
-				issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDownloadRetry forSyncRecord:syncRecord level:OCIssueLevelError title:OCLocalized(@"Invalid checksum") description:OCLocalized(@"The downloaded file's checksum does not match the checksum provided by the server.") metaData:nil];
+				issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDownloadRetry forSyncRecord:syncRecord level:OCIssueLevelError title:OCLocalizedString(@"Invalid checksum",nil) description:OCLocalizedString(@"The downloaded file's checksum does not match the checksum provided by the server.",nil) metaData:nil];
 
 				issue.muted = isTriggeredDownload;
 
@@ -439,7 +439,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 					useDownloadedFile = NO;
 
-					issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDownloadCancel forSyncRecord:syncRecord level:OCIssueLevelError title:OCLocalized(@"File modified locally") description:[NSString stringWithFormat:OCLocalized(@"\"%@\" was modified locally before the download completed."), item.name] metaData:nil];
+					issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDownloadCancel forSyncRecord:syncRecord level:OCIssueLevelError title:OCLocalizedString(@"File modified locally",nil) description:[NSString stringWithFormat:OCLocalizedString(@"\"%@\" was modified locally before the download completed.",nil), item.name] metaData:nil];
 
 					issue.muted = isTriggeredDownload;
 
@@ -616,7 +616,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 				else
 				{
 					// Manual download => inform user
-					OCSyncIssue *issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDownloadRetry forSyncRecord:syncContext.syncRecord level:OCIssueLevelError title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), self.localItem.name] description:OCLocalized(@"The file no longer exists on the server in this location.") metaData:nil];
+					OCSyncIssue *issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDownloadRetry forSyncRecord:syncContext.syncRecord level:OCIssueLevelError title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@",nil), self.localItem.name] description:OCLocalizedString(@"The file no longer exists on the server in this location.",nil) metaData:nil];
 
 					issue.muted = isTriggeredDownload;
 
@@ -647,14 +647,14 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 					syncContext.updateStoredSyncRecordAfterItemUpdates = YES; // Update sync record in db, so resolutionRetries is persisted
 
 					[syncContext transitionToState:OCSyncRecordStateReady withWaitConditions:@[
-						[[OCWaitConditionMetaDataRefresh waitForLocation:item.location versionOtherThan:item.itemVersionIdentifier until:[NSDate dateWithTimeIntervalSinceNow:120.0]] withLocalizedDescription:OCLocalized(@"Waiting for metadata refresh")]
+						[[OCWaitConditionMetaDataRefresh waitForLocation:item.location versionOtherThan:item.itemVersionIdentifier until:[NSDate dateWithTimeIntervalSinceNow:120.0]] withLocalizedDescription:OCLocalizedString(@"Waiting for metadata refresh",nil)]
 					]];
 
 					handledError = YES;
 				}
 				else
 				{
-					errorDescription = OCLocalizedString(@"The contents of the file on the server has changed since initiating download - or the file is no longer available on the server.", nil);
+					errorDescription = OCLocalizedString(@"The contents of the file on the server has changed since initiating download - or the file is no longer available on the server.",nil);
 				}
 			}
 
@@ -670,7 +670,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 					syncContext.updateStoredSyncRecordAfterItemUpdates = YES; // Update sync record in db, so resolutionRetries is persisted
 
 					[syncContext transitionToState:OCSyncRecordStateReady withWaitConditions:@[
-						[[OCWaitConditionMetaDataRefresh waitForLocation:item.location versionOtherThan:item.itemVersionIdentifier until:[NSDate dateWithTimeIntervalSinceNow:10.0]] withLocalizedDescription:[NSString stringWithFormat:OCLocalized(@"Waiting to retry (%ld of %ld)"), _resolutionRetries, maxResolutionRetries]]
+						[[OCWaitConditionMetaDataRefresh waitForLocation:item.location versionOtherThan:item.itemVersionIdentifier until:[NSDate dateWithTimeIntervalSinceNow:10.0]] withLocalizedDescription:[NSString stringWithFormat:OCLocalizedString(@"Waiting to retry (%ld of %ld)",nil), _resolutionRetries, maxResolutionRetries]]
 					]];
 
 					// NSLog(@"Retry:retries=%lu", (unsigned long)_resolutionRetries);
@@ -685,7 +685,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 				OCLogError(@"Wrapping download %@ error %@ into cancellation issue", item, downloadError);
 
 				// The item wasn't found on the server (either a 404 or a failed precondition HTTP status with respective Sabre error message)
-				OCSyncIssue *issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDownloadRetry forSyncRecord:syncContext.syncRecord level:OCIssueLevelError title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@", nil), self.localItem.name] description:((errorDescription != nil) ? errorDescription : downloadError.localizedDescription) metaData:nil];
+				OCSyncIssue *issue = [OCSyncIssue issueFromTemplate:OCMessageTemplateIdentifierDownloadRetry forSyncRecord:syncContext.syncRecord level:OCIssueLevelError title:[NSString stringWithFormat:OCLocalizedString(@"Couldn't download %@",nil), self.localItem.name] description:((errorDescription != nil) ? errorDescription : downloadError.localizedDescription) metaData:nil];
 
 				issue.muted = isTriggeredDownload;
 

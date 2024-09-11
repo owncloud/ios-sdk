@@ -34,7 +34,7 @@
 {
 	if ((self = [super initWithKind:OCItemPolicyKindAvailableOffline core:core]) != nil)
 	{
-		self.localizedName = OCLocalized(@"Available Offline");
+		self.localizedName = OCLocalizedString(@"Available Offline",nil);
 
 		// Show item if: !removed && type==file && localCopy // && downloadTrigger==availableOffline
 		// (show all local copies, as it provides more utility than showing just the files downloaded through available offline)

@@ -510,7 +510,7 @@ static void collationProvider(void *dbObj, sqlite3 *db, int eTextRep, const char
 							{
 								migration.progress = NSProgress.indeterminateProgress;
 								migration.progress.cancellable = NO;
-								migration.progress.localizedDescription = OCLocalized(@"Upgrading database…");
+								migration.progress.localizedDescription = OCLocalizedString(@"Upgrading database…",nil);
 
 								db.busyStatusHandler(migration.progress);
 							}

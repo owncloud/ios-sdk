@@ -158,12 +158,12 @@
 
 	if (specialType == OCDriveSpecialTypePersonal)
 	{
-		return (OCLocalized(@"Personal"));
+		return (OCLocalizedString(@"Personal",nil));
 	}
 
 	if (specialType == OCDriveSpecialTypeShares)
 	{
-		return (OCLocalized(@"Shared with me"));
+		return (OCLocalizedString(@"Shared with me",nil));
 	}
 
 	return (_name);

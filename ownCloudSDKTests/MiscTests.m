@@ -725,8 +725,8 @@
 	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleCopy duplicateCount:@(1)] isEqual:@"Base copy"]);
 	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleCopy duplicateCount:@(2)] isEqual:@"Base copy 2"]);
 
-	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleCopyLocalized duplicateCount:@(1)] isEqual:[@"Base " stringByAppendingString:OCLocalized(@"copy")]]);
-	NSString *expectedName = [NSString stringWithFormat:@"Base %@ 2", OCLocalized(@"copy")];
+	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleCopyLocalized duplicateCount:@(1)] isEqual:[@"Base " stringByAppendingString:OCLocalizedString(@"copy",nil)]]);
+	NSString *expectedName = [NSString stringWithFormat:@"Base %@ 2", OCLocalizedString(@"copy",nil)];
 	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleCopyLocalized duplicateCount:@(2)] isEqual:expectedName]);
 
 	XCTAssert([[@"Base" itemDuplicateNameWithStyle:OCCoreDuplicateNameStyleBracketed duplicateCount:@(1)] isEqual:@"Base (1)"]);
