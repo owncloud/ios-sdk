@@ -714,7 +714,7 @@
 
 				if ((processSession = [[OCProcessManager sharedProcessManager] findLatestSessionForProcessWithBundleIdentifier:task.bundleID]) != nil)
 				{
-					taskExecutingOtherProcessIsAlive = ![[OCProcessManager sharedProcessManager] isAnyInstanceOfSessionProcessRunning:processSession];
+					taskExecutingOtherProcessIsAlive = [[OCProcessManager sharedProcessManager] isAnyInstanceOfSessionProcessRunning:processSession];
 					isRelevant = !taskExecutingOtherProcessIsAlive;
 				}
 			}
