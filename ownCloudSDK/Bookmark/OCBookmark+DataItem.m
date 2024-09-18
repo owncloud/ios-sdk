@@ -20,6 +20,7 @@
 #import "OCDataTypes.h"
 #import "OCResource.h"
 #import "OCMacros.h"
+#import "OCCoreManager.h"
 
 @implementation OCBookmark (DataItem)
 
@@ -35,10 +36,17 @@
 
 - (OCDataItemVersion)dataItemVersion
 {
-	OCResource *avatarResource = OCTypedCast(self.avatar, OCResource);
-	NSString *avatarVersion = ((avatarResource != nil) ? avatarResource.version : @"");
+	if (OCCoreManager.sharedCoreManager.memoryConfiguration != OCCoreMemoryConfigurationMinimum)
+	{
+		OCResource *avatarResource = OCTypedCast(self.avatar, OCResource);
+		NSString *avatarVersion = ((avatarResource != nil) ? avatarResource.version : @"");
 
-	return ([NSString stringWithFormat:@"%@%@%@%@%@%@%@", self.name, self.url, self.originURL, self.userName, self.userDisplayName, self.authenticationDataID, avatarVersion]);
+		return ([NSString stringWithFormat:@"%@%@%@%@%@%@%@", self.name, self.url, self.originURL, self.userName, self.userDisplayName, self.authenticationDataID, avatarVersion]);
+	}
+	else
+	{
+		return ([NSString stringWithFormat:@"%@%@%@%@%@%@", self.name, self.url, self.originURL, self.userName, self.userDisplayName, self.authenticationDataID]);
+	}
 }
 
 @end

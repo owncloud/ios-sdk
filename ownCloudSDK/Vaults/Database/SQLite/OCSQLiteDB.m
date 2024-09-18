@@ -1245,6 +1245,7 @@ static void collationProvider(void *dbObj, sqlite3 *db, int eTextRep, const char
 
 + (int64_t)setMemoryLimit:(int64_t)memoryLimit
 {
+	sqlite3_config(SQLITE_CONFIG_MEMSTATUS, true);
 	int64_t previousMemoryLimit = sqlite3_soft_heap_limit64(memoryLimit);
 
 	OCLogDebug(@"Changed memory limit from %lld to %lld bytes", previousMemoryLimit, memoryLimit);

@@ -76,7 +76,9 @@ static void OCIPNotificationCenterCallback(CFNotificationCenterRef center, void 
 {
 	OCIPNotificationCenter *notificationCenter = (__bridge OCIPNotificationCenter *)observer;
 
-	[notificationCenter deliverNotificationForName:(__bridge OCIPCNotificationName)name];
+	@autoreleasepool {
+		[notificationCenter deliverNotificationForName:(__bridge OCIPCNotificationName)name];
+	}
 }
 
 - (void)enable:(BOOL)enable observationForName:(NSString *)name

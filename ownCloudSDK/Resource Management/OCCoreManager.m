@@ -425,7 +425,7 @@
 		switch (memoryConfiguration)
 		{
 			case OCCoreMemoryConfigurationMinimum:
-				[OCSQLiteDB setMemoryLimit:(1 * 1024 * 1024)]; // Set 1 MB memory limit for SQLite;
+				[OCSQLiteDB setMemoryLimit:(1 * 1024 * 512)]; // Set 0.5 MB memory limit for SQLite;
 			break;
 
 			default: break;
