@@ -336,7 +336,7 @@
 				completionHandler(self, error);
 			}
 		}]];
-	} segmentSize:((_memoryConfiguration == OCCoreMemoryConfigurationMinimum) ? 20 : 200)];
+	} segmentSize:((_memoryConfiguration == OCCoreMemoryConfigurationMinimum) ? 10 : 200)];
 }
 
 - (void)updateCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler
@@ -452,7 +452,7 @@
 				completionHandler(self, error);
 			}
 		}]];
-	} segmentSize:((_memoryConfiguration == OCCoreMemoryConfigurationMinimum) ? 20 : 200)];
+	} segmentSize:((_memoryConfiguration == OCCoreMemoryConfigurationMinimum) ? 10 : 200)];
 }
 
 - (void)removeCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler

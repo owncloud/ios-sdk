@@ -78,108 +78,112 @@
 	NSData *bookmarkData;
 	NSURL *bookmarkStoreURL;
 
-	if ((bookmarkStoreURL = self.bookmarkStoreURL) != nil)
-	{
-		if ((bookmarkData = [[NSData alloc] initWithContentsOfURL:bookmarkStoreURL]) != nil)
+	@autoreleasepool {
+		if ((bookmarkStoreURL = self.bookmarkStoreURL) != nil)
 		{
-			NSMutableArray<OCBookmark *> *reconstructedBookmarks = nil;
-
-			@try
+			if ((bookmarkData = [[NSData alloc] initWithContentsOfURL:bookmarkStoreURL]) != nil)
 			{
-				NSArray<OCBookmark *> *existingBookmarks = nil;
-				NSMutableArray<OCBookmark *> *loadedBookmarks = nil;
+				NSMutableArray<OCBookmark *> *reconstructedBookmarks = nil;
 
-				loadedBookmarks = [NSKeyedUnarchiver unarchiveObjectWithData:bookmarkData];
-
-				@synchronized(self)
+				@try
 				{
-					existingBookmarks = [_bookmarks copy];
-				}
+					NSArray<OCBookmark *> *existingBookmarks = nil;
+					NSMutableArray<OCBookmark *> *loadedBookmarks = nil;
 
-				if (existingBookmarks != nil)
-				{
-					// Look for changed bookmarks and update only those that don't match the existing instances
-					reconstructedBookmarks = [NSMutableArray new];
+					loadedBookmarks = [NSKeyedUnarchiver unarchiveObjectWithData:bookmarkData];
 
-					for (OCBookmark *loadedBookmark in loadedBookmarks)
+					@synchronized(self)
 					{
-						OCBookmark *existingBookmark = nil;
+						existingBookmarks = [_bookmarks copy];
+					}
 
-						for (OCBookmark *bookmark in existingBookmarks)
+					if (existingBookmarks != nil)
+					{
+						// Look for changed bookmarks and update only those that don't match the existing instances
+						reconstructedBookmarks = [NSMutableArray new];
+
+						for (OCBookmark *loadedBookmark in loadedBookmarks)
 						{
-							if ([bookmark.uuid isEqual:loadedBookmark.uuid])
+							OCBookmark *existingBookmark = nil;
+
+							for (OCBookmark *bookmark in existingBookmarks)
 							{
-								existingBookmark = bookmark;
-								break;
-							}
-						}
-
-						if (existingBookmark == nil)
-						{
-							// New bookmark
-							[reconstructedBookmarks addObject:loadedBookmark];
-						}
-						else
-						{
-							// Existing bookmark - check for changes
-							NSError *error = nil;
-							NSData *existingBookmarkData = nil, *loadedBookmarkData = nil;
-							BOOL isIdentical = NO;
-
-							if ((existingBookmarkData = [NSKeyedArchiver archivedDataWithRootObject:existingBookmark requiringSecureCoding:NO error:&error]) != nil)
-							{
-								if ((loadedBookmarkData = [NSKeyedArchiver archivedDataWithRootObject:loadedBookmark requiringSecureCoding:NO error:&error]) != nil)
+								if ([bookmark.uuid isEqual:loadedBookmark.uuid])
 								{
-									if ([existingBookmarkData isEqual:loadedBookmarkData])
-									{
-										isIdentical = YES;
-									}
+									existingBookmark = bookmark;
+									break;
 								}
 							}
 
-							if (isIdentical)
+							if (existingBookmark == nil)
 							{
-								// Bookmark unchanged - use existing copy
-								[reconstructedBookmarks addObject:existingBookmark];
+								// New bookmark
+								[reconstructedBookmarks addObject:loadedBookmark];
 							}
 							else
 							{
-								// Bookmark changed - use loaded copy
-								[reconstructedBookmarks addObject:loadedBookmark];
+								// Existing bookmark - check for changes
+								@autoreleasepool {
+									NSError *error = nil;
+									NSData *existingBookmarkData = nil, *loadedBookmarkData = nil;
+									BOOL isIdentical = NO;
+
+									if ((existingBookmarkData = [NSKeyedArchiver archivedDataWithRootObject:existingBookmark requiringSecureCoding:NO error:&error]) != nil)
+									{
+										if ((loadedBookmarkData = [NSKeyedArchiver archivedDataWithRootObject:loadedBookmark requiringSecureCoding:NO error:&error]) != nil)
+										{
+											if ([existingBookmarkData isEqual:loadedBookmarkData])
+											{
+												isIdentical = YES;
+											}
+										}
+									}
+
+									if (isIdentical)
+									{
+										// Bookmark unchanged - use existing copy
+										[reconstructedBookmarks addObject:existingBookmark];
+									}
+									else
+									{
+										// Bookmark changed - use loaded copy
+										[reconstructedBookmarks addObject:loadedBookmark];
+									}
+								}
 							}
 						}
 					}
+					else
+					{
+						// No bookmarks previously loaded - just use the loaded ones
+						reconstructedBookmarks = loadedBookmarks;
+					}
 				}
-				else
-				{
-					// No bookmarks previously loaded - just use the loaded ones
-					reconstructedBookmarks = loadedBookmarks;
+				@catch(NSException *exception) {
+					OCLogError(@"Error loading bookmarks: %@", OCLogPrivate(exception));
 				}
-			}
-			@catch(NSException *exception) {
-				OCLogError(@"Error loading bookmarks: %@", OCLogPrivate(exception));
-			}
 
-			@synchronized(self)
-			{
-				if (reconstructedBookmarks != nil)
+				@synchronized(self)
 				{
-					_bookmarks = reconstructedBookmarks;
+					if (reconstructedBookmarks != nil)
+					{
+						_bookmarks = reconstructedBookmarks;
+					}
+					else
+					{
+						[_bookmarks removeAllObjects];
+					}
+
+					[_bookmarksDatasource setVersionedItems:_bookmarks];
 				}
-				else
+			}
+			else
+			{
+				@synchronized(self)
 				{
 					[_bookmarks removeAllObjects];
+					[_bookmarksDatasource setVersionedItems:_bookmarks];
 				}
-
-				[_bookmarksDatasource setVersionedItems:_bookmarks];
-			}
-		}
-		else
-		{
-			@synchronized(self)
-			{
-				[_bookmarks removeAllObjects];
-				[_bookmarksDatasource setVersionedItems:_bookmarks];
 			}
 		}
 	}
@@ -187,21 +191,23 @@
 
 - (void)saveBookmarks
 {
-	@synchronized(self)
-	{
-		if (_bookmarks != nil)
+	@autoreleasepool {
+		@synchronized(self)
 		{
-			NSData *bookmarkData = nil;
-
-			@try
+			if (_bookmarks != nil)
 			{
-				bookmarkData = [NSKeyedArchiver archivedDataWithRootObject:_bookmarks];
-			}
-			@catch(NSException *exception) {
-				OCLogError(@"Error archiving bookmarks: %@", OCLogPrivate(exception));
-			}
+				NSData *bookmarkData = nil;
 
-			[bookmarkData writeToURL:self.bookmarkStoreURL atomically:YES];
+				@try
+				{
+					bookmarkData = [NSKeyedArchiver archivedDataWithRootObject:_bookmarks];
+				}
+				@catch(NSException *exception) {
+					OCLogError(@"Error archiving bookmarks: %@", OCLogPrivate(exception));
+				}
+
+				[bookmarkData writeToURL:self.bookmarkStoreURL atomically:YES];
+			}
 		}
 	}
 
