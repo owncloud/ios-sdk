@@ -75,43 +75,13 @@
             "value": "Auto-accepted."
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auto-accepted."
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aceito automaticamente. "
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auto-accepted."
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auto-accepted."
-          }
-        },
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auto-accepted."
-          }
-        },
         "nn_NO": {
           "stringUnit": {
             "state": "translated",
             "value": "Auto-accepted."
           }
         },
-        "pt_PT": {
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Auto-accepted."
@@ -123,10 +93,40 @@
             "value": "Auto-accepted."
           }
         },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto-accepted."
+          }
+        },
+        "pt_PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto-accepted."
+          }
+        },
         "th_TH": {
           "stringUnit": {
             "state": "translated",
             "value": "ยอมรับโดยอัตโนมัติ"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto-accepted."
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aceito automaticamente. "
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto-accepted."
           }
         }
       }
@@ -237,25 +237,13 @@
             "value": "Business category"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Business category"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Categoria de negócio"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Business category"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Business category"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Business category"
@@ -271,6 +259,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "ประเภทธุรกิจ"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Categoria de negócio"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Business category"
           }
         }
       }
@@ -289,7 +289,7 @@
             "value": "Certificate chain"
           }
         },
-        "es": {
+        "nn_NO": {
           "stringUnit": {
             "state": "translated",
             "value": "Certificate chain"
@@ -301,49 +301,25 @@
             "value": "Certificate chain"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate chain"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate chain"
-          }
-        },
         "mk": {
           "stringUnit": {
             "state": "translated",
             "value": "Certificate chain"
           }
         },
-        "pt_BR": {
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Certificate chain"
           }
         },
-        "ko": {
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
             "value": "Certificate chain"
           }
         },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate chain"
-          }
-        },
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate chain"
-          }
-        },
-        "nn_NO": {
+        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Certificate chain"
@@ -361,7 +337,7 @@
             "value": "Certificate chain"
           }
         },
-        "fr": {
+        "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Certificate chain"
@@ -373,7 +349,31 @@
             "value": "Certificate chain"
           }
         },
-        "zh-Hans": {
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificate chain"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificate chain"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificate chain"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificate chain"
+          }
+        },
+        "nb_NO": {
           "stringUnit": {
             "state": "translated",
             "value": "Certificate chain"
@@ -395,7 +395,7 @@
             "value": "Certificate Details"
           }
         },
-        "es": {
+        "nn_NO": {
           "stringUnit": {
             "state": "translated",
             "value": "Certificate Details"
@@ -407,49 +407,25 @@
             "value": "Certificate Details"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate Details"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate Details"
-          }
-        },
         "mk": {
           "stringUnit": {
             "state": "translated",
             "value": "Certificate Details"
           }
         },
-        "pt_BR": {
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Certificate Details"
           }
         },
-        "ko": {
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
             "value": "Certificate Details"
           }
         },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate Details"
-          }
-        },
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate Details"
-          }
-        },
-        "nn_NO": {
+        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Certificate Details"
@@ -467,7 +443,7 @@
             "value": "Certificate Details"
           }
         },
-        "fr": {
+        "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Certificate Details"
@@ -479,7 +455,31 @@
             "value": "Certificate Details"
           }
         },
-        "zh-Hans": {
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificate Details"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificate Details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificate Details"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificate Details"
+          }
+        },
+        "nb_NO": {
           "stringUnit": {
             "state": "translated",
             "value": "Certificate Details"
@@ -591,25 +591,13 @@
             "value": "Certificate has issues."
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate has issues."
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O certificado tem problemas."
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate has issues."
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificate has issues."
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Certificate has issues."
@@ -625,6 +613,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "ใบรับรองมีปัญหา"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O certificado tem problemas."
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificate has issues."
           }
         }
       }
@@ -734,25 +734,13 @@
             "value": "Common name"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Common name"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nome comum"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Common name"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Common name"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Common name"
@@ -768,6 +756,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "ชื่อสามัญ"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nome comum"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Common name"
           }
         }
       }
@@ -877,25 +877,13 @@
             "value": "Country"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Country"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "País"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Country"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Country"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Country"
@@ -911,6 +899,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "ประเทศ"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "País"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Country"
           }
         }
       }
@@ -1019,25 +1019,13 @@
             "value": "Extensions"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extensions"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extensões"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extensions"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extensions"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Extensions"
@@ -1053,6 +1041,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "ส่วนขยาย"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extensões"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extensions"
           }
         }
       }
@@ -1161,25 +1161,13 @@
             "value": "Fingerprints"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fingerprints"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impressões digitais"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fingerprints"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fingerprints"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Fingerprints"
@@ -1195,6 +1183,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "ลายนิ้วมือ"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impressões digitais"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fingerprints"
           }
         }
       }
@@ -1273,43 +1273,13 @@
             "value": "Hide ±"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide ±"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esconder ± "
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide ±"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide ±"
-          }
-        },
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide ±"
-          }
-        },
         "nn_NO": {
           "stringUnit": {
             "state": "translated",
             "value": "Hide ±"
           }
         },
-        "pt_PT": {
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Hide ±"
@@ -1321,10 +1291,40 @@
             "value": "Hide ±"
           }
         },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide ±"
+          }
+        },
+        "pt_PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide ±"
+          }
+        },
         "th_TH": {
           "stringUnit": {
             "state": "translated",
             "value": "ซ่อน ±"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide ±"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esconder ± "
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide ±"
           }
         }
       }
@@ -1433,25 +1433,13 @@
             "value": "Hostname"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hostname"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nome do Host"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hostname"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hostname"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Hostname"
@@ -1467,6 +1455,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "ชื่อโฮสต์"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nome do Host"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hostname"
           }
         }
       }
@@ -1485,7 +1485,7 @@
             "value": "Intermediate Certificate"
           }
         },
-        "es": {
+        "nn_NO": {
           "stringUnit": {
             "state": "translated",
             "value": "Intermediate Certificate"
@@ -1497,49 +1497,25 @@
             "value": "Intermediate Certificate"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intermediate Certificate"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intermediate Certificate"
-          }
-        },
         "mk": {
           "stringUnit": {
             "state": "translated",
             "value": "Intermediate Certificate"
           }
         },
-        "pt_BR": {
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Intermediate Certificate"
           }
         },
-        "ko": {
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
             "value": "Intermediate Certificate"
           }
         },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intermediate Certificate"
-          }
-        },
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intermediate Certificate"
-          }
-        },
-        "nn_NO": {
+        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Intermediate Certificate"
@@ -1557,7 +1533,7 @@
             "value": "Intermediate Certificate"
           }
         },
-        "fr": {
+        "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Intermediate Certificate"
@@ -1569,7 +1545,31 @@
             "value": "Intermediate Certificate"
           }
         },
-        "zh-Hans": {
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intermediate Certificate"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intermediate Certificate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intermediate Certificate"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intermediate Certificate"
+          }
+        },
+        "nb_NO": {
           "stringUnit": {
             "state": "translated",
             "value": "Intermediate Certificate"
@@ -1681,25 +1681,13 @@
             "value": "Issuer"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Issuer"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gerador"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Issuer"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Issuer"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Issuer"
@@ -1715,6 +1703,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "ผู้ออก"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerador"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Issuer"
           }
         }
       }
@@ -1824,25 +1824,13 @@
             "value": "Jurisdiction country"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction country"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "País de Jurisdição"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction country"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jurisdiction country"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Jurisdiction country"
@@ -1858,6 +1846,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "สังกัดประเทศ"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "País de Jurisdição"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jurisdiction country"
           }
         }
       }
@@ -1967,25 +1967,13 @@
             "value": "Jurisdiction locality"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction locality"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Local de Jurisdição"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction locality"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jurisdiction locality"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Jurisdiction locality"
@@ -2001,6 +1989,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "สังกัดท้องที่"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local de Jurisdição"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jurisdiction locality"
           }
         }
       }
@@ -2110,25 +2110,13 @@
             "value": "Jurisdiction state or province"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction state or province"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Estado ou província de jurisdição"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction state or province"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jurisdiction state or province"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Jurisdiction state or province"
@@ -2144,6 +2132,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "จังหวัด"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado ou província de jurisdição"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jurisdiction state or province"
           }
         }
       }
@@ -2253,25 +2253,13 @@
             "value": "Key bytes"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key bytes"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bytes da chave"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key bytes"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key bytes"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Key bytes"
@@ -2287,6 +2275,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "คีย์ไบต์"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bytes da chave"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key bytes"
           }
         }
       }
@@ -2396,25 +2396,13 @@
             "value": "Key exponent"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key exponent"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expoente da chave"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key exponent"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key exponent"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Key exponent"
@@ -2430,6 +2418,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "คีย์สัญลักษณ์"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expoente da chave"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key exponent"
           }
         }
       }
@@ -2539,25 +2539,13 @@
             "value": "Information"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Information"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Informações"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Information"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Information"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Information"
@@ -2573,6 +2561,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "สารสนเทศ"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informações"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Information"
           }
         }
       }
@@ -2682,25 +2682,13 @@
             "value": "Key size (bits)"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key size (bits)"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tamanho da chave (bits)"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key size (bits)"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key size (bits)"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Key size (bits)"
@@ -2716,6 +2704,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "ขนาดคีย์ (บิต)"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamanho da chave (bits)"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key size (bits)"
           }
         }
       }
@@ -2825,25 +2825,13 @@
             "value": "Locality"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Locality"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Localidade"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Locality"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locality"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Locality"
@@ -2859,6 +2847,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "ตำบล"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Localidade"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locality"
           }
         }
       }
@@ -2967,25 +2967,13 @@
             "value": "No issues found."
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No issues found."
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Não foram encontrados problemas."
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No issues found."
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No issues found."
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "No issues found."
@@ -3001,6 +2989,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "ไม่พบปัญหา"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foram encontrados problemas."
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No issues found."
           }
         }
       }
@@ -3110,28 +3110,16 @@
             "value": "Organization Unit"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organisation Unit"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unidade de Organização"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organization Unit"
-          }
-        },
         "nn_NO": {
           "stringUnit": {
             "state": "translated",
             "value": "Organization Unit"
+          }
+        },
+        "en_GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organisation Unit"
           }
         },
         "pt_PT": {
@@ -3144,6 +3132,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "หน่วยองค์กร"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidade de Organização"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organization Unit"
           }
         }
       }
@@ -3253,28 +3253,16 @@
             "value": "Organization"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organisation"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organização"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organization"
-          }
-        },
         "nn_NO": {
           "stringUnit": {
             "state": "translated",
             "value": "Organization"
+          }
+        },
+        "en_GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organisation"
           }
         },
         "pt_PT": {
@@ -3287,6 +3275,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "หน่วยงาน"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organização"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organization"
           }
         }
       }
@@ -3395,25 +3395,13 @@
             "value": "Public Key"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Public Key"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chave pública"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Public Key"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public Key"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Public Key"
@@ -3429,6 +3417,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "คีย์สาธารณะ"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chave pública"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public Key"
           }
         }
       }
@@ -3507,43 +3507,13 @@
             "value": "Reason"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reason"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Razão "
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reason"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reason"
-          }
-        },
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reason"
-          }
-        },
         "nn_NO": {
           "stringUnit": {
             "state": "translated",
             "value": "Reason"
           }
         },
-        "pt_PT": {
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Reason"
@@ -3555,10 +3525,40 @@
             "value": "Reason"
           }
         },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reason"
+          }
+        },
+        "pt_PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reason"
+          }
+        },
         "th_TH": {
           "stringUnit": {
             "state": "translated",
             "value": "เหตุผล"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reason"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Razão "
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reason"
           }
         }
       }
@@ -3577,7 +3577,7 @@
             "value": "Root Certificate"
           }
         },
-        "es": {
+        "nn_NO": {
           "stringUnit": {
             "state": "translated",
             "value": "Root Certificate"
@@ -3589,49 +3589,25 @@
             "value": "Root Certificate"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Root Certificate"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Root Certificate"
-          }
-        },
         "mk": {
           "stringUnit": {
             "state": "translated",
             "value": "Root Certificate"
           }
         },
-        "pt_BR": {
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Root Certificate"
           }
         },
-        "ko": {
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
             "value": "Root Certificate"
           }
         },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Root Certificate"
-          }
-        },
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Root Certificate"
-          }
-        },
-        "nn_NO": {
+        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Root Certificate"
@@ -3649,7 +3625,7 @@
             "value": "Root Certificate"
           }
         },
-        "fr": {
+        "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Root Certificate"
@@ -3661,7 +3637,31 @@
             "value": "Root Certificate"
           }
         },
-        "zh-Hans": {
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Root Certificate"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Root Certificate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Root Certificate"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Root Certificate"
+          }
+        },
+        "nb_NO": {
           "stringUnit": {
             "state": "translated",
             "value": "Root Certificate"
@@ -3774,25 +3774,13 @@
             "value": "Serial Number"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Serial Number"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Número de série"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Serial Number"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serial Number"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Serial Number"
@@ -3808,6 +3796,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "หมายเลขผลิตภัณฑ์"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Número de série"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serial Number"
           }
         }
       }
@@ -3887,43 +3887,13 @@
             "value": "Show ±"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show ±"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mostrar ± "
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show ±"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show ±"
-          }
-        },
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show ±"
-          }
-        },
         "nn_NO": {
           "stringUnit": {
             "state": "translated",
             "value": "Show ±"
           }
         },
-        "pt_PT": {
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Show ±"
@@ -3935,10 +3905,40 @@
             "value": "Show ±"
           }
         },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show ±"
+          }
+        },
+        "pt_PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show ±"
+          }
+        },
         "th_TH": {
           "stringUnit": {
             "state": "translated",
             "value": "แสดง ±"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show ±"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar ± "
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show ±"
           }
         }
       }
@@ -4048,25 +4048,13 @@
             "value": "Signature Algorithm"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Signature Algorithm"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Algoritmo de Assinatura"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Signature Algorithm"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signature Algorithm"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Signature Algorithm"
@@ -4082,6 +4070,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "อัลกอริธึมลายเซ็น"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algoritmo de Assinatura"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signature Algorithm"
           }
         }
       }
@@ -4191,25 +4191,13 @@
             "value": "State or province"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "State or province"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Estado ou província"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "State or province"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "State or province"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "State or province"
@@ -4225,6 +4213,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "รัฐหรือจังหวัด"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado ou província"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "State or province"
           }
         }
       }
@@ -4334,25 +4334,13 @@
             "value": "Subject"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Subject"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Assunto"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Subject"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subject"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Subject"
@@ -4368,6 +4356,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "หัวเรื่อง"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assunto"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subject"
           }
         }
       }
@@ -4476,25 +4476,13 @@
             "value": "User-accepted."
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-accepted."
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usuário aceito."
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-accepted."
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User-accepted."
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "User-accepted."
@@ -4510,6 +4498,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "ผู้ใช้งานได้รับการยอมรับ"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuário aceito."
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User-accepted."
           }
         }
       }
@@ -4618,25 +4618,13 @@
             "value": "User-rejected."
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-rejected."
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usuário rejeitado."
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-rejected."
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User-rejected."
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "User-rejected."
@@ -4652,6 +4640,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "ผู้ใช้ที่ถูกปฏิเสธ"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuário rejeitado."
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User-rejected."
           }
         }
       }
@@ -4670,7 +4670,7 @@
             "value": "Validating…"
           }
         },
-        "es": {
+        "nn_NO": {
           "stringUnit": {
             "state": "translated",
             "value": "Validating…"
@@ -4682,49 +4682,25 @@
             "value": "Validating…"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validating…"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validating…"
-          }
-        },
         "mk": {
           "stringUnit": {
             "state": "translated",
             "value": "Validating…"
           }
         },
-        "pt_BR": {
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Validating…"
           }
         },
-        "ko": {
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
             "value": "Validating…"
           }
         },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validating…"
-          }
-        },
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validating…"
-          }
-        },
-        "nn_NO": {
+        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Validating…"
@@ -4742,7 +4718,7 @@
             "value": "Validating…"
           }
         },
-        "fr": {
+        "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Validating…"
@@ -4754,7 +4730,31 @@
             "value": "Validating…"
           }
         },
-        "zh-Hans": {
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validating…"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validating…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validating…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validating…"
+          }
+        },
+        "nb_NO": {
           "stringUnit": {
             "state": "translated",
             "value": "Validating…"
@@ -4866,25 +4866,13 @@
             "value": "Validation Error"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validation Error"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erro de validação"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validation Error"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validation Error"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Validation Error"
@@ -4900,6 +4888,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "ข้อผิดพลาดในการตรวจสอบ"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erro de validação"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validation Error"
           }
         }
       }
@@ -5008,25 +5008,13 @@
             "value": "Validation Status"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validation Status"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Status de validação"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validation Status"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validation Status"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Validation Status"
@@ -5042,6 +5030,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "สถานะการตรวจสอบ"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status de validação"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validation Status"
           }
         }
       }
@@ -5151,25 +5151,13 @@
             "value": "Valid from"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valid from"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Válido de"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valid from"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valid from"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Valid from"
@@ -5185,6 +5173,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "ใช้ได้ตั้งแต่"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válido de"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valid from"
           }
         }
       }
@@ -5294,25 +5294,13 @@
             "value": "Valid until"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valid until"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Válido até"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valid until"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valid until"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Valid until"
@@ -5328,6 +5316,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "ใช้ได้จนถึง"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válido até"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valid until"
           }
         }
       }
@@ -5437,25 +5437,13 @@
             "value": "Version"
           }
         },
-        "en_GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version"
-          }
-        },
-        "pt_BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Versão"
-          }
-        },
-        "nb_NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version"
-          }
-        },
         "nn_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
+          }
+        },
+        "en_GB": {
           "stringUnit": {
             "state": "translated",
             "value": "Version"
@@ -5471,6 +5459,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "เวอร์ชัน"
+          }
+        },
+        "pt_BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versão"
+          }
+        },
+        "nb_NO": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
           }
         }
       }
