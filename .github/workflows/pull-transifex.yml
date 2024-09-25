@@ -21,11 +21,6 @@ jobs:
           token: ${{ secrets.TX_TOKEN }}
           args: pull --force --skip --all
 
-      - name: l10n-format
-        run: |
-          jq . ownCloudSDK/Resources/Localizable.xcstrings > ownCloudSDK/Resources/Localizable.xcstrings
-          jq . ownCloudUI/Resources/Localizable.xcstrings > ownCloudUI/Resources/Localizable.xcstrings
-
       - uses: GuillaumeFalourd/git-commit-push@v1.3
         with:
           email: devops@owncloud.com
