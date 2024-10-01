@@ -86,6 +86,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)removeCapability:(OCBookmarkCapability)capability;
 - (BOOL)hasCapability:(OCBookmarkCapability)capability;
 
+#pragma mark - Metadata storage
+@property(strong,nullable) NSURL *metaDataStorageURL; //!< URL to store bookmark data in (f.ex. certificates, avatar images, ..)
+
+- (nullable NSError *)storeMetadata;
+
 #pragma mark - Certificate approval
 - (NSNotificationName)certificateUserApprovalUpdateNotificationName; //!< Notification that gets sent if the bookmark's certificate user-approved status changed
 - (void)postCertificateUserApprovalUpdateNotification; //!< Posts a .certificateUserApprovalUpdateNotificationName notification
