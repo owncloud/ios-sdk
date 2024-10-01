@@ -21,6 +21,7 @@
 #import "OCLogger.h"
 #import "OCDataSourceArray.h"
 #import "OCBookmark+DataItem.h"
+#import "OCVault.h"
 
 @implementation OCBookmarkManager
 {
@@ -105,6 +106,13 @@
 						for (OCBookmark *loadedBookmark in loadedBookmarks)
 						{
 							OCBookmark *existingBookmark = nil;
+
+							if (loadedBookmark.metaDataStorageURL == nil)
+							{
+								// Old-style bookmark with internal/memory metadata storage - transition it to external storage
+								loadedBookmark.metaDataStorageURL = [OCVault bookmarkMetadataURLForVaultUUID:loadedBookmark.uuid]; // Provide bookmark storage location
+								loadedBookmark.avatar = loadedBookmark.avatar; // Re-set avatar to force generation of _avatarDataURL
+							}
 
 							for (OCBookmark *bookmark in existingBookmarks)
 							{
@@ -204,6 +212,16 @@
 				}
 				@catch(NSException *exception) {
 					OCLogError(@"Error archiving bookmarks: %@", OCLogPrivate(exception));
+				}
+
+				for (OCBookmark *bookmark in _bookmarks)
+				{
+					NSError *error;
+
+					if ((error = [bookmark storeMetadata]) != nil)
+					{
+						OCLogError(@"Error storing metadata for bookmark: %@ (for %@)", error, bookmark);
+					}
 				}
 
 				[bookmarkData writeToURL:self.bookmarkStoreURL atomically:YES];
