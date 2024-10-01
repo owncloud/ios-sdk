@@ -44,6 +44,7 @@
 
 				[Bookmark UUID].ockvs			- OCVault.keyValueStoreURL
 
+				"BookmarkMetadata"/			- OCVault.bookmarkMetadataURL and +bookmarkMetadataURLForVaultUUID: (folder where (larger) bookmark metadata blobs are stored)
 				"Erasure"/				- OCVault.wipeContainerRootURL (folder whose contents should be erased)
 
 		"HTTPPipeline"/						- OCVault.httpPipelineRootURL
@@ -52,6 +53,7 @@
 
 		"TemporaryDownloads"/					- OCVault.temporaryDownloadURL
 			[Random UUID] (temporary files for downloads)
+
 
 		"messageQueue.dat"					- OCMessageQueue.globalQueue KVS
 
@@ -102,6 +104,7 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 	NSURL *_filesRootURL;
 	NSURL *_httpPipelineRootURL;
 	NSURL *_temporaryDownloadURL;
+	NSURL *_bookmarkMetadataURL;
 	NSURL *_wipeContainerRootURL;
 	NSURL *_wipeContainerFilesRootURL;
 
@@ -140,6 +143,7 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 @property(nullable,readonly,nonatomic) NSURL *drivesRootURL; //!< The vault's root URL for drive folders
 @property(nullable,readonly,nonatomic) NSURL *httpPipelineRootURL; //!< The vault's root URL for HTTP pipeline data
 @property(nullable,readonly,nonatomic) NSURL *temporaryDownloadURL; //!< The vault's root URL for temporarily downloaded files.
+@property(nullable,readonly,nonatomic) NSURL *bookmarkMetadataURL; //!< The vault's root URL for bookmark metadata files.
 
 @property(nullable,readonly,nonatomic) NSURL *wipeContainerRootURL; //!< The vault's rootURL subfolder for items to erase.
 @property(nullable,readonly,nonatomic) NSURL *wipeContainerFilesRootURL; //!< The vault's filesRootURL subfolder for items to erase.
@@ -199,6 +203,8 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 + (nullable NSString *)rootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid;
 
 + (nullable NSString *)databaseFilePathRelativeToRootPathForVaultUUID:(NSUUID *)uuid;
+
++ (nullable NSURL *)bookmarkMetadataURLForVaultUUID:(NSUUID *)uuid;
 
 @property(nullable,readonly,nonatomic,class) NSURL *httpPipelineRootURL;
 
