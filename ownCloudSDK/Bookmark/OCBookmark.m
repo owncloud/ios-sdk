@@ -34,6 +34,7 @@
 	OCIPCNotificationName _bookmarkAuthUpdateNotificationName;
 
 	id<OCViewProvider> _avatar;
+	NSURL *_avatarDataURL;
 	NSData *_avatarData;
 
 	NSString *_lastUsername;
@@ -246,19 +247,64 @@
 	return (primaryCertificate);
 }
 
+#pragma mark - Metadata storage
+- (NSError *)storeMetadata
+{
+	NSError *error = nil;
+
+	@synchronized(self)
+	{
+		if (_metaDataStorageURL != nil)
+		{
+			if ([NSFileManager.defaultManager createDirectoryAtURL:_metaDataStorageURL withIntermediateDirectories:YES attributes:nil error:&error])
+			{
+				if ((_avatarDataURL != nil) && (_avatarData != nil))
+				{
+					[_avatarData writeToURL:_avatarDataURL options:NSDataWritingAtomic error:&error];
+				}
+			}
+		}
+	}
+
+	return (error);
+}
+
 #pragma mark - Avatar
+- (NSData *)avatarData
+{
+	@synchronized(self)
+	{
+		if ((_avatarData == nil) && (_avatarDataURL != nil))
+		{
+			_avatarData = [[NSData alloc] initWithContentsOfURL:_avatarDataURL];
+		}
+	}
+
+	return (_avatarData);
+}
+
 - (id<OCViewProvider>)avatar
 {
 	@synchronized(self)
 	{
-		if ((_avatar == nil) && (_avatarData != nil))
+		if (_avatar == nil)
 		{
-			@try
+			NSData *avatarData = _avatarData;
+
+			if ((avatarData == nil) && (_avatarDataURL != nil))
 			{
-				_avatar = [NSKeyedUnarchiver unarchiveObjectWithData:_avatarData];
+				avatarData = [[NSData alloc] initWithContentsOfURL:_avatarDataURL];
 			}
-			@catch (NSException *exception)
+
+			if (avatarData != nil)
 			{
+				@try
+				{
+					_avatar = [NSKeyedUnarchiver unarchiveObjectWithData:avatarData];
+				}
+				@catch (NSException *exception)
+				{
+				}
 			}
 		}
 
@@ -304,6 +350,15 @@
 
 		_avatar = (avatarData != nil) ? avatar : nil;
 		_avatarData = avatarData;
+
+		if ((avatarData != nil) && (_metaDataStorageURL != nil))
+		{
+			_avatarDataURL = [_metaDataStorageURL URLByAppendingPathComponent:@"avatarData"];
+		}
+		else
+		{
+			_avatarDataURL = nil;
+		}
 	}
 }
 
@@ -415,6 +470,8 @@
 
 		_originURL = [decoder decodeObjectOfClass:NSURL.class forKey:@"originURL"];
 
+		_metaDataStorageURL = [decoder decodeObjectOfClass:NSURL.class forKey:@"metaDataStorageURL"];
+
 		_capabilities = [decoder decodeObjectOfClasses:[NSSet setWithObjects:NSSet.class, NSString.class, nil] forKey:@"capabilities"];
 
 		_certificateStore = [decoder decodeObjectOfClass:OCCertificateStore.class forKey:@"certificateStore"];
@@ -435,6 +492,7 @@
 		_authenticationValidationDate = [decoder decodeObjectOfClass:NSDate.class forKey:@"authenticationValidationDate"];
 
 		_avatarData = [decoder decodeObjectOfClass:NSData.class forKey:@"avatarData"];
+		_avatarDataURL = [decoder decodeObjectOfClass:NSURL.class forKey:@"avatarDataURL"];
 
 		_databaseVersion = [decoder decodeIntegerForKey:@"databaseVersion"];
 
@@ -462,6 +520,8 @@
 
 	[coder encodeObject:_originURL forKey:@"originURL"];
 
+	[coder encodeObject:_metaDataStorageURL forKey:@"metaDataStorageURL"];
+
 	[coder encodeObject:_capabilities forKey:@"capabilities"];
 
 	[coder encodeObject:_certificateStore forKey:@"certificateStore"];
@@ -469,7 +529,11 @@
 	[coder encodeObject:_authenticationMethodIdentifier forKey:@"authenticationMethodIdentifier"];
 	[coder encodeObject:_authenticationValidationDate forKey:@"authenticationValidationDate"];
 
-	[coder encodeObject:_avatarData forKey:@"avatarData"];
+	if (_avatarDataURL == nil)
+	{
+		[coder encodeObject:_avatarData forKey:@"avatarData"];
+	}
+	[coder encodeObject:_avatarDataURL forKey:@"avatarDataURL"];
 
 	[coder encodeInteger:_databaseVersion forKey:@"databaseVersion"];
 
