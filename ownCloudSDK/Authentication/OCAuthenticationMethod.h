@@ -125,6 +125,7 @@ extern NSString *OCAuthorizationMethodAlternativeServerURLOriginURLKey; //!< Key
 extern OCClassSettingsIdentifier OCClassSettingsIdentifierAuthentication;
 extern OCClassSettingsKey OCAuthenticationMethodBrowserSessionClass;
 extern OCClassSettingsKey OCAuthenticationMethodBrowserSessionPrefersEphermal;
+extern OCClassSettingsKey OCAuthenticationMethodSkipWWWAuthenticateChecks;
 
 NS_ASSUME_NONNULL_END
 
