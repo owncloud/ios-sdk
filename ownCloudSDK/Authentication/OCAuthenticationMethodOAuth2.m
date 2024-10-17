@@ -116,6 +116,7 @@ OCAuthenticationMethodAutoRegister
 		OCAuthenticationMethodOAuth2RedirectURI 	  : @"oc://ios.owncloud.com",
 		OCAuthenticationMethodOAuth2ClientID 		  : @"mxd5OQDk6es5LzOzRvidJNfXLUZS2oN3oUFeXPP8LpPrhx3UroJFduGEYIBOxkY1",
 		OCAuthenticationMethodOAuth2ClientSecret 	  : @"KFeFWWEZO9TkisIQzR3fo7hfiMXlOpaqP8CFuTbSHzV1TUuGECglPxpiVKJfOXIx",
+		OCAuthenticationMethodOAuth2PostClientIDAndSecret : @(NO)
 	});
 }
 
@@ -162,6 +163,12 @@ OCAuthenticationMethodAutoRegister
 		OCAuthenticationMethodOAuth2OmitAuthorizationParameters : @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeStringArray,
 			OCClassSettingsMetadataKeyDescription 	: @"Omit Authorization Request Parameters - parameter names provided here are omitted from OAuth2 authorization requests.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"OAuth2"
+		},
+		OCAuthenticationMethodOAuth2PostClientIDAndSecret : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Send Client ID and Client Secret in the body of POST requests to the token endpoint. As per RFC 6749 section 2.3.1, this should only be used if the token endpoint does not support receiving these via Basic authentication.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"OAuth2"
 		}
@@ -911,8 +918,42 @@ OCAuthenticationMethodAutoRegister
 		
 		[tokenRequest addParameters:parameters];
 
-		[tokenRequest setValue:[self tokenRequestAuthorizationHeaderForType:requestType connection:connection] forHeaderField:OCHTTPHeaderFieldNameAuthorization];
-		
+		// Add client ID and client secret as authentication header or as parameters
+		NSNumber *postClientIDAndSecret;
+		if (((postClientIDAndSecret = [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2PostClientIDAndSecret]) != nil) &&
+		     postClientIDAndSecret.boolValue)
+		{
+			// Include Client ID and Client Secret as parameters in the POST body
+			//
+			// As per https://datatracker.ietf.org/doc/html/rfc6749#section-2.3.1:
+			// > Alternatively, the authorization server MAY support including the
+			// > client credentials in the request-body using the following parameters:
+			// > 	client_id …
+			// > 	client_secret …
+			// > …
+			// > Including the client credentials in the request-body using the two
+			// > parameters is NOT RECOMMENDED and SHOULD be limited to clients unable
+			// > to directly utilize the HTTP Basic authentication scheme (or other
+			// > password-based HTTP authentication schemes).  The parameters can only
+			// > be transmitted in the request-body and MUST NOT be included in the
+			// > request URI.
+
+			NSString *clientID = self.clientID, *clientSecret = self.clientSecret;
+
+			if ((clientID != nil) && (clientSecret != nil))
+			{
+				[tokenRequest addParameters:@{
+					@"client_id" : clientID,
+					@"client_secret" : clientSecret
+				}];
+			}
+		}
+		else
+		{
+			// Include Client ID and Client Secret as header
+			[tokenRequest setValue:[self tokenRequestAuthorizationHeaderForType:requestType connection:connection] forHeaderField:OCHTTPHeaderFieldNameAuthorization];
+		}
+
 		// Send Token Request
 		[connection sendRequest:tokenRequest ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 			OCLogDebug(@"Received token request result (error=%@)", error);
@@ -1132,3 +1173,4 @@ OCClassSettingsKey OCAuthenticationMethodOAuth2ClientID = @"oa2-client-id";
 OCClassSettingsKey OCAuthenticationMethodOAuth2ClientSecret = @"oa2-client-secret";
 OCClassSettingsKey OCAuthenticationMethodOAuth2ExpirationOverrideSeconds = @"oa2-expiration-override-seconds";
 OCClassSettingsKey OCAuthenticationMethodOAuth2OmitAuthorizationParameters = @"omit-authorization-parameters";
+OCClassSettingsKey OCAuthenticationMethodOAuth2PostClientIDAndSecret = @"post-client-id-and-secret";

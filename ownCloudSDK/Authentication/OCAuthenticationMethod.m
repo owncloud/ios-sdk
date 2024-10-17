@@ -370,6 +370,13 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCAuthenticationMethod)
 			OCClassSettingsMetadataKeyDescription 	: @"Indicates whether the app should ask iOS for a private authentication (web) session for OAuth2 or OpenID Connect. Private authentication sessions do not share cookies and other browsing data with the user's normal browser. Apple only promises that [this setting](https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsession/3237231-prefersephemeralwebbrowsersessio) will be honored if the user has set Safari as default browser.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusSupported,
 			OCClassSettingsMetadataKeyCategory	: @"Authentication"
+		},
+
+		OCAuthenticationMethodSkipWWWAuthenticateChecks : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"Overrides whether the default WebDAV endpoint should be probed to detect available authentication methods. By default, the necessity for this is determined dynamically.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusSupported,
+			OCClassSettingsMetadataKeyCategory	: @"Authentication"
 		}
 	});
 }
@@ -404,3 +411,4 @@ NSString *OCAuthorizationMethodAlternativeServerURLOriginURLKey = @"alternativeS
 OCClassSettingsIdentifier OCClassSettingsIdentifierAuthentication = @"authentication";
 OCClassSettingsKey OCAuthenticationMethodBrowserSessionClass = @"browser-session-class";
 OCClassSettingsKey OCAuthenticationMethodBrowserSessionPrefersEphermal = @"browser-session-prefers-ephermal";
+OCClassSettingsKey OCAuthenticationMethodSkipWWWAuthenticateChecks = @"skip-www-authenticate-checks";

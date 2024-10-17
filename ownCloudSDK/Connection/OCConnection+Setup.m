@@ -651,6 +651,12 @@
 			detectionOptions[OCAuthenticationMethodWebFingerAlternativeIDPKey] = webFingerAlternativeIDPBaseURL;
 		}
 
+		NSNumber *skipWWWAuthenticateChecks;
+		if ((skipWWWAuthenticateChecks = [OCAuthenticationMethod classSettingForOCClassSettingsKey:OCAuthenticationMethodSkipWWWAuthenticateChecks]) != nil)
+		{
+			detectionOptions[OCAuthenticationMethodSkipWWWAuthenticateChecksKey] = skipWWWAuthenticateChecks;
+		}
+
 		if (detectionOptions.count == 0)
 		{
 			detectionOptions = nil;
