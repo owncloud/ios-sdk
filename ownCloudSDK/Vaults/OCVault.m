@@ -280,6 +280,15 @@
 	return (_temporaryDownloadURL);
 }
 
+- (NSURL *)bookmarkMetadataURL
+{
+	if (_bookmarkMetadataURL == nil)
+	{
+		_bookmarkMetadataURL = [self.class bookmarkMetadataURLForVaultUUID:self.uuid];
+	}
+	return (_bookmarkMetadataURL);
+}
+
 - (NSURL *)wipeContainerRootURL
 {
 	if (_wipeContainerRootURL == nil)
@@ -1108,6 +1117,11 @@
 + (NSString *)keyValueStoreFilePathRelativeToRootPathForVaultUUID:(NSUUID *)uuid
 {
 	return ([uuid.UUIDString stringByAppendingString:@".ockvs"]);
+}
+
++ (nullable NSURL *)bookmarkMetadataURLForVaultUUID:(NSUUID *)uuid
+{
+	return ([[self rootURLForUUID:uuid] URLByAppendingPathComponent:@"BookmarkMetadata" isDirectory:YES]);
 }
 
 + (NSURL *)httpPipelineRootURL
