@@ -919,9 +919,7 @@ OCAuthenticationMethodAutoRegister
 		[tokenRequest addParameters:parameters];
 
 		// Add client ID and client secret as authentication header or as parameters
-		NSNumber *postClientIDAndSecret;
-		if (((postClientIDAndSecret = [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2PostClientIDAndSecret]) != nil) &&
-		     postClientIDAndSecret.boolValue)
+		if ([self sendClientIDAndSecretInPOSTBody])
 		{
 			// Include Client ID and Client Secret as parameters in the POST body
 			//
@@ -1160,6 +1158,12 @@ OCAuthenticationMethodAutoRegister
 		// Internal error
 		completionHandler(OCError(OCErrorInternal), nil, nil);
 	}
+}
+
+- (BOOL)sendClientIDAndSecretInPOSTBody
+{
+	NSNumber *forcePostClientIDAndSecret = [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2PostClientIDAndSecret];
+	return ((forcePostClientIDAndSecret != nil) && forcePostClientIDAndSecret.boolValue);
 }
 
 @end

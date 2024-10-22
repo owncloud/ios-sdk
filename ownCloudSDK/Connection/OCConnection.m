@@ -2303,7 +2303,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 						file.checksum = [OCChecksum checksumFromHeaderString:checksumString];
 					}
 
-					file.eTag = request.httpResponse.headerFields[@"oc-etag"];
+					OCFileETag eTag = request.httpResponse.headerFields[@"oc-etag"];
+					if (eTag == nil)
+					{
+						// Allow fallback to standard HTTP Etag if oc-etag is not available
+						eTag = request.httpResponse.headerFields[@"Etag"];
+					}
+
+					file.eTag = eTag;
 					file.fileID = file.item.fileID;
 
 					event.file = file;
