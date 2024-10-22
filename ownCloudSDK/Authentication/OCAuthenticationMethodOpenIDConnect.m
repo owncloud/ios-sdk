@@ -720,6 +720,30 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 	}];
 }
 
+- (BOOL)sendClientIDAndSecretInPOSTBody
+{
+	if (_openIDConfig != nil)
+	{
+		NSArray<NSString *>* supportedEndpointAuthMethods = OCTypedCast(_openIDConfig[@"token_endpoint_auth_methods_supported"], NSArray);
+
+		// Determine supported auth methods (reference: https://openid.net/specs/openid-connect-discovery-1_0.html)
+		BOOL supportsBasicAuth = [supportedEndpointAuthMethods containsObject:@"client_secret_basic"];
+		BOOL supportsPost = [supportedEndpointAuthMethods containsObject:@"client_secret_post"];
+
+		if (!supportsBasicAuth && supportsPost)
+		{
+			// Basic auth is not supported, only POST
+			return (YES);
+		}
+		else if (!supportsPost && !supportsBasicAuth)
+		{
+			// None of the implemented methods is supported
+			OCLogWarning(@"OpenID configuration token_endpoint_auth_methods_supported does not contain any supported auth methods.")
+		}
+	}
+
+	return ([super sendClientIDAndSecretInPOSTBody]);
+}
 
 #pragma mark - Generate bookmark authentication data
 - (NSDictionary<NSString *,NSString *> *)prepareAuthorizationRequestParameters:(NSDictionary<NSString *,NSString *> *)parameters forConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options
