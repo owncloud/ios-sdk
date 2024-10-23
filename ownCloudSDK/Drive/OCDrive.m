@@ -159,9 +159,10 @@
 {
 	OCDriveSpecialType specialType = self.specialType;
 
+    // Uncommented Personal drive name until new capability spaces > has_multiple_personal_spaces is available, to use name for Kiteworks build
 	if (specialType == OCDriveSpecialTypePersonal)
 	{
-		return (OCLocalizedString(@"Personal",nil));
+        //return (OCLocalizedString(@"Personal",nil));
 	}
 
 	if (specialType == OCDriveSpecialTypeShares)
@@ -297,7 +298,7 @@
 
 OCDriveType OCDriveTypePersonal = @"personal";
 OCDriveType OCDriveTypeVirtual = @"virtual";
-OCDriveType OCDriveTypeProject = @"project";
+OCDriveType OCDriveTypeProject = @"shares"; // @"project";
 OCDriveType OCDriveTypeMountpoint = @"mountpoint";
 OCDriveType OCDriveTypeShare = @"share";
 
