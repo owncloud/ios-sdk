@@ -104,7 +104,37 @@
 					_registeredMetaDataCollectionsByIdentifier[identifier] = registeredMetaDataCollections;
 				}
 
-				[registeredMetaDataCollections addObject:metaData];
+				if (OCPlatform.current.memoryConfiguration == OCPlatformMemoryConfigurationMinimum)
+				{
+					@autoreleasepool {
+						NSMutableDictionary<OCClassSettingsKey,OCClassSettingsMetadata> *filteredCollection = [NSMutableDictionary new];
+
+						for (OCClassSettingsKey settingsKey in metaData)
+						{
+							OCClassSettingsMetadata settingsMetadata = metaData[settingsKey];
+							id mdType = settingsMetadata[OCClassSettingsMetadataKeyType];
+							id mdPossibleKeys = settingsMetadata[OCClassSettingsMetadataKeyPossibleKeys];
+
+							if ((mdType != nil) || (mdPossibleKeys != nil))
+							{
+								NSMutableDictionary<OCClassSettingsMetadataKey,id> *filteredMetadata = [NSMutableDictionary new];
+								filteredMetadata[OCClassSettingsMetadataKeyType] = mdType;
+								filteredMetadata[OCClassSettingsMetadataKeyPossibleKeys] = mdPossibleKeys;
+
+								filteredCollection[settingsKey] = [[NSDictionary alloc] initWithDictionary:filteredMetadata];
+							}
+						}
+
+						if (filteredCollection.count > 0)
+						{
+							[registeredMetaDataCollections addObject:[[NSDictionary alloc] initWithDictionary:filteredCollection]];
+						}
+					}
+				}
+				else
+				{
+					[registeredMetaDataCollections addObject:metaData];
+				}
 			}
 
 			[self clearSourceCache];
