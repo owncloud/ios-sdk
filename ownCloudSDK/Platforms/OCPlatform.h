@@ -34,9 +34,19 @@
 #define OCView NSView
 #endif /* TARGET_OS_OSX */
 
+typedef NS_ENUM(NSUInteger, OCPlatformMemoryConfiguration)
+{
+	OCPlatformMemoryConfigurationDefault,	//!< Default memory configuration
+	OCPlatformMemoryConfigurationMinimum	//!< Try using only the minimum amount of memory needed
+} __attribute__((enum_extensibility(closed)));
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCPlatform : NSObject
+
+@property(readonly,strong,nonatomic,class) OCPlatform *current;
+
+@property(assign) OCPlatformMemoryConfiguration memoryConfiguration;
 
 @end
 
