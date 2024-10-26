@@ -56,18 +56,18 @@
 	return (self);
 }
 
-- (void)setMemoryConfiguration:(OCCoreMemoryConfiguration)memoryConfiguration
+- (void)setMemoryConfiguration:(OCPlatformMemoryConfiguration)memoryConfiguration
 {
 	_memoryConfiguration = memoryConfiguration;
 
 	switch (_memoryConfiguration)
 	{
-		case OCCoreMemoryConfigurationDefault:
+		case OCPlatformMemoryConfigurationDefault:
 			_cache.countLimit = OCCacheLimitNone;
 		break;
 
-		case OCCoreMemoryConfigurationMinimum:
-			_cache.countLimit = 1;
+		case OCPlatformMemoryConfigurationMinimum:
+			_cache.countLimit = 0;
 		break;
 	}
 }

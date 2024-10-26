@@ -40,7 +40,7 @@ typedef void(^OCResourceRetrieveCompletionHandler)(NSError * _Nullable error, OC
 @property(weak,nullable) id<OCResourceStorage> storage;
 @property(weak,nullable) OCCore *core;
 
-@property(assign,nonatomic) OCCoreMemoryConfiguration memoryConfiguration;
+@property(assign,nonatomic) OCPlatformMemoryConfiguration memoryConfiguration;
 
 // @property(assign) NSUInteger maximumConcurrentJobs; //!< Maximum number of jobs to work on in parallel. A value of 0 indicates no limit.
 
