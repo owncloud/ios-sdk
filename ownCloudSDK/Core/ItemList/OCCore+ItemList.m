@@ -51,11 +51,11 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 {
 	switch (self.memoryConfiguration)
 	{
-		case OCCoreMemoryConfigurationMinimum:
+		case OCPlatformMemoryConfigurationMinimum:
 			return (1);
 		break;
 
-		case OCCoreMemoryConfigurationDefault:
+		case OCPlatformMemoryConfigurationDefault:
 		default:
 			return (2);
 		break;

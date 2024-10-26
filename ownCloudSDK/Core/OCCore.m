@@ -410,7 +410,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		[self addSignalProvider:_connectingStatusSignalProvider];
 		[self addSignalProvider:_connectionStatusSignalProvider];
 
-		self.memoryConfiguration = OCCoreManager.sharedCoreManager.memoryConfiguration;
+		self.memoryConfiguration = OCPlatform.current.memoryConfiguration;
 
 		[self startIPCObservation];
 	}
@@ -755,7 +755,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 					}
 
 					// If app provider is available and enabled
-					if (OCCoreManager.sharedCoreManager.memoryConfiguration != OCCoreMemoryConfigurationMinimum) // only load app providers in memory configurations other than minimum
+					if (self.memoryConfiguration != OCPlatformMemoryConfigurationMinimum) // only load app providers in memory configurations other than minimum
 					{
 						OCAppProvider *latestSupportedAppProvider = self.connection.capabilities.latestSupportedAppProvider;
 
@@ -1043,7 +1043,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 }
 
 #pragma mark - Memory configuration
-- (void)setMemoryConfiguration:(OCCoreMemoryConfiguration)memoryConfiguration
+- (void)setMemoryConfiguration:(OCPlatformMemoryConfiguration)memoryConfiguration
 {
 	_memoryConfiguration = memoryConfiguration;
 
@@ -1051,12 +1051,12 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 	switch (_memoryConfiguration)
 	{
-		case OCCoreMemoryConfigurationDefault:
+		case OCPlatformMemoryConfigurationDefault:
 			_thumbnailCache.countLimit = OCCacheLimitNone;
 		break;
 
-		case OCCoreMemoryConfigurationMinimum:
-			_thumbnailCache.countLimit = 1;
+		case OCPlatformMemoryConfigurationMinimum:
+			_thumbnailCache.countLimit = 0;
 		break;
 	}
 }
