@@ -137,6 +137,9 @@ typedef NSNumber* OCCapabilityBool;
 
 @property(readonly,nonatomic) BOOL federatedSharingSupported;
 
+#pragma mark - Search
+@property(readonly,nonatomic) BOOL serverSideSearchSupported;
+
 #pragma mark - Notifications
 @property(readonly,nullable,nonatomic) NSArray<NSString *> *notificationEndpoints;
 

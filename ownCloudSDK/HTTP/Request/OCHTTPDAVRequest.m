@@ -91,7 +91,7 @@
 	return (_bodyData);
 }
 
-- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath reuseUsersByID:(NSMutableDictionary<NSString *,OCUser *> *)usersByUserID driveID:(nullable OCDriveID)driveID withErrors:(NSArray <NSError *> **)errors
+- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath drives:(NSArray<OCDrive *> *)drives reuseUsersByID:(NSMutableDictionary<NSString *,OCUser *> *)usersByUserID driveID:(nullable OCDriveID)driveID withErrors:(NSArray <NSError *> **)errors
 {
 	NSArray <OCItem *> *responseItems = nil;
 	NSData *responseData = self.httpResponse.bodyData;
@@ -111,10 +111,27 @@
 			{
 				if (basePath != nil)
 				{
-					parser.options = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-						basePath, 	@"basePath",
-						usersByUserID, 	@"usersByUserID",
-					nil];
+					NSMutableDictionary<NSString *,id> *options = [NSMutableDictionary new];
+					NSMutableDictionary<NSString *, OCDriveID> *drivePrefixMap = nil;
+
+					if (drives != nil)
+					{
+						drivePrefixMap = [NSMutableDictionary new];
+						for (OCDrive *drive in drives)
+						{
+							if (drive.specialType != nil)
+							{
+								NSString *drivePrefixPath = [[NSString alloc] initWithFormat:@"/%@/", drive.identifier];
+								drivePrefixMap[drivePrefixPath] = drive.identifier;
+							}
+						}
+					}
+
+					options[@"basePath"] = basePath;
+					options[@"usersByUserID"] = usersByUserID;
+					options[@"drivePrefixMap"] = drivePrefixMap;
+
+					parser.options = options;
 				}
 
 				[parser addObjectCreationClasses:@[ [OCItem class], [NSError class] ]];

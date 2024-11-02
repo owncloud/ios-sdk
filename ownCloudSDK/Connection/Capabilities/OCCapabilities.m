@@ -122,6 +122,9 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 @dynamic federatedSharingIncoming;
 @dynamic federatedSharingOutgoing;
 
+#pragma mark - Search
+@dynamic serverSideSearchSupported;
+
 #pragma mark - Notifications
 @dynamic notificationEndpoints;
 
@@ -739,6 +742,12 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 	}
 
 	return (self.federatedSharingIncoming.boolValue || self.federatedSharingOutgoing.boolValue);
+}
+
+#pragma mark - Search
+- (BOOL)serverSideSearchSupported
+{
+	return (OCTypedCast(_capabilities[@"search"], NSDictionary) != nil);
 }
 
 #pragma mark - Notifications
