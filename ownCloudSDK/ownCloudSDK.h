@@ -230,6 +230,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCQueryFilter.h>
 #import <ownCloudSDK/OCQueryCondition.h>
 #import <ownCloudSDK/OCQueryCondition+Item.h>
+#import <ownCloudSDK/OCQueryCondition+KQLBuilder.h>
 #import <ownCloudSDK/OCQueryChangeSet.h>
 
 #import <ownCloudSDK/OCItem.h>

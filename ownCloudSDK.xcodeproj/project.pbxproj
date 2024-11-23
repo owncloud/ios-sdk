@@ -884,6 +884,8 @@
 		DCF00BF527E28A77001F2AFC /* OCDataSourceSubscription+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF00BF327E28A77001F2AFC /* OCDataSourceSubscription+Internal.h */; };
 		DCF00BF627E28A77001F2AFC /* OCDataSourceSubscription+Internal.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF00BF427E28A77001F2AFC /* OCDataSourceSubscription+Internal.m */; };
 		DCF00C1927E698A4001F2AFC /* DataSourceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF00C1827E698A4001F2AFC /* DataSourceTests.m */; };
+		DCF06B662CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF06B642CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCF06B672CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF06B652CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.m */; };
 		DCF072E42798630900E0B01D /* OCResourceTextPlaceholder.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF072E22798630900E0B01D /* OCResourceTextPlaceholder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCF072E52798630900E0B01D /* OCResourceTextPlaceholder.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF072E32798630900E0B01D /* OCResourceTextPlaceholder.m */; };
 		DCF072E82798652500E0B01D /* OCResourceSourceAvatarPlaceholders.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF072E62798652500E0B01D /* OCResourceSourceAvatarPlaceholders.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1929,6 +1931,8 @@
 		DCF00BF327E28A77001F2AFC /* OCDataSourceSubscription+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCDataSourceSubscription+Internal.h"; sourceTree = "<group>"; };
 		DCF00BF427E28A77001F2AFC /* OCDataSourceSubscription+Internal.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCDataSourceSubscription+Internal.m"; sourceTree = "<group>"; };
 		DCF00C1827E698A4001F2AFC /* DataSourceTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DataSourceTests.m; sourceTree = "<group>"; };
+		DCF06B642CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCQueryCondition+KQLBuilder.h"; sourceTree = "<group>"; };
+		DCF06B652CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCQueryCondition+KQLBuilder.m"; sourceTree = "<group>"; };
 		DCF072E22798630900E0B01D /* OCResourceTextPlaceholder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCResourceTextPlaceholder.h; sourceTree = "<group>"; };
 		DCF072E32798630900E0B01D /* OCResourceTextPlaceholder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCResourceTextPlaceholder.m; sourceTree = "<group>"; };
 		DCF072E62798652500E0B01D /* OCResourceSourceAvatarPlaceholders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCResourceSourceAvatarPlaceholders.h; sourceTree = "<group>"; };
@@ -2599,6 +2603,8 @@
 				DC359690223FA7CC00C4D6E6 /* OCQueryCondition.h */,
 				DC35969522403E5B00C4D6E6 /* OCQueryCondition+SQLBuilder.m */,
 				DC35969422403E5B00C4D6E6 /* OCQueryCondition+SQLBuilder.h */,
+				DCF06B652CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.m */,
+				DCF06B642CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.h */,
 				DC3596992240EC0A00C4D6E6 /* OCQueryCondition+Item.m */,
 				DC3596982240EC0A00C4D6E6 /* OCQueryCondition+Item.h */,
 			);
@@ -4814,6 +4820,7 @@
 				DCAEB06921FA617D0067E147 /* OCActivity.h in Headers */,
 				DCFFF57E20D3A51C0096D2D3 /* OCSyncContext.h in Headers */,
 				DC0283632090A3E8005B6334 /* OCItemThumbnail.h in Headers */,
+				DCF06B662CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.h in Headers */,
 				DCADC04D2072D54200DB8E83 /* OCSQLiteTableSchema.h in Headers */,
 				DC73F3BF254BFE9900CE5FA9 /* NSArray+ObjCRuntime.h in Headers */,
 				DCC4F3FF27D75BF700ABF4C9 /* OCDataConverterPipeline.h in Headers */,
@@ -5404,6 +5411,7 @@
 				DC0BE5B228F80BBA00CE2101 /* OCShareRole.m in Sources */,
 				DCC26FC02B7397D400904000 /* OCPasswordPolicyRule+StandardRules.m in Sources */,
 				DCC6567520CA695600110A97 /* OCCoreManager.m in Sources */,
+				DCF06B672CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.m in Sources */,
 				DC2F66A12603FCF6001BFDB6 /* OCCancelAction.m in Sources */,
 				DC6DEEBA24C5C82400E3772E /* OCHTTPPolicyBookmark.m in Sources */,
 				DCEE0B7025E697AF006534B5 /* OCCoreManager+ItemResolution.m in Sources */,
