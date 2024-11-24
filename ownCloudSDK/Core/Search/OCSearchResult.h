@@ -32,6 +32,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong) OCKQLQuery kqlQuery;
 @property(strong) OCDataSource *results;
 
+@property(strong,nullable) NSError *error;
+
 @property(strong,nullable) OCProgress *progress;
 - (void)cancel;
 

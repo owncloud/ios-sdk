@@ -39,6 +39,7 @@
 		self.kqlQuery = kqlQuery;
 		self.results = [[OCDataSourceArray alloc] initWithItems:nil];
 		[((OCDataSourceArray *)self.results) setVersionedItems:@[]];
+		self.results.state = OCDataSourceStateLoading;
 	}
 
 	return (self);
@@ -61,6 +62,14 @@
 {
 	NSArray<OCItem *> *searchResults = OCTypedCast(event.result, NSArray);
 	OCDataSourceArray *searchResultDatasource = (OCDataSourceArray *)self.results;
+
+	self.results.state = OCDataSourceStateIdle;
+
+	if (event.error != nil) {
+		self.error = event.error;
+		OCLogError(@"Search ended with error: %@", event.error);
+		return;
+	}
 
 	if (searchResults != nil)
 	{
