@@ -4902,6 +4902,7 @@
 				DCC8F9A8202852A200EB6701 /* Headers */,
 				DCC8F9A9202852A200EB6701 /* Resources */,
 				DC102FAD22D3E0F300DEBC38 /* Update LastGitCommit key in Info.plist */,
+				DC86F8572CF345AA00D757DA /* Normalize xcstrings files */,
 			);
 			buildRules = (
 			);
@@ -5111,6 +5112,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "LASTGITCOMMIT=$(git rev-parse --short HEAD)\ndefaults write \"${BUILT_PRODUCTS_DIR}/${INFOPLIST_PATH%.*}\" \"LastGitCommit\" \"${LASTGITCOMMIT}\"\n\nGITTAGS=$(git describe --tags)\ndefaults write \"${BUILT_PRODUCTS_DIR}/${INFOPLIST_PATH%.*}\" \"GitTags\" \"${GITTAGS}\"\n\nGITBRANCH=$(git branch --show-current)\ndefaults write \"${BUILT_PRODUCTS_DIR}/${INFOPLIST_PATH%.*}\" \"GitBranch\" \"${GITBRANCH}\"\n";
+		};
+		DC86F8572CF345AA00D757DA /* Normalize xcstrings files */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/ownCloudSDK/Resources/Localizable.xcstrings",
+				"$(SRCROOT)/ownCloudUI/Resources/Localizable.xcstrings",
+			);
+			name = "Normalize xcstrings files";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "if ! command -v jq 2>&1 >/dev/null\nthen\n    echo \"jq could not be found\"\n    exit 0\nfi\n\nbeautifyJSON() {\n  jq --sort-keys 'walk(if type == \"object\" then del(.\"th_TH\", .\"pt_PT\", .\"pt_BR\", .\"nn_NO\", .\"nb_NO\", .\"en_GB\") else . end)' $1 >$1.tmp\n  mv $1.tmp $1\n}\nbeautifyJSON \"ownCloudSDK/Resources/Localizable.xcstrings\"\nbeautifyJSON \"ownCloudUI/Resources/Localizable.xcstrings\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
