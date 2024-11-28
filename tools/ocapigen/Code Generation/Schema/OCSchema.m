@@ -47,7 +47,6 @@
 		[self addPropertiesFrom:node additionalRequired:nil];
 
 		if (node.childrenByName[@"allOf"]) {
-			NSLog(@"AllOf: %@", node.childrenByName[@"allOf"].value);
 			for (NSString *reference in OCTypedCast(node.childrenByName[@"allOf"].value, NSArray)) {
 				OCYAMLNode *referencedNode;
 				if ((referencedNode = [parser nodeForReference:reference]) != nil)
