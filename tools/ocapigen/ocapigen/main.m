@@ -100,7 +100,7 @@ int main(int argc, const char * argv[]) {
 		{
 			OCSchema *schema;
 
-			if ((schema = [[OCSchema alloc] initWithYAMLNode:schemaNode]) != nil)
+			if ((schema = [[OCSchema alloc] initWithYAMLNode:schemaNode parser:parser]) != nil)
 			{
 				[generator addSchema:schema];
 			}

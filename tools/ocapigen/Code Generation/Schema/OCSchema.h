@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 #import "OCSchemaProperty.h"
 #import "OCYAMLNode.h"
+#import "OCYAMLParser.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -31,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong) NSMutableArray<OCSchemaProperty *> *properties;
 
-- (instancetype)initWithYAMLNode:(OCYAMLNode *)node;
+- (instancetype)initWithYAMLNode:(OCYAMLNode *)node parser:(OCYAMLParser *)parser;
 
 @end
 

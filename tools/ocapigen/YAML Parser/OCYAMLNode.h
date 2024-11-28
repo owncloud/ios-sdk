@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 
 typedef NSString* OCYAMLPath;
+typedef NSString* OCYAMLReference;
 
 NS_ASSUME_NONNULL_BEGIN
 
