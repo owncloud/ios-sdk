@@ -211,4 +211,22 @@
 	return (node);
 }
 
+- (OCYAMLNode *)nodeForReference:(OCYAMLReference)reference
+{
+	if (![reference hasPrefix:@"$ref:"]) {
+		// Not a reference
+		return (nil);
+	}
+
+	OCYAMLPath path = [reference substringFromIndex:5];
+	path = [path stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"\"' 	"]];
+
+	if (path.length == 0)
+	{
+		return nil;
+	}
+
+	return ([self nodeForPath:path]);
+}
+
 @end
