@@ -18,16 +18,20 @@
 
 #import <Foundation/Foundation.h>
 #import "GAGraph.h"
+#import "GAGraphStruct+Encoder.h"
 #import "GAGraphData+Decoder.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @class GAGraphContext;
 
+typedef NSMutableDictionary<NSString*,id>* GAGraphStruct; //!< A graph struct is a dictionary that can be encoded as JSON to send to the server
+
 @protocol GAGraphObject <NSObject>
 
 @required
 + (nullable instancetype)decodeGraphData:(GAGraphData)structure context:(nullable GAGraphContext *)context error:(NSError * _Nullable * _Nullable)outError;
+- (nullable GAGraphStruct)encodeToGraphStructWithContext:(nullable GAGraphContext *)context error:(NSError * _Nullable * _Nullable)outError;
 
 @optional
 @property(readonly,strong,nonatomic) GAGraphType graphType;
