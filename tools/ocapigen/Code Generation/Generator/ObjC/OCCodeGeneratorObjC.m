@@ -17,8 +17,12 @@
  */
 
 #import "OCCodeGeneratorObjC.h"
+#import "NSString+GeneratorTools.h"
 
 @implementation OCCodeGeneratorObjC
+{
+	NSMutableDictionary<NSString *, NSString *> *_typedefTypeToNativeClassMap;
+}
 
 - (NSDictionary<OCCodeRawType,OCCodeNativeType> *)rawToNativeTypeMap
 {
@@ -78,13 +82,13 @@
 	return ([super nativeTypeForProperty:property asReference:asReference remappedFrom:outRemappedFrom inSegment:fileSegment]);
 }
 
-- (OCCodeNativeType)nativeTypeForRAWType:(OCCodeRawType)rawType rawFormat:(OCCodeRawFormat)rawFormat rawItemType:(OCCodeRawType)rawItemType asReference:(BOOL)asReference inSegment:(nullable OCCodeFileSegment *)fileSegment
+- (OCCodeNativeType)nativeTypeForRAWType:(OCCodeRawType)rawType rawFormat:(OCCodeRawFormat)rawFormat rawItemType:(OCCodeRawType)rawItemType asReference:(BOOL)asReference forProperty:(nullable OCSchemaProperty *)property inSegment:(nullable OCCodeFileSegment *)fileSegment
 {
 	OCCodeNativeType nativeType;
 
-	if ((nativeType = [super nativeTypeForRAWType:rawType rawFormat:rawFormat rawItemType:rawItemType asReference:asReference inSegment:fileSegment]) != nil)
+	if ((nativeType = [super nativeTypeForRAWType:rawType rawFormat:rawFormat rawItemType:rawItemType asReference:asReference forProperty:property inSegment:fileSegment]) != nil)
 	{
-		if (asReference && ![nativeType hasSuffix:@"*"])
+		if (asReference && ![nativeType hasSuffix:@"*"] && (_typedefTypeToNativeClassMap[nativeType] == nil))
 		{
 			nativeType = [nativeType stringByAppendingString:@" *"];
 		}
@@ -92,7 +96,6 @@
 
 	return (nativeType);
 }
-
 
 - (NSString *)commentForProperty:(OCSchemaProperty *)property ofSchema:(OCSchema *)schema
 {
@@ -145,11 +148,43 @@
 	[segment addLine:@""];
 }
 
+- (void)generate
+{
+	_typedefTypeToNativeClassMap = [NSMutableDictionary new];
+
+	for (OCSchema *schema in self.allSchemas)
+	{
+		if (!([schema.type isEqual:OCSchemaTypeObject] || (schema.type == nil)))
+		{
+			// Use typedef
+			NSString *typeName = [self nativeTypeNameForSchema:schema inSegment:nil];
+			NSString *nativeTypeClass = self.rawToNativeTypeMap[schema.type];
+
+			if (nativeTypeClass == nil)
+			{
+				NSLog(@"ERROR: no native type found for %@", schema.type);
+			}
+
+			_typedefTypeToNativeClassMap[typeName] = nativeTypeClass;
+		}
+	}
+
+	[super generate];
+}
+
 - (void)generateForSchema:(OCSchema *)schema
 {
+	if ([schema.type isEqual:OCSchemaTypeObject] || (schema.type == nil)) {
+		[self generateForObjectSchema:schema];
+	} else {
+		[self generateForSchema:schema ofNativeTypeClass:self.rawToNativeTypeMap[schema.type]];
+	}
+}
+
+- (void)generateForSchema:(OCSchema *)schema ofNativeTypeClass:(NSString *)nativeTypeClass
+{
 	NSString *className = [self nativeTypeNameForSchema:schema inSegment:nil];
-	OCCodeFileSegment *segment = nil, *forwardDeclarationsSegment = nil, *headerPropertiesSegment = nil;
-	NSMutableSet <NSString *> *forwardDeclaredTypeNames = [NSMutableSet new];
+	OCCodeFileSegment *segment = nil;
 
 	// ##
 	// ## Header file
@@ -166,10 +201,84 @@
 	segment = [[headerFile segmentForName:OCCodeFileSegmentNameIncludes after:segment] clear];
 
 	[segment addLine:@"#import <Foundation/Foundation.h>"];
-	[segment addLine:@"#import \"GAGraphObject.h\""];
+
+	// Typedef
+	segment = [[headerFile segmentForName:OCCodeFileSegmentNameTypeLeadIn after:segment] clear];
+	if (schema.enumValues != nil) {
+		// Enum
+		[segment addLine:@"typedef %@* %@ NS_TYPED_ENUM;", nativeTypeClass, className];
+		[segment addLine:@""];
+
+		// Enum values
+		for (NSString *enumValue in schema.enumValues)
+		{
+			[segment addLine:@"extern %@ %@%@;", className, className, enumValue.withCapitalizedFirstChar];
+		}
+	} else {
+		// Typedef
+		[segment addLine:@"typedef %@* %@;", nativeTypeClass, className];
+	}
+
+	segment = [[headerFile segmentForName:OCCodeFileSegmentNameTypeLeadOut after:segment] clear];
+
+	// ##
+	// ## Implementation file
+	// ##
+
+	if (schema.enumValues != nil) {
+		NSString *implementationFileName = [className stringByAppendingString:@".m"];
+		OCCodeFile *implementationFile = [self fileForName:implementationFileName];
+
+		// Lead comment
+		segment = [[implementationFile segmentForName:OCCodeFileSegmentNameLeadComment] clear];
+		[self addCopyrightHeaderToSegment:segment];
+
+		// Includes
+		segment = [[implementationFile segmentForName:OCCodeFileSegmentNameIncludes after:segment] clear];
+		[segment addLine:@"#import \"%@\"", headerFileName];
+
+		// Enum values
+		segment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeLeadIn after:segment] clear];
+		for (NSString *enumValue in schema.enumValues)
+		{
+			[segment addLine:@"%@ %@%@ = @\"%@\";", className, className, enumValue.withCapitalizedFirstChar, enumValue];
+		}
+
+		// Protected
+		segment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeProtected after:segment] clear];
+		segment.locked = YES;
+
+		// End
+		segment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeLeadOut after:segment] clear];
+	}
+}
+
+- (void)generateForObjectSchema:(OCSchema *)schema
+{
+	NSString *className = [self nativeTypeNameForSchema:schema inSegment:nil];
+	OCCodeFileSegment *segment = nil, *forwardDeclarationsSegment = nil, *headerPropertiesSegment = nil, *headerImportsSegment = nil;
+	NSMutableSet <NSString *> *forwardDeclaredTypeNames = [NSMutableSet new];
+	NSMutableSet <NSString *> *includeTypeNames = [NSMutableSet new];
+
+	// ##
+	// ## Header file
+	// ##
+
+	NSString *headerFileName = [className stringByAppendingString:@".h"];
+	OCCodeFile *headerFile = [self fileForName:headerFileName];
+
+	// Lead comment
+	segment = [[headerFile segmentForName:OCCodeFileSegmentNameLeadComment] clear];
+	[self addCopyrightHeaderToSegment:segment];
+
+	// Includes
+	headerImportsSegment = [[headerFile segmentForName:OCCodeFileSegmentNameIncludes after:segment] clear];
+
+	[headerImportsSegment addLine:@"#import <Foundation/Foundation.h>"];
+	[headerImportsSegment addLine:@"#import \"GAGraphObject.h\""];
 
 	// Forward declarations (prepare)
-	forwardDeclarationsSegment = [[headerFile segmentForName:OCCodeFileSegmentNameForwardDeclarations after:segment] clear];
+	forwardDeclarationsSegment = [[headerFile segmentForName:OCCodeFileSegmentNameForwardDeclarations after:headerImportsSegment] clear];
 
 	// @interface …
 	segment = [[headerFile segmentForName:OCCodeFileSegmentNameTypeLeadIn after:forwardDeclarationsSegment] clear];
@@ -210,12 +319,19 @@
 			}
 			else
 			{
-				[forwardDeclaredTypeNames addObject:propertyClassName];
+				if (_typedefTypeToNativeClassMap[propertyClassName] != nil)
+				{
+					[includeTypeNames addObject:propertyClassName];
+				}
+				else
+				{
+					[forwardDeclaredTypeNames addObject:propertyClassName];
+				}
 			}
 		}
 		else if (property.isCollection)
 		{
-			OCCodeNativeType propertClassName = [self nativeTypeForRAWType:property.itemType rawFormat:nil rawItemType:nil asReference:NO inSegment:segment];
+			OCCodeNativeType propertClassName = [self nativeTypeForRAWType:property.itemType rawFormat:nil rawItemType:nil asReference:NO forProperty:property inSegment:segment];
 
 			if (![propertClassName hasPrefix:@"NS"])
 			{
@@ -228,6 +344,16 @@
 	segment = [[headerFile segmentForName:OCCodeFileSegmentNameTypeProtected after:headerPropertiesSegment] clear];
 	segment.locked = YES;
 
+	// Imports (render)
+	NSArray<NSString *> *includeTypeNamesSorted = [includeTypeNames.allObjects sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
+	if (includeTypeNamesSorted != nil)
+	{
+		for (NSString *typeName in includeTypeNamesSorted)
+		{
+			[headerImportsSegment addLine:@"#import \"%@.h\"", typeName];
+		}
+	}
+
 	// Forward declarations (render)
 	NSArray<NSString *> *forwardDeclaredTypeNamesSorted = [forwardDeclaredTypeNames.allObjects sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
 	if (forwardDeclarationsSegment != nil)
@@ -237,6 +363,7 @@
 			[forwardDeclarationsSegment addLine:@"@class %@;", typeName];
 		}
 	}
+
 
 	// @end (class)
 	segment = [headerFile segmentForName:OCCodeFileSegmentNameTypeLeadOut after:segment];
@@ -251,7 +378,7 @@
 	NSString *implementationFileName = [className stringByAppendingString:@".m"];
 	NSMutableString *debugDescriptionStringFormat = [NSMutableString new], *debugDescriptionStringContent = [NSMutableString new];
 	OCCodeFile *implementationFile = [self fileForName:implementationFileName];
-	OCCodeFileSegment *nativeSerializationSegment = nil, *nativeDeserializationSegment = nil, *debugDescriptionSegment = nil;
+	OCCodeFileSegment *structSerializationSegment = nil, *nativeSerializationSegment = nil, *nativeDeserializationSegment = nil, *debugDescriptionSegment = nil;
 
 	// Lead comment
 	segment = [[implementationFile segmentForName:OCCodeFileSegmentNameLeadComment] clear];
@@ -272,7 +399,8 @@
 
 	// Implementation serialization
 	segment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeSerialization after:segment] clear];
-	nativeDeserializationSegment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeNativeDeserialization after:segment] clear];
+	structSerializationSegment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeStructSerialization after:segment] clear];
+	nativeDeserializationSegment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeNativeDeserialization after:structSerializationSegment] clear];
 	nativeSerializationSegment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeNativeSerialization after:nativeDeserializationSegment] clear];
 	debugDescriptionSegment = [[implementationFile segmentForName:OCCodeFileSegmentNameTypeDebugDescription after:nativeSerializationSegment] clear];
 
@@ -280,6 +408,10 @@
 	[segment addLine:@"{"];
 	[segment addLine:@"	%@ *instance = [self new];", className];
 	[segment addLine:@""];
+
+	[structSerializationSegment addLine:@"- (nullable GAGraphStruct)encodeToGraphStructWithContext:(nullable GAGraphContext *)context error:(NSError * _Nullable * _Nullable)outError"];
+	[structSerializationSegment addLine:@"{"];
+	[structSerializationSegment addLine:@"	GA_ENC_INIT"];
 
 	[nativeDeserializationSegment addLine:@"+ (BOOL)supportsSecureCoding"];
 	[nativeDeserializationSegment addLine:@"{"];
@@ -307,8 +439,13 @@
 
 		if (property.isCollection)
 		{
-			collectionType = [[self nativeTypeForRAWType:property.type rawFormat:nil rawItemType:nil asReference:NO inSegment:segment] stringByAppendingString:@".class"];
-			propertyClassName = [self nativeTypeForRAWType:property.itemType rawFormat:nil rawItemType:nil asReference:NO inSegment:segment];
+			collectionType = [[self nativeTypeForRAWType:property.type rawFormat:nil rawItemType:nil asReference:NO forProperty:property inSegment:segment] stringByAppendingString:@".class"];
+			propertyClassName = [self nativeTypeForRAWType:property.itemType rawFormat:nil rawItemType:nil asReference:NO forProperty:property inSegment:segment];
+		}
+
+		// Typedef types -> native types mapping
+		if ((propertyClassName != nil) && (_typedefTypeToNativeClassMap[propertyClassName] != nil)) {
+			propertyClassName = _typedefTypeToNativeClassMap[propertyClassName];
 		}
 
 		if ([property.name isEqual:propertyName])
@@ -334,6 +471,9 @@
 			}
 		}
 
+		// Properties -> JSON mapping
+		[structSerializationSegment addLine:@"%@	GA_ENC_ADD(_%@, \"%@\", %@);", commentedOut, propertyName, property.name, (property.required ? @"YES" : @"NO")];
+
 		// Secure Coding deserialization
 		if ([collectionType isEqual:@"Nil"])
 		{
@@ -357,6 +497,10 @@
 	[segment addLine:@""];
 	[segment addLine:@"	return (instance);"];
 	[segment addLine:@"}"];
+
+
+	[structSerializationSegment addLine:@"	GA_ENC_RETURN"];
+	[structSerializationSegment addLine:@"}"];
 
 	[nativeDeserializationSegment addLine:@"	}"];
 	[nativeDeserializationSegment addLine:@""];

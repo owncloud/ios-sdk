@@ -21,12 +21,19 @@
 #import "OCYAMLNode.h"
 #import "OCYAMLParser.h"
 
+typedef NSString* OCSchemaType;
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCSchema : NSObject
 
 @property(strong) NSString *name;
 @property(strong,nullable) NSString *desc;
+
+@property(strong,nullable) OCSchemaType type;
+@property(strong,nullable) OCYAMLNode *schemaNode;
+
+@property(strong,nullable) NSArray<NSString *> *enumValues;
 
 @property(strong) OCYAMLPath yamlPath;
 
@@ -35,5 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithYAMLNode:(OCYAMLNode *)node parser:(OCYAMLParser *)parser;
 
 @end
+
+extern OCSchemaType OCSchemaTypeObject;
+extern OCSchemaType OCSchemaTypeString;
 
 NS_ASSUME_NONNULL_END

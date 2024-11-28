@@ -18,18 +18,8 @@
 
 #import "OCSchema.h"
 #import "OCSchemaProperty.h"
-
-@interface OCYAMLNode (Requirements)
-@end
-
-@implementation OCYAMLNode (Requirements)
-
-- (NSArray<NSString *> *)requiredProperties
-{
-	return OCTypedCast(self.childrenByName[@"required"].value, NSArray);
-}
-
-@end
+#import "OCYAMLNode+GeneratorTools.h"
+#import "NSString+GeneratorTools.h"
 
 @implementation OCSchema
 
@@ -37,6 +27,8 @@
 {
 	if ((self = [super init]) != nil)
 	{
+		self.schemaNode = node;
+
 		self.name = node.name;
 		self.desc = node.childrenByName[@"description"].value;
 
@@ -55,14 +47,23 @@
 				}
 			}
 		}
+
+		if (node.childrenByName[@"enum"] != nil)
+		{
+			self.enumValues = [node.childrenByName[@"enum"].value valuesFromArrayString];
+		}
 	}
 
 	return (self);
 }
 
-
 - (void)addPropertiesFrom:(OCYAMLNode *)node additionalRequired:(NSArray<NSString *> *)additionalRequired
 {
+	if (self.type == nil)
+	{
+		self.type = node.childrenByName[@"type"].value;
+	}
+
 	for (OCYAMLNode *propertyNode in node.childrenByName[@"properties"].children)
 	{
 		OCSchemaProperty *property = [OCSchemaProperty new];
@@ -99,3 +100,6 @@
 }
 
 @end
+
+OCSchemaType OCSchemaTypeObject = @"object";
+OCSchemaType OCSchemaTypeString = @"string";
