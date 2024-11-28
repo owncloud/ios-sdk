@@ -29,6 +29,7 @@
 		@"string:date-time" 	: @"NSDate",
 		@"integer" 		: @"NSNumber",
 		@"boolean" 		: @"NSNumber",
+		@"number"		: @"NSNumber",
 	});
 }
 
