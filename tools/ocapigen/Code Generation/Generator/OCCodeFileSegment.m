@@ -167,6 +167,7 @@ OCCodeFileSegmentName OCCodeFileSegmentNameIncludes = @"includes";
 OCCodeFileSegmentName OCCodeFileSegmentNameForwardDeclarations = @"forward declarations";
 OCCodeFileSegmentName OCCodeFileSegmentNameTypeLeadIn = @"type start";
 OCCodeFileSegmentName OCCodeFileSegmentNameTypeSerialization = @"type serialization";
+OCCodeFileSegmentName OCCodeFileSegmentNameTypeStructSerialization = @"struct serialization";
 OCCodeFileSegmentName OCCodeFileSegmentNameTypeNativeSerialization = @"type native serialization";
 OCCodeFileSegmentName OCCodeFileSegmentNameTypeNativeDeserialization = @"type native deserialization";
 OCCodeFileSegmentName OCCodeFileSegmentNameTypeDebugDescription = @"type debug description";

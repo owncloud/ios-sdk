@@ -46,6 +46,7 @@ typedef NSString* OCCodeNativeType;
 - (instancetype)initWithTargetFolder:(NSURL *)targetFolderURL;
 
 #pragma mark - Add schemas
+@property(strong,nullable,readonly,nonatomic) NSArray<OCSchema *> *allSchemas;
 - (void)addSchema:(OCSchema *)schema;
 
 #pragma mark - Request files
@@ -61,7 +62,7 @@ typedef NSString* OCCodeNativeType;
 - (nullable OCCodeNativeType)collectionTypeFor:(OCCodeNativeType)collectionType itemType:(OCCodeNativeType)itemType asReference:(BOOL)asReference inSegment:(nullable OCCodeFileSegment *)fileSegment; //!< Combines a collection and item type to a new type, i.e. NSArray and OCItem to NSArray<OCItem>.
 
 - (OCCodeNativePropertyName)nativeNameForProperty:(OCSchemaProperty *)property inSegment:(nullable OCCodeFileSegment *)fileSegment; //!< Mapping of raw names to model property names, i.e. "description" -> "desc" for ObjC (where "description" is effectively reserved)
-- (OCCodeNativeType)nativeTypeForRAWType:(OCCodeRawType)rawType rawFormat:(nullable OCCodeRawFormat)rawFormat rawItemType:(nullable OCCodeRawType)rawItemType asReference:(BOOL)asReference inSegment:(nullable OCCodeFileSegment *)fileSegment; //!< Mapping of raw names to model types, i.e. "string" -> "NSString" (asReference=NO) + "NSString *" (asReference=YES)
+- (OCCodeNativeType)nativeTypeForRAWType:(OCCodeRawType)rawType rawFormat:(nullable OCCodeRawFormat)rawFormat rawItemType:(nullable OCCodeRawType)rawItemType asReference:(BOOL)asReference forProperty:(nullable OCSchemaProperty *)property inSegment:(nullable OCCodeFileSegment *)fileSegment; //!< Mapping of raw names to model types, i.e. "string" -> "NSString" (asReference=NO) + "NSString *" (asReference=YES)
 - (OCCodeNativeType)nativeTypeForProperty:(OCSchemaProperty *)property asReference:(BOOL)asReference remappedFrom:(OCCodeNativeType _Nullable * _Nullable)outRemappedFrom inSegment:(nullable OCCodeFileSegment *)fileSegment; //!< Mapping of schema properties to model types, i.e. "array" -> "NSArray<NSString *>" (asReference=NO) + "NSArray<NSString *> *" (asReference=YES)
 - (OCCodeNativeType)rawTypeForSchemaName:(NSString *)schemaName; //!< Formats a schema name as raw name for further processing (i.e. "odata.error.detail" -> "Odataerrordetail")
 - (OCCodeNativeType)nativeTypeNameForSchema:(OCSchema *)schema inSegment:(nullable OCCodeFileSegment *)fileSegment; //!< Mapping of schema names to native model types, i.e. "user" -> "OCGUser"

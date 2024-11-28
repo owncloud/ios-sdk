@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DCCC85992CF8C86D00251683 /* NSString+GeneratorTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC85982CF8C86D00251683 /* NSString+GeneratorTools.m */; };
+		DCCC859C2CF8C8DE00251683 /* OCYAMLNode+GeneratorTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC859B2CF8C8DE00251683 /* OCYAMLNode+GeneratorTools.m */; };
 		DCFE3BB427A1E7B900939415 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE3BB327A1E7B900939415 /* main.m */; };
 		DCFE3BBF27A1E7E200939415 /* OCYAMLParser.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE3BBE27A1E7E200939415 /* OCYAMLParser.m */; };
 		DCFE3BC227A1E84600939415 /* OCYAMLNode.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFE3BC127A1E84600939415 /* OCYAMLNode.m */; };
@@ -32,6 +34,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		DCCC85972CF8C86D00251683 /* NSString+GeneratorTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSString+GeneratorTools.h"; sourceTree = "<group>"; };
+		DCCC85982CF8C86D00251683 /* NSString+GeneratorTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+GeneratorTools.m"; sourceTree = "<group>"; };
+		DCCC859A2CF8C8DE00251683 /* OCYAMLNode+GeneratorTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCYAMLNode+GeneratorTools.h"; sourceTree = "<group>"; };
+		DCCC859B2CF8C8DE00251683 /* OCYAMLNode+GeneratorTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCYAMLNode+GeneratorTools.m"; sourceTree = "<group>"; };
 		DCFE3BB027A1E7B900939415 /* ocapigen */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ocapigen; sourceTree = BUILT_PRODUCTS_DIR; };
 		DCFE3BB327A1E7B900939415 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		DCFE3BBD27A1E7E200939415 /* OCYAMLParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCYAMLParser.h; sourceTree = "<group>"; };
@@ -65,6 +71,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		DCCC85962CF8C85C00251683 /* Tools */ = {
+			isa = PBXGroup;
+			children = (
+				DCCC85982CF8C86D00251683 /* NSString+GeneratorTools.m */,
+				DCCC85972CF8C86D00251683 /* NSString+GeneratorTools.h */,
+				DCCC859B2CF8C8DE00251683 /* OCYAMLNode+GeneratorTools.m */,
+				DCCC859A2CF8C8DE00251683 /* OCYAMLNode+GeneratorTools.h */,
+			);
+			path = Tools;
+			sourceTree = "<group>";
+		};
 		DCFE3BA727A1E7B900939415 = {
 			isa = PBXGroup;
 			children = (
@@ -107,6 +124,7 @@
 			children = (
 				DCFE3BD827A2AB4B00939415 /* Generator */,
 				DCFE3BD727A2AB3400939415 /* Schema */,
+				DCCC85962CF8C85C00251683 /* Tools */,
 			);
 			path = "Code Generation";
 			sourceTree = "<group>";
@@ -174,7 +192,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastUpgradeCheck = 1320;
+				LastUpgradeCheck = 1610;
 				ORGANIZATIONNAME = "ownCloud GmbH";
 				TargetAttributes = {
 					DCFE3BAF27A1E7B900939415 = {
@@ -209,9 +227,11 @@
 				DCFE3BD627A2AA2B00939415 /* OCCodeGeneratorObjC.m in Sources */,
 				DCFE3BBF27A1E7E200939415 /* OCYAMLParser.m in Sources */,
 				DCFE3BC227A1E84600939415 /* OCYAMLNode.m in Sources */,
+				DCCC85992CF8C86D00251683 /* NSString+GeneratorTools.m in Sources */,
 				DCFE3BDC27A2D38B00939415 /* OCCodeFileSegment.m in Sources */,
 				DCFE3BC527A1FB4C00939415 /* OCSchema.m in Sources */,
 				DCFE3BD327A2988600939415 /* OCCodeFile.m in Sources */,
+				DCCC859C2CF8C8DE00251683 /* OCYAMLNode+GeneratorTools.m in Sources */,
 				DCFE3BB427A1E7B900939415 /* main.m in Sources */,
 				DCFE3BD027A2081900939415 /* OCCodeGenerator.m in Sources */,
 				DCFE3BCA27A1FBB200939415 /* OCSchemaProperty.m in Sources */,
@@ -255,9 +275,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -314,9 +336,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -336,6 +360,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 4AP2STM4H5;
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -346,6 +371,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 4AP2STM4H5;
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
