@@ -306,7 +306,6 @@
 		DC47E4CF27A5820D0020E8EF /* GAFolderView.m in Sources */ = {isa = PBXBuildFile; fileRef = DC47E4A127A5820C0020E8EF /* GAFolderView.m */; };
 		DC47E4D027A5820D0020E8EF /* GARoot.m in Sources */ = {isa = PBXBuildFile; fileRef = DC47E4A227A5820C0020E8EF /* GARoot.m */; };
 		DC47E4D127A5820D0020E8EF /* GADrive.m in Sources */ = {isa = PBXBuildFile; fileRef = DC47E4A327A5820C0020E8EF /* GADrive.m */; };
-		DC47E4D227A5820D0020E8EF /* GADirectoryObject.h in Headers */ = {isa = PBXBuildFile; fileRef = DC47E4A427A5820C0020E8EF /* GADirectoryObject.h */; };
 		DC47E4D327A5820D0020E8EF /* GAFolder.m in Sources */ = {isa = PBXBuildFile; fileRef = DC47E4A527A5820C0020E8EF /* GAFolder.m */; };
 		DC47E4D427A5820D0020E8EF /* GAPasswordProfile.h in Headers */ = {isa = PBXBuildFile; fileRef = DC47E4A627A5820C0020E8EF /* GAPasswordProfile.h */; };
 		DC47E4D527A5820D0020E8EF /* GADeleted.m in Sources */ = {isa = PBXBuildFile; fileRef = DC47E4A727A5820C0020E8EF /* GADeleted.m */; };
@@ -327,7 +326,6 @@
 		DC47E4E427A5820D0020E8EF /* GADeleted.h in Headers */ = {isa = PBXBuildFile; fileRef = DC47E4B627A5820C0020E8EF /* GADeleted.h */; };
 		DC47E4E527A5820D0020E8EF /* GAFolder.h in Headers */ = {isa = PBXBuildFile; fileRef = DC47E4B727A5820C0020E8EF /* GAFolder.h */; };
 		DC47E4E627A5820D0020E8EF /* GAPasswordProfile.m in Sources */ = {isa = PBXBuildFile; fileRef = DC47E4B827A5820C0020E8EF /* GAPasswordProfile.m */; };
-		DC47E4E727A5820D0020E8EF /* GADirectoryObject.m in Sources */ = {isa = PBXBuildFile; fileRef = DC47E4B927A5820C0020E8EF /* GADirectoryObject.m */; };
 		DC47E4E827A5820D0020E8EF /* GAFolderView.h in Headers */ = {isa = PBXBuildFile; fileRef = DC47E4BA27A5820C0020E8EF /* GAFolderView.h */; };
 		DC47E4E927A5820D0020E8EF /* GARoot.h in Headers */ = {isa = PBXBuildFile; fileRef = DC47E4BB27A5820C0020E8EF /* GARoot.h */; };
 		DC47E4EA27A5820D0020E8EF /* GADrive.h in Headers */ = {isa = PBXBuildFile; fileRef = DC47E4BC27A5820C0020E8EF /* GADrive.h */; };
@@ -545,17 +543,13 @@
 		DC8FE700221CAF280016BDEE /* OCProgressManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC8FE6FE221CAF280016BDEE /* OCProgressManager.m */; };
 		DC9219DD2964CB4500F538EE /* GAEducationUser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9219CD2964CB4400F538EE /* GAEducationUser.h */; };
 		DC9219DE2964CB4500F538EE /* GAAppRoleAssignment.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9219CE2964CB4400F538EE /* GAAppRoleAssignment.h */; };
-		DC9219DF2964CB4500F538EE /* GAEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9219CF2964CB4500F538EE /* GAEntity.h */; };
 		DC9219E02964CB4500F538EE /* GAAppRole.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9219D02964CB4500F538EE /* GAAppRole.h */; };
 		DC9219E12964CB4500F538EE /* GAApplication.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9219D12964CB4500F538EE /* GAApplication.h */; };
 		DC9219E32964CB4500F538EE /* GAEducationUser.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9219D32964CB4500F538EE /* GAEducationUser.m */; };
 		DC9219E42964CB4500F538EE /* GAApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9219D42964CB4500F538EE /* GAApplication.m */; };
 		DC9219E52964CB4500F538EE /* GAEducationSchool.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9219D52964CB4500F538EE /* GAEducationSchool.m */; };
 		DC9219E62964CB4500F538EE /* GAAppRole.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9219D62964CB4500F538EE /* GAAppRole.m */; };
-		DC9219E72964CB4500F538EE /* GAEntity.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9219D72964CB4500F538EE /* GAEntity.m */; };
 		DC9219E82964CB4500F538EE /* GAEducationSchool.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9219D82964CB4500F538EE /* GAEducationSchool.h */; };
-		DC9219E92964CB4500F538EE /* GAEducationOrganization.h in Headers */ = {isa = PBXBuildFile; fileRef = DC9219D92964CB4500F538EE /* GAEducationOrganization.h */; };
-		DC9219EB2964CB4500F538EE /* GAEducationOrganization.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9219DB2964CB4500F538EE /* GAEducationOrganization.m */; };
 		DC9219EC2964CB4500F538EE /* GAAppRoleAssignment.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9219DC2964CB4500F538EE /* GAAppRoleAssignment.m */; };
 		DC9219F32964CB6000F538EE /* GATagAssignment.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9219ED2964CB6000F538EE /* GATagAssignment.m */; };
 		DC9219F42964CB6000F538EE /* GATagUnassignment.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9219EE2964CB6000F538EE /* GATagUnassignment.m */; };
@@ -743,6 +737,49 @@
 		DCC8FA30202B405F00EB6701 /* OCEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC8FA2E202B405F00EB6701 /* OCEvent.m */; };
 		DCC8FA33202B443D00EB6701 /* OCEventTarget.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC8FA31202B443D00EB6701 /* OCEventTarget.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCC8FA34202B443D00EB6701 /* OCEventTarget.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC8FA32202B443D00EB6701 /* OCEventTarget.m */; };
+		DCCC853E2CF8770700251683 /* GAActivity.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC853C2CF8770700251683 /* GAActivity.h */; };
+		DCCC853F2CF8770700251683 /* GAActivity.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC853D2CF8770700251683 /* GAActivity.m */; };
+		DCCC85422CF8771600251683 /* GAAudio.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC85412CF8771600251683 /* GAAudio.m */; };
+		DCCC85432CF8771600251683 /* GAAudio.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC85402CF8771600251683 /* GAAudio.h */; };
+		DCCC854C2CF8773F00251683 /* GADriveItemInvite.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC85472CF8773F00251683 /* GADriveItemInvite.m */; };
+		DCCC854D2CF8773F00251683 /* GADriveRecipient.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC85492CF8773F00251683 /* GADriveRecipient.m */; };
+		DCCC854E2CF8773F00251683 /* GADriveUpdate.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC854B2CF8773F00251683 /* GADriveUpdate.m */; };
+		DCCC854F2CF8773F00251683 /* GADriveItemCreateLink.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC85452CF8773F00251683 /* GADriveItemCreateLink.m */; };
+		DCCC85502CF8773F00251683 /* GADriveUpdate.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC854A2CF8773F00251683 /* GADriveUpdate.h */; };
+		DCCC85512CF8773F00251683 /* GADriveItemInvite.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC85462CF8773F00251683 /* GADriveItemInvite.h */; };
+		DCCC85522CF8773F00251683 /* GADriveItemCreateLink.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC85442CF8773F00251683 /* GADriveItemCreateLink.h */; };
+		DCCC85532CF8773F00251683 /* GADriveRecipient.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC85482CF8773F00251683 /* GADriveRecipient.h */; };
+		DCCC85562CF8776100251683 /* GAGeoCoordinates.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC85542CF8776100251683 /* GAGeoCoordinates.h */; };
+		DCCC85572CF8776100251683 /* GAGeoCoordinates.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC85552CF8776100251683 /* GAGeoCoordinates.m */; };
+		DCCC855A2CF877CA00251683 /* GALanguage.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC85582CF877CA00251683 /* GALanguage.h */; };
+		DCCC855E2CF877E100251683 /* GAPhoto.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC855D2CF877E100251683 /* GAPhoto.m */; };
+		DCCC855F2CF877E100251683 /* GAPhoto.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC855C2CF877E100251683 /* GAPhoto.h */; };
+		DCCC85622CF877EE00251683 /* GASharePointIdentitySet.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC85602CF877EE00251683 /* GASharePointIdentitySet.h */; };
+		DCCC85632CF877EE00251683 /* GASharePointIdentitySet.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC85612CF877EE00251683 /* GASharePointIdentitySet.m */; };
+		DCCC856E2CF877FA00251683 /* GASharingLinkType.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC856A2CF877FA00251683 /* GASharingLinkType.h */; };
+		DCCC856F2CF877FA00251683 /* GASharingLinkPassword.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC85682CF877FA00251683 /* GASharingLinkPassword.h */; };
+		DCCC85702CF877FA00251683 /* GASharingLink.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC85662CF877FA00251683 /* GASharingLink.h */; };
+		DCCC85712CF877FA00251683 /* GASignInActivity.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC856C2CF877FA00251683 /* GASignInActivity.h */; };
+		DCCC85722CF877FA00251683 /* GASharingInvitation.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC85642CF877FA00251683 /* GASharingInvitation.h */; };
+		DCCC85732CF877FA00251683 /* GASharingLinkType.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC856B2CF877FA00251683 /* GASharingLinkType.m */; };
+		DCCC85742CF877FA00251683 /* GASharingInvitation.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC85652CF877FA00251683 /* GASharingInvitation.m */; };
+		DCCC85752CF877FA00251683 /* GASharingLinkPassword.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC85692CF877FA00251683 /* GASharingLinkPassword.m */; };
+		DCCC85762CF877FA00251683 /* GASharingLink.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC85672CF877FA00251683 /* GASharingLink.m */; };
+		DCCC85772CF877FA00251683 /* GASignInActivity.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC856D2CF877FA00251683 /* GASignInActivity.m */; };
+		DCCC857C2CF8780A00251683 /* GAThumbnailSet.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC857A2CF8780A00251683 /* GAThumbnailSet.h */; };
+		DCCC857D2CF8780A00251683 /* GAThumbnail.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC85782CF8780A00251683 /* GAThumbnail.h */; };
+		DCCC857E2CF8780A00251683 /* GAThumbnailSet.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC857B2CF8780A00251683 /* GAThumbnailSet.m */; };
+		DCCC857F2CF8780A00251683 /* GAThumbnail.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC85792CF8780A00251683 /* GAThumbnail.m */; };
+		DCCC85842CF8781800251683 /* GAUnifiedRoleDefinition.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC85802CF8781800251683 /* GAUnifiedRoleDefinition.h */; };
+		DCCC85852CF8781800251683 /* GAUnifiedRolePermission.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC85822CF8781800251683 /* GAUnifiedRolePermission.h */; };
+		DCCC85862CF8781800251683 /* GAUnifiedRoleDefinition.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC85812CF8781800251683 /* GAUnifiedRoleDefinition.m */; };
+		DCCC85872CF8781800251683 /* GAUnifiedRolePermission.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC85832CF8781800251683 /* GAUnifiedRolePermission.m */; };
+		DCCC858C2CF8782000251683 /* GAVideo.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC858A2CF8782000251683 /* GAVideo.h */; };
+		DCCC858D2CF8782000251683 /* GAUserUpdate.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC85882CF8782000251683 /* GAUserUpdate.h */; };
+		DCCC858E2CF8782000251683 /* GAVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC858B2CF8782000251683 /* GAVideo.m */; };
+		DCCC858F2CF8782000251683 /* GAUserUpdate.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC85892CF8782000251683 /* GAUserUpdate.m */; };
+		DCCC85912CF87C8200251683 /* GAGraphStruct+Encoder.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCC85902CF87C7C00251683 /* GAGraphStruct+Encoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCCC85932CF87DAC00251683 /* GAGraphStruct+Encoder.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC85922CF87DA500251683 /* GAGraphStruct+Encoder.m */; };
 		DCCE49342684B148005961D8 /* OCVault+Prepopulation.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCE49322684B148005961D8 /* OCVault+Prepopulation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCCE49352684B148005961D8 /* OCVault+Prepopulation.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCE49332684B148005961D8 /* OCVault+Prepopulation.m */; };
 		DCCE49392684BC1B005961D8 /* OCDAVRawResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = DCCE49372684BC1B005961D8 /* OCDAVRawResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -914,8 +951,6 @@
 		DCFBACF121BAA77F00943F76 /* largePropFindResponse1000.xml in Resources */ = {isa = PBXBuildFile; fileRef = DCFBACF021BAA77F00943F76 /* largePropFindResponse1000.xml */; };
 		DCFBACF721BAB35A00943F76 /* PerformanceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFBACF621BAB35A00943F76 /* PerformanceTests.m */; };
 		DCFBACF921BAB5F500943F76 /* OCDetailedPerformanceTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFBACF821BAB5F500943F76 /* OCDetailedPerformanceTestCase.m */; };
-		DCFC9ED828003EFC005D9144 /* GAShared.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFC9ED628003EFB005D9144 /* GAShared.m */; };
-		DCFC9ED928003EFC005D9144 /* GAShared.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFC9ED728003EFB005D9144 /* GAShared.h */; };
 		DCFC9EDC28003F0D005D9144 /* GARemoteItem.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFC9EDA28003F0D005D9144 /* GARemoteItem.h */; };
 		DCFC9EDD28003F0D005D9144 /* GARemoteItem.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFC9EDB28003F0D005D9144 /* GARemoteItem.m */; };
 		DCFC9EE128004791005D9144 /* OCDataSourceComposition.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFC9EDF28004791005D9144 /* OCDataSourceComposition.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1338,7 +1373,6 @@
 		DC47E4A127A5820C0020E8EF /* GAFolderView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GAFolderView.m; sourceTree = "<group>"; };
 		DC47E4A227A5820C0020E8EF /* GARoot.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GARoot.m; sourceTree = "<group>"; };
 		DC47E4A327A5820C0020E8EF /* GADrive.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GADrive.m; sourceTree = "<group>"; };
-		DC47E4A427A5820C0020E8EF /* GADirectoryObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADirectoryObject.h; sourceTree = "<group>"; };
 		DC47E4A527A5820C0020E8EF /* GAFolder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GAFolder.m; sourceTree = "<group>"; };
 		DC47E4A627A5820C0020E8EF /* GAPasswordProfile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GAPasswordProfile.h; sourceTree = "<group>"; };
 		DC47E4A727A5820C0020E8EF /* GADeleted.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GADeleted.m; sourceTree = "<group>"; };
@@ -1359,7 +1393,6 @@
 		DC47E4B627A5820C0020E8EF /* GADeleted.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADeleted.h; sourceTree = "<group>"; };
 		DC47E4B727A5820C0020E8EF /* GAFolder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GAFolder.h; sourceTree = "<group>"; };
 		DC47E4B827A5820C0020E8EF /* GAPasswordProfile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GAPasswordProfile.m; sourceTree = "<group>"; };
-		DC47E4B927A5820C0020E8EF /* GADirectoryObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GADirectoryObject.m; sourceTree = "<group>"; };
 		DC47E4BA27A5820C0020E8EF /* GAFolderView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GAFolderView.h; sourceTree = "<group>"; };
 		DC47E4BB27A5820C0020E8EF /* GARoot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GARoot.h; sourceTree = "<group>"; };
 		DC47E4BC27A5820C0020E8EF /* GADrive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADrive.h; sourceTree = "<group>"; };
@@ -1586,7 +1619,6 @@
 		DC8FE6FE221CAF280016BDEE /* OCProgressManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCProgressManager.m; sourceTree = "<group>"; };
 		DC9219CD2964CB4400F538EE /* GAEducationUser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GAEducationUser.h; sourceTree = "<group>"; };
 		DC9219CE2964CB4400F538EE /* GAAppRoleAssignment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GAAppRoleAssignment.h; sourceTree = "<group>"; };
-		DC9219CF2964CB4500F538EE /* GAEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GAEntity.h; sourceTree = "<group>"; };
 		DC9219D02964CB4500F538EE /* GAAppRole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GAAppRole.h; sourceTree = "<group>"; };
 		DC9219D12964CB4500F538EE /* GAApplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GAApplication.h; sourceTree = "<group>"; };
 		DC9219D22964CB4500F538EE /* GAEducationClass.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GAEducationClass.m; sourceTree = "<group>"; };
@@ -1594,11 +1626,8 @@
 		DC9219D42964CB4500F538EE /* GAApplication.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GAApplication.m; sourceTree = "<group>"; };
 		DC9219D52964CB4500F538EE /* GAEducationSchool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GAEducationSchool.m; sourceTree = "<group>"; };
 		DC9219D62964CB4500F538EE /* GAAppRole.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GAAppRole.m; sourceTree = "<group>"; };
-		DC9219D72964CB4500F538EE /* GAEntity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GAEntity.m; sourceTree = "<group>"; };
 		DC9219D82964CB4500F538EE /* GAEducationSchool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GAEducationSchool.h; sourceTree = "<group>"; };
-		DC9219D92964CB4500F538EE /* GAEducationOrganization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GAEducationOrganization.h; sourceTree = "<group>"; };
 		DC9219DA2964CB4500F538EE /* GAEducationClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GAEducationClass.h; sourceTree = "<group>"; };
-		DC9219DB2964CB4500F538EE /* GAEducationOrganization.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GAEducationOrganization.m; sourceTree = "<group>"; };
 		DC9219DC2964CB4500F538EE /* GAAppRoleAssignment.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GAAppRoleAssignment.m; sourceTree = "<group>"; };
 		DC9219ED2964CB6000F538EE /* GATagAssignment.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GATagAssignment.m; sourceTree = "<group>"; };
 		DC9219EE2964CB6000F538EE /* GATagUnassignment.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GATagUnassignment.m; sourceTree = "<group>"; };
@@ -1793,6 +1822,49 @@
 		DCC8FA2E202B405F00EB6701 /* OCEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCEvent.m; sourceTree = "<group>"; };
 		DCC8FA31202B443D00EB6701 /* OCEventTarget.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCEventTarget.h; sourceTree = "<group>"; };
 		DCC8FA32202B443D00EB6701 /* OCEventTarget.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCEventTarget.m; sourceTree = "<group>"; };
+		DCCC853C2CF8770700251683 /* GAActivity.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GAActivity.h; sourceTree = "<group>"; };
+		DCCC853D2CF8770700251683 /* GAActivity.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GAActivity.m; sourceTree = "<group>"; };
+		DCCC85402CF8771600251683 /* GAAudio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GAAudio.h; sourceTree = "<group>"; };
+		DCCC85412CF8771600251683 /* GAAudio.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GAAudio.m; sourceTree = "<group>"; };
+		DCCC85442CF8773F00251683 /* GADriveItemCreateLink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GADriveItemCreateLink.h; sourceTree = "<group>"; };
+		DCCC85452CF8773F00251683 /* GADriveItemCreateLink.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GADriveItemCreateLink.m; sourceTree = "<group>"; };
+		DCCC85462CF8773F00251683 /* GADriveItemInvite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GADriveItemInvite.h; sourceTree = "<group>"; };
+		DCCC85472CF8773F00251683 /* GADriveItemInvite.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GADriveItemInvite.m; sourceTree = "<group>"; };
+		DCCC85482CF8773F00251683 /* GADriveRecipient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GADriveRecipient.h; sourceTree = "<group>"; };
+		DCCC85492CF8773F00251683 /* GADriveRecipient.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GADriveRecipient.m; sourceTree = "<group>"; };
+		DCCC854A2CF8773F00251683 /* GADriveUpdate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GADriveUpdate.h; sourceTree = "<group>"; };
+		DCCC854B2CF8773F00251683 /* GADriveUpdate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GADriveUpdate.m; sourceTree = "<group>"; };
+		DCCC85542CF8776100251683 /* GAGeoCoordinates.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GAGeoCoordinates.h; sourceTree = "<group>"; };
+		DCCC85552CF8776100251683 /* GAGeoCoordinates.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GAGeoCoordinates.m; sourceTree = "<group>"; };
+		DCCC85582CF877CA00251683 /* GALanguage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GALanguage.h; sourceTree = "<group>"; };
+		DCCC855C2CF877E100251683 /* GAPhoto.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GAPhoto.h; sourceTree = "<group>"; };
+		DCCC855D2CF877E100251683 /* GAPhoto.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GAPhoto.m; sourceTree = "<group>"; };
+		DCCC85602CF877EE00251683 /* GASharePointIdentitySet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GASharePointIdentitySet.h; sourceTree = "<group>"; };
+		DCCC85612CF877EE00251683 /* GASharePointIdentitySet.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GASharePointIdentitySet.m; sourceTree = "<group>"; };
+		DCCC85642CF877FA00251683 /* GASharingInvitation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GASharingInvitation.h; sourceTree = "<group>"; };
+		DCCC85652CF877FA00251683 /* GASharingInvitation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GASharingInvitation.m; sourceTree = "<group>"; };
+		DCCC85662CF877FA00251683 /* GASharingLink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GASharingLink.h; sourceTree = "<group>"; };
+		DCCC85672CF877FA00251683 /* GASharingLink.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GASharingLink.m; sourceTree = "<group>"; };
+		DCCC85682CF877FA00251683 /* GASharingLinkPassword.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GASharingLinkPassword.h; sourceTree = "<group>"; };
+		DCCC85692CF877FA00251683 /* GASharingLinkPassword.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GASharingLinkPassword.m; sourceTree = "<group>"; };
+		DCCC856A2CF877FA00251683 /* GASharingLinkType.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GASharingLinkType.h; sourceTree = "<group>"; };
+		DCCC856B2CF877FA00251683 /* GASharingLinkType.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GASharingLinkType.m; sourceTree = "<group>"; };
+		DCCC856C2CF877FA00251683 /* GASignInActivity.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GASignInActivity.h; sourceTree = "<group>"; };
+		DCCC856D2CF877FA00251683 /* GASignInActivity.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GASignInActivity.m; sourceTree = "<group>"; };
+		DCCC85782CF8780A00251683 /* GAThumbnail.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GAThumbnail.h; sourceTree = "<group>"; };
+		DCCC85792CF8780A00251683 /* GAThumbnail.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GAThumbnail.m; sourceTree = "<group>"; };
+		DCCC857A2CF8780A00251683 /* GAThumbnailSet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GAThumbnailSet.h; sourceTree = "<group>"; };
+		DCCC857B2CF8780A00251683 /* GAThumbnailSet.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GAThumbnailSet.m; sourceTree = "<group>"; };
+		DCCC85802CF8781800251683 /* GAUnifiedRoleDefinition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GAUnifiedRoleDefinition.h; sourceTree = "<group>"; };
+		DCCC85812CF8781800251683 /* GAUnifiedRoleDefinition.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GAUnifiedRoleDefinition.m; sourceTree = "<group>"; };
+		DCCC85822CF8781800251683 /* GAUnifiedRolePermission.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GAUnifiedRolePermission.h; sourceTree = "<group>"; };
+		DCCC85832CF8781800251683 /* GAUnifiedRolePermission.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GAUnifiedRolePermission.m; sourceTree = "<group>"; };
+		DCCC85882CF8782000251683 /* GAUserUpdate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GAUserUpdate.h; sourceTree = "<group>"; };
+		DCCC85892CF8782000251683 /* GAUserUpdate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GAUserUpdate.m; sourceTree = "<group>"; };
+		DCCC858A2CF8782000251683 /* GAVideo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GAVideo.h; sourceTree = "<group>"; };
+		DCCC858B2CF8782000251683 /* GAVideo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GAVideo.m; sourceTree = "<group>"; };
+		DCCC85902CF87C7C00251683 /* GAGraphStruct+Encoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "GAGraphStruct+Encoder.h"; sourceTree = "<group>"; };
+		DCCC85922CF87DA500251683 /* GAGraphStruct+Encoder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "GAGraphStruct+Encoder.m"; sourceTree = "<group>"; };
 		DCCE49322684B148005961D8 /* OCVault+Prepopulation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCVault+Prepopulation.h"; sourceTree = "<group>"; };
 		DCCE49332684B148005961D8 /* OCVault+Prepopulation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCVault+Prepopulation.m"; sourceTree = "<group>"; };
 		DCCE49372684BC1B005961D8 /* OCDAVRawResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDAVRawResponse.h; sourceTree = "<group>"; };
@@ -1962,8 +2034,6 @@
 		DCFBACF621BAB35A00943F76 /* PerformanceTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PerformanceTests.m; sourceTree = "<group>"; };
 		DCFBACF821BAB5F500943F76 /* OCDetailedPerformanceTestCase.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDetailedPerformanceTestCase.m; sourceTree = "<group>"; };
 		DCFBACFA21BAB6F200943F76 /* OCDetailedPerformanceTestCase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDetailedPerformanceTestCase.h; sourceTree = "<group>"; };
-		DCFC9ED628003EFB005D9144 /* GAShared.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GAShared.m; sourceTree = "<group>"; };
-		DCFC9ED728003EFB005D9144 /* GAShared.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GAShared.h; sourceTree = "<group>"; };
 		DCFC9EDA28003F0D005D9144 /* GARemoteItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GARemoteItem.h; sourceTree = "<group>"; };
 		DCFC9EDB28003F0D005D9144 /* GARemoteItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GARemoteItem.m; sourceTree = "<group>"; };
 		DCFC9EDF28004791005D9144 /* OCDataSourceComposition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDataSourceComposition.h; sourceTree = "<group>"; };
@@ -2780,36 +2850,44 @@
 		DC47E49027A5820C0020E8EF /* GeneratedTypes */ = {
 			isa = PBXGroup;
 			children = (
+				DCCC853C2CF8770700251683 /* GAActivity.h */,
+				DCCC853D2CF8770700251683 /* GAActivity.m */,
 				DC9219D12964CB4500F538EE /* GAApplication.h */,
 				DC9219D42964CB4500F538EE /* GAApplication.m */,
 				DC9219D02964CB4500F538EE /* GAAppRole.h */,
 				DC9219D62964CB4500F538EE /* GAAppRole.m */,
 				DC9219CE2964CB4400F538EE /* GAAppRoleAssignment.h */,
 				DC9219DC2964CB4500F538EE /* GAAppRoleAssignment.m */,
+				DCCC85402CF8771600251683 /* GAAudio.h */,
+				DCCC85412CF8771600251683 /* GAAudio.m */,
 				DC47E4B627A5820C0020E8EF /* GADeleted.h */,
 				DC47E4A727A5820C0020E8EF /* GADeleted.m */,
-				DC47E4A427A5820C0020E8EF /* GADirectoryObject.h */,
-				DC47E4B927A5820C0020E8EF /* GADirectoryObject.m */,
 				DC47E4BC27A5820C0020E8EF /* GADrive.h */,
 				DC47E4A327A5820C0020E8EF /* GADrive.m */,
 				DC47E4B527A5820C0020E8EF /* GADriveItem.h */,
 				DC47E49927A5820C0020E8EF /* GADriveItem.m */,
+				DCCC85442CF8773F00251683 /* GADriveItemCreateLink.h */,
+				DCCC85452CF8773F00251683 /* GADriveItemCreateLink.m */,
+				DCCC85462CF8773F00251683 /* GADriveItemInvite.h */,
+				DCCC85472CF8773F00251683 /* GADriveItemInvite.m */,
+				DCCC85482CF8773F00251683 /* GADriveRecipient.h */,
+				DCCC85492CF8773F00251683 /* GADriveRecipient.m */,
+				DCCC854A2CF8773F00251683 /* GADriveUpdate.h */,
+				DCCC854B2CF8773F00251683 /* GADriveUpdate.m */,
 				DC9219DA2964CB4500F538EE /* GAEducationClass.h */,
 				DC9219D22964CB4500F538EE /* GAEducationClass.m */,
-				DC9219D92964CB4500F538EE /* GAEducationOrganization.h */,
-				DC9219DB2964CB4500F538EE /* GAEducationOrganization.m */,
 				DC9219D82964CB4500F538EE /* GAEducationSchool.h */,
 				DC9219D52964CB4500F538EE /* GAEducationSchool.m */,
 				DC9219CD2964CB4400F538EE /* GAEducationUser.h */,
 				DC9219D32964CB4500F538EE /* GAEducationUser.m */,
-				DC9219CF2964CB4500F538EE /* GAEntity.h */,
-				DC9219D72964CB4500F538EE /* GAEntity.m */,
 				DC47E4B027A5820C0020E8EF /* GAFileSystemInfo.h */,
 				DC47E49E27A5820C0020E8EF /* GAFileSystemInfo.m */,
 				DC47E4B727A5820C0020E8EF /* GAFolder.h */,
 				DC47E4A527A5820C0020E8EF /* GAFolder.m */,
 				DC47E4BA27A5820C0020E8EF /* GAFolderView.h */,
 				DC47E4A127A5820C0020E8EF /* GAFolderView.m */,
+				DCCC85542CF8776100251683 /* GAGeoCoordinates.h */,
+				DCCC85552CF8776100251683 /* GAGeoCoordinates.m */,
 				DC47E49427A5820C0020E8EF /* GAGroup.h */,
 				DC47E4A827A5820C0020E8EF /* GAGroup.m */,
 				DC47E49D27A5820C0020E8EF /* GAHashes.h */,
@@ -2822,6 +2900,7 @@
 				DC47E4BE27A5820C0020E8EF /* GAImage.m */,
 				DC47E4AD27A5820C0020E8EF /* GAItemReference.h */,
 				DC47E49727A5820C0020E8EF /* GAItemReference.m */,
+				DCCC85582CF877CA00251683 /* GALanguage.h */,
 				DC9219F02964CB6000F538EE /* GAObjectIdentity.h */,
 				DC9219F22964CB6000F538EE /* GAObjectIdentity.m */,
 				DC47E4AF27A5820C0020E8EF /* GAODataError.h */,
@@ -2836,24 +2915,48 @@
 				DC47E4B827A5820C0020E8EF /* GAPasswordProfile.m */,
 				DC9A116627CFCC1200D90BA4 /* GAPermission.h */,
 				DC9A116727CFCC1200D90BA4 /* GAPermission.m */,
+				DCCC855C2CF877E100251683 /* GAPhoto.h */,
+				DCCC855D2CF877E100251683 /* GAPhoto.m */,
 				DC47E4A927A5820C0020E8EF /* GAQuota.h */,
 				DC47E49327A5820C0020E8EF /* GAQuota.m */,
 				DCFC9EDA28003F0D005D9144 /* GARemoteItem.h */,
 				DCFC9EDB28003F0D005D9144 /* GARemoteItem.m */,
 				DC47E4BB27A5820C0020E8EF /* GARoot.h */,
 				DC47E4A227A5820C0020E8EF /* GARoot.m */,
-				DCFC9ED728003EFB005D9144 /* GAShared.h */,
-				DCFC9ED628003EFB005D9144 /* GAShared.m */,
+				DCCC85602CF877EE00251683 /* GASharePointIdentitySet.h */,
+				DCCC85612CF877EE00251683 /* GASharePointIdentitySet.m */,
+				DCCC85642CF877FA00251683 /* GASharingInvitation.h */,
+				DCCC85652CF877FA00251683 /* GASharingInvitation.m */,
+				DCCC85662CF877FA00251683 /* GASharingLink.h */,
+				DCCC85672CF877FA00251683 /* GASharingLink.m */,
+				DCCC85682CF877FA00251683 /* GASharingLinkPassword.h */,
+				DCCC85692CF877FA00251683 /* GASharingLinkPassword.m */,
+				DCCC856A2CF877FA00251683 /* GASharingLinkType.h */,
+				DCCC856B2CF877FA00251683 /* GASharingLinkType.m */,
+				DCCC856C2CF877FA00251683 /* GASignInActivity.h */,
+				DCCC856D2CF877FA00251683 /* GASignInActivity.m */,
 				DC47E4AB27A5820C0020E8EF /* GASpecialFolder.h */,
 				DC47E49127A5820C0020E8EF /* GASpecialFolder.m */,
 				DC9219F12964CB6000F538EE /* GATagAssignment.h */,
 				DC9219ED2964CB6000F538EE /* GATagAssignment.m */,
 				DC9219EF2964CB6000F538EE /* GATagUnassignment.h */,
 				DC9219EE2964CB6000F538EE /* GATagUnassignment.m */,
+				DCCC85782CF8780A00251683 /* GAThumbnail.h */,
+				DCCC85792CF8780A00251683 /* GAThumbnail.m */,
+				DCCC857A2CF8780A00251683 /* GAThumbnailSet.h */,
+				DCCC857B2CF8780A00251683 /* GAThumbnailSet.m */,
 				DC47E4B327A5820C0020E8EF /* GATrash.h */,
 				DC47E49A27A5820C0020E8EF /* GATrash.m */,
+				DCCC85802CF8781800251683 /* GAUnifiedRoleDefinition.h */,
+				DCCC85812CF8781800251683 /* GAUnifiedRoleDefinition.m */,
+				DCCC85822CF8781800251683 /* GAUnifiedRolePermission.h */,
+				DCCC85832CF8781800251683 /* GAUnifiedRolePermission.m */,
 				DC47E4AA27A5820C0020E8EF /* GAUser.h */,
 				DC47E49227A5820C0020E8EF /* GAUser.m */,
+				DCCC85882CF8782000251683 /* GAUserUpdate.h */,
+				DCCC85892CF8782000251683 /* GAUserUpdate.m */,
+				DCCC858A2CF8782000251683 /* GAVideo.h */,
+				DCCC858B2CF8782000251683 /* GAVideo.m */,
 			);
 			path = GeneratedTypes;
 			sourceTree = "<group>";
@@ -4387,6 +4490,8 @@
 				DCFE3B7C27A1669300939415 /* GAGraphContext.h */,
 				DCFE3B9C27A1A6E500939415 /* GAGraphData+Decoder.m */,
 				DCFE3B9B27A1A6E500939415 /* GAGraphData+Decoder.h */,
+				DCCC85922CF87DA500251683 /* GAGraphStruct+Encoder.m */,
+				DCCC85902CF87C7C00251683 /* GAGraphStruct+Encoder.h */,
 			);
 			path = "Parser Support";
 			sourceTree = "<group>";
@@ -4440,8 +4545,14 @@
 				DCB6D05822A13E7500CA47C5 /* NSString+OCSQLTools.h in Headers */,
 				DC9C19E6278488360021222E /* OCResourceManagerJob.h in Headers */,
 				DC2AA57022DD1339001D5C39 /* OCItemPolicyProcessorAvailableOffline.h in Headers */,
+				DCCC855A2CF877CA00251683 /* GALanguage.h in Headers */,
 				DC72568020405752006111FA /* OCClassSettings.h in Headers */,
 				DCC3700F24D4B3B7008B0DEB /* OCDatabase+Diagnostic.h in Headers */,
+				DCCC856E2CF877FA00251683 /* GASharingLinkType.h in Headers */,
+				DCCC856F2CF877FA00251683 /* GASharingLinkPassword.h in Headers */,
+				DCCC85702CF877FA00251683 /* GASharingLink.h in Headers */,
+				DCCC85712CF877FA00251683 /* GASignInActivity.h in Headers */,
+				DCCC85722CF877FA00251683 /* GASharingInvitation.h in Headers */,
 				DCE741D829B7DD5000BFF393 /* OCServerInstance.h in Headers */,
 				DCDBB5EA2523E3AF00FAD707 /* OCAvatar.h in Headers */,
 				DC39DC59204215A800189B9A /* NSProgress+OCEvent.h in Headers */,
@@ -4464,6 +4575,7 @@
 				DCD09E3C2A1B573100BFF393 /* OCResourceSourceURL.h in Headers */,
 				DCEEB2F12047094500189B9A /* NSData+OCHash.h in Headers */,
 				DC9B4FD52941FF630037F8F8 /* OCCertificateStoreRecord.h in Headers */,
+				DCCC85622CF877EE00251683 /* GASharePointIdentitySet.h in Headers */,
 				DC826665281AC59D00F91F7D /* OCVFSCore.h in Headers */,
 				DC9219DE2964CB4500F538EE /* GAAppRoleAssignment.h in Headers */,
 				DC47E4F527A83D9B0020E8EF /* OCQuota.h in Headers */,
@@ -4490,7 +4602,6 @@
 				DC07C296212450DC00B815A4 /* OCExtensionLocation.h in Headers */,
 				DC446C85206B8DB500189B9A /* OCRunLoopThread.h in Headers */,
 				DC3181672BDF882500E70392 /* OCSignalRecord.h in Headers */,
-				DC9219DF2964CB4500F538EE /* GAEntity.h in Headers */,
 				DC72E4292063D61F00189B9A /* OCClassSettingsFlatSource.h in Headers */,
 				DCC8F9FF20285C1500EB6701 /* OCAuthenticationMethodOAuth2.h in Headers */,
 				DC545E7A203F7DD0006111FA /* OCUser.h in Headers */,
@@ -4531,6 +4642,7 @@
 				DC8556F6204F361100189B9A /* OCLogger.h in Headers */,
 				DC47E4D927A5820D0020E8EF /* GASpecialFolder.h in Headers */,
 				DC36EC7C27B5362800967483 /* OCConnection+OData.h in Headers */,
+				DCCC85562CF8776100251683 /* GAGeoCoordinates.h in Headers */,
 				DC434D0E20D68C3000740056 /* NSString+OCPath.h in Headers */,
 				DCE741DC29B7EA7000BFF393 /* OCBookmark+ServerInstance.h in Headers */,
 				DCC4F3F727D757FE00ABF4C9 /* OCDataConverter.h in Headers */,
@@ -4580,6 +4692,7 @@
 				DCB0A46C21B9355C00FAC4E9 /* OCCoreServerStatusSignalProvider.h in Headers */,
 				DC0CE18B28C63B2E009ABDFB /* OCAppProviderFileType.h in Headers */,
 				DCEAF04E2806201300980B6D /* OCResourceText.h in Headers */,
+				DCCC853E2CF8770700251683 /* GAActivity.h in Headers */,
 				DC6D51D924A8BC4D006B75E6 /* OCNetworkMonitor.h in Headers */,
 				DC8B7B3922D88FFD00E63657 /* OCItemPolicyProcessor.h in Headers */,
 				DCF163F6274BA6C300E0182A /* OCSQLiteCollationLocalized.h in Headers */,
@@ -4611,7 +4724,6 @@
 				DCFE682028D857B500091D2A /* NSError+OCISError.h in Headers */,
 				DCC8FA25202B259D00EB6701 /* OCSyncRecord.h in Headers */,
 				DC0CE18728C63B15009ABDFB /* OCAppProviderApp.h in Headers */,
-				DCFC9ED928003EFC005D9144 /* GAShared.h in Headers */,
 				DC2D646821C3D71000EB26FD /* OCCore+Thumbnails.h in Headers */,
 				DC6CC30F2642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.h in Headers */,
 				DCC599F422EEE65700499B29 /* OCCore+Claims.h in Headers */,
@@ -4627,9 +4739,12 @@
 				DC0BE5B828F80DBF00CE2101 /* OCSymbol.h in Headers */,
 				DC31816B2BDF882500E70392 /* OCSignalConsumer.h in Headers */,
 				DCE227D822D612EC000BE0A5 /* OCCore+ItemPolicies.h in Headers */,
+				DCCC85912CF87C8200251683 /* GAGraphStruct+Encoder.h in Headers */,
 				DC70147F220B0650009D4FD9 /* OCHTTPResponse.h in Headers */,
 				DCC8F9F6202855A200EB6701 /* OCShare.h in Headers */,
 				DC47E4E827A5820D0020E8EF /* GAFolderView.h in Headers */,
+				DCCC85842CF8781800251683 /* GAUnifiedRoleDefinition.h in Headers */,
+				DCCC85852CF8781800251683 /* GAUnifiedRolePermission.h in Headers */,
 				DC27BBC32304A7CE002CC2F8 /* NSHTTPCookie+OCCookies.h in Headers */,
 				DCA35D6124CF704100DBE2B0 /* OCSyncAction+Diagnostic.h in Headers */,
 				DC5966A22276DB5D004CB28D /* OCSyncLane.h in Headers */,
@@ -4644,6 +4759,7 @@
 				DC47E4D727A5820D0020E8EF /* GAQuota.h in Headers */,
 				DC1C7AC6253F8EE3002F2B9F /* NSError+OCClassSettings.h in Headers */,
 				DC3C7FE121A6EDE00064D193 /* NSError+OCHTTPStatus.h in Headers */,
+				DCCC855F2CF877E100251683 /* GAPhoto.h in Headers */,
 				DC19BFE921CBACB0007C20D1 /* OCProcessSession.h in Headers */,
 				DC47E4E527A5820D0020E8EF /* GAFolder.h in Headers */,
 				DCDCA61C245093E800AFA158 /* NSURL+OCPrivateLink.h in Headers */,
@@ -4655,7 +4771,6 @@
 				DC114A9822A7AA2E00CBD597 /* NSString+OCRandom.h in Headers */,
 				DC19BFF121CBE28B007C20D1 /* OCWaitCondition.h in Headers */,
 				DCDB76282739EF9A00EE7A06 /* OCExtension+ServerLocator.h in Headers */,
-				DC47E4D227A5820D0020E8EF /* GADirectoryObject.h in Headers */,
 				DCA35D5D24CF6BEC00DBE2B0 /* NSArray+OCNullable.h in Headers */,
 				DC3CE065242A49E100AB8B88 /* OCMessagePresenter.h in Headers */,
 				DC04A4942330290A006285AC /* OCCoreProxy.h in Headers */,
@@ -4690,9 +4805,12 @@
 				DC1889792189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.h in Headers */,
 				DCCE49392684BC1B005961D8 /* OCDAVRawResponse.h in Headers */,
 				DCC83307242E1B4600153F8C /* OCCore+MessageAutoresolver.h in Headers */,
-				DC9219E92964CB4500F538EE /* GAEducationOrganization.h in Headers */,
 				DC07C28E21244FC800B815A4 /* OCExtensionManager.h in Headers */,
 				DCDB76122739D30500EE7A06 /* OCServerLocator.h in Headers */,
+				DCCC85502CF8773F00251683 /* GADriveUpdate.h in Headers */,
+				DCCC85512CF8773F00251683 /* GADriveItemInvite.h in Headers */,
+				DCCC85522CF8773F00251683 /* GADriveItemCreateLink.h in Headers */,
+				DCCC85532CF8773F00251683 /* GADriveRecipient.h in Headers */,
 				DCE370942099D18100114981 /* OCDatabaseConsistentOperation.h in Headers */,
 				DC47DF762770CEE300989D84 /* NSError+OCErrorTools.h in Headers */,
 				DCC8FA0B2029C0BE00EB6701 /* OCQueryFilter.h in Headers */,
@@ -4721,12 +4839,17 @@
 				DC4AFAB8206AE92F00189B9A /* OCSQLiteTransaction.h in Headers */,
 				DC6ABF68253462E700689C7B /* OCHostSimulatorResponse.h in Headers */,
 				DCEAA0B425CEB7290017F99B /* OCLockManager.h in Headers */,
+				DCCC85432CF8771600251683 /* GAAudio.h in Headers */,
 				DC9C596D2B7D1B1B005DE8F7 /* OCPasswordPolicyRuleCharacters.h in Headers */,
 				DC73F3AC254BF95C00CE5FA9 /* OCClassSettings+Documentation.h in Headers */,
 				DC6BFFED231FB9F8005FA5CB /* OCEventRecord.h in Headers */,
 				DCC26FB92B722C8900904000 /* OCPasswordPolicyReport.h in Headers */,
+				DCCC858C2CF8782000251683 /* GAVideo.h in Headers */,
+				DCCC858D2CF8782000251683 /* GAUserUpdate.h in Headers */,
 				DC4B116D2208306C0062BCDD /* OCHTTPPipeline.h in Headers */,
 				DC576ECE2264894E0087316D /* OCDeallocAction.h in Headers */,
+				DCCC857C2CF8780A00251683 /* GAThumbnailSet.h in Headers */,
+				DCCC857D2CF8780A00251683 /* GAThumbnail.h in Headers */,
 				DCC8F9FB2028586900EB6701 /* OCAuthenticationMethod.h in Headers */,
 				DCEAF0462805B80D00980B6D /* OCResourceSourceDriveItems.h in Headers */,
 				DC359692223FA7CC00C4D6E6 /* OCQueryCondition.h in Headers */,
@@ -5248,6 +5371,7 @@
 				DC31816A2BDF882500E70392 /* OCSignal.m in Sources */,
 				DCE26621211348B00001FB2C /* OCCore+CommandLocalImport.m in Sources */,
 				DCF1C6732631BFD5004D8B0F /* OCMeasurement.m in Sources */,
+				DCCC853F2CF8770700251683 /* GAActivity.m in Sources */,
 				DC2565F62260C86A00828AA5 /* OCCertificateRuleChecker.m in Sources */,
 				DC3AB1922808B3C400789435 /* OCItem+OCDataItem.m in Sources */,
 				DC35969722403E5B00C4D6E6 /* OCQueryCondition+SQLBuilder.m in Sources */,
@@ -5259,6 +5383,7 @@
 				DC6D51DA24A8BC4D006B75E6 /* OCNetworkMonitor.m in Sources */,
 				DC04A4952330290A006285AC /* OCCoreProxy.m in Sources */,
 				DC6C0A522923A59A0045FF2A /* OCDataSourceMapped.m in Sources */,
+				DCCC855E2CF877E100251683 /* GAPhoto.m in Sources */,
 				DCEE0B5725E68C53006534B5 /* OCBookmarkManager+ItemResolution.m in Sources */,
 				DCD9B8832379783200691929 /* UIDevice+ModelID.m in Sources */,
 				DC139CD120DBC1690090175A /* OCChecksumAlgorithmSHA1.m in Sources */,
@@ -5283,6 +5408,7 @@
 				DC41C7BB25EA62520074F23B /* OCResourceSourceItemThumbnails.m in Sources */,
 				DCC8FA0020285C1500EB6701 /* OCAuthenticationMethodOAuth2.m in Sources */,
 				DCDB761F2739D4A300EE7A06 /* OCServerLocatorWebFinger.m in Sources */,
+				DCCC85422CF8771600251683 /* GAAudio.m in Sources */,
 				DCDD9B15222986D50052A001 /* OCShare+OCXMLObjectCreation.m in Sources */,
 				DC54396520D50B8A002BF291 /* OCCore+CommandDelete.m in Sources */,
 				DCF163F7274BA6C300E0182A /* OCSQLiteCollationLocalized.m in Sources */,
@@ -5385,17 +5511,19 @@
 				DC46F3C52843C66B00038880 /* OCAction.m in Sources */,
 				DC07C28F21244FC800B815A4 /* OCExtensionManager.m in Sources */,
 				DC1C7AC3253F3CD9002F2B9F /* OCClassSettings+Metadata.m in Sources */,
+				DCCC858E2CF8782000251683 /* GAVideo.m in Sources */,
+				DCCC858F2CF8782000251683 /* GAUserUpdate.m in Sources */,
 				DC576ECF2264894E0087316D /* OCDeallocAction.m in Sources */,
 				DC8FE700221CAF280016BDEE /* OCProgressManager.m in Sources */,
 				DC47E4DF27A5820D0020E8EF /* GAHashes.m in Sources */,
 				DC72568120405752006111FA /* OCClassSettings.m in Sources */,
 				DCDBB5E72523DDA200FAD707 /* OCConnection+Avatars.m in Sources */,
 				DCE741DD29B7EA7000BFF393 /* OCBookmark+ServerInstance.m in Sources */,
-				DC9219E72964CB4500F538EE /* GAEntity.m in Sources */,
 				DCE370952099D18100114981 /* OCDatabaseConsistentOperation.m in Sources */,
 				DCC8FA30202B405F00EB6701 /* OCEvent.m in Sources */,
 				DC31816C2BDF882500E70392 /* OCSignalConsumer.m in Sources */,
 				DCC8FA22202B218100EB6701 /* OCAppIdentity.m in Sources */,
+				DCCC85632CF877EE00251683 /* GASharePointIdentitySet.m in Sources */,
 				DCE227CF22D60CF5000BE0A5 /* OCCore+AvailableOffline.m in Sources */,
 				DC9C19E7278488360021222E /* OCResourceManagerJob.m in Sources */,
 				DC3CE03F2429FAA200AB8B88 /* OCMessage.m in Sources */,
@@ -5406,6 +5534,7 @@
 				DCEEB2EE2046E2B900189B9A /* OCCertificate.m in Sources */,
 				DC20DE4C21BFCBC20096000B /* OCLogComponent.m in Sources */,
 				DC07C29321244FD800B815A4 /* OCExtension.m in Sources */,
+				DCCC85572CF8776100251683 /* GAGeoCoordinates.m in Sources */,
 				DCD3439D2059319C00189B9A /* OCSQLiteDB.m in Sources */,
 				DCE784F922325D4F00733F01 /* OCConnection+Recipients.m in Sources */,
 				DC0BE5B228F80BBA00CE2101 /* OCShareRole.m in Sources */,
@@ -5418,6 +5547,8 @@
 				DC36EC8227B560D600967483 /* OCQueryCondition+ODataBuilder.m in Sources */,
 				DC0376EF271B1C8500151E8C /* OCLocaleFilterClassSettings.m in Sources */,
 				DC47E4BF27A5820D0020E8EF /* GASpecialFolder.m in Sources */,
+				DCCC85862CF8781800251683 /* GAUnifiedRoleDefinition.m in Sources */,
+				DCCC85872CF8781800251683 /* GAUnifiedRolePermission.m in Sources */,
 				DC1889812189EC2600CFB3F9 /* OCLogWriter.m in Sources */,
 				DCF072E92798652500E0B01D /* OCResourceSourceAvatarPlaceholders.m in Sources */,
 				DC47E4C027A5820D0020E8EF /* GAUser.m in Sources */,
@@ -5451,7 +5582,6 @@
 				DC2565F22260BE3700828AA5 /* OCCertificate+PrivacyLogging.m in Sources */,
 				DCA35D6624CF72B500DBE2B0 /* OCDiagnosticContext.m in Sources */,
 				DC0BE5BF28F9427900CE2101 /* OCStatistic.m in Sources */,
-				DCFC9ED828003EFC005D9144 /* GAShared.m in Sources */,
 				DC594B1221EF4B2900B882C4 /* OCAsyncSequentialQueue.m in Sources */,
 				DC41C7CE25EA627A0074F23B /* OCResourceRequestItemThumbnail.m in Sources */,
 				DC22669B22817DC600FB29EE /* OCVault+Internal.m in Sources */,
@@ -5469,6 +5599,7 @@
 				DC708CDD214135C000FE43CA /* OCSyncActionCreateFolder.m in Sources */,
 				DCC26FC82B73D2DD00904000 /* OCPasswordPolicy+Generator.m in Sources */,
 				DC1C7ABF253F3C65002F2B9F /* OCClassSettings+Validation.m in Sources */,
+				DCCC85932CF87DAC00251683 /* GAGraphStruct+Encoder.m in Sources */,
 				DC20DE5121BFCEB00096000B /* OCLogToggle.m in Sources */,
 				DC139CCD20DBBA8D0090175A /* OCChecksumAlgorithm.m in Sources */,
 				DC47E4CA27A5820D0020E8EF /* GAIdentitySet.m in Sources */,
@@ -5488,6 +5619,8 @@
 				DCF1C6902631C296004D8B0F /* OCMeasurementEvent.m in Sources */,
 				DCDA307221412A0100DB61A9 /* OCSyncAction.m in Sources */,
 				DCED67D827F1A7B200686E4F /* OCCore+DataSources.m in Sources */,
+				DCCC857E2CF8780A00251683 /* GAThumbnailSet.m in Sources */,
+				DCCC857F2CF8780A00251683 /* GAThumbnail.m in Sources */,
 				DCC83308242E1B4600153F8C /* OCCore+MessageAutoresolver.m in Sources */,
 				DC2F63682239509E0063C2DA /* OCCore+Sharing.m in Sources */,
 				DC2A127728D05DD30088A2B7 /* OCItem+OCTypeAlias.m in Sources */,
@@ -5521,6 +5654,11 @@
 				DCA35D7724D00B2900DBE2B0 /* OCHTTPPipelineTask+Diagnostic.m in Sources */,
 				DCD8439B25E1BEE5008D9BBA /* NSDictionary+OCExpand.m in Sources */,
 				DC139CC920DBB8440090175A /* OCChecksum.m in Sources */,
+				DCCC85732CF877FA00251683 /* GASharingLinkType.m in Sources */,
+				DCCC85742CF877FA00251683 /* GASharingInvitation.m in Sources */,
+				DCCC85752CF877FA00251683 /* GASharingLinkPassword.m in Sources */,
+				DCCC85762CF877FA00251683 /* GASharingLink.m in Sources */,
+				DCCC85772CF877FA00251683 /* GASignInActivity.m in Sources */,
 				DCEAF04F2806201300980B6D /* OCResourceText.m in Sources */,
 				DC0364FC20AAD75700F62732 /* OCCore+SyncEngine.m in Sources */,
 				DC381FD622C9E77500284699 /* OCCore+DirectURL.m in Sources */,
@@ -5581,6 +5719,10 @@
 				DCB330DE29F142FB00BFF393 /* OCShareRole+OCDataItem.m in Sources */,
 				DCDD9B19222989E50052A001 /* OCIdentity.m in Sources */,
 				DCADC04E2072D54200DB8E83 /* OCSQLiteTableSchema.m in Sources */,
+				DCCC854C2CF8773F00251683 /* GADriveItemInvite.m in Sources */,
+				DCCC854D2CF8773F00251683 /* GADriveRecipient.m in Sources */,
+				DCCC854E2CF8773F00251683 /* GADriveUpdate.m in Sources */,
+				DCCC854F2CF8773F00251683 /* GADriveItemCreateLink.m in Sources */,
 				DC35969B2240EC0A00C4D6E6 /* OCQueryCondition+Item.m in Sources */,
 				DC708CE1214135D100FE43CA /* OCSyncActionDelete.m in Sources */,
 				DCDB76132739D30500EE7A06 /* OCServerLocator.m in Sources */,
@@ -5602,14 +5744,12 @@
 				DCD7AA452580E5A5000CD155 /* NSURLSessionTask+Debug.m in Sources */,
 				DC6BFFF723206215005FA5CB /* OCEventQueue.m in Sources */,
 				DC39DC4C2041A2FB00189B9A /* NSError+OCError.m in Sources */,
-				DC9219EB2964CB4500F538EE /* GAEducationOrganization.m in Sources */,
 				DC9C19E327839E440021222E /* OCResourceSourceStorage.m in Sources */,
 				DC5A794F21E5FAF20045BCAA /* OCConnection+Signals.m in Sources */,
 				DC9219EC2964CB4500F538EE /* GAAppRoleAssignment.m in Sources */,
 				DC241E6F229549E200AEE068 /* OCAuthenticationMethodOpenIDConnect.m in Sources */,
 				DC6CC30826428DD50040ECAC /* OCAuthenticationBrowserSessionCustomScheme.m in Sources */,
 				DC6CF8252195D7C90013B9F9 /* OCSyncActionUpdate.m in Sources */,
-				DC47E4E727A5820D0020E8EF /* GADirectoryObject.m in Sources */,
 				DCC26FB62B7228B500904000 /* OCCapabilities+PasswordPolicy.m in Sources */,
 				DCC599F522EEE65700499B29 /* OCCore+Claims.m in Sources */,
 				DC47E4DA27A5820D0020E8EF /* GAOpenGraphFile.m in Sources */,
