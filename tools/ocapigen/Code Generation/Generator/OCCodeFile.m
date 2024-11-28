@@ -114,6 +114,14 @@
 		}
 	}
 
+	// Trim extraneous newlines from the end of the file
+	while ([fileContents hasSuffix:@"\n\n"]) {
+		[fileContents replaceCharactersInRange:NSMakeRange(fileContents.length-1, 1) withString:@""];
+	}
+
+	// Add one new line at the end
+	[fileContents appendFormat:@"\n"];
+
 	return (fileContents);
 }
 
