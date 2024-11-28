@@ -27,7 +27,7 @@
 #import "OCHTTPResponse+DAVError.h"
 #import "NSProgress+OCExtensions.h"
 #import "OCCore+SyncEngine.h"
-#import "OCCoreManager.h"
+#import "OCPlatform.h"
 
 typedef NSString* OCUploadInfoKey;
 typedef NSString* OCUploadInfoTask;
@@ -241,7 +241,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 			{
 				NSNumber *capabilitiesTusMaxChunkSize;
 
-				if (OCCoreManager.sharedCoreManager.memoryConfiguration != OCCoreMemoryConfigurationMinimum)
+				if (OCPlatform.current.memoryConfiguration != OCPlatformMemoryConfigurationMinimum)
 				{
 					// Memory configuration is NOT minimum, so avoid splitting up files into chunks if
 					// possible, which requires additional memory and could mean going over a tight memory
@@ -296,7 +296,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		return (nil);
 	}
 
-	if (OCCoreManager.sharedCoreManager.memoryConfiguration == OCCoreMemoryConfigurationMinimum)
+	if (OCPlatform.current.memoryConfiguration == OCPlatformMemoryConfigurationMinimum)
 	{
 		// Memory configuration is minimum, so use just Creation instead of Creation-With-Upload
 		// to avoid splitting up files into chunks if possible, which requires additional memory

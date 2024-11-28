@@ -20,7 +20,7 @@
 #import "OCDataTypes.h"
 #import "OCResource.h"
 #import "OCMacros.h"
-#import "OCCoreManager.h"
+#import "OCPlatform.h"
 
 @implementation OCBookmark (DataItem)
 
@@ -36,7 +36,7 @@
 
 - (OCDataItemVersion)dataItemVersion
 {
-	if (OCCoreManager.sharedCoreManager.memoryConfiguration != OCCoreMemoryConfigurationMinimum)
+	if (OCPlatform.current.memoryConfiguration != OCPlatformMemoryConfigurationMinimum)
 	{
 		OCResource *avatarResource = OCTypedCast(self.avatar, OCResource);
 		NSString *avatarVersion = ((avatarResource != nil) ? avatarResource.version : @"");

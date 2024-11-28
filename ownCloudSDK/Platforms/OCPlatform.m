@@ -17,7 +17,38 @@
  */
 
 #import "OCPlatform.h"
+#import "OCAppIdentity.h"
+#import "OCSQLiteDB.h"
 
 @implementation OCPlatform
+
++ (OCPlatform *)current
+{
+	static OCPlatform *currentPlatform;
+
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		currentPlatform = [OCPlatform new];
+	});
+
+	return (currentPlatform);
+}
+
+- (instancetype)init
+{
+	if ((self = [super init]) != nil)
+	{
+		_memoryConfiguration = OCPlatformMemoryConfigurationDefault;
+
+		if ([OCAppIdentity.sharedAppIdentity.componentIdentifier isEqual:OCAppComponentIdentifierFileProviderExtension] ||
+		    [OCAppIdentity.sharedAppIdentity.componentIdentifier isEqual:OCAppComponentIdentifierFileProviderUIExtension] ||
+		    [OCAppIdentity.sharedAppIdentity.componentIdentifier isEqual:OCAppComponentIdentifierShareExtension])
+		{
+			_memoryConfiguration = OCPlatformMemoryConfigurationMinimum;
+		}
+	}
+
+	return (self);
+}
 
 @end
