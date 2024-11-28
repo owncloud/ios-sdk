@@ -96,6 +96,19 @@
 		}
 	}
 
+	if ([property.name hasPrefix:@"@"])
+	{
+		NSRange dotRange;
+
+		NSString *name = [property.name substringFromIndex:1];
+
+		while ((dotRange = [name rangeOfString:@"."]).location != NSNotFound) {
+			name = [[name substringToIndex:dotRange.location] stringByAppendingString:[name substringFromIndex:dotRange.location+1].withCapitalizedFirstChar];
+		};
+
+		return (name);
+	}
+
 	return (property.name);
 }
 
