@@ -131,10 +131,27 @@
 		NSString *name = [lineContent substringToIndex:splitPoint.location];
 		NSString *value = [[lineContent substringFromIndex:splitPoint.location+1] stringByTrimmingCharactersInSet:whitespaceCharSet];
 
+		// Sanitize name
+		if ([name hasPrefix:@"'"] && [name hasSuffix:@"'"] && (name.length > 1))
+		{
+			// Remove ''
+			name = [name substringWithRange:NSMakeRange(1, name.length-2)];
+		}
+		if ([name hasPrefix:@"\""] && [name hasSuffix:@"\""] && (name.length > 1))
+		{
+			// Remove ''
+			name = [name substringWithRange:NSMakeRange(1, name.length-2)];
+		}
+
 		// Sanitize value
 		if ([value isEqual:@""]) { value = nil; }
 
 		if ([value hasPrefix:@"'"] && [value hasSuffix:@"'"] && (value.length > 1))
+		{
+			// Remove ''
+			value = [value substringWithRange:NSMakeRange(1, value.length-2)];
+		}
+		if ([value hasPrefix:@"\""] && [value hasSuffix:@"\""] && (value.length > 1))
 		{
 			// Remove ''
 			value = [value substringWithRange:NSMakeRange(1, value.length-2)];
