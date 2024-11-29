@@ -164,11 +164,11 @@
 	switch (self.operator)
 	{
 		case OCQueryConditionOperatorPropertyGreaterThanValue:
-			query = [[NSString alloc] initWithFormat:@"(%@>%@)", kqlProperty, smartQuotedValue];
+			query = [[NSString alloc] initWithFormat:@"(%@:>%@)", kqlProperty, smartQuotedValue];
 		break;
 
 		case OCQueryConditionOperatorPropertyLessThanValue:
-			query = [[NSString alloc] initWithFormat:@"(%@<%@)", kqlProperty, smartQuotedValue];
+			query = [[NSString alloc] initWithFormat:@"(%@:<%@)", kqlProperty, smartQuotedValue];
 		break;
 
 		case OCQueryConditionOperatorPropertyEqualToValue:
