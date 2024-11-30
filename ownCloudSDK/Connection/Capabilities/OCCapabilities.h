@@ -138,7 +138,9 @@ typedef NSNumber* OCCapabilityBool;
 @property(readonly,nonatomic) BOOL federatedSharingSupported;
 
 #pragma mark - Search
-@property(readonly,nonatomic) BOOL serverSideSearchSupported;
+@property(readonly,nonatomic) BOOL serverSideSearchSupported; //!< Indicates if ocis-style KQL-based server-side search is available
+@property(readonly,nullable,nonatomic) NSArray<NSString *> *enabledServerSideSearchProperties; //!< Returns a list of enabled/supported server-side search properties (f.ex. "name", "mtime", "size", "mediatype", "type", "tag", "tags", "content", "scope")
+- (nullable NSArray<NSString *> *)supportedKeywordsForServerSideSearchProperty:(NSString *)searchPropertyName; //!< Returns the server-provided list of supported keywords for that property (f.ex. "document", "spreadsheet", … for "mediatype")
 
 #pragma mark - Notifications
 @property(readonly,nullable,nonatomic) NSArray<NSString *> *notificationEndpoints;
