@@ -58,7 +58,10 @@ typedef NS_ENUM(NSUInteger, OCEventType)
 	OCEventTypeFilterFiles,
 
 	// Wakeup
-	OCEventTypeWakeupSyncRecord
+	OCEventTypeWakeupSyncRecord,
+
+	// Search
+	OCEventTypeSearch
 } __attribute__((enum_extensibility(closed)));
 
 @class OCEvent;

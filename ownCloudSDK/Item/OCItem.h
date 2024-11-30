@@ -188,6 +188,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,strong) NSNumber *quotaBytesRemaining; //!< Remaining space (if a quota is set)
 @property(nullable,strong) NSNumber *quotaBytesUsed; //!< Used space (if a quota is set)
 
+@property(nullable,strong) NSNumber *searchScore; //!< Score returned by server-side search (for server-side searches only) (dynamic/ephermal)
+
 @property(readonly,nonatomic) BOOL compactingAllowed; //!< YES if the local copy may be removed during compacting.
 
 @property(assign) OCItemVersionSeed versionSeed; //!< Version seed that changes whenever the item is updated
