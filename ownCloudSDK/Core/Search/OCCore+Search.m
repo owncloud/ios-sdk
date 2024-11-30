@@ -18,6 +18,7 @@
 
 #import "OCCore+Search.h"
 #import "OCConnection.h"
+#import "NSError+OCError.h"
 
 @implementation OCCore (Search)
 
@@ -25,11 +26,18 @@
 {
 	OCSearchResult *searchResult = [[OCSearchResult alloc] initWithKQLQuery:pattern core:self];
 
-	OCProgress *progress = [self.connection searchFilesWithPattern:pattern limit:limit options:options resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
-		[searchResult _handleResultEvent:event];
-	} userInfo:nil ephermalUserInfo:nil]];
+	if (self.connectionStatus != OCCoreConnectionStatusOnline)
+	{
+		searchResult.error = OCError(OCErrorNotAvailableOffline);
+	}
+	else
+	{
+		OCProgress *progress = [self.connection searchFilesWithPattern:pattern limit:limit options:options resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
+			[searchResult _handleResultEvent:event];
+		} userInfo:nil ephermalUserInfo:nil]];
 
-	searchResult.progress = progress;
+		searchResult.progress = progress;
+	}
 
 	return (searchResult);
 }
