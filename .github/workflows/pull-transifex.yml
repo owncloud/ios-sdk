@@ -35,10 +35,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y clang libpython2.7 libpython2.7-dev
 
       - name: Download Swift
-        run: wget -o /tmp/swift.tar.gz https://download.swift.org/swift-6.0.2-release/ubuntu2004/swift-6.0.2-RELEASE/swift-6.0.2-RELEASE-ubuntu20.04.tar.gz
+        run: curl -o /tmp/swift.tar.gz https://download.swift.org/swift-6.0.2-release/ubuntu2004/swift-6.0.2-RELEASE/swift-6.0.2-RELEASE-ubuntu20.04.tar.gz
 
       - name: Extract Swift
-        run: tar xzf /tmp/swift.tar.gz
+        run: tar -xzf /tmp/swift.tar.gz
 
       - name: Move Swift to /usr/share
         run: sudo mv /tmp/swift /usr/share/swift
