@@ -41,7 +41,7 @@ jobs:
         run: tar -xzf /tmp/swift.tar.gz
 
       - name: Move Swift to /usr/share
-        run: sudo mv /tmp/swift /usr/share/swift
+        run: sudo mv swift /usr/share/swift
 
       - name: Add Swift to PATH
         run: echo "export PATH=/usr/share/swift/usr/bin:\$PATH" >> $GITHUB_ENV
