@@ -35,13 +35,13 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y clang libpython2.7 libpython2.7-dev
 
       - name: Download Swift
-        run: wget https://download.swift.org/swift-6.0.2-release/ubuntu2004/swift-6.0.2-RELEASE/swift-6.0.2-RELEASE-ubuntu20.04.tar.gz
+        run: wget -o /tmp/swift.tar.gz https://download.swift.org/swift-6.0.2-release/ubuntu2004/swift-6.0.2-RELEASE/swift-6.0.2-RELEASE-ubuntu20.04.tar.gz
 
       - name: Extract Swift
-        run: tar xzf swift-6.0.2-RELEASE-ubuntu20.04.tar.gz
+        run: tar xzf /tmp/swift.tar.gz
 
       - name: Move Swift to /usr/share
-        run: sudo mv swift-6.0.2-RELEASE-ubuntu20.04 /usr/share/swift
+        run: sudo mv /tmp/swift /usr/share/swift
 
       - name: Add Swift to PATH
         run: echo "export PATH=/usr/share/swift/usr/bin:\$PATH" >> $GITHUB_ENV
@@ -53,15 +53,10 @@ jobs:
         run: cat tools/ocstringstool/ocstringstool/main.swift
 
       - name: Compile Swift file
-        run: swiftc tools/ocstringstool/ocstringstool/main.swift -o ocstringstool
+        run: swiftc tools/ocstringstool/ocstringstool/main.swift -o /tmp/ocstringstool
 
       - name: Run compiled Swift program
-        run: ./ocstringstool normalize "ownCloudSDK/Resources" "ownCloudUI/Resources"
-
-      - name: Cleanup download and ocstringstool
-        run: |
-          rm swift-*-ubuntu20.04.tar.gz 
-          rm ocstringstool
+        run: /tmp/ocstringstool normalize "ownCloudSDK/Resources" "ownCloudUI/Resources"
 
       - uses: GuillaumeFalourd/git-commit-push@v1.3
         with:
