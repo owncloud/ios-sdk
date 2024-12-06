@@ -31,12 +31,6 @@ jobs:
           beautifyJSON "ownCloudSDK/Resources/Localizable.xcstrings"
           beautifyJSON "ownCloudUI/Resources/Localizable.xcstrings"         
 
-      - name: Fetch Swift file
-        run: curl -o tools/ocstringstool/ocstringstool/main.swift https://raw.githubusercontent.com/owncloud/ios-sdk/refs/heads/fix/xcstrings-format/tools/ocstringstool/ocstringstool/main.swift
-
-      - name: Show Swift file
-        run: cat tools/ocstringstool/ocstringstool/main.swift
-
       - uses: swift-actions/setup-swift@v2
       - name: Compile Swift file
         run: |
