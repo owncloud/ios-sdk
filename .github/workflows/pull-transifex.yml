@@ -34,8 +34,8 @@ jobs:
       - name: Show Swift file
         run: cat tools/ocstringstool/ocstringstool/main.swift
 
+      - uses: swift-actions/setup-swift@v2
       - name: Compile Swift file
-        uses: swift-actions/setup-swift@v2
         run: |
          swift -v
          swiftc tools/ocstringstool/ocstringstool/main.swift -o /tmp/ocstringstool
