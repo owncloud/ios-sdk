@@ -31,13 +31,15 @@ jobs:
           beautifyJSON "ownCloudSDK/Resources/Localizable.xcstrings"
           beautifyJSON "ownCloudUI/Resources/Localizable.xcstrings"         
 
-      - uses: swift-actions/setup-swift@v2
-      - name: Compile Swift file
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2.1.0
+            
+      - name: Build ocstringstool
         run: |
          swift -v
          swiftc tools/ocstringstool/ocstringstool/main.swift -o /tmp/ocstringstool
 
-      - name: Run compiled Swift program
+      - name: Run ocstringstool
         run: /tmp/ocstringstool normalize "ownCloudSDK/Resources" "ownCloudUI/Resources"
 
       - uses: GuillaumeFalourd/git-commit-push@v1.3
