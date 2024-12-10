@@ -80,7 +80,7 @@
 
 - (nullable NSProgress *)retrieveDriveListWithCompletionHandler:(OCRetrieveDriveListCompletionHandler)completionHandler
 {
-	return ([self requestODataAtURL:[self URLForEndpoint:OCConnectionEndpointIDGraphMeDrives options:nil] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil entityClass:GADrive.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+	return ([self requestODataAtURL:[self URLForEndpoint:OCConnectionEndpointIDGraphMeDrives options:nil] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:nil entityClass:GADrive.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
 		NSMutableArray<OCDrive *> *ocDrives = nil;
 
 		if (error == nil)
@@ -119,3 +119,5 @@
 
 OCConnectionEndpointID OCConnectionEndpointIDGraphMeDrives = @"meDrives";
 OCConnectionEndpointID OCConnectionEndpointIDGraphDrives = @"drives";
+OCConnectionEndpointID OCConnectionEndpointIDGraphUsers = @"endpoint-graph-users";
+OCConnectionEndpointID OCConnectionEndpointIDGraphGroups = @"endpoint-graph-groups";

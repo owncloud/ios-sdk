@@ -28,7 +28,7 @@
 {
 	OCIdentity *recipient = [self new];
 
-	recipient.type = OCRecipientTypeUser;
+	recipient.type = OCIdentityTypeUser;
 	recipient.user = user;
 
 	return (recipient);
@@ -38,7 +38,7 @@
 {
 	OCIdentity *recipient = [self new];
 
-	recipient.type = OCRecipientTypeGroup;
+	recipient.type = OCIdentityTypeGroup;
 	recipient.group = group;
 
 	return (recipient);
@@ -55,11 +55,15 @@
 {
 	switch (_type)
 	{
-		case OCRecipientTypeUser:
+		case OCIdentityTypeUser:
+			if (_user.identifier != nil) {
+				return (_user.identifier);
+			}
+
 			return (_user.userName);
 		break;
 
-		case OCRecipientTypeGroup:
+		case OCIdentityTypeGroup:
 			return (_group.identifier);
 		break;
 	}
@@ -71,11 +75,11 @@
 {
 	switch (_type)
 	{
-		case OCRecipientTypeUser:
+		case OCIdentityTypeUser:
 			return ((_searchResultName.length == 0) ? _user.displayName : [_user.displayName stringByAppendingFormat:@" (%@)", _searchResultName]);
 		break;
 
-		case OCRecipientTypeGroup:
+		case OCIdentityTypeGroup:
 			return ((_searchResultName.length == 0) ? _group.name : [_group.name stringByAppendingFormat:@" (%@)", _searchResultName]);
 		break;
 	}
@@ -159,16 +163,16 @@
 
 	switch (_type)
 	{
-		case OCRecipientTypeUser:
+		case OCIdentityTypeUser:
 			typeAsString = @"user";
 		break;
 
-		case OCRecipientTypeGroup:
+		case OCIdentityTypeGroup:
 			typeAsString = @"group";
 		break;
 	}
 
-	return ([NSString stringWithFormat:@"<%@: %p, type: %@, identifier: %@, name: %@%@%@%@%@>", NSStringFromClass(self.class), self, typeAsString, self.identifier, self.displayName, ((_user!=nil)?[NSString stringWithFormat:@", user: %@", _user]:@""), ((_group!=nil)?[NSString stringWithFormat:@", group: %@", _group]:@""), ((_searchResultName!=nil)?[NSString stringWithFormat:@", searchResultName: %@", _searchResultName]:@""), ((_matchType!=OCRecipientMatchTypeUnknown) ? ((_matchType==OCRecipientMatchTypeExact) ? @", matchType: exact" : @", matchType: additional") : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, type: %@, identifier: %@, name: %@%@%@%@%@>", NSStringFromClass(self.class), self, typeAsString, self.identifier, self.displayName, ((_user!=nil)?[NSString stringWithFormat:@", user: %@", _user]:@""), ((_group!=nil)?[NSString stringWithFormat:@", group: %@", _group]:@""), ((_searchResultName!=nil)?[NSString stringWithFormat:@", searchResultName: %@", _searchResultName]:@""), ((_matchType!=OCIdentityMatchTypeUnknown) ? ((_matchType==OCIdentityMatchTypeExact) ? @", matchType: exact" : @", matchType: additional") : @"")]);
 }
 
 @end
