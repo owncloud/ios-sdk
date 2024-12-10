@@ -30,7 +30,7 @@
 		scale = UIScreen.mainScreen.scale;
 	}
 
-	request = [[OCResourceRequestAvatar alloc] initWithType:OCResourceTypeAvatar identifier:user.userIdentifier];
+	request = [[OCResourceRequestAvatar alloc] initWithType:OCResourceTypeAvatar identifier:user.uniqueIdentifier];
 	request.reference = user;
 
 	request.maxPointSize = requestedMaximumSizeInPoints;

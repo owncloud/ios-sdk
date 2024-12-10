@@ -88,7 +88,7 @@
 	{
 		OCAvatar *avatar = [self _createImageWithClass:OCAvatar.class];
 
-		avatar.userIdentifier = self.identifier;
+		avatar.uniqueUserIdentifier = self.identifier;
 		avatar.eTag = self.version;
 
 		avatar.timestamp = self.timestamp;

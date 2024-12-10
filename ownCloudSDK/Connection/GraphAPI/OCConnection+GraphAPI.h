@@ -38,5 +38,7 @@ typedef void(^OCRetrieveDriveListCompletionHandler)(NSError * _Nullable error, N
 
 extern OCConnectionEndpointID OCConnectionEndpointIDGraphMeDrives;
 extern OCConnectionEndpointID OCConnectionEndpointIDGraphDrives;
+extern OCConnectionEndpointID OCConnectionEndpointIDGraphUsers;
+extern OCConnectionEndpointID OCConnectionEndpointIDGraphGroups;
 
 NS_ASSUME_NONNULL_END

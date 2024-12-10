@@ -25,9 +25,12 @@ typedef void(^OCConnectionODataRequestCompletionHandler)(NSError * _Nullable err
 
 @interface OCConnection (OData)
 
-- (NSProgress *)requestODataAtURL:(NSURL *)url requireSignals:(nullable NSSet<OCConnectionSignalID> *)requiredSignals selectEntityID:(nullable OCODataEntityID)selectEntityID selectProperties:(nullable NSArray<OCODataProperty> *)selectProperties filterString:(nullable OCODataFilterString)filterString entityClass:(Class)entityClass completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler;
+- (void)decodeODataResponse:(OCHTTPResponse *)response error:(nullable NSError *)error entityClass:(nullable Class)entityClass completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler;
 
-//- (NSProgress *)createODataObject:(id<GAGraphObject>)object atURL:(NSURL *)url
+- (NSProgress *)requestODataAtURL:(NSURL *)url requireSignals:(nullable NSSet<OCConnectionSignalID> *)requiredSignals selectEntityID:(nullable OCODataEntityID)selectEntityID selectProperties:(nullable NSArray<OCODataProperty> *)selectProperties filterString:(nullable OCODataFilterString)filterString parameters:(nullable NSDictionary<NSString *,NSString *> *)parameters entityClass:(Class)entityClass completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler;
+
+- (nullable NSProgress *)createODataObject:(id<GAGraphObject>)object atURL:(NSURL *)url requireSignals:(nullable NSSet<OCConnectionSignalID> *)requiredSignals parameters:(nullable NSDictionary<NSString *,NSString *> *)additionalParameters responseEntityClass:(nullable Class)responseEntityClass completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler;
+
 //- (NSProgress *)updateODataObject:(id)…;
 //- (NSProgress *)removeOData;
 

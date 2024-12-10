@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(class,nonatomic,readonly) CGSize defaultSize;
 
-@property(strong,nullable) OCUserIdentifier userIdentifier;
+@property(strong,nullable) OCUniqueUserIdentifier uniqueUserIdentifier;
 @property(strong,nullable) OCFileETag eTag;
 
 @property(strong,nullable) NSDate *timestamp;

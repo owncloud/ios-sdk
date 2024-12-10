@@ -132,7 +132,9 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		OCConnectionEndpointIDAvatars			: @"remote.php/dav/avatars",				// Requested once per user per session (adding /[user]/[size-in-pixels])
 
 		OCConnectionEndpointIDGraphMeDrives		: @"graph/v1.0/me/drives",				// Drives of the user
-		OCConnectionEndpointIDGraphDrives		: @"graph/v1.0/drives",				// Drives
+		OCConnectionEndpointIDGraphDrives		: @"graph/v1.0/drives",					// Drives
+		OCConnectionEndpointIDGraphUsers		: @"graph/v1.0/users",					// Users
+		OCConnectionEndpointIDGraphGroups		: @"graph/v1.0/groups",					// Groups
 
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOpenIDConnect, OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
 		OCConnectionCertificateExtendedValidationRule	: @"bookmarkCertificate == serverCertificate",
