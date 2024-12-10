@@ -24,12 +24,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface GAGraphContext : NSObject
 
-// To implement (and use):
+@property(class,nonatomic,strong,nullable,readonly) GAGraphContext *defaultContext; //!< Context that WILL return an error during encoding if a required value is missing
+@property(class,nonatomic,strong,nullable,readonly) GAGraphContext *relaxedContext; //!< Context that will NOT return an error during encoding if a required value is missing
 
-//- (nullable id)provideObjectForData:(GAGraphData)structure type:(GAGraphType)type;
-//
-//- (void)cacheGraphObject:(id<GAGraphObject>)graphObject;
-//- (nullable id<GAGraphObject>)cachedObjectForType:(GAGraphType)type identifier:(GAGraphIdentifier)identifier;
+@property(assign) BOOL ignoreRequirements;
+@property(assign) BOOL ignoreConversionErrors;
 
 @end
 

@@ -18,13 +18,14 @@
 
 #import "OCConnection.h"
 #import "GADrive.h"
+#import "GADriveUpdate.h"
 #import "OCConnection+OData.h"
 #import "OCConnection+GraphAPI.h"
 
 @implementation OCConnection (Drives)
 
 #pragma mark - Creation
-- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes completionHandler:(OCConnectionDriveCreationCompletionHandler)completionHandler
+- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes completionHandler:(OCConnectionDriveCompletionHandler)completionHandler
 {
 	GADrive *drive = [GADrive new];
 	drive.name = name;
@@ -99,6 +100,25 @@
 - (nullable NSProgress *)deleteDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler
 {
 	return ([self _disableDeleteDrive:drive doDelete:YES completionHandler:completionHandler]);
+}
+
+#pragma mark - Change attributes
+- (nullable NSProgress *)updateDrive:(OCDrive *)drive properties:(NSDictionary<OCDriveProperty, id> *)updateProperties completionHandler:(OCConnectionDriveCompletionHandler)completionHandler
+{
+	// Reference: https://owncloud.dev/apis/http/graph/spaces/#modifying-spaces
+	GADriveUpdate *gaDriveUpdate = [GADriveUpdate new];
+
+	for (OCDriveProperty property in updateProperties) {
+		if ([property isEqual:OCDrivePropertyQuotaTotal]) {
+			gaDriveUpdate.quota = [GAQuota new];
+		}
+		[gaDriveUpdate setValue:updateProperties[property] forKeyPath:property];
+	}
+
+	return ([self updateODataObject:gaDriveUpdate atURL:[[self URLForEndpoint:OCConnectionEndpointIDGraphDrives options:nil] URLByAppendingPathComponent:drive.identifier] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] parameters:nil responseEntityClass:GADrive.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+		NSLog(@"Updated space: %@", response);
+		completionHandler(error, (response != nil) ? [OCDrive driveFromGADrive:(GADrive *)response] : nil);
+	}]);
 }
 
 @end
