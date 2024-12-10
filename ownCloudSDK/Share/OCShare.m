@@ -44,11 +44,11 @@
 {
 	OCShare *share = [OCShare new];
 
-	if (recipient.type == OCRecipientTypeGroup)
+	if (recipient.type == OCIdentityTypeGroup)
 	{
 		share.type = OCShareTypeGroupShare;
 	}
-	else if (recipient.type == OCRecipientTypeUser)
+	else if (recipient.type == OCIdentityTypeUser)
 	{
 		if (recipient.user.isRemote)
 		{

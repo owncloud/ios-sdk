@@ -29,13 +29,13 @@
 	return ([NSDictionary object:self[key] key:key ofClass:class inCollection:collectionClass required:required context:context error:outError]);
 }
 
-+ (nullable id)object:(id)inObject key:(NSString *)key ofClass:(Class)class inCollection:(nullable Class)collectionClass required:(BOOL)required context:(nullable GAGraphContext *)context error:(NSError * _Nullable * _Nullable)outError
++ (nullable id)object:(id)inObject key:(nullable NSString *)key ofClass:(Class)class inCollection:(nullable Class)collectionClass required:(BOOL)required context:(nullable GAGraphContext *)context error:(NSError * _Nullable * _Nullable)outError
 {
 	id object = inObject;
 
 	if (object != nil)
 	{
-		if (collectionClass != Nil)
+		if ((collectionClass != Nil) && (key != nil))
 		{
 			if ([object isKindOfClass:collectionClass] && (class != collectionClass))
 			{

@@ -2,12 +2,12 @@
 //  OCConnection+Recipients.m
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 08.03.19.
-//  Copyright © 2019 ownCloud GmbH. All rights reserved.
+//  Created by Felix Schwarz on 09.12.24.
+//  Copyright © 2024 ownCloud GmbH. All rights reserved.
 //
 
 /*
- * Copyright (C) 2019, ownCloud GmbH.
+ * Copyright (C) 2024, ownCloud GmbH.
  *
  * This code is covered by the GNU Public License Version 3.
  *
@@ -18,225 +18,226 @@
 
 #import "OCConnection.h"
 #import "NSError+OCError.h"
+#import "OCMacros.h"
+#import "OCConnection+OData.h"
+#import "OCConnection+GraphAPI.h"
+#import "GAUser.h"
+#import "GAGroup.h"
+#import "NSProgress+OCExtensions.h"
 
-/*
-	References:
-	- Developer documentation: https://doc.owncloud.com/server/developer_manual/core/ocs-recipient-api.html
-	- Implementation: https://github.com/owncloud/core/blob/master/apps/files_sharing/lib/Controller/ShareesController.php
-*/
+#if OC_LEGACY_SUPPORT
+#import "OCConnection+RecipientsLegacy.h"
+#endif /* OC_LEGACY_SUPPORT */
 
 @implementation OCConnection (Recipients)
 
-- (NSMutableArray <OCIdentity *> *)_recipientsFromJSONArray:(NSArray<NSDictionary<NSString *, id> *> *)jsonArray matchType:(OCRecipientMatchType)matchType addToArray:(NSMutableArray <OCIdentity *> *)recipientsArray
-{
-	for (NSDictionary<NSString *, id> *recipientDict in jsonArray)
-	{
-		OCIdentity *recipient = nil;
-
-		NSString *label = recipientDict[@"label"];
-
-		NSDictionary <NSString *, id> *value = recipientDict[@"value"];
-		OCShareTypeID shareTypeID = value[@"shareType"];
-		NSString *shareWith = value[@"shareWith"];
-		NSString *shareWithAdditionalInfo = value[@"shareWithAdditionalInfo"];
-
-		if ((shareWith != nil) && (shareTypeID != nil))
-		{
-			switch ((OCShareType)shareTypeID.integerValue)
-			{
-				case OCShareTypeUserShare:
-					recipient = [[OCIdentity identityWithUser:[OCUser userWithUserName:shareWith displayName:label isRemote:NO]] withSearchResultName:shareWithAdditionalInfo];
-				break;
-
-				case OCShareTypeRemote:
-					recipient = [[OCIdentity identityWithUser:[OCUser userWithUserName:shareWith displayName:label isRemote:YES]] withSearchResultName:shareWithAdditionalInfo];
-				break;
-
-				case OCShareTypeGroupShare:
-					recipient = [[OCIdentity identityWithGroup:[OCGroup groupWithIdentifier:shareWith name:label]] withSearchResultName:shareWithAdditionalInfo];
-				break;
-
-				default:
-				break;
-			}
-
-			if (recipient != nil)
-			{
-				recipient.matchType = matchType;
-
-				if (recipientsArray == nil)
-				{
-					recipientsArray = [NSMutableArray new];
-				}
-
-				[recipientsArray addObject:recipient];
-			}
-		}
-	}
-
-	return (recipientsArray);
-}
-
+#pragma mark - Search
 - (nullable NSProgress *)retrieveRecipientsForItemType:(OCItemType)itemType ofShareType:(nullable NSArray <OCShareTypeID> *)shareTypes searchTerm:(nullable NSString *)searchTerm maximumNumberOfRecipients:(NSUInteger)maximumNumberOfRecipients completionHandler:(OCConnectionRecipientsRetrievalCompletionHandler)completionHandler
 {
-	OCHTTPRequest *request;
 	NSProgress *progress = nil;
 
-	request = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDRecipients options:nil]];
-	request.requiredSignals = self.actionSignals;
-
-	[request setValue:@"json" forParameter:@"format"];
-
-	switch (itemType)
-	{
-		case OCItemTypeCollection:
-			[request setValue:@"folder" forParameter:@"itemType"];
-		break;
-
-		case OCItemTypeFile:
-			[request setValue:@"file" forParameter:@"itemType"];
-		break;
+	// OC 10
+	#if OC_LEGACY_SUPPORT
+	if (!self.useDriveAPI) {
+		return ([self legacyRetrieveRecipientsForItemType:itemType ofShareType:shareTypes searchTerm:searchTerm maximumNumberOfRecipients:maximumNumberOfRecipients completionHandler:completionHandler]);
 	}
+	#endif /* OC_LEGACY_SUPPORT */
 
-	if (shareTypes != nil)
+	// ocis
+	// Reference: https://owncloud.dev/apis/http/graph/users/#get-users
+	if ((searchTerm != nil) && (searchTerm.length > 0))
 	{
-		[request setValueArray:shareTypes apply:^NSString *(NSNumber *value) {
-			return ([value stringValue]);
-		} forParameter:@"shareType"];
-	}
+		NSProgress *combinedProgress = [NSProgress indeterminateProgress];
+		NSMutableArray<OCIdentity *> *resultIdentities = [NSMutableArray new];
+		__block NSError *combinedError = nil;
+		dispatch_group_t completionGroup = dispatch_group_create();
 
-	if (searchTerm != nil)
-	{
-		[request setValue:searchTerm forParameter:@"search"];
-	}
-
-	[request setValue:[NSString stringWithFormat:@"%ld", maximumNumberOfRecipients] forParameter:@"perPage"];
-
-	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
-		NSError *jsonError = nil;
-		NSDictionary <NSString *, id> *jsonDictionary;
-		NSMutableArray<OCIdentity *> *recipients = nil;
-
-		if ((jsonDictionary = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
-		{
-			NSDictionary *ocsDictionary=nil, *metaDictionary=nil, *dataDictionary=nil;
-
-			if ((ocsDictionary = jsonDictionary[@"ocs"]) != nil)
-			{
-				if ((metaDictionary = ocsDictionary[@"meta"]) != nil)
-				{
-					NSNumber *statusCode = metaDictionary[@"statuscode"];
-					NSString *statusMessage = metaDictionary[@"message"];
-
-					switch (statusCode.integerValue)
-					{
-						case 100:
-						case 200:
-							// All is well
-						break;
-
-						case OCHTTPStatusCodeBAD_REQUEST:
-							error = OCErrorWithDescription(OCErrorInsufficientParameters, statusMessage);
-						break;
-
-						default:
-							error = OCErrorWithDescription(OCErrorUnknown, statusMessage);
-						break;
-					}
+		dispatch_group_enter(completionGroup);
+		progress = [self _retrieveUsersForSearchTerm:searchTerm maximumResultCount:maximumNumberOfRecipients completionHandler:^(NSError * _Nullable error, NSArray<OCIdentity *> * _Nullable recipients, BOOL finished) {
+			@synchronized(resultIdentities) {
+				if (error != nil) {
+					combinedError = error;
 				}
-
-				if ((error == nil) && ((dataDictionary = ocsDictionary[@"data"]) != nil))
+				else
 				{
-					recipients = [self _recipientsFromJSONArray:dataDictionary[@"exact"][@"users"] matchType:OCRecipientMatchTypeExact addToArray:recipients];
-					recipients = [self _recipientsFromJSONArray:dataDictionary[@"exact"][@"groups"] matchType:OCRecipientMatchTypeExact addToArray:recipients];
-					recipients = [self _recipientsFromJSONArray:dataDictionary[@"exact"][@"remotes"] matchType:OCRecipientMatchTypeExact addToArray:recipients];
-
-					recipients = [self _recipientsFromJSONArray:dataDictionary[@"users"] matchType:OCRecipientMatchTypeAdditional addToArray:recipients];
-					recipients = [self _recipientsFromJSONArray:dataDictionary[@"groups"] matchType:OCRecipientMatchTypeAdditional addToArray:recipients];
-					recipients = [self _recipientsFromJSONArray:dataDictionary[@"remotes"] matchType:OCRecipientMatchTypeAdditional addToArray:recipients];
+					[resultIdentities addObjectsFromArray:recipients];
 				}
 			}
-		}
-		else
-		{
-			if (jsonError != nil)
-			{
-				error = jsonError;
-			}
-		}
+			dispatch_group_leave(completionGroup);
+		}];
+		[combinedProgress addChild:progress withPendingUnitCount:50];
 
-		completionHandler(error, recipients);
-	}];
+		dispatch_group_enter(completionGroup);
+		progress = [self _retrieveGroupsForSearchTerm:searchTerm maximumResultCount:maximumNumberOfRecipients completionHandler:^(NSError * _Nullable error, NSArray<OCIdentity *> * _Nullable recipients, BOOL finished) {
+			@synchronized(resultIdentities) {
+				if (error != nil) {
+					combinedError = error;
+				}
+				else
+				{
+					[resultIdentities addObjectsFromArray:recipients];
+				}
+			}
+			dispatch_group_leave(completionGroup);
+		}];
+		[combinedProgress addChild:progress withPendingUnitCount:50];
+
+		dispatch_group_notify(completionGroup, dispatch_get_main_queue(), ^{
+			completionHandler(combinedError, (combinedError == nil) ? resultIdentities : nil, YES);
+		});
+	}
+	else
+	{
+		if (completionHandler != nil)
+		{
+			completionHandler(nil, @[], YES);
+		}
+	}
 
 	return (progress);
 }
 
-@end
-
-/*
+- (nullable NSProgress *)_retrieveUsersForSearchTerm:(NSString *)searchTerm maximumResultCount:(NSUInteger)maximumResultCount completionHandler:(OCConnectionRecipientsRetrievalCompletionHandler)completionHandler
 {
-   "ocs":{
-      "meta":{
-         "status":"ok",
-         "statuscode":100,
-         "message":"OK",
-         "totalitems":"",
-         "itemsperpage":""
-      },
-      "data":{
-         "exact":{
-            "users":[
-               {
-                  "label":"Demo User",
-                  "value":{
-                     "shareType":0,
-                     "shareWith":"demo"
-                  }
-               },
-               {
-                  "label":"admin",
-                  "value":{
-                     "shareType":0,
-                     "shareWith":"admin"
-                  }
-               },
-               {
-                  "label":"test",
-                  "value":{
-                     "shareType":0,
-                     "shareWith":"test"
-                  }
-               }
-            ],
-            "groups":[
+	return ([self requestODataAtURL:[self URLForEndpoint:OCConnectionEndpointIDGraphUsers options:nil] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:@{
+		@"$search" : [NSString stringWithFormat:@"\"%@\"", searchTerm],
+		@"$orderby" : @"displayName"
+	} entityClass:GAUser.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+		NSMutableArray<OCIdentity *> *ocIdentities = nil;
 
-            ],
-            "remotes":[
+		if (error == nil)
+		{
+			// Convert GAUser to OCIdentities
+			NSArray<GAUser *> *gaUsers;
 
-            ]
-         },
-         "users":[
-            {
-               "label":"Shakira",
-               "value":{
-                  "shareType":0,
-                  "shareWith":"shaka"
-               }
-            }
-         ],
-         "groups":[
-            {
-               "label":"admin",
-               "value":{
-                  "shareType":1,
-                  "shareWith":"admin"
-               }
-            }
-         ],
-         "remotes":[
+			if ((gaUsers = OCTypedCast(response, NSArray)) != nil)
+			{
+				ocIdentities = [NSMutableArray new];
 
-         ]
-      }
-   }
+				for (GAUser *gaUser in gaUsers)
+				{
+					OCUser *ocUser;
+
+					if ((ocUser = [OCUser userWithGraphUser:gaUser]) != nil)
+					{
+						OCIdentity *ocIdentity;
+
+						if ((ocIdentity = [OCIdentity identityWithUser:ocUser]) != nil)
+						{
+							[ocIdentities addObject:ocIdentity];
+						}
+					}
+				}
+			}
+		}
+
+		OCLogDebug(@"User response: identities=%@, error=%@", ocIdentities, error);
+
+		completionHandler(error, (ocIdentities.count > 0) ? ocIdentities : nil, YES);
+	}]);
 }
-*/
+
+- (nullable NSProgress *)_retrieveGroupsForSearchTerm:(nullable NSString *)searchTerm maximumResultCount:(NSUInteger)maximumResultCount completionHandler:(OCConnectionRecipientsRetrievalCompletionHandler)completionHandler
+{
+	return ([self requestODataAtURL:[self URLForEndpoint:OCConnectionEndpointIDGraphGroups options:nil] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:@{
+		@"$search" : [NSString stringWithFormat:@"\"%@\"", searchTerm],
+		@"$orderby" : @"displayName"
+	} entityClass:GAGroup.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+		NSMutableArray<OCIdentity *> *ocIdentities = nil;
+
+		if (error == nil)
+		{
+			// Convert GAGroup to OCIdentities
+			NSArray<GAGroup *> *gaGroups;
+
+			if ((gaGroups = OCTypedCast(response, NSArray)) != nil)
+			{
+				ocIdentities = [NSMutableArray new];
+
+				for (GAGroup *gaGroup in gaGroups)
+				{
+					OCGroup *ocGroup;
+
+					if ((ocGroup = [OCGroup groupWithGraphGroup:gaGroup]) != nil)
+					{
+						OCIdentity *ocIdentity;
+
+						if ((ocIdentity = [OCIdentity identityWithGroup:ocGroup]) != nil)
+						{
+							[ocIdentities addObject:ocIdentity];
+						}
+					}
+				}
+			}
+		}
+
+		OCLogDebug(@"Group response: identities=%@, error=%@", ocIdentities, error);
+
+		completionHandler(error, (ocIdentities.count > 0) ? ocIdentities : nil, YES);
+	}]);
+}
+
+#pragma mark - Lookup
+- (nullable NSProgress *)retrieveUserForID:(OCUserID)userID completionHandler:(OCConnectionUserRetrievalCompletionHandler)completionHandler
+{
+	// ocis-only
+	if (!self.useDriveAPI) {
+		completionHandler(OCError(OCErrorFeatureNotSupportedByServer), nil);
+		return(nil);
+	}
+
+	// Reference: https://owncloud.dev/apis/http/graph/users/#get-usersuserid-or-accountname
+	return ([self requestODataAtURL:[[self URLForEndpoint:OCConnectionEndpointIDGraphUsers options:nil] URLByAppendingPathComponent:userID] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:nil entityClass:GAUser.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+		OCUser *user = nil;
+
+		if (error == nil)
+		{
+			GAUser *gaUser;
+
+			if ((gaUser = OCTypedCast(response, GAUser)) != nil)
+			{
+				// Convert GAUser to OCUser
+				user = [OCUser userWithGraphUser:gaUser];
+			}
+			else
+			{
+				error = OCError(OCErrorResponseUnknownFormat);
+			}
+		}
+
+		completionHandler(error, user);
+	}]);
+}
+
+- (nullable NSProgress *)retrieveGroupForID:(OCGroupID)groupID completionHandler:(OCConnectionGroupRetrievalCompletionHandler)completionHandler
+{
+	// ocis-only
+	if (!self.useDriveAPI) {
+		completionHandler(OCError(OCErrorFeatureNotSupportedByServer), nil);
+		return(nil);
+	}
+
+	// Reference: https://owncloud.dev/apis/http/graph/groups/#get-groupsgroupid
+	return ([self requestODataAtURL:[[self URLForEndpoint:OCConnectionEndpointIDGraphGroups options:nil] URLByAppendingPathComponent:groupID] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:nil entityClass:GAGroup.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+		OCGroup *group = nil;
+
+		if (error == nil)
+		{
+			GAGroup *gaGroup;
+
+			if ((gaGroup = OCTypedCast(response, GAGroup)) != nil)
+			{
+				// Convert GAGroup to OCGroup
+				group = [OCGroup groupWithGraphGroup:gaGroup];
+			}
+			else
+			{
+				error = OCError(OCErrorResponseUnknownFormat);
+			}
+		}
+
+		completionHandler(error, group);
+	}]);
+}
+
+@end

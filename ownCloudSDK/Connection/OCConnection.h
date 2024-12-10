@@ -36,6 +36,7 @@
 #import "OCAvatar.h"
 #import "OCDrive.h"
 #import "OCAppProviderApp.h"
+#import "OCFeatureAvailability.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
@@ -347,13 +348,39 @@ typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCS
 
 @end
 
+#pragma mark - DRIVES
+typedef void(^OCConnectionDriveCreationCompletionHandler)(NSError * _Nullable error, OCDrive * _Nullable newDrive);
+typedef void(^OCConnectionDriveManagementCompletionHandler)(NSError * _Nullable error);
+
+@interface OCConnection (Drives)
+
+#pragma mark - Creation
+- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes completionHandler:(OCConnectionDriveCreationCompletionHandler)completionHandler;
+
+#pragma mark - Disable/Restore/Delete
+- (nullable NSProgress *)disableDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
+- (nullable NSProgress *)restoreDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
+- (nullable NSProgress *)deleteDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
+
+#pragma mark - Change attributes
+//- (nullable NSProgress *)changeQuota:(nullable NSNumber *)quotaBytes ofDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
+//- (nullable NSProgress *)changeName:(nullable NSString *)name ofDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
+
+@end
+
 #pragma mark - RECIPIENTS
-typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCIdentity *> * _Nullable recipients);
+typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCIdentity *> * _Nullable recipients, BOOL finished);
+typedef void(^OCConnectionUserRetrievalCompletionHandler)(NSError * _Nullable error, OCUser * _Nullable user);
+typedef void(^OCConnectionGroupRetrievalCompletionHandler)(NSError * _Nullable error, OCGroup * _Nullable group);
 
 @interface OCConnection (Recipients)
 
-#pragma mark - Retrieval
+#pragma mark - Search
 - (nullable NSProgress *)retrieveRecipientsForItemType:(OCItemType)itemType ofShareType:(nullable NSArray <OCShareTypeID> *)shareTypes searchTerm:(nullable NSString *)searchTerm maximumNumberOfRecipients:(NSUInteger)maximumNumberOfRecipients completionHandler:(OCConnectionRecipientsRetrievalCompletionHandler)completionHandler;
+
+#pragma mark - Lookup
+- (nullable NSProgress *)retrieveUserForID:(OCUserID)userID completionHandler:(OCConnectionUserRetrievalCompletionHandler)completionHandler; //!< Looks up a user with the server using its ID. ocis-only
+- (nullable NSProgress *)retrieveGroupForID:(OCGroupID)groupID completionHandler:(OCConnectionGroupRetrievalCompletionHandler)completionHandler; //!< Looks up a group with the server using its ID. ocis-only
 
 @end
 

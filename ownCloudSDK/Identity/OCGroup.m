@@ -18,10 +18,11 @@
 
 #import "OCGroup.h"
 #import "OCMacros.h"
+#import "GAGroup.h"
 
 @implementation OCGroup
 
-+ (instancetype)groupWithIdentifier:(nullable OCUserGroupID)groupID name:(nullable NSString *)name;
++ (instancetype)groupWithIdentifier:(nullable OCGroupID)groupID name:(nullable NSString *)name;
 {
 	OCGroup *group = [self new];
 
@@ -29,6 +30,11 @@
 	group.name = name;
 
 	return (group);
+}
+
++ (instancetype)groupWithGraphGroup:(GAGroup *)gaGroup
+{
+	return ([self groupWithIdentifier:gaGroup.identifier name:gaGroup.displayName]);
 }
 
 #pragma mark - Comparison
