@@ -123,7 +123,7 @@
 	 	OCNANotEqual([drive.gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag) ||
 	 	OCNANotEqual(drive.detachedSinceDate, _detachedSinceDate) ||
 	 	(drive.detachedState != _detachedState) ||
-	 	(drive.isDeactivated != self.isDeactivated) ||
+	 	(drive.isDisabled != self.isDisabled) ||
 	 	OCNANotEqual(drive.rootETag, self.rootETag));
 }
 
@@ -187,7 +187,7 @@
 	return (rootETag);
 }
 
-- (BOOL)isDeactivated
+- (BOOL)isDisabled
 {
 	return ([_gaDrive.root.deleted.state isEqual:GADeletedStateTrashed]);
 }
@@ -252,7 +252,7 @@
 
 - (OCDataItemVersion)dataItemVersion
 {
-	return ([NSString stringWithFormat:@"%@:%@:%@:%@:%@:%@:%@:%@:%ld:%@:%ld", _identifier, _type, _name, _desc, _davRootURL, _gaDrive.eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameImage].eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag, (long)_detachedState, _detachedSinceDate, (long)self.isDeactivated]);
+	return ([NSString stringWithFormat:@"%@:%@:%@:%@:%@:%@:%@:%@:%ld:%@:%ld", _identifier, _type, _name, _desc, _davRootURL, _gaDrive.eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameImage].eTag, [_gaDrive specialDriveItemFor:GASpecialFolderNameReadme].eTag, (long)_detachedState, _detachedSinceDate, (long)self.isDisabled]);
 }
 
 #pragma mark - Comparison
@@ -296,5 +296,9 @@ OCDriveType OCDriveTypeShare = @"share";
 OCDriveSpecialType OCDriveSpecialTypePersonal = @"personal";
 OCDriveSpecialType OCDriveSpecialTypeShares = @"shares";
 OCDriveSpecialType OCDriveSpecialTypeSpace = @"space";
+
+OCDriveProperty OCDrivePropertyName = @"name"; // Must correspond to GADrive key path
+OCDriveProperty OCDrivePropertyDescription = @"desc"; // Must correspond to GADrive key path
+OCDriveProperty OCDrivePropertyQuotaTotal = @"quota.total"; // Must correspond to GADrive key path
 
 OCDriveID OCDriveIDSharesJail = @"a0ca6a90-a365-4782-871e-d44447bbc668$a0ca6a90-a365-4782-871e-d44447bbc668";
