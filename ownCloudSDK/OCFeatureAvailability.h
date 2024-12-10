@@ -41,4 +41,7 @@
 	#define OC_FEATURE_AVAILABLE_AUTHENTICATION_SESSION 0
 #endif /* TARGET_OS_IOS || TARGET_OS_MACCATALYST */
 
+// ownCloud 10 (legacy) support
+#define OC_LEGACY_SUPPORT 1
+
 #endif /* OCFeatureAvailability_h */
