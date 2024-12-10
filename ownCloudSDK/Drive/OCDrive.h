@@ -49,7 +49,7 @@ typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 
 @property(readonly,nonatomic,nullable) OCDriveSpecialType specialType; //!< Convenience accessor to determine if a drive is the personal or shares jail drive.
 
-@property(readonly,nonatomic) BOOL isDeactivated;
+@property(readonly,nonatomic) BOOL isDisabled;
 
 @property(strong,nullable,nonatomic) NSString *name;
 @property(strong,nullable) NSString *desc;

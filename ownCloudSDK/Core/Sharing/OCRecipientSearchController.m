@@ -111,7 +111,7 @@
 			searchID = _searchIDCounter++;
 		}
 
-		[core.connection retrieveRecipientsForItemType:_itemType ofShareType:self.shareTypes searchTerm:self.searchTerm maximumNumberOfRecipients:self.maximumResultCount completionHandler:^(NSError * _Nullable error, NSArray<OCIdentity *> * _Nullable recipients) {
+		[core.connection retrieveRecipientsForItemType:_itemType ofShareType:self.shareTypes searchTerm:self.searchTerm maximumNumberOfRecipients:self.maximumResultCount completionHandler:^(NSError * _Nullable error, NSArray<OCIdentity *> * _Nullable recipients, BOOL complete) {
 			OCDataSourceArray *recipientsDataSource = nil;
 
 			@synchronized(self)

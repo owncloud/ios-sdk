@@ -18,17 +18,21 @@
 
 #import <Foundation/Foundation.h>
 
+@class GAGroup;
+
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NSString* OCUserGroupID;
+typedef NSString* OCGroupID;
 
 @interface OCGroup : NSObject <NSSecureCoding, NSCopying>
 
-@property(strong) OCUserGroupID identifier;
+@property(strong) OCGroupID identifier;
 
 @property(nullable,strong) NSString *name;
 
-+ (instancetype)groupWithIdentifier:(nullable OCUserGroupID)groupID name:(nullable NSString *)name;
++ (instancetype)groupWithIdentifier:(nullable OCGroupID)groupID name:(nullable NSString *)name;
+
++ (instancetype)groupWithGraphGroup:(GAGroup *)gaGroup;
 
 @end
 
