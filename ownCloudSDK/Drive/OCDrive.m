@@ -297,4 +297,8 @@ OCDriveSpecialType OCDriveSpecialTypePersonal = @"personal";
 OCDriveSpecialType OCDriveSpecialTypeShares = @"shares";
 OCDriveSpecialType OCDriveSpecialTypeSpace = @"space";
 
+OCDriveProperty OCDrivePropertyName = @"name"; // Must correspond to GADrive key path
+OCDriveProperty OCDrivePropertyDescription = @"desc"; // Must correspond to GADrive key path
+OCDriveProperty OCDrivePropertyQuotaTotal = @"quota.total"; // Must correspond to GADrive key path
+
 OCDriveID OCDriveIDSharesJail = @"a0ca6a90-a365-4782-871e-d44447bbc668$a0ca6a90-a365-4782-871e-d44447bbc668";

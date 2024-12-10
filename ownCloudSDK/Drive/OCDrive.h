@@ -29,7 +29,9 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NSString *OCDriveType NS_TYPED_ENUM;
 typedef NSString* OCDriveAlias;
 
-typedef NSString *OCDriveSpecialType NS_TYPED_ENUM;
+typedef NSString* OCDriveSpecialType NS_TYPED_ENUM;
+
+typedef NSString* OCDriveProperty NS_TYPED_ENUM;
 
 typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 {
@@ -51,8 +53,8 @@ typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 
 @property(readonly,nonatomic) BOOL isDisabled;
 
-@property(strong,nullable,nonatomic) NSString *name;
-@property(strong,nullable) NSString *desc;
+@property(strong,nullable,nonatomic) NSString *name; //!< Name of the drive/space
+@property(strong,nullable) NSString *desc; //!< Description ("subtitle") of the drive/space. A long-form "description" can be stored inside the space as ".space/readme.md".
 
 @property(strong,nullable) NSURL *davRootURL;
 
@@ -87,6 +89,10 @@ extern OCDriveType OCDriveTypeShare;
 extern OCDriveSpecialType OCDriveSpecialTypePersonal;	//!< The user's personal space
 extern OCDriveSpecialType OCDriveSpecialTypeShares;	//!< The Shares Jail space
 extern OCDriveSpecialType OCDriveSpecialTypeSpace;	//!< Regular project spaces
+
+extern OCDriveProperty OCDrivePropertyName; //!< The name of the space
+extern OCDriveProperty OCDrivePropertyDescription; //!< The description of the space
+extern OCDriveProperty OCDrivePropertyQuotaTotal; //!< The quota total of / space available in the space in bytes
 
 extern OCDriveID OCDriveIDSharesJail; //!< The static UUID of the Shares Jail
 

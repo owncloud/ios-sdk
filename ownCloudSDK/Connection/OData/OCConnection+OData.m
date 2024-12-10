@@ -124,7 +124,7 @@
 	return (progress);
 }
 
-- (nullable NSProgress *)createODataObject:(id<GAGraphObject>)object atURL:(NSURL *)url requireSignals:(nullable NSSet<OCConnectionSignalID> *)requiredSignals parameters:(nullable NSDictionary<NSString *,NSString *> *)additionalParameters responseEntityClass:(nullable Class)responseEntityClass completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler
+- (nullable NSProgress *)_sendODataObject:(id<GAGraphObject>)object atURL:(NSURL *)url withMethod:(OCHTTPMethod)httpMethod requireSignals:(nullable NSSet<OCConnectionSignalID> *)requiredSignals parameters:(nullable NSDictionary<NSString *,NSString *> *)additionalParameters responseEntityClass:(nullable Class)responseEntityClass completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler
 {
 	NSProgress *progress = nil;
 	NSError *error = nil;
@@ -149,7 +149,7 @@
 	OCHTTPRequest *request;
 
 	request = [OCHTTPRequest requestWithURL:url];
-	request.method = OCHTTPMethodPOST;
+	request.method = httpMethod;
 	request.requiredSignals = requiredSignals; // self.actionSignals;
 	if (additionalParameters.count > 0)
 	{
@@ -162,6 +162,16 @@
 	}];
 
 	return (progress);
+}
+
+- (nullable NSProgress *)createODataObject:(id<GAGraphObject>)object atURL:(NSURL *)url requireSignals:(nullable NSSet<OCConnectionSignalID> *)requiredSignals parameters:(nullable NSDictionary<NSString *,NSString *> *)additionalParameters responseEntityClass:(nullable Class)responseEntityClass completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler
+{
+	return ([self _sendODataObject:object atURL:url withMethod:OCHTTPMethodPOST requireSignals:requiredSignals parameters:additionalParameters responseEntityClass:responseEntityClass completionHandler:completionHandler]);
+}
+
+- (nullable NSProgress *)updateODataObject:(id<GAGraphObject>)object atURL:(NSURL *)url requireSignals:(nullable NSSet<OCConnectionSignalID> *)requiredSignals parameters:(nullable NSDictionary<NSString *,NSString *> *)additionalParameters responseEntityClass:(nullable Class)responseEntityClass completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler
+{
+	return ([self _sendODataObject:object atURL:url withMethod:OCHTTPMethodPATCH requireSignals:requiredSignals parameters:additionalParameters responseEntityClass:responseEntityClass completionHandler:completionHandler]);
 }
 
 @end

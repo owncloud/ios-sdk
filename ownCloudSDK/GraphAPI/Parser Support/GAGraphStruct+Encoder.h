@@ -22,7 +22,7 @@
 	GAGraphStruct graphStruct = [NSMutableDictionary new]; \
 	NSError *error = nil;
 #define GA_ENC_ADD(var,jsName,req) \
- 	if ((error = [graphStruct set:var forKey:@jsName required:req context:nil]) != nil) { \
+ 	if ((error = [graphStruct set:var forKey:@jsName required:req context:context]) != nil) { \
  		if (outError != NULL) { *outError = error; } \
  		return(nil); \
 	}

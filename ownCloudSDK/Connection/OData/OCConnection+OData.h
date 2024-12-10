@@ -31,7 +31,8 @@ typedef void(^OCConnectionODataRequestCompletionHandler)(NSError * _Nullable err
 
 - (nullable NSProgress *)createODataObject:(id<GAGraphObject>)object atURL:(NSURL *)url requireSignals:(nullable NSSet<OCConnectionSignalID> *)requiredSignals parameters:(nullable NSDictionary<NSString *,NSString *> *)additionalParameters responseEntityClass:(nullable Class)responseEntityClass completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler;
 
-//- (NSProgress *)updateODataObject:(id)…;
+- (nullable NSProgress *)updateODataObject:(id<GAGraphObject>)object atURL:(NSURL *)url requireSignals:(nullable NSSet<OCConnectionSignalID> *)requiredSignals parameters:(nullable NSDictionary<NSString *,NSString *> *)additionalParameters responseEntityClass:(nullable Class)responseEntityClass completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler;
+
 //- (NSProgress *)removeOData;
 
 @end

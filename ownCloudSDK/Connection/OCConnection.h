@@ -349,13 +349,13 @@ typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCS
 @end
 
 #pragma mark - DRIVES
-typedef void(^OCConnectionDriveCreationCompletionHandler)(NSError * _Nullable error, OCDrive * _Nullable newDrive);
+typedef void(^OCConnectionDriveCompletionHandler)(NSError * _Nullable error, OCDrive * _Nullable newDrive);
 typedef void(^OCConnectionDriveManagementCompletionHandler)(NSError * _Nullable error);
 
 @interface OCConnection (Drives)
 
 #pragma mark - Creation
-- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes completionHandler:(OCConnectionDriveCreationCompletionHandler)completionHandler;
+- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes completionHandler:(OCConnectionDriveCompletionHandler)completionHandler;
 
 #pragma mark - Disable/Restore/Delete
 - (nullable NSProgress *)disableDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
@@ -363,6 +363,7 @@ typedef void(^OCConnectionDriveManagementCompletionHandler)(NSError * _Nullable 
 - (nullable NSProgress *)deleteDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
 
 #pragma mark - Change attributes
+- (nullable NSProgress *)updateDrive:(OCDrive *)drive properties:(NSDictionary<OCDriveProperty, id> *)updateProperties completionHandler:(OCConnectionDriveCompletionHandler)completionHandler;
 //- (nullable NSProgress *)changeQuota:(nullable NSNumber *)quotaBytes ofDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
 //- (nullable NSProgress *)changeName:(nullable NSString *)name ofDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
 
