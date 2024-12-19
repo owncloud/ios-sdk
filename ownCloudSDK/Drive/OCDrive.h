@@ -20,9 +20,11 @@
 #import "OCTypes.h"
 #import "OCQuota.h"
 #import "OCDataTypes.h"
+#import "OCIdentity.h"
 
 @class GADrive;
 @class OCLocation;
+@class GAPermission;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -66,6 +68,8 @@ typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 
 @property(strong,nonatomic,readonly) OCLocation *rootLocation;
 @property(strong,nonatomic,readonly) OCFileETag rootETag;
+
+@property(strong,nonatomic,nullable,readonly) NSArray<GAPermission *> *permissions;
 
 #pragma mark - Detached management
 @property(readonly,nonatomic) BOOL isDetached;

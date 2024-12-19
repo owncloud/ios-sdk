@@ -102,7 +102,7 @@
 	return ([self requestODataAtURL:[self URLForEndpoint:OCConnectionEndpointIDGraphUsers options:nil] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:@{
 		@"$search" : [NSString stringWithFormat:@"\"%@\"", searchTerm],
 		@"$orderby" : @"displayName"
-	} entityClass:GAUser.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+	} entityClass:GAUser.class options:nil completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
 		NSMutableArray<OCIdentity *> *ocIdentities = nil;
 
 		if (error == nil)
@@ -142,7 +142,7 @@
 	return ([self requestODataAtURL:[self URLForEndpoint:OCConnectionEndpointIDGraphGroups options:nil] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:@{
 		@"$search" : [NSString stringWithFormat:@"\"%@\"", searchTerm],
 		@"$orderby" : @"displayName"
-	} entityClass:GAGroup.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+	} entityClass:GAGroup.class options:nil completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
 		NSMutableArray<OCIdentity *> *ocIdentities = nil;
 
 		if (error == nil)
@@ -187,7 +187,7 @@
 	}
 
 	// Reference: https://owncloud.dev/apis/http/graph/users/#get-usersuserid-or-accountname
-	return ([self requestODataAtURL:[[self URLForEndpoint:OCConnectionEndpointIDGraphUsers options:nil] URLByAppendingPathComponent:userID] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:nil entityClass:GAUser.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+	return ([self requestODataAtURL:[[self URLForEndpoint:OCConnectionEndpointIDGraphUsers options:nil] URLByAppendingPathComponent:userID] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:nil entityClass:GAUser.class options:nil completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
 		OCUser *user = nil;
 
 		if (error == nil)
@@ -218,7 +218,7 @@
 	}
 
 	// Reference: https://owncloud.dev/apis/http/graph/groups/#get-groupsgroupid
-	return ([self requestODataAtURL:[[self URLForEndpoint:OCConnectionEndpointIDGraphGroups options:nil] URLByAppendingPathComponent:groupID] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:nil entityClass:GAGroup.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+	return ([self requestODataAtURL:[[self URLForEndpoint:OCConnectionEndpointIDGraphGroups options:nil] URLByAppendingPathComponent:groupID] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:nil entityClass:GAGroup.class options:nil completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
 		OCGroup *group = nil;
 
 		if (error == nil)
@@ -238,6 +238,114 @@
 
 		completionHandler(error, group);
 	}]);
+}
+
+- (nullable NSProgress *)retrieveDetailsForIdentity:(OCIdentity *)identity completionHandler:(OCConnectionIdentityDetailsRetrievalCompletionHandler)completionHandler
+{
+	// ocis-only
+	if (!self.useDriveAPI) {
+		completionHandler(OCError(OCErrorFeatureNotSupportedByServer), nil);
+		return(nil);
+	}
+
+	if (identity.user != nil) {
+		return ([self retrieveUserForID:identity.user.identifier completionHandler:^(NSError * _Nullable error, OCUser * _Nullable user) {
+			completionHandler(error, (user != nil) ? [OCIdentity identityWithUser:user] : nil);
+		}]);
+	} else if (identity.group != nil) {
+		return ([self retrieveGroupForID:identity.group.identifier completionHandler:^(NSError * _Nullable error, OCGroup * _Nullable group) {
+			completionHandler(error, (group != nil) ? [OCIdentity identityWithGroup:group] : nil);
+		}]);
+	} else {
+		completionHandler(OCError(OCErrorInvalidParameter), nil);
+	}
+
+	return (nil);
+}
+
+- (nullable NSProgress *)retrieveDetailsForObjects:(NSArray *)identityObjects asIdentities:(BOOL)asIdentities resolveIdentities:(BOOL)resolveIdentities completionHandler:(OCConnectionIdentityObjectsDetailsRetrievalCompletionHandler)completionHandler
+{
+	// ocis-only
+	if (!self.useDriveAPI) {
+		completionHandler(OCError(OCErrorFeatureNotSupportedByServer), nil);
+		return(nil);
+	}
+	NSProgress *combinedProgress = NSProgress.indeterminateProgress;
+	dispatch_group_t retrievalGroup = dispatch_group_create();
+	NSMutableArray *resultObjects = [NSMutableArray new];
+	__block NSError *retrievalError = nil;
+
+	for (id identityObj in identityObjects) {
+		OCUser *user = OCTypedCast(identityObj, OCUser);
+		OCGroup *group = OCTypedCast(identityObj, OCGroup);
+		OCIdentity *identity = OCTypedCast(identityObj, OCIdentity);
+		NSProgress *retrieveProgress = nil;
+
+		if ((identity != nil) && resolveIdentities) {
+			if (identity.user != nil) {
+				user = identity.user;
+				identity = nil;
+			} else if (identity.group != nil) {
+				group = identity.group;
+				identity = nil;
+			}
+		}
+
+		if (user != nil) {
+			dispatch_group_enter(retrievalGroup);
+			retrieveProgress = [self retrieveUserForID:user.identifier completionHandler:^(NSError * _Nullable error, OCUser * _Nullable user) {
+				@synchronized(resultObjects) {
+					if ((error != nil) && (retrievalError == nil)) {
+						retrievalError = error;
+					}
+					if (user != nil) {
+						[resultObjects addObject:(asIdentities ? [OCIdentity identityWithUser:user] : user)];
+					}
+				}
+				dispatch_group_leave(retrievalGroup);
+			}];
+		}
+
+		if (group != nil) {
+			dispatch_group_enter(retrievalGroup);
+			retrieveProgress = [self retrieveGroupForID:group.identifier completionHandler:^(NSError * _Nullable error, OCGroup * _Nullable group) {
+				@synchronized(resultObjects) {
+					if ((error != nil) && (retrievalError == nil)) {
+						retrievalError = error;
+					}
+					if (group != nil) {
+						[resultObjects addObject:(asIdentities ? [OCIdentity identityWithGroup:group] : group)];
+					}
+				}
+				dispatch_group_leave(retrievalGroup);
+			}];
+		}
+
+		if (identity != nil) {
+			dispatch_group_enter(retrievalGroup);
+			retrieveProgress = [self retrieveDetailsForIdentity:identity completionHandler:^(NSError * _Nullable error, OCIdentity * _Nullable identity) {
+				@synchronized(resultObjects) {
+					if ((error != nil) && (retrievalError == nil)) {
+						retrievalError = error;
+					}
+					if (identity != nil) {
+						[resultObjects addObject:identity];
+					}
+				}
+				dispatch_group_leave(retrievalGroup);
+			}];
+		}
+
+		if (retrieveProgress != nil) {
+			[combinedProgress addChild:retrieveProgress withPendingUnitCount:1];
+		}
+	}
+
+	dispatch_group_notify(retrievalGroup, dispatch_get_main_queue(), ^{
+		completionHandler(retrievalError, (retrievalError == nil) ? resultObjects : nil);
+	});
+
+	return (combinedProgress);
 }
 
 @end

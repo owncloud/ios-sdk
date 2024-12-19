@@ -131,6 +131,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 		OCConnectionEndpointIDGraphMeDrives		: @"graph/v1.0/me/drives",				// Drives of the user
 		OCConnectionEndpointIDGraphDrives		: @"graph/v1.0/drives",					// Drives
+		OCConnectionEndpointIDGraphDrivePermissions	: @"graph/v1beta1/drives",				// Drive permissions base
 		OCConnectionEndpointIDGraphUsers		: @"graph/v1.0/users",					// Users
 		OCConnectionEndpointIDGraphGroups		: @"graph/v1.0/groups",					// Groups
 

@@ -18,16 +18,14 @@
 
 #import "OCShare.h"
 #import "OCMacros.h"
+#import "OCSharePermission.h"
 
 @implementation OCShare
 
-@dynamic canRead;
-@dynamic canUpdate;
-@dynamic canCreate;
-@dynamic canDelete;
-@dynamic canShare;
+@dynamic permissions;
 
 @synthesize protectedByPassword = _protectedByPassword;
+@synthesize originGAPermission = _originGAPermission;
 
 - (instancetype)init
 {
@@ -40,7 +38,7 @@
 }
 
 #pragma mark - Convenience constructors
-+ (instancetype)shareWithRecipient:(OCIdentity *)recipient location:(OCLocation *)location permissions:(OCSharePermissionsMask)permissions expiration:(NSDate *)expirationDate
++ (instancetype)shareWithRecipient:(OCIdentity *)recipient location:(OCLocation *)location permissions:(NSArray<OCSharePermission *> *)permissions expiration:(NSDate *)expirationDate
 {
 	OCShare *share = [OCShare new];
 
@@ -66,13 +64,13 @@
 
 	share.itemLocation = location;
 
-	share.permissions = permissions;
+	share.sharePermissions = permissions;
 	share.expirationDate = expirationDate;
 
 	return (share);
 }
 
-+ (instancetype)shareWithPublicLinkToLocation:(OCLocation *)location linkName:(NSString *)name permissions:(OCSharePermissionsMask)permissions password:(NSString *)password expiration:(NSDate *)expirationDate
++ (instancetype)shareWithPublicLinkToLocation:(OCLocation *)location linkName:(NSString *)name permissions:(NSArray<OCSharePermission *> *)permissions password:(NSString *)password expiration:(NSDate *)expirationDate
 {
 	OCShare *share = [OCShare new];
 
@@ -85,7 +83,7 @@
 
 	share.password = password;
 
-	share.permissions = permissions;
+	share.sharePermissions = permissions;
 	share.expirationDate = expirationDate;
 
 	return (share);
@@ -95,12 +93,12 @@
 #define BIT_ACCESSOR(getMethodName,setMethodName,flag) \
 - (BOOL)getMethodName \
 { \
-	return ((_permissions & flag) == flag); \
+	return ((self.permissions & flag) == flag); \
 } \
 \
 - (void)setMethodName:(BOOL)flagValue \
 { \
-	_permissions = (_permissions & ~flag) | (flagValue ? flag : 0); \
+	self.permissions = (self.permissions & ~flag) | (flagValue ? flag : 0); \
 }
 
 BIT_ACCESSOR(canRead,	setCanRead,	OCSharePermissionsMaskRead);
@@ -108,6 +106,20 @@ BIT_ACCESSOR(canUpdate,	setCanUpdate,	OCSharePermissionsMaskUpdate);
 BIT_ACCESSOR(canCreate,	setCanCreate,	OCSharePermissionsMaskCreate);
 BIT_ACCESSOR(canDelete,	setCanDelete,	OCSharePermissionsMaskDelete);
 BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
+
+- (void)setPermissions:(OCSharePermissionsMask)permissions
+{
+	self.sharePermissions = @[ [[OCSharePermission alloc] initWithPermissionsMask:permissions] ];
+}
+
+- (OCSharePermissionsMask)permissions
+{
+	if (_sharePermissions != nil) {
+		return ([OCSharePermission permissionMaskForPermissions:_sharePermissions]);
+	}
+
+	return (OCSharePermissionsMaskNone);
+}
 
 - (BOOL)protectedByPassword
 {
@@ -188,7 +200,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 			compareVar(_token) &&
 			compareVar(_url) &&
 
-			(otherShare->_permissions == _permissions) &&
+			(otherShare.permissions == self.permissions) &&
 
 			(otherShare.protectedByPassword == self.protectedByPassword) &&
 
@@ -248,7 +260,13 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 		_token = [decoder decodeObjectOfClass:[NSString class] forKey:@"token"];
 		_url = [decoder decodeObjectOfClass:[NSURL class] forKey:@"url"];
 
-		_permissions = [decoder decodeIntegerForKey:@"permissions"];
+		_sharePermissions = [decoder decodeObjectOfClasses:[NSSet setWithObjects:OCSharePermission.class, NSArray.class, nil] forKey:@"sharePermissions"];
+
+		OCSharePermissionsMask legacyPermissionMask = [decoder decodeIntegerForKey:@"permissions"];
+		if (legacyPermissionMask != 0)
+		{
+			self.permissions = legacyPermissionMask;
+		}
 
 		_protectedByPassword = [decoder decodeBoolForKey:@"protectedByPassword"];
 
@@ -282,7 +300,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 	[coder encodeObject:_token forKey:@"token"];
 	[coder encodeObject:_url forKey:@"url"];
 
-	[coder encodeInteger:_permissions forKey:@"permissions"];
+	[coder encodeObject:_sharePermissions forKey:@"sharePermissions"];
 
 	[coder encodeBool:self.protectedByPassword forKey:@"protectedByPassword"];
 
@@ -412,7 +430,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 	copiedShare->_token = _token;
 	copiedShare->_url = _url;
 
-	copiedShare->_permissions = _permissions;
+	copiedShare->_sharePermissions = _sharePermissions;
 
 	copiedShare->_creationDate = _creationDate;
 	copiedShare->_expirationDate = _expirationDate;

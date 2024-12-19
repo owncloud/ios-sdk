@@ -14,16 +14,17 @@
  *
  */
 
-// occgen: includes
+// occgen: includes {"locked":true}
 #import <Foundation/Foundation.h>
 #import "GAGraphObject.h"
+#import "OCShareTypes.h"
 
 // occgen: type start
 NS_ASSUME_NONNULL_BEGIN
 @interface GAUnifiedRolePermission : NSObject <GAGraphObject, NSSecureCoding>
 
-// occgen: type properties
-@property(strong, nullable) NSArray<NSString *> *allowedResourceActions; //!< |
+// occgen: type properties { "customPropertyTypes" : { "allowedResourceActions" : "NSArray<OCShareActionID> *" }}
+@property(strong, nullable) NSArray<OCShareActionID> *allowedResourceActions; //!< |
 @property(strong, nullable) NSString *condition; //!< |
 
 // occgen: type protected {"locked":true}
