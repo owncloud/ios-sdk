@@ -146,7 +146,7 @@
 - (nullable NSProgress *)retrievePermissionsForDriveWithID:(OCDriveID)driveID item:(nullable OCItem *)item completionHandler:(OCConnectionShareRetrievalCompletionHandler)completionHandler
 {
 	OCLocation *location = [[OCLocation alloc] initWithBookmarkUUID:self.bookmark.uuid driveID:driveID path:item.path];
-	NSURL *permissionURL = [self permissionsURLForDriveWithID:driveID fileID:item.fileID permissionID:nil];
+	NSURL *permissionURL = [self permissionsURLForDriveWithID:driveID fileID:(item.isRoot ? nil : item.fileID) permissionID:nil];
 
 	return ([self requestODataAtURL:permissionURL requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:nil entityClass:GAPermission.class options:@{
 		OCODataOptionKeyLibreGraphDecoders: @[
