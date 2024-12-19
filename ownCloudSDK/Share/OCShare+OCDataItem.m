@@ -20,6 +20,7 @@
 #import "OCDataRenderer.h"
 #import "OCDataConverter.h"
 #import "OCDataItemPresentable.h"
+#import "OCSharePermission.h"
 
 @implementation OCShare (OCDataItem)
 
@@ -46,7 +47,7 @@
 		}
 	}
 
-	return ([NSString stringWithFormat:@"%@%lx%@%@%@%d%@_%@%@%@", self.itemLocation.string, self.permissions, self.name, self.token, self.url, self.protectedByPassword, self.state, self.accepted, self.expirationDate, otherItemSharesVersions]);
+	return ([NSString stringWithFormat:@"%@%lx%@%@%@%d%@_%@%@%@%@", self.itemLocation.string, self.permissions, self.name, self.token, self.url, self.protectedByPassword, self.state, self.accepted, self.expirationDate, otherItemSharesVersions, self.sharePermissions.firstObject.roleID]);
 }
 
 #pragma mark - OCDataConverter for OCDrives

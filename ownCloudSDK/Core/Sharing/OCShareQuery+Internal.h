@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface OCShareQuery (Internal)
 
-- (void)_updateWithRetrievedShares:(NSArray <OCShare *> *)shares forItem:(OCItem *)item scope:(OCShareScope)scope; //!< Replaces the internal array of shares with the provided shares if item and scope match.
+- (void)_updateWithRetrievedShares:(NSArray <OCShare *> *)newShares allowedPermissionActions:(nullable NSArray<OCShareActionID> *)allowedPermissionActions allowedRoles:(nullable NSArray<OCShareRole *> *)allowedRoles forItem:(OCItem *)item scope:(OCShareScope)scope; //!< Replaces the internal array of shares with the provided shares if item and scope match.
 
 - (void)_updateWithAddedShare:(nullable OCShare *)addedShare updatedShare:(nullable OCShare *)updatedShare removedShare:(nullable OCShare *)removedShare; //!< May only be called from OCCore.createShare/.updateShare/.deleteShare.
 
