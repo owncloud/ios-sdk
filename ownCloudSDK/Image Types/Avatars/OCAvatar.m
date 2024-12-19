@@ -35,7 +35,7 @@
 {
 	[super encodeWithCoder:coder];
 
-	[coder encodeObject:_userIdentifier    	forKey:@"userIdentifier"];
+	[coder encodeObject:_uniqueUserIdentifier    	forKey:@"userIdentifier"];
 	[coder encodeObject:_eTag		forKey:@"eTag"];
 	[coder encodeObject:_timestamp		forKey:@"timestamp"];
 }
@@ -44,7 +44,7 @@
 {
 	if ((self = [super initWithCoder:decoder]) != nil)
 	{
-		_userIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"userIdentifier"];
+		_uniqueUserIdentifier = [decoder decodeObjectOfClass:NSString.class forKey:@"userIdentifier"];
 		_eTag = [decoder decodeObjectOfClass:NSString.class forKey:@"eTag"];
 		_timestamp = [decoder decodeObjectOfClass:NSDate.class forKey:@"timestamp"];
 	}

@@ -22,6 +22,7 @@
 #import "NSDate+OCDateParser.h"
 #import "OCLogger.h"
 #import "OCMacros.h"
+#import "GAGraphContext.h"
 
 @implementation NSMutableDictionary (GAGraphDataEncoder)
 
@@ -122,7 +123,9 @@
 {
 	NSError *error = nil;
 
-	if (required && (value == nil))
+	if (required && (value == nil) &&
+	    ((context == nil) || ((context != nil) && !context.ignoreRequirements))
+	   )
 	{
 		return (OCErrorWithDescription(OCErrorRequiredValueMissing, ([NSString stringWithFormat:@"GAGraphDataEncoder: missing value for required property %@", key])));
 	}
@@ -134,7 +137,9 @@
 		return (error);
 	}
 
-	if (required && (encodedValue == nil))
+	if (required && (encodedValue == nil) &&
+	    ((context == nil) || ((context != nil) && !context.ignoreConversionErrors))
+	   )
 	{
 		return (OCErrorWithDescription(OCErrorRequiredValueMissing, ([NSString stringWithFormat:@"GAGraphDataEncoder: conversion failed for required property %@=%@", key, value])));
 	}

@@ -19,11 +19,10 @@
 #import "OCUser.h"
 #import "OCMacros.h"
 #import "OCLogger.h"
+#import "GAUser.h"
+#import "GAIdentity.h"
 
 @implementation OCUser
-
-@synthesize userName = _userName;
-@synthesize displayName = _displayName;
 
 @dynamic isRemote;
 @dynamic remoteHost;
@@ -36,6 +35,8 @@
 	user.userName = userName;
 	user.displayName = displayName;
 
+	user.type = user.isRemote ? OCUserTypeFederated : OCUserTypeMember;
+
 	return (user);
 }
 
@@ -47,7 +48,63 @@
 	user.displayName = displayName;
 	user->_forceIsRemote = @(isRemote);
 
+	user.type = user.isRemote ? OCUserTypeFederated : OCUserTypeMember;
+
 	return (user);
+}
+
++ (instancetype)userWithGraphDisplayname:(NSString *)displayName identifier:(NSString *)identifier userType:(NSString *)userType
+{
+	OCUser *user = [OCUser new];
+
+	user.displayName = displayName;
+	user.identifier = identifier;
+
+	if ([userType isEqual:@"Member"])
+	{
+		user.type = OCUserTypeMember;
+	}
+	if ([userType isEqual:@"Guest"])
+	{
+		user.type = OCUserTypeGuest;
+	}
+	if ([userType isEqual:@"Federated"])
+	{
+		user.type = OCUserTypeFederated;
+	}
+
+	return (user);
+}
+
++ (instancetype)userWithGraphUser:(GAUser *)gaUser
+{
+	return ([self userWithGraphDisplayname:gaUser.displayName identifier:gaUser.identifier userType:gaUser.userType]);
+}
+
++ (instancetype)userWithGraphIdentity:(GAIdentity *)gaIdentity
+{
+	return ([self userWithGraphDisplayname:([gaIdentity.displayName isEqual:@""] ? nil : gaIdentity.displayName) identifier:gaIdentity.identifier userType:gaIdentity.libreGraphUserType]);
+}
+
+- (GAIdentity *)gaIdentity
+{
+	GAIdentity *identity = [GAIdentity new];
+	identity.identifier = self.identifier;
+	identity.displayName = self.displayName;
+	switch (self.type) {
+		case OCUserTypeMember:
+			identity.libreGraphUserType = @"Member";
+		break;
+		case OCUserTypeGuest:
+			identity.libreGraphUserType = @"Guest";
+		break;
+		case OCUserTypeFederated:
+			identity.libreGraphUserType = @"Federated";
+		break;
+		case OCUserTypeUnknown: break;
+	}
+
+	return (identity);
 }
 
 - (NSRange)_atRemoteRange
@@ -100,8 +157,13 @@
 	return (nil);
 }
 
-- (OCUserIdentifier)userIdentifier
+- (OCUniqueUserIdentifier)uniqueIdentifier
 {
+	if (_identifier != nil)
+	{
+		// Graph User IDentifier
+		return (_identifier);
+	}
 	return ([NSString stringWithFormat:@"%@:%d", self.userName, self.isRemote]);
 }
 
@@ -204,6 +266,7 @@
 	OCUser *user = [OCUser new];
 
 	user->_userName = _userName;
+	user->_identifier = _identifier;
 	user->_displayName = _displayName;
 	user->_emailAddress = _emailAddress;
 	user->_forceIsRemote = _forceIsRemote;
@@ -221,10 +284,14 @@
 {
 	if ((self = [super init]) != nil)
 	{
-		self.userName = [decoder decodeObjectOfClass:[NSString class] forKey:@"userName"];
-		self.displayName = [decoder decodeObjectOfClass:[NSString class] forKey:@"displayName"];
-		self.emailAddress = [decoder decodeObjectOfClass:[NSString class] forKey:@"emailAddress"];
-		_forceIsRemote = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"forceIsRemote"];
+		self.displayName = [decoder decodeObjectOfClass:NSString.class forKey:@"displayName"];
+
+		self.userName = [decoder decodeObjectOfClass:NSString.class forKey:@"userName"];
+		self.emailAddress = [decoder decodeObjectOfClass:NSString.class forKey:@"emailAddress"];
+		_forceIsRemote = [decoder decodeObjectOfClass:NSNumber.class forKey:@"forceIsRemote"];
+
+		self.type = [decoder decodeIntegerForKey:@"type"];
+		self.identifier = [decoder decodeObjectOfClass:NSString.class forKey:@"identifier"];
 	}
 
 	return (self);
@@ -232,16 +299,20 @@
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
-	[coder encodeObject:self.userName forKey:@"userName"];
 	[coder encodeObject:self.displayName forKey:@"displayName"];
+
+	[coder encodeObject:self.userName forKey:@"userName"];
 	[coder encodeObject:self.emailAddress forKey:@"emailAddress"];
 	[coder encodeObject:_forceIsRemote forKey:@"forceIsRemote"];
+
+	[coder encodeInteger:_type forKey:@"type"];
+	[coder encodeObject:self.identifier forKey:@"identifier"];
 }
 
 #pragma mark - Description
 - (NSString *)description
 {
-	return ([NSString stringWithFormat:@"<%@: %p, userName: %@, displayName: %@%@>", NSStringFromClass(self.class), self, _userName, _displayName, ((_emailAddress!=nil) ? [NSString stringWithFormat:@", emailAddress: [%@]",_emailAddress] : @"")]);
+	return ([NSString stringWithFormat:@"<%@: %p, displayName: %@%@%@%@>", NSStringFromClass(self.class), self, _displayName, ((_userName!=nil) ? [NSString stringWithFormat:@", userName: %@",_userName] : @""), ((_identifier!=nil) ? [NSString stringWithFormat:@", identifier: %@",_identifier] : @""), ((_emailAddress!=nil) ? [NSString stringWithFormat:@", emailAddress: [%@]",_emailAddress] : @"")]);
 }
 
 @end
