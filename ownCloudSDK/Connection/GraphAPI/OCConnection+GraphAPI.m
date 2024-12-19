@@ -20,10 +20,14 @@
 #import "OCConnection+OData.h"
 #import "GAIdentitySet.h"
 #import "GADrive.h"
+#import "GAPermission.h"
+#import "GAUnifiedRoleDefinition.h"
 #import "GAODataError.h"
 #import "GAODataErrorMain.h"
 #import "GAGraphData+Decoder.h"
+#import "OCODataDecoder.h"
 #import "OCMacros.h"
+#import "OCShare+GraphAPI.h"
 
 @implementation OCConnection (GraphAPI)
 
@@ -80,7 +84,7 @@
 
 - (nullable NSProgress *)retrieveDriveListWithCompletionHandler:(OCRetrieveDriveListCompletionHandler)completionHandler
 {
-	return ([self requestODataAtURL:[self URLForEndpoint:OCConnectionEndpointIDGraphMeDrives options:nil] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:nil entityClass:GADrive.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+	return ([self requestODataAtURL:[self URLForEndpoint:OCConnectionEndpointIDGraphMeDrives options:nil] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:nil entityClass:GADrive.class options:nil completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
 		NSMutableArray<OCDrive *> *ocDrives = nil;
 
 		if (error == nil)
@@ -115,9 +119,72 @@
 	}]);
 }
 
+#pragma mark - Permissions
+- (NSURL *)permissionsURLForDriveWithID:(OCDriveID)driveID fileID:(nullable OCFileID)fileID permissionID:(nullable OCShareID)shareID
+{
+	NSURL *permissionURL;
+
+	if (fileID == nil)
+	{
+		// Drive permissions
+		permissionURL = [[self URLForEndpoint:OCConnectionEndpointIDGraphDrivePermissions options:nil] URLByAppendingPathComponent:[NSString stringWithFormat:@"%@/root/permissions", driveID]];
+	}
+	else
+	{
+		// Item permissions
+		permissionURL = [[self URLForEndpoint:OCConnectionEndpointIDGraphDrivePermissions options:nil] URLByAppendingPathComponent:[NSString stringWithFormat:@"%@/items/%@/permissions", driveID, fileID]];
+	}
+
+	if (shareID != nil)
+	{
+		permissionURL = [permissionURL URLByAppendingPathComponent:shareID];
+	}
+
+	return (permissionURL);
+}
+
+- (nullable NSProgress *)retrievePermissionsForDriveWithID:(OCDriveID)driveID item:(nullable OCItem *)item completionHandler:(OCConnectionShareRetrievalCompletionHandler)completionHandler
+{
+	OCLocation *location = [[OCLocation alloc] initWithBookmarkUUID:self.bookmark.uuid driveID:driveID path:item.path];
+	NSURL *permissionURL = [self permissionsURLForDriveWithID:driveID fileID:item.fileID permissionID:nil];
+
+	return ([self requestODataAtURL:permissionURL requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:nil entityClass:GAPermission.class options:@{
+		OCODataOptionKeyLibreGraphDecoders: @[
+			[[OCODataDecoder alloc] initWithLibreGraphID:@"@libre.graph.permissions.actions.allowedValues" entityClass:Nil customDecoder:^id(id  _Nonnull value, NSError * _Nullable __autoreleasing * _Nullable outError) { return (value); }],
+			[[OCODataDecoder alloc] initWithLibreGraphID:@"@libre.graph.permissions.roles.allowedValues" entityClass:GAUnifiedRoleDefinition.class customDecoder:nil],
+		],
+		OCODataOptionKeyReturnODataResponse : @(YES)
+	} completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+		OCODataResponse *oDataResponse = OCTypedCast(response, OCODataResponse);
+
+		NSArray<GAUnifiedRoleDefinition *> *gaRoleDefinitions = oDataResponse.libreGraphObjects[@"@libre.graph.permissions.roles.allowedValues"];
+
+		NSMutableArray<OCShare *> *shares = [NSMutableArray new];
+		for (GAPermission *gaPermission in oDataResponse.result) {
+			[shares addObject:[OCShare shareFromGAPermission:gaPermission roleDefinitions:gaRoleDefinitions forLocation:location item:item category:OCShareCategoryByMe]];
+		}
+
+		NSMutableArray<OCShareRole *> *roles = nil;
+		if (gaRoleDefinitions != nil)
+		{
+			roles = [NSMutableArray new];
+			for (GAUnifiedRoleDefinition *gaRoleDefinition in gaRoleDefinitions) {
+				OCShareRole *role;
+				if ((role = gaRoleDefinition.role) != nil)
+				{
+					[roles addObject:gaRoleDefinition.role];
+				}
+			}
+		}
+
+		completionHandler(error, oDataResponse.libreGraphObjects[@"@libre.graph.permissions.actions.allowedValues"], roles, shares);
+	}]);
+}
+
 @end
 
 OCConnectionEndpointID OCConnectionEndpointIDGraphMeDrives = @"meDrives";
 OCConnectionEndpointID OCConnectionEndpointIDGraphDrives = @"drives";
+OCConnectionEndpointID OCConnectionEndpointIDGraphDrivePermissions = @"endpoint-graph-drive-permissions";
 OCConnectionEndpointID OCConnectionEndpointIDGraphUsers = @"endpoint-graph-users";
 OCConnectionEndpointID OCConnectionEndpointIDGraphGroups = @"endpoint-graph-groups";

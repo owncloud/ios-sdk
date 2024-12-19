@@ -27,6 +27,7 @@
 #import "OCLogger.h"
 #import "NSError+OCHTTPStatus.h"
 #import "NSArray+OCFiltering.h"
+#import "OCSharePermission.h"
 #import "OCMacros.h"
 
 @implementation OCCore (Sharing)
@@ -153,7 +154,7 @@
 {
 	__weak OCCore *weakCore = self;
 
-	[self.connection retrieveSharesWithScope:scope forItem:item options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShare *> * _Nullable shares) {
+	[self.connection retrieveSharesWithScope:scope forItem:item options:nil completionHandler:^(NSError * _Nullable error, NSArray<OCShareActionID> * _Nullable allowedPermissionActions, NSArray<OCShareRole *> * _Nullable allowedRoles, NSArray<OCShare *> * _Nullable shares) {
 		OCCore *core = weakCore;
 
 		if (core != nil)
@@ -176,7 +177,7 @@
 				{
 					for (OCShareQuery *query in core->_shareQueries)
 					{
-						[query _updateWithRetrievedShares:((error == nil) ? shares : @[]) forItem:item scope:scope];
+						[query _updateWithRetrievedShares:((error == nil) ? shares : @[]) allowedPermissionActions:allowedPermissionActions allowedRoles:allowedRoles forItem:item scope:scope];
 					}
 				}
 
@@ -555,6 +556,19 @@
 
 - (nullable OCShareRole *)matchingShareRoleForShare:(OCShare *)share
 {
+	// First check for roles provided inside the share itself (ocis)
+	if (share.sharePermissions.count > 0)
+	{
+		for (OCSharePermission *permission in share.sharePermissions)
+		{
+			if (permission.role != nil)
+			{
+				return (permission.role);
+			}
+		}
+	}
+
+	// Then check for globally available roles (legacy)
 	NSArray<OCShareRole *> *roles = [self availableShareRolesForType:share.type location:share.itemLocation];
 	OCShareRole *customRole = nil;
 	OCShareRole *exactMatchingRole = nil;

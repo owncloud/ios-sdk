@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 
 @class GAGroup;
+@class GAIdentity;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -30,9 +31,12 @@ typedef NSString* OCGroupID;
 
 @property(nullable,strong) NSString *name;
 
+@property(readonly,nonatomic,nullable) GAIdentity *gaIdentity;
+
 + (instancetype)groupWithIdentifier:(nullable OCGroupID)groupID name:(nullable NSString *)name;
 
 + (instancetype)groupWithGraphGroup:(GAGroup *)gaGroup;
++ (instancetype)groupWithGraphIdentity:(GAIdentity *)gaIdentity;
 
 @end
 
