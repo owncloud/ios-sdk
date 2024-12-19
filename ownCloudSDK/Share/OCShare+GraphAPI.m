@@ -32,8 +32,8 @@
 	share.identifier = gaPermission.identifier;
 	share.itemLocation = (location != nil) ? location : item.location;
 	share.itemType = share.itemLocation.type;
-	share.itemFileID = item.fileID;
-	share.itemMIMEType = item.mimeType;
+	share.itemFileID = (share.itemType == OCLocationTypeDrive) ? nil : item.fileID;
+	share.itemMIMEType = (share.itemType == OCLocationTypeDrive) ? nil : item.mimeType;
 
 	share.recipient = [OCIdentity identityFromGASharePointIdentitySet:gaPermission.grantedToV2];
 	share.sharePermissions = [gaPermission sharePermissionsUsingRoleDefinitions:gaRoleDefinitions];
