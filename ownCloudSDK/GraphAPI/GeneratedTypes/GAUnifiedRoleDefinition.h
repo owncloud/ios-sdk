@@ -18,12 +18,16 @@
 #import <Foundation/Foundation.h>
 #import "GAGraphObject.h"
 
-// occgen: forward declarations
+// occgen: forward declarations {"locked":true}
 @class GAUnifiedRolePermission;
+@class OCShareRole;
 
-// occgen: type start
+// occgen: type start {"locked":true}
 NS_ASSUME_NONNULL_BEGIN
 @interface GAUnifiedRoleDefinition : NSObject <GAGraphObject, NSSecureCoding>
+{
+	OCShareRole *_role;
+}
 
 // occgen: type properties
 @property(strong, nullable) NSString *desc; //!< The description for the unifiedRoleDefinition.
@@ -33,7 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong, nullable) NSNumber *libreGraphWeight; //!< [integer] |
 
 // occgen: type protected {"locked":true}
-
+@property(strong, nullable, nonatomic) OCShareRole *role;
 
 // occgen: type end
 @end

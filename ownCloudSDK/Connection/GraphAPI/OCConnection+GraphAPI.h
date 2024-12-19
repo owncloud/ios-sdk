@@ -17,6 +17,7 @@
  */
 
 #import "OCConnection.h"
+#import "GAUnifiedRoleDefinition.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -34,10 +35,16 @@ typedef void(^OCRetrieveDriveListCompletionHandler)(NSError * _Nullable error, N
 
 - (nullable NSProgress *)retrieveDriveListWithCompletionHandler:(OCRetrieveDriveListCompletionHandler)completionHandler; //!< Retrieves a list of drives and updates .drives
 
+#pragma mark - Permissions
+- (NSURL *)permissionsURLForDriveWithID:(OCDriveID)driveID fileID:(nullable OCFileID)fileID permissionID:(nullable OCShareID)shareID; //!< Returns the API URL for the provided driveID [+ fileID [+ shareID]]
+
+- (nullable NSProgress *)retrievePermissionsForDriveWithID:(OCDriveID)driveID item:(nullable OCItem *)item completionHandler:(OCConnectionShareRetrievalCompletionHandler)completionHandler; //!< Retrieves the permissions for a drive and returns them as OCShares. The original GAPermission objects remain available as OCShare.originGAPermission but should only be used for debugging.
+
 @end
 
 extern OCConnectionEndpointID OCConnectionEndpointIDGraphMeDrives;
 extern OCConnectionEndpointID OCConnectionEndpointIDGraphDrives;
+extern OCConnectionEndpointID OCConnectionEndpointIDGraphDrivePermissions;
 extern OCConnectionEndpointID OCConnectionEndpointIDGraphUsers;
 extern OCConnectionEndpointID OCConnectionEndpointIDGraphGroups;
 

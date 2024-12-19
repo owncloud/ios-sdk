@@ -20,6 +20,9 @@
 
 typedef NS_ENUM(NSUInteger, OCHTTPStatusCode)
 {
+	// Informational (1xx)
+	OCHTTPStatusCodeCONTINUE = 100,
+
 	// Success (2xx)
 	OCHTTPStatusCodeOK = 200,
 	OCHTTPStatusCodeCREATED = 201,

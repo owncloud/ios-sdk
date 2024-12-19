@@ -19,6 +19,7 @@
 #import "OCGroup.h"
 #import "OCMacros.h"
 #import "GAGroup.h"
+#import "GAIdentity.h"
 
 @implementation OCGroup
 
@@ -35,6 +36,19 @@
 + (instancetype)groupWithGraphGroup:(GAGroup *)gaGroup
 {
 	return ([self groupWithIdentifier:gaGroup.identifier name:gaGroup.displayName]);
+}
+
++ (instancetype)groupWithGraphIdentity:(GAIdentity *)gaIdentity
+{
+	return ([self groupWithIdentifier:gaIdentity.identifier name:gaIdentity.displayName]);
+}
+
+- (GAIdentity *)gaIdentity
+{
+	GAIdentity *identity = [GAIdentity new];
+	identity.identifier = self.identifier;
+	identity.displayName = self.name;
+	return (identity);
 }
 
 #pragma mark - Comparison

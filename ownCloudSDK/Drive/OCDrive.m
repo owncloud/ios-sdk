@@ -20,6 +20,9 @@
 #import "GADrive.h"
 #import "GADriveItem.h"
 #import "GADeleted.h"
+#import "GAIdentitySet.h"
+#import "GAIdentity.h"
+#import "OCIdentity+GraphAPI.h"
 #import "OCMacros.h"
 #import "OCLocation.h"
 #import "OCCore.h"
@@ -190,6 +193,11 @@
 - (BOOL)isDisabled
 {
 	return ([_gaDrive.root.deleted.state isEqual:GADeletedStateTrashed]);
+}
+
+- (NSArray<GAPermission *> *)permissions
+{
+	return (_gaDrive.root.permissions);
 }
 
 #pragma mark - Secure coding
