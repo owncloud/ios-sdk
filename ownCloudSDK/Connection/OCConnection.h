@@ -47,6 +47,7 @@
 @class OCServerInstance;
 @class OCTUSJobSegment;
 @class OCTUSJob;
+@class OCShareRole;
 
 typedef NSString* OCConnectionEndpointID NS_TYPED_ENUM;
 typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
@@ -291,7 +292,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 #pragma mark - SHARING
-typedef void(^OCConnectionShareRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCShare *> * _Nullable shares);
+typedef void(^OCConnectionShareRetrievalCompletionHandler)(NSError * _Nullable error, NSArray<OCShareActionID> * _Nullable allowedPermissionActions, NSArray<OCShareRole *> * _Nullable allowedRoles, NSArray<OCShare *> * _Nullable shares);
 typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCShare * _Nullable share);
 
 @interface OCConnection (Sharing)
@@ -373,6 +374,8 @@ typedef void(^OCConnectionDriveManagementCompletionHandler)(NSError * _Nullable 
 typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCIdentity *> * _Nullable recipients, BOOL finished);
 typedef void(^OCConnectionUserRetrievalCompletionHandler)(NSError * _Nullable error, OCUser * _Nullable user);
 typedef void(^OCConnectionGroupRetrievalCompletionHandler)(NSError * _Nullable error, OCGroup * _Nullable group);
+typedef void(^OCConnectionIdentityDetailsRetrievalCompletionHandler)(NSError * _Nullable error, OCIdentity * _Nullable identity);
+typedef void(^OCConnectionIdentityObjectsDetailsRetrievalCompletionHandler)(NSError * _Nullable error, NSArray* _Nullable identityObjects);
 
 @interface OCConnection (Recipients)
 
@@ -380,8 +383,10 @@ typedef void(^OCConnectionGroupRetrievalCompletionHandler)(NSError * _Nullable e
 - (nullable NSProgress *)retrieveRecipientsForItemType:(OCItemType)itemType ofShareType:(nullable NSArray <OCShareTypeID> *)shareTypes searchTerm:(nullable NSString *)searchTerm maximumNumberOfRecipients:(NSUInteger)maximumNumberOfRecipients completionHandler:(OCConnectionRecipientsRetrievalCompletionHandler)completionHandler;
 
 #pragma mark - Lookup
-- (nullable NSProgress *)retrieveUserForID:(OCUserID)userID completionHandler:(OCConnectionUserRetrievalCompletionHandler)completionHandler; //!< Looks up a user with the server using its ID. ocis-only
-- (nullable NSProgress *)retrieveGroupForID:(OCGroupID)groupID completionHandler:(OCConnectionGroupRetrievalCompletionHandler)completionHandler; //!< Looks up a group with the server using its ID. ocis-only
+- (nullable NSProgress *)retrieveUserForID:(OCUserID)userID completionHandler:(OCConnectionUserRetrievalCompletionHandler)completionHandler; //!< Looks up a user with the server using its ID. GraphAPI / ocis-only
+- (nullable NSProgress *)retrieveGroupForID:(OCGroupID)groupID completionHandler:(OCConnectionGroupRetrievalCompletionHandler)completionHandler; //!< Looks up a group with the server using its ID. GraphAPI / ocis-only
+- (nullable NSProgress *)retrieveDetailsForIdentity:(OCIdentity *)identity completionHandler:(OCConnectionIdentityDetailsRetrievalCompletionHandler)completionHandler; //!< Retrieve full (user|group) details for identity. GraphAPI / ocis-only
+- (nullable NSProgress *)retrieveDetailsForObjects:(NSArray *)identityObjects asIdentities:(BOOL)asIdentities resolveIdentities:(BOOL)resolveIdentities completionHandler:(OCConnectionIdentityObjectsDetailsRetrievalCompletionHandler)completionHandler; //!< Retrieve full details for (user|group|identity) objects (can be mixed in array). If `asIdentities` is YES, the completionHandler will contain only OCIdentity instances. If `resolveIdentities` is YES, OCIdentity instances will be returned as OCUser and OCGroup where applicable. GraphAPI / ocis-only
 
 @end
 

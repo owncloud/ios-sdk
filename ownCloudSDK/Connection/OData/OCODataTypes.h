@@ -22,6 +22,8 @@ typedef NSString* OCODataEntityID;
 typedef NSString* OCODataProperty;
 typedef NSString* OCODataFilterString;
 
-NS_ASSUME_NONNULL_BEGIN
+typedef NSString* OCODataLibreGraphID;
+typedef NSDictionary<OCODataLibreGraphID,id>* OCODataLibreGraphObjects;
 
-NS_ASSUME_NONNULL_END
+typedef NSString *OCODataOptionKey;
+typedef NSDictionary<OCODataOptionKey,id> *OCODataOptions;

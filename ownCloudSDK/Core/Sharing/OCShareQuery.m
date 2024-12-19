@@ -107,7 +107,7 @@
 	}
 }
 
-- (void)_updateWithRetrievedShares:(NSArray <OCShare *> *)newShares forItem:(OCItem *)item scope:(OCShareScope)scope
+- (void)_updateWithRetrievedShares:(NSArray <OCShare *> *)newShares allowedPermissionActions:(nullable NSArray<OCShareActionID> *)allowedPermissionActions allowedRoles:(nullable NSArray<OCShareRole *> *)allowedRoles forItem:(OCItem *)item scope:(OCShareScope)scope
 {
 	// Replace if item and scope match and differences in the objects were found
 	if ((([self.item.path isEqual:item.path]) || (self.item == item)) && (scope == self.scope))
@@ -150,6 +150,15 @@
 					}
 				}
 			}
+
+			if (self.allowedRoles.count != allowedRoles.count) {
+				// Updating due to allowed roles count change
+				hasDifferences = YES;
+			}
+			if (self.allowedPermissionActions.count != allowedPermissionActions.count) {
+				// Updating due to allowed actions count change
+				hasDifferences = YES;
+			}
 		}
 
 		if (hasDifferences)
@@ -175,6 +184,9 @@
 				{
 					[self->_shares removeAllObjects];
 				}
+
+				self.allowedRoles = allowedRoles;
+				self.allowedPermissionActions = allowedPermissionActions;
 			}];
 		}
 

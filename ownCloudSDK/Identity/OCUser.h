@@ -20,6 +20,7 @@
 #import "OCFeatureAvailability.h"
 
 @class GAUser;
+@class GAIdentity;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -56,9 +57,12 @@ typedef NS_ENUM(NSInteger, OCUserType) {
 @property(nullable,readonly) OCUniqueUserIdentifier uniqueIdentifier; //!< Unique SDK internal identifier for the user
 @property(nullable,readonly) NSString *localizedInitials; //!< Returns localized initials for user
 
+@property(readonly,nonatomic,nullable) GAIdentity *gaIdentity;
+
 + (nullable NSString *)localizedInitialsForName:(NSString *)name;
 
 + (instancetype)userWithGraphUser:(GAUser *)user;
++ (instancetype)userWithGraphIdentity:(GAIdentity *)identity;
 
 + (instancetype)userWithUserName:(nullable NSString *)userName displayName:(nullable NSString *)displayName;
 + (instancetype)userWithUserName:(nullable NSString *)userName displayName:(nullable NSString *)displayName isRemote:(BOOL)isRemote;

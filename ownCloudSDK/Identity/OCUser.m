@@ -20,6 +20,7 @@
 #import "OCMacros.h"
 #import "OCLogger.h"
 #import "GAUser.h"
+#import "GAIdentity.h"
 
 @implementation OCUser
 
@@ -52,27 +53,58 @@
 	return (user);
 }
 
-+ (instancetype)userWithGraphUser:(GAUser *)gaUser
++ (instancetype)userWithGraphDisplayname:(NSString *)displayName identifier:(NSString *)identifier userType:(NSString *)userType
 {
 	OCUser *user = [OCUser new];
 
-	user.displayName = gaUser.displayName;
-	user.identifier = gaUser.identifier;
+	user.displayName = displayName;
+	user.identifier = identifier;
 
-	if ([gaUser.userType isEqual:@"Member"])
+	if ([userType isEqual:@"Member"])
 	{
 		user.type = OCUserTypeMember;
 	}
-	if ([gaUser.userType isEqual:@"Guest"])
+	if ([userType isEqual:@"Guest"])
 	{
 		user.type = OCUserTypeGuest;
 	}
-	if ([gaUser.userType isEqual:@"Federated"])
+	if ([userType isEqual:@"Federated"])
 	{
 		user.type = OCUserTypeFederated;
 	}
 
 	return (user);
+}
+
++ (instancetype)userWithGraphUser:(GAUser *)gaUser
+{
+	return ([self userWithGraphDisplayname:gaUser.displayName identifier:gaUser.identifier userType:gaUser.userType]);
+}
+
++ (instancetype)userWithGraphIdentity:(GAIdentity *)gaIdentity
+{
+	return ([self userWithGraphDisplayname:([gaIdentity.displayName isEqual:@""] ? nil : gaIdentity.displayName) identifier:gaIdentity.identifier userType:gaIdentity.libreGraphUserType]);
+}
+
+- (GAIdentity *)gaIdentity
+{
+	GAIdentity *identity = [GAIdentity new];
+	identity.identifier = self.identifier;
+	identity.displayName = self.displayName;
+	switch (self.type) {
+		case OCUserTypeMember:
+			identity.libreGraphUserType = @"Member";
+		break;
+		case OCUserTypeGuest:
+			identity.libreGraphUserType = @"Guest";
+		break;
+		case OCUserTypeFederated:
+			identity.libreGraphUserType = @"Federated";
+		break;
+		case OCUserTypeUnknown: break;
+	}
+
+	return (identity);
 }
 
 - (NSRange)_atRemoteRange

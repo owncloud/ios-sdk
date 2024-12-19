@@ -49,3 +49,12 @@ OCShareRoleType OCShareRoleTypeEditor = @"editor";
 OCShareRoleType OCShareRoleTypeContributor = @"contributor";
 OCShareRoleType OCShareRoleTypeManager = @"manager";
 OCShareRoleType OCShareRoleTypeCustom = @"custom";
+
+// as per https://github.com/owncloud/web/blob/6983ef727ea25430d57c7625ec53f0b249132246/packages/web-client/src/graph/drives/drives.ts#L9
+OCShareRoleID OCShareRoleIDManagerV1 = @"manager"; // v1 role id
+OCShareRoleID OCShareRoleIDViewerV1 = @"viewer"; // v1 role id
+OCShareRoleID OCShareRoleIDEditorV1 = @"editor"; // v1 role id
+
+OCShareRoleID OCShareRoleIDManager = @"312c0871-5ef7-4b3a-85b6-0e4074c64049"; // v2 role id
+OCShareRoleID OCShareRoleIDViewer = @"a8d5fe5e-96e3-418d-825b-534dbdf22b99"; // v2 role id
+OCShareRoleID OCShareRoleIDEditor = @"58c63c02-1d89-4572-916a-870abc5a1b7d"; // v2 role id

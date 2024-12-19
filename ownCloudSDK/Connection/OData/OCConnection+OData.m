@@ -19,60 +19,33 @@
 #import "OCConnection+OData.h"
 #import "GAODataError.h"
 #import "NSError+OCError.h"
+#import "OCODataDecoder.h"
 
 @implementation OCConnection (OData)
 
-- (void)decodeODataResponse:(OCHTTPResponse *)response error:(nullable NSError *)error entityClass:(nullable Class)entityClass completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler
+- (void)decodeODataResponse:(OCHTTPResponse *)response error:(nullable NSError *)error entityClass:(nullable Class)entityClass options:(nullable OCODataOptions)options completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler
 {
-	NSDictionary <NSString *, id> *jsonDictionary = nil;
-	NSError *returnError = error;
-	id returnResult = nil;
-
-	if (error == nil)
+	if (error != nil)
 	{
-		NSError *jsonError = nil;
-
-		if ((jsonDictionary = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
-		{
-			if (jsonDictionary[@"error"] != nil)
-			{
-				NSError *decodeError = nil;
-
-				GAODataError *dataError = [jsonDictionary objectForKey:@"error" ofClass:GAODataError.class inCollection:Nil required:NO context:nil error:&decodeError];
-				returnError = dataError.nativeError;
-			}
-			else if ((jsonDictionary[@"value"] != nil) && (entityClass != nil))
-			{
-				if ([jsonDictionary[@"value"] isKindOfClass:NSArray.class])
-				{
-					returnResult = [jsonDictionary objectForKey:@"value" ofClass:entityClass inCollection:NSArray.class required:NO context:nil error:&returnError];
-				}
-				else
-				{
-					returnResult = [jsonDictionary objectForKey:@"value" ofClass:entityClass inCollection:Nil required:NO context:nil error:&returnError];
-				}
-			}
-			else if (entityClass != nil)
-			{
-				returnResult = [NSDictionary object:jsonDictionary key:nil ofClass:entityClass inCollection:Nil required:YES context:nil error:&returnError];
-			}
-			else
-			{
-				returnError = OCError(OCErrorResponseUnknownFormat);
-			}
-		}
-		else if (jsonError != nil)
-		{
-			returnError = jsonError;
-		}
+		completionHandler(error, nil);
+		return;
 	}
 
-	OCLogDebug(@"OData response: returnResult=%@, error=%@, json: %@", returnResult, returnError, jsonDictionary);
+	NSError *jsonError = nil;
+	NSDictionary <NSString *, id> *jsonDictionary = nil;
 
-	completionHandler(returnError, returnResult);
+	if ((jsonDictionary = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
+	{
+		OCODataResponse *decodedResponse = [OCODataDecoder decodeODataResponse:jsonDictionary entityClass:entityClass options:options];
+		completionHandler(decodedResponse.error, [(NSNumber *)options[OCODataOptionKeyReturnODataResponse] boolValue] ? decodedResponse : decodedResponse.result);
+	}
+	else
+	{
+		completionHandler(jsonError, nil);
+	}
 }
 
-- (NSProgress *)requestODataAtURL:(NSURL *)url requireSignals:(nullable NSSet<OCConnectionSignalID> *)requiredSignals selectEntityID:(nullable OCODataEntityID)selectEntityID selectProperties:(nullable NSArray<OCODataProperty> *)selectProperties filterString:(nullable OCODataFilterString)filterString parameters:(nullable NSDictionary<NSString *,NSString *> *)additionalParameters entityClass:(Class)entityClass completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler
+- (NSProgress *)requestODataAtURL:(NSURL *)url requireSignals:(nullable NSSet<OCConnectionSignalID> *)requiredSignals selectEntityID:(nullable OCODataEntityID)selectEntityID selectProperties:(nullable NSArray<OCODataProperty> *)selectProperties filterString:(nullable OCODataFilterString)filterString parameters:(nullable NSDictionary<NSString *,NSString *> *)additionalParameters entityClass:(Class)entityClass options:(nullable OCODataOptions)options completionHandler:(nonnull OCConnectionODataRequestCompletionHandler)completionHandler
 {
 	OCHTTPRequest *request;
 	NSProgress *progress = nil;
@@ -118,7 +91,7 @@
 	}
 
 	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
-		[self decodeODataResponse:response error:error entityClass:entityClass completionHandler:completionHandler];
+		[self decodeODataResponse:response error:error entityClass:entityClass options:options completionHandler:completionHandler];
 	}];
 
 	return (progress);
@@ -158,7 +131,7 @@
 	request.bodyData = postData;
 
 	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
-		[self decodeODataResponse:response error:error entityClass:((responseEntityClass != nil) ? responseEntityClass : object.class) completionHandler:completionHandler];
+		[self decodeODataResponse:response error:error entityClass:((responseEntityClass != nil) ? responseEntityClass : object.class) options:nil completionHandler:completionHandler];
 	}];
 
 	return (progress);
@@ -175,3 +148,5 @@
 }
 
 @end
+
+OCODataOptionKey OCODataOptionKeyReturnODataResponse = @"returnODataResponse";

@@ -242,6 +242,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCShare+OCDataItem.h>
 #import <ownCloudSDK/OCShareRole.h>
 #import <ownCloudSDK/OCShareRole+OCDataItem.h>
+#import <ownCloudSDK/OCSharePermission.h>
 #import <ownCloudSDK/OCUser.h>
 #import <ownCloudSDK/OCGroup.h>
 #import <ownCloudSDK/OCIdentity.h>
@@ -361,3 +362,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCStatistic.h>
 
 #import <ownCloudSDK/OCSignal.h>
+
+#import <ownCloudSDK/GAUnifiedRolePermission.h>
+#import <ownCloudSDK/GAUnifiedRoleDefinition.h>
+#import <ownCloudSDK/GAQuota.h>
+#import <ownCloudSDK/GASharePointIdentitySet.h>

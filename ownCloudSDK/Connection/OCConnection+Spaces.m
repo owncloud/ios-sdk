@@ -62,7 +62,7 @@
 	}
 
 	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
-		[self decodeODataResponse:response error:error entityClass:nil completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+		[self decodeODataResponse:response error:error entityClass:nil options:nil completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
 			completionHandler(error);
 		}];
 	}];
@@ -89,7 +89,7 @@
 	[request setBodyData:[@"{}" dataUsingEncoding:NSUTF8StringEncoding]]; // "This request needs an empty body (–data-raw ‘{}’) to fulfil the standard libregraph specification even when the body is not needed."
 
 	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
-		[self decodeODataResponse:response error:error entityClass:nil completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+		[self decodeODataResponse:response error:error entityClass:nil options:nil completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
 			completionHandler(error);
 		}];
 	}];

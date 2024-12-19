@@ -29,11 +29,10 @@
 	return (instance);
 }
 
-// occgen: struct serialization
+// occgen: struct serialization {"locked":true}
 - (nullable GAGraphStruct)encodeToGraphStructWithContext:(nullable GAGraphContext *)context error:(NSError * _Nullable * _Nullable)outError
 {
-	GA_ENC_INIT
-	GA_ENC_RETURN
+	return ([NSMutableDictionary new]);
 }
 
 // occgen: type native deserialization
