@@ -38,6 +38,7 @@
 #import "NSString+OCPath.h"
 #import "NSURL+OCPrivateLink.h"
 #import "NSError+OCNetworkFailure.h"
+#import "OCConnection+GraphAPI.h"
 
 @interface OCSharingResponseStatus : NSObject <OCXMLObjectCreation>
 
@@ -170,6 +171,16 @@
 
 - (nullable NSProgress *)retrieveSharesWithScope:(OCShareScope)scope forItem:(nullable OCItem *)item options:(nullable NSDictionary *)options completionHandler:(OCConnectionShareRetrievalCompletionHandler)completionHandler
 {
+	if (self.useDriveAPI)
+	{
+		if ((item != nil) && ((scope == OCShareScopeItem) || (scope == OCShareScopeItemWithReshares)))
+		{
+			return [self retrievePermissionsForDriveWithID:item.driveID item:item completionHandler:^(NSError * _Nullable error, NSArray<OCShareActionID> * _Nullable allowedPermissionActions, NSArray<OCShareRole *> * _Nullable roles, NSArray<OCShare *> * _Nullable shares) {
+				completionHandler(error, allowedPermissionActions, roles, shares);
+			}];
+		}
+	}
+
 	OCHTTPRequest *request;
 	NSProgress *progress = nil;
 	NSURL *url = [self URLForEndpoint:OCConnectionEndpointIDShares options:nil];
@@ -236,7 +247,7 @@
 
 				if (completionHandler != nil)
 				{
-					completionHandler(OCError(OCErrorInsufficientParameters), nil);
+					completionHandler(OCError(OCErrorInsufficientParameters), nil, nil, nil);
 				}
 
 				return (nil);
@@ -316,7 +327,7 @@
 			}];
 		}
 
-		completionHandler(error, (error == nil) ? shares : nil);
+		completionHandler(error, nil, nil, (error == nil) ? shares : nil);
 	}];
 
 	return (progress);
@@ -719,6 +730,23 @@
 {
 	OCHTTPRequest *request;
 	OCProgress *requestProgress = nil;
+	NSURL *url;
+	SEL resultHandlerAction;
+
+	if (self.useDriveAPI)
+	{
+		// via https://owncloud.dev/apis/http/graph/permissions/#deleting-permission-delete-drivesdrive-iditemsitem-idpermissionsperm-id
+		url = [self permissionsURLForDriveWithID:share.itemLocation.driveID fileID:share.itemFileID permissionID:share.identifier];
+		resultHandlerAction = @selector(_handleDeletePermissionResult:error:);
+	}
+	else
+	{
+		url = [[self URLForEndpoint:OCConnectionEndpointIDShares options:@{
+			OCConnectionOptionDriveID : OCDriveIDWrap(share.itemLocation.driveID)
+		}] URLByAppendingPathComponent:share.identifier];
+
+		resultHandlerAction = @selector(_handleDeleteShareResult:error:);
+	}
 
 	if (share.type == OCShareTypeRemote)
 	{
@@ -736,14 +764,12 @@
 		return (nil);
 	}
 
-	request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:@{
-		OCConnectionOptionDriveID : OCDriveIDWrap(share.itemLocation.driveID)
-	}] URLByAppendingPathComponent:share.identifier]];
+	request = [OCHTTPRequest requestWithURL:url];
 	request.method = OCHTTPMethodDELETE;
 	request.requiredSignals = self.propFindSignals;
 	request.forceCertificateDecisionDelegation = YES;
 
-	request.resultHandlerAction = @selector(_handleDeleteShareResult:error:);
+	request.resultHandlerAction = resultHandlerAction;
 	request.eventTarget = eventTarget;
 
 	[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
@@ -796,6 +822,49 @@
 			}];
 
 			event.error = error;
+		}
+	}
+
+	if (event != nil)
+	{
+		[request.eventTarget handleEvent:event sender:self];
+	}
+}
+
+- (void)_handleDeletePermissionResult:(OCHTTPRequest *)request error:(NSError *)error
+{
+	OCEvent *event;
+
+	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeDeleteShare uuid:request.identifier attributes:nil]) != nil)
+	{
+		if (error.isNetworkFailureError)
+		{
+			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalizedString(@"Sharing requires an active connection.",nil), error);
+		}
+		else if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
+		{
+			event.error = request.error;
+		}
+		else
+		{
+			switch (request.httpResponse.status.code)
+			{
+				case OCHTTPStatusCodeCONTINUE:
+				case OCHTTPStatusCodeOK:
+				case OCHTTPStatusCodeNO_CONTENT:
+					// Successful
+				break;
+
+				case OCHTTPStatusCodeNOT_FOUND:
+					// Share couldn't be deleted
+					event.error = OCError(OCErrorShareNotFound);
+				break;
+
+				default:
+					// Unknown error
+					event.error = request.httpResponse.status.error;
+				break;
+			}
 		}
 	}
 

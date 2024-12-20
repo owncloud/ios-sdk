@@ -34,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable id)objectForKey:(NSString *)key ofClass:(Class)class inCollection:(nullable Class)collectionClass required:(BOOL)required context:(nullable GAGraphContext *)context error:(NSError * _Nullable * _Nullable)outError;
 
-+ (nullable id)object:(id)inObject key:(NSString *)key ofClass:(Class)class inCollection:(nullable Class)collectionClass required:(BOOL)required context:(nullable GAGraphContext *)context error:(NSError * _Nullable * _Nullable)outError;
++ (nullable id)object:(id)inObject key:(nullable NSString *)key ofClass:(Class)class inCollection:(nullable Class)collectionClass required:(BOOL)required context:(nullable GAGraphContext *)context error:(NSError * _Nullable * _Nullable)outError;
 
 @end
 

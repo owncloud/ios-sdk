@@ -34,6 +34,11 @@
 
 - (nullable NSProgress *)retrieveAvatarForUser:(OCUser *)user existingETag:(nullable OCFileETag)eTag withSize:(CGSize)size completionHandler:(void(^)(NSError * _Nullable error, BOOL unchanged, OCAvatar * _Nullable avatar))completionHandler
 {
+	if (user.userName == nil) {
+		completionHandler(OCError(OCErrorInvalidParameter), NO, nil);
+		return(nil);
+	}
+
 	OCHTTPRequest *request;
 	NSProgress *progress = nil;
 	NSURL *avatarURL = [[[self URLForEndpoint:OCConnectionEndpointIDAvatars options:nil] URLByAppendingPathComponent:user.userName] URLByAppendingPathComponent:[@((NSInteger)size.width).stringValue stringByAppendingString:@".png"] isDirectory:NO];
@@ -61,7 +66,7 @@
 			case OCHTTPStatusCodeOK: {
 				OCAvatar *avatar = [[OCAvatar alloc] init];
 
-				avatar.userIdentifier = user.userIdentifier;
+				avatar.uniqueUserIdentifier = user.uniqueIdentifier;
 				avatar.eTag = response.headerFields[OCHTTPHeaderFieldNameETag];
 				avatar.mimeType = response.contentType;
 				avatar.data = response.bodyData;
