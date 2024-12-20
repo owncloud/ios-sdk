@@ -96,20 +96,8 @@
 	return (OCSharePermissionDriveRoleNone);
 }
 
-- (nullable NSString *)localizedRoleNameWithRoles:(nullable NSArray<GAUnifiedRoleDefinition *> *)roleDefinitions
+- (nullable NSString *)localizedDriveRoleName
 {
-	for (GAUnifiedRoleDefinition *roleDefinition in roleDefinitions)
-	{
-		if ([roleDefinition.identifier isEqual:_roleID] && (roleDefinition.displayName != nil)) {
-			return (roleDefinition.displayName);
-		}
-	}
-
-	if ([self.role.identifier isEqual:self.roleID])
-	{
-		return (self.role.localizedName);
-	}
-
 	switch (self.driveRole)
 	{
 		case OCSharePermissionDriveRoleManager:
@@ -129,6 +117,23 @@
 			return (nil);
 		break;
 	}
+}
+
+- (nullable NSString *)localizedRoleNameWithRoles:(nullable NSArray<GAUnifiedRoleDefinition *> *)roleDefinitions
+{
+	for (GAUnifiedRoleDefinition *roleDefinition in roleDefinitions)
+	{
+		if ([roleDefinition.identifier isEqual:_roleID] && (roleDefinition.displayName != nil)) {
+			return (roleDefinition.displayName);
+		}
+	}
+
+	if ([self.role.identifier isEqual:self.roleID])
+	{
+		return (self.role.localizedName);
+	}
+
+	return (self.localizedDriveRoleName);
 }
 
 // MARK: - permission -> Legacy mask conversion
