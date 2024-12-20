@@ -18,6 +18,7 @@
 
 #import "OCCodeGenerator.h"
 #import "OCCodeFileSegment.h"
+#import "NSString+GeneratorTools.h"
 
 @implementation OCCodeGenerator
 
@@ -34,6 +35,11 @@
 	}
 
 	return (self);
+}
+
+- (NSArray<OCSchema *> *)allSchemas
+{
+	return (_schemaByPath.allValues);
 }
 
 - (void)addSchema:(OCSchema *)schema
@@ -90,10 +96,23 @@
 		}
 	}
 
+	if ([property.name hasPrefix:@"@"])
+	{
+		NSRange dotRange;
+
+		NSString *name = [property.name substringFromIndex:1];
+
+		while ((dotRange = [name rangeOfString:@"."]).location != NSNotFound) {
+			name = [[name substringToIndex:dotRange.location] stringByAppendingString:[name substringFromIndex:dotRange.location+1].withCapitalizedFirstChar];
+		};
+
+		return (name);
+	}
+
 	return (property.name);
 }
 
-- (OCCodeNativeType)nativeTypeForRAWType:(OCCodeRawType)rawType rawFormat:(OCCodeRawFormat)rawFormat rawItemType:(OCCodeRawType)rawItemType asReference:(BOOL)asReference inSegment:(nullable OCCodeFileSegment *)fileSegment
+- (OCCodeNativeType)nativeTypeForRAWType:(OCCodeRawType)rawType rawFormat:(OCCodeRawFormat)rawFormat rawItemType:(OCCodeRawType)rawItemType asReference:(BOOL)asReference forProperty:(nullable OCSchemaProperty *)property inSegment:(nullable OCCodeFileSegment *)fileSegment
 {
 	OCCodeNativeType nativeType = nil;
 	BOOL dontAddPrefix = NO;
@@ -105,8 +124,8 @@
 
 	if ((nativeType == nil) && (rawItemType != nil))
 	{
-		nativeType = [self collectionTypeFor:[self nativeTypeForRAWType:rawType rawFormat:nil rawItemType:nil asReference:NO inSegment:fileSegment]
-					itemType:[self nativeTypeForRAWType:rawItemType rawFormat:nil rawItemType:nil asReference:NO inSegment:fileSegment]
+		nativeType = [self collectionTypeFor:[self nativeTypeForRAWType:rawType rawFormat:nil rawItemType:nil asReference:NO forProperty:property inSegment:fileSegment]
+					itemType:[self nativeTypeForRAWType:rawItemType rawFormat:nil rawItemType:nil asReference:NO forProperty:property inSegment:fileSegment]
 					asReference:asReference
 					inSegment:fileSegment];
 
@@ -156,7 +175,7 @@
 
 	if (self.nativeTypesUseCamelCase)
 	{
-		nativeType = [[[nativeType substringToIndex:1] uppercaseString] stringByAppendingString:[nativeType substringFromIndex:1]];
+		nativeType = nativeType.withCapitalizedFirstChar;
 	}
 
 	if ((self.nativeTypesPrefix != nil) && !dontAddPrefix)
@@ -190,7 +209,7 @@
 	{
 		OCCodeNativeType pureNativeType = nil;
 
-		pureNativeType = [self nativeTypeForRAWType:property.type rawFormat:property.format rawItemType:property.itemType asReference:asReference inSegment:fileSegment];
+		pureNativeType = [self nativeTypeForRAWType:property.type rawFormat:property.format rawItemType:property.itemType asReference:asReference forProperty:property inSegment:fileSegment];
 
 		if (nativeType == nil)
 		{
@@ -208,14 +227,14 @@
 - (OCCodeNativeType)rawTypeForSchemaName:(NSString *)schemaName
 {
 	schemaName = [schemaName stringByReplacingOccurrencesOfString:@"." withString:@""];
-	schemaName = [[[schemaName substringToIndex:1] uppercaseString] stringByAppendingString:[schemaName substringFromIndex:1]];
+	schemaName = schemaName.withCapitalizedFirstChar;
 
 	return (schemaName);
 }
 
 - (OCCodeNativeType)nativeTypeNameForSchema:(OCSchema *)schema inSegment:(nullable OCCodeFileSegment *)fileSegment
 {
-	return ([self nativeTypeForRAWType:[self rawTypeForSchemaName:schema.name] rawFormat:nil rawItemType:nil asReference:NO inSegment:fileSegment]);
+	return ([self nativeTypeForRAWType:[self rawTypeForSchemaName:schema.name] rawFormat:nil rawItemType:nil asReference:NO forProperty:nil inSegment:fileSegment]);
 }
 
 - (BOOL)isGeneratedType:(OCCodeNativeType)type inSegment:(nullable OCCodeFileSegment *)fileSegment
@@ -243,7 +262,7 @@
 - (void)generate
 {
 	// Generate content
-	for (OCSchema *schema in _schemaByPath.allValues)
+	for (OCSchema *schema in self.allSchemas)
 	{
 		[self generateForSchema:schema];
 	}

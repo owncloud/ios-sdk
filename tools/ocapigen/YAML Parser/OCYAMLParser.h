@@ -29,6 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)parse;
 
 - (OCYAMLNode *)nodeForPath:(OCYAMLPath)path;
+- (OCYAMLNode *)nodeForReference:(OCYAMLReference)reference;
 
 @end
 
