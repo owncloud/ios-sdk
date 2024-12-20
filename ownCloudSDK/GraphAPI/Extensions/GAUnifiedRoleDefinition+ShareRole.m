@@ -32,6 +32,8 @@
 		role.localizedName = self.displayName;
 		role.localizedDescription = self.desc;
 
+		role.weight = self.libreGraphWeight;
+
 		// TODO: self.rolePermissions[0].allowedResourceActions -> integration into OCShareRolef
 
 		_role = role;
