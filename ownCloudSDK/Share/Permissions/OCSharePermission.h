@@ -51,6 +51,7 @@ typedef NS_ENUM(NSInteger, OCSharePermissionDriveRole) {
 
 // MARK: - ocis space properties
 @property(readonly,nonatomic) OCSharePermissionDriveRole driveRole; //!< For ocis spaces, returns the role - or OCSharePermissionDriveRoleNone if no role is provided
+@property(readonly,strong,nullable,nonatomic) NSString *localizedDriveRoleName; //!< For ocis spaces, returns a localized name for the drive role, ignoring actual roles. Returns nil for non-driverole roles
 - (nullable NSString *)localizedRoleNameWithRoles:(nullable NSArray<GAUnifiedRoleDefinition *> *)roleDefinitions; //!< For ocis spaces, returns a textual representation of .driveRole - or the name of the matching role definition
 
 // MARK: - OC10 properties

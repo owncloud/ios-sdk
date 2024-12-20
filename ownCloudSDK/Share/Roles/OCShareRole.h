@@ -37,6 +37,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(assign) OCSharePermissionsMask customizablePermissions; //!< Mask of permissions the user is allowed to customize
 @property(assign) OCLocationType locations; //!< Mask of OCLocationTypes this role can be used with
 
+@property(strong,nullable) NSNumber *weight; //!< Weight for ordering
+
 @property(strong) OCSymbolName symbolName;
 @property(strong) NSString *localizedName;
 @property(strong) NSString *localizedDescription;
