@@ -54,13 +54,16 @@
 	return self.customDecoder(value, outError);
 }
 
-+ (nullable OCODataResponse *)decodeODataResponse:(id)jsonObj entityClass:(nullable Class)entityClass options:(nullable OCODataOptions)options;
++ (nullable OCODataResponse *)decodeODataResponse:(id)jsonObj entityClass:(nullable Class)entityClass options:(nullable OCODataOptions)options
 {
 	NSMutableDictionary<OCODataLibreGraphID, id> *libreGraphObjects = nil;
 	NSError *returnError = nil;
 	id returnResult = nil;
 	NSDictionary<NSString *, id> *jsonDictionary = OCTypedCast(jsonObj, NSDictionary);
 	NSArray *jsonArray = OCTypedCast(jsonObj, NSArray);
+	NSString *valueKey = options[OCODataOptionKeyValueKey];
+
+	if (valueKey == nil) { valueKey = @"value"; }
 
 	if (jsonDictionary != nil)
 	{
@@ -71,18 +74,18 @@
 			GAODataError *dataError = [jsonDictionary objectForKey:@"error" ofClass:GAODataError.class inCollection:Nil required:NO context:nil error:&decodeError];
 			returnError = dataError.nativeError;
 		}
-		else if ((jsonDictionary[@"value"] != nil) && (entityClass != nil))
+		else if ((jsonDictionary[valueKey] != nil) && (entityClass != nil))
 		{
-			if ([jsonDictionary[@"value"] isKindOfClass:NSArray.class])
+			if ([jsonDictionary[valueKey] isKindOfClass:NSArray.class])
 			{
-				returnResult = [jsonDictionary objectForKey:@"value" ofClass:entityClass inCollection:NSArray.class required:NO context:nil error:&returnError];
+				returnResult = [jsonDictionary objectForKey:valueKey ofClass:entityClass inCollection:NSArray.class required:NO context:nil error:&returnError];
 			}
 			else
 			{
-				returnResult = [jsonDictionary objectForKey:@"value" ofClass:entityClass inCollection:Nil required:NO context:nil error:&returnError];
+				returnResult = [jsonDictionary objectForKey:valueKey ofClass:entityClass inCollection:Nil required:NO context:nil error:&returnError];
 			}
 		}
-		else if (entityClass != nil)
+		else if ((entityClass != nil) && (options[OCODataOptionKeyValueKey] == nil)) // If OCODataOptionKeyValueKey is set, do NOT fall back to jsonDictionary root in attempt to decode to the entity class
 		{
 			returnResult = [NSDictionary object:jsonDictionary key:nil ofClass:entityClass inCollection:Nil required:YES context:nil error:&returnError];
 		}
