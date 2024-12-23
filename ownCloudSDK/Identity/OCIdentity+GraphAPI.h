@@ -21,6 +21,7 @@
 @class GASharePointIdentitySet;
 @class GAIdentitySet;
 @class GAIdentity;
+@class GADriveRecipient;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -31,6 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(readonly,nullable,nonatomic) GAIdentitySet *gaIdentitySet;
 @property(readonly,nullable,nonatomic) GAIdentity *gaIdentity;
+@property(readonly,nullable,nonatomic) GADriveRecipient *gaDriveRecipient;
 
 @end
 

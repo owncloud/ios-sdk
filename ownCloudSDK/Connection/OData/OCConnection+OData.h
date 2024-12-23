@@ -38,5 +38,6 @@ typedef void(^OCConnectionODataRequestCompletionHandler)(NSError * _Nullable err
 @end
 
 extern OCODataOptionKey OCODataOptionKeyReturnODataResponse; //!< Return the complete OCODataResponse object as response object
+extern OCODataOptionKey OCODataOptionKeyValueKey; //!< Require that the entity(s) are stored under the provided key in the response. Returns nil if the key does not exist.
 
 NS_ASSUME_NONNULL_END

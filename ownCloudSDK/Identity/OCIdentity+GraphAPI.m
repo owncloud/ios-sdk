@@ -20,6 +20,7 @@
 #import "GASharePointIdentitySet.h"
 #import "GAIdentitySet.h"
 #import "GAIdentity.h"
+#import "GADriveRecipient.h"
 
 @implementation OCIdentity (GraphAPI)
 
@@ -63,11 +64,39 @@
 
 - (GAIdentity *)gaIdentity
 {
-	return (self.user != nil) ?
-			self.user.gaIdentity :
-		((self.group != nil) ?
-			self.group.gaIdentity :
-			nil);
+	switch (self.type)
+	{
+		case OCIdentityTypeUser:
+			return (self.user.gaIdentity);
+		break;
+
+		case OCIdentityTypeGroup:
+			return (self.group.gaIdentity);
+		break;
+
+		default:
+			return (nil);
+		break;
+	}
+}
+
+- (GADriveRecipient *)gaDriveRecipient
+{
+	GADriveRecipient *driveRecipient = [GADriveRecipient new];
+	driveRecipient.objectId = self.identifier;
+
+	switch (self.type)
+	{
+		case OCIdentityTypeUser:
+			driveRecipient.libreGraphRecipientType = @"user";
+		break;
+
+		case OCIdentityTypeGroup:
+			driveRecipient.libreGraphRecipientType = @"group";
+		break;
+	}
+
+	return (driveRecipient);
 }
 
 @end

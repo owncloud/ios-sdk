@@ -14,9 +14,10 @@
  *
  */
 
-// occgen: includes
+// occgen: includes {"locked":true}
 #import <Foundation/Foundation.h>
 #import "GAGraphObject.h"
+#import "OCShareTypes.h"
 
 // occgen: forward declarations
 @class GADriveRecipient;
@@ -25,10 +26,10 @@
 NS_ASSUME_NONNULL_BEGIN
 @interface GADriveItemInvite : NSObject <GAGraphObject, NSSecureCoding>
 
-// occgen: type properties
+// occgen: type properties { "customPropertyTypes" : { "roles" : "NSArray<OCShareRoleID> *", "libreGraphPermissionsActions" : "NSArray<OCShareActionID> *" }}
 @property(strong, nullable) NSArray<GADriveRecipient *> *recipients; //!< A collection of recipients who will receive access and the sharing invitation. Currently, only internal users or groups are supported.
-@property(strong, nullable) NSArray<NSString *> *roles; //!< Specifies the roles that are to be granted to the recipients of the sharing invitation.
-@property(strong, nullable) NSArray<NSString *> *libreGraphPermissionsActions; //!< Specifies the actions that are to be granted to the recipients of the sharing invitation, in effect creating a custom role.
+@property(strong, nullable) NSArray<OCShareRoleID> *roles; //!< Specifies the roles that are to be granted to the recipients of the sharing invitation.
+@property(strong, nullable) NSArray<OCShareActionID> *libreGraphPermissionsActions; //!< Specifies the actions that are to be granted to the recipients of the sharing invitation, in effect creating a custom role.
 @property(strong, nullable) NSDate *expirationDateTime; //!< [string:date-time] Specifies the dateTime after which the permission expires.
 
 // occgen: type protected {"locked":true}
