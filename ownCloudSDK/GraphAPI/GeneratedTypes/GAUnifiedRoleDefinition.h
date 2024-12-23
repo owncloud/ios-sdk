@@ -14,9 +14,10 @@
  *
  */
 
-// occgen: includes
+// occgen: includes {"locked":true}
 #import <Foundation/Foundation.h>
 #import "GAGraphObject.h"
+#import "OCShareTypes.h"
 
 // occgen: forward declarations {"locked":true}
 @class GAUnifiedRolePermission;
@@ -29,10 +30,10 @@ NS_ASSUME_NONNULL_BEGIN
 	OCShareRole *_role;
 }
 
-// occgen: type properties
+// occgen: type properties { "customPropertyTypes" : { "identifier" : "OCShareRoleID" }}
 @property(strong, nullable) NSString *desc; //!< The description for the unifiedRoleDefinition.
 @property(strong, nullable) NSString *displayName; //!< The display name for the unifiedRoleDefinition. Required. Supports $filter (`eq`, `in`).
-@property(strong, nullable) NSString *identifier; //!< The unique identifier for the role definition. Key, not nullable, Read-only. Inherited from entity. Supports $filter (`eq`, `in`).
+@property(strong, nullable) OCShareRoleID identifier; //!< The unique identifier for the role definition. Key, not nullable, Read-only. Inherited from entity. Supports $filter (`eq`, `in`).
 @property(strong, nullable) NSArray<GAUnifiedRolePermission *> *rolePermissions; //!< List of permissions included in the role.
 @property(strong, nullable) NSNumber *libreGraphWeight; //!< [integer] |
 

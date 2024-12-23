@@ -153,7 +153,8 @@
 			[[OCODataDecoder alloc] initWithLibreGraphID:@"@libre.graph.permissions.actions.allowedValues" entityClass:Nil customDecoder:^id(id  _Nonnull value, NSError * _Nullable __autoreleasing * _Nullable outError) { return (value); }],
 			[[OCODataDecoder alloc] initWithLibreGraphID:@"@libre.graph.permissions.roles.allowedValues" entityClass:GAUnifiedRoleDefinition.class customDecoder:nil],
 		],
-		OCODataOptionKeyReturnODataResponse : @(YES)
+		OCODataOptionKeyReturnODataResponse: @(YES),
+		OCODataOptionKeyValueKey: @"value" // make sure that a response without any permissions in it (which may contain actions and roles, but no permissions) does not return a misinterpreted "nil" instance of GAPermission
 	} completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
 		OCODataResponse *oDataResponse = OCTypedCast(response, OCODataResponse);
 

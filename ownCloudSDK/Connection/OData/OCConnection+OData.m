@@ -150,3 +150,4 @@
 @end
 
 OCODataOptionKey OCODataOptionKeyReturnODataResponse = @"returnODataResponse";
+OCODataOptionKey OCODataOptionKeyValueKey = @"valueKey";
