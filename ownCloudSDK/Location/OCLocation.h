@@ -47,6 +47,8 @@ typedef NS_OPTIONS(NSInteger, OCLocationType) {
 @property(strong,nullable,nonatomic) OCDriveID driveID; //!< DriveID of the drive. A nil value indicates a legacy WebDAV endpoint path.
 @property(strong,nullable) OCPath path; //!< The path of the location inside the drive and account.
 
+@property(strong,nullable) OCFileID fileID; //!< File ID of the object at the location
+
 - (instancetype)initWithDriveID:(nullable OCDriveID)driveID path:(nullable OCPath)path;
 - (instancetype)initWithBookmarkUUID:(nullable OCBookmarkUUID)bookmarkUUID driveID:(nullable OCDriveID)driveID path:(nullable OCPath)path;
 

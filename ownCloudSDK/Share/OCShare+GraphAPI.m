@@ -17,6 +17,7 @@
  */
 
 #import "OCShare+GraphAPI.h"
+#import "OCShareRole+GraphAPI.h"
 #import "OCIdentity+GraphAPI.h"
 #import "OCSharePermission.h"
 #import "GASharingLink.h"
@@ -32,7 +33,7 @@
 	share.identifier = gaPermission.identifier;
 	share.itemLocation = (location != nil) ? location : item.location;
 	share.itemType = share.itemLocation.type;
-	share.itemFileID = (share.itemType == OCLocationTypeDrive) ? nil : item.fileID;
+	share.itemFileID = (share.itemType == OCLocationTypeDrive) ? nil : ((location.fileID != nil) ? location.fileID : item.fileID);
 	share.itemMIMEType = (share.itemType == OCLocationTypeDrive) ? nil : item.mimeType;
 
 	share.recipient = [OCIdentity identityFromGASharePointIdentitySet:gaPermission.grantedToV2];
@@ -43,6 +44,24 @@
 		share.url = gaPermission.link.webUrl;
 		share.name = gaPermission.link.libreGraphDisplayName;
 		share.type = OCShareTypeLink;
+		if (gaPermission.link.type != nil)
+		{
+			// Find role among ocis link share roles
+			for (OCShareRole *linkRole in OCShareRole.linkShareRoles)
+			{
+				if ([linkRole.identifier isEqual:gaPermission.link.type])
+				{
+					share.sharePermissions = @[ [[OCSharePermission alloc] initWithRole:linkRole] ];
+					break;
+				}
+			}
+
+			if (share.sharePermissions.count == 0)
+			{
+				// Fallback in case none of the standard link share roles fits
+				share.sharePermissions = @[ [[OCSharePermission alloc] initWithRoleID:gaPermission.link.type] ];
+			}
+		}
 	}
 
 	share.creationDate = gaPermission.createdDateTime;

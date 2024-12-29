@@ -38,7 +38,7 @@ typedef void(^OCRetrieveDriveListCompletionHandler)(NSError * _Nullable error, N
 #pragma mark - Permissions
 - (NSURL *)permissionsURLForDriveWithID:(OCDriveID)driveID fileID:(nullable OCFileID)fileID permissionID:(nullable OCShareID)shareID; //!< Returns the API URL for the provided driveID [+ fileID [+ shareID]]
 
-- (nullable NSProgress *)retrievePermissionsForDriveWithID:(OCDriveID)driveID item:(nullable OCItem *)item completionHandler:(OCConnectionShareRetrievalCompletionHandler)completionHandler; //!< Retrieves the permissions for a drive and returns them as OCShares. The original GAPermission objects remain available as OCShare.originGAPermission but should only be used for debugging.
+- (nullable NSProgress *)retrievePermissionsForLocation:(OCLocation *)location completionHandler:(OCConnectionShareRetrievalCompletionHandler)completionHandler; //!< Retrieves the permissions for a drive and returns them as OCShares. The original GAPermission objects remain available as OCShare.originGAPermission but should only be used for debugging. The passed location must contain a fileID when not querying a root path
 
 @end
 

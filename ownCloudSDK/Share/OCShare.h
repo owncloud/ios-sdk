@@ -25,6 +25,7 @@
 #import "GAPermission.h"
 
 @class OCSharePermission;
+@class OCShareRole;
 @class GAPermission;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -51,6 +52,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(assign,nonatomic) OCSharePermissionsMask permissions; //!< Mask of permissions set on the share
 @property(strong,nullable) NSArray<OCSharePermission *> *sharePermissions;
+@property(readonly,nullable,strong) OCShareRoleID firstRoleID; //!< Convenience accessor to return the first roleID from .sharePermissions
+@property(readonly,nullable,strong) OCShareRole *firstRole; //!< Convenience accessor to return the first role from .sharePermissions
 
 @property(nullable,strong) NSDate *creationDate; //!< Creation date of the share
 @property(nullable,strong) NSDate *expirationDate; //!< Expiration date of the share
