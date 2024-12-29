@@ -289,7 +289,7 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	__weak id <OCCoreDelegate> _delegate;
 
-	NSMutableArray<OCShareRole *> *_shareRoles;
+	NSMutableArray<OCShareRole *> *_legacyShareRoles;
 
 	NSNumber *_rootQuotaBytesRemaining;
 	NSNumber *_rootQuotaBytesUsed;
@@ -420,6 +420,8 @@ typedef id<NSObject> OCCoreItemTracking;
 + (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType;
 @end
 
+typedef void(^OCCoreShareRoleRetrievalHandler)(NSError * _Nullable error, NSArray<OCShareRole *> * _Nullable roles);
+
 @interface OCCore (Sharing)
 /**
  Creates a new share on the server.
@@ -465,8 +467,8 @@ typedef id<NSObject> OCCoreItemTracking;
 - (nullable NSProgress *)retrievePrivateLinkForItem:(OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable privateLink))completionHandler; //!< Returns the private link for the item
 - (nullable NSProgress *)retrieveItemForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item))completionHandler; //!< Returns the item for the private link
 
-- (nullable NSArray<OCShareRole *> *)availableShareRolesForType:(OCShareType)type location:(OCLocation *)location; //!< Returns the share roles available for this location and type. Returns nil if none are available.
-- (nullable OCShareRole *)matchingShareRoleForShare:(OCShare *)share; //!< Returns the share role matching the provided item and share's permissions and location. Returns nil if none matches.
+- (void)availableShareRolesForType:(OCShareType)shareType location:(OCLocation *)location completionHandler:(OCCoreShareRoleRetrievalHandler)completionHandler; //!< Returns the share roles available for this location and type. Returns nil if none are available.
+- (nullable OCShareRole *)matchingForShare:(OCShare *)share fromShareRoles:(nullable NSArray<OCShareRole *> *)roles; //!< Returns the share role matching the provided item and share's permissions and location. Returns nil if none matches.
 
 @end
 

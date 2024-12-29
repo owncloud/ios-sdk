@@ -121,6 +121,29 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 	return (OCSharePermissionsMaskNone);
 }
 
+- (OCShareRoleID)firstRoleID
+{
+	for (OCSharePermission *permission in _sharePermissions) {
+		if (permission.roleID != nil) {
+			return (permission.roleID);
+		}
+		if (permission.role.identifier != nil) {
+			return (permission.role.identifier);
+		}
+	}
+	return (nil);
+}
+
+- (OCShareRole *)firstRole
+{
+	for (OCSharePermission *permission in _sharePermissions) {
+		if (permission.role != nil) {
+			return (permission.role);
+		}
+	}
+	return (nil);
+}
+
 - (BOOL)protectedByPassword
 {
 	if ((_password != nil) && ![_password isEqual:@""])

@@ -85,9 +85,17 @@
 				returnResult = [jsonDictionary objectForKey:valueKey ofClass:entityClass inCollection:Nil required:NO context:nil error:&returnError];
 			}
 		}
-		else if ((entityClass != nil) && (options[OCODataOptionKeyValueKey] == nil)) // If OCODataOptionKeyValueKey is set, do NOT fall back to jsonDictionary root in attempt to decode to the entity class
+		else if (entityClass != nil)
 		{
-			returnResult = [NSDictionary object:jsonDictionary key:nil ofClass:entityClass inCollection:Nil required:YES context:nil error:&returnError];
+		 	// If OCODataOptionKeyValueKey is set, do NOT fall back to jsonDictionary root in attempt to decode to the entity class ..
+			if (options[OCODataOptionKeyValueKey] != nil)
+			{
+				returnResult = nil; // .. but return a nil value instead.
+			}
+			else
+			{
+				returnResult = [NSDictionary object:jsonDictionary key:nil ofClass:entityClass inCollection:Nil required:YES context:nil error:&returnError];
+			}
 		}
 		else
 		{

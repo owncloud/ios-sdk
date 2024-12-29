@@ -304,6 +304,11 @@
 		location.bookmarkUUID = [[NSUUID alloc] initWithUUIDString:self.bookmarkUUID];
 	}
 
+	if (self.fileID != nil)
+	{
+		location.fileID = self.fileID;
+	}
+
 	_location = location;
 
 	return (location);

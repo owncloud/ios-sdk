@@ -43,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong) NSString *localizedName;
 @property(strong) NSString *localizedDescription;
 
-- (instancetype)initWithType:(OCShareRoleType)type shareTypes:(OCShareTypesMask)shareTypes permissions:(OCSharePermissionsMask)permissions customizablePermissions:(OCSharePermissionsMask)customizablePermissions locations:(OCLocationType)locations symbolName:(OCSymbolName)symbolName localizedName:(NSString *)localizedName localizedDescription:(NSString *)localizedDescription;
+- (instancetype)initWithIdentifier:(nullable OCShareRoleID)identifier type:(OCShareRoleType)type shareTypes:(OCShareTypesMask)shareTypes permissions:(OCSharePermissionsMask)permissions customizablePermissions:(OCSharePermissionsMask)customizablePermissions locations:(OCLocationType)locations symbolName:(OCSymbolName)symbolName localizedName:(NSString *)localizedName localizedDescription:(NSString *)localizedDescription;
 
 @end
 
