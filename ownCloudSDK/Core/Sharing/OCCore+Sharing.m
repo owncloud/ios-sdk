@@ -29,6 +29,8 @@
 #import "NSArray+OCFiltering.h"
 #import "OCSharePermission.h"
 #import "OCMacros.h"
+#import "OCConnection+GraphAPI.h"
+#import "OCShareRole+GraphAPI.h"
 
 @implementation OCCore (Sharing)
 
@@ -305,7 +307,6 @@
 {
 	OCProgress *progress;
 
-
 	progress = [self.connection makeDecisionOnShare:share accept:accept resultTarget:[OCEventTarget eventTargetWithEphermalEventHandlerBlock:^(OCEvent * _Nonnull event, id  _Nonnull sender) {
 		if (event.error == nil)
 		{
@@ -360,7 +361,31 @@
 }
 
 #pragma mark - Roles
-- (nullable NSArray<OCShareRole *> *)availableShareRolesForType:(OCShareType)shareType location:(OCLocation *)location
+- (void)availableShareRolesForType:(OCShareType)shareType location:(OCLocation *)location completionHandler:(OCCoreShareRoleRetrievalHandler)completionHandler
+{
+	if (!self.useDrives) {
+		// Legacy roles
+		completionHandler(nil, [self availableLegacyShareRolesForType:shareType location:location]);
+		return;
+	}
+
+	if (shareType == OCShareTypeLink)
+	{
+		// ocis link share roles (hard-coded, can't be retrieved from server)
+		completionHandler(nil, [OCShareRole.linkShareRoles filteredArrayUsingBlock:^BOOL(OCShareRole * _Nonnull role, BOOL * _Nonnull stop) {
+			return ((role.locations & location.type) != 0); // Role supported for location
+		}]);
+	}
+	else
+	{
+		// Retrieve ocis share roles for users and groups
+		[self.connection retrievePermissionsForLocation:location completionHandler:^(NSError * _Nullable error, NSArray<OCShareActionID> * _Nullable allowedPermissionActions, NSArray<OCShareRole *> * _Nullable allowedRoles, NSArray<OCShare *> * _Nullable shares) {
+			completionHandler(error, allowedRoles);
+		}];
+	}
+}
+
+- (nullable NSArray<OCShareRole *> *)availableLegacyShareRolesForType:(OCShareType)shareType location:(OCLocation *)location
 {
 	NSArray<OCShareRole *> *roles = nil;
 	OCLocationType locationType = location.type;
@@ -372,98 +397,106 @@
 		return(nil);
 	}
 
-	@synchronized(_shareRoles)
+	@synchronized(_legacyShareRoles)
 	{
-		if (_shareRoles.count == 0)
+		if (_legacyShareRoles.count == 0)
 		{
 			// Roles as described in
 			// - https://github.com/owncloud/ocis/issues/4848#issuecomment-1283678879
 			// - https://github.com/owncloud/web/blob/master/packages/web-client/src/helpers/share/role.ts
-			[_shareRoles addObjectsFromArray:@[
+			[_legacyShareRoles addObjectsFromArray:@[
 				// # USERS & GROUPS
 				// ## Viewer
 				// - files, folders
-				[[OCShareRole alloc] initWithType:OCShareRoleTypeViewer
-						       shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
-						     permissions:OCSharePermissionsMaskRead|(resharingSupported ? OCSharePermissionsMaskShare : 0)
-					 customizablePermissions:OCSharePermissionsMaskNone
-						       locations:OCLocationTypeFile|OCLocationTypeFolder
-						      symbolName:@"eye.fill"
-						   localizedName:OCLocalizedString(@"Viewer",nil)
-					    localizedDescription:OCLocalizedString(resharingSupported ? @"Download, preview and share" : @"Download and preview", nil)],
+				[[OCShareRole alloc] initWithIdentifier:nil
+								   type:OCShareRoleTypeViewer
+							     shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
+							    permissions:OCSharePermissionsMaskRead|(resharingSupported ? OCSharePermissionsMaskShare : 0)
+						customizablePermissions:OCSharePermissionsMaskNone
+							      locations:OCLocationTypeFile|OCLocationTypeFolder
+							     symbolName:@"eye.fill"
+							  localizedName:OCLocalizedString(@"Viewer",nil)
+						   localizedDescription:OCLocalizedString(resharingSupported ? @"Download, preview and share" : @"Download and preview", nil)],
 
 				// - drives
-				[[OCShareRole alloc] initWithType:OCShareRoleTypeViewer
-						       shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
-						     permissions:OCSharePermissionsMaskRead
-					 customizablePermissions:OCSharePermissionsMaskNone
-						       locations:OCLocationTypeDrive
-						      symbolName:@"eye.fill"
-						   localizedName:OCLocalizedString(@"Viewer", nil)
-					    localizedDescription:OCLocalizedString(@"Download and preview", nil)],
+				[[OCShareRole alloc] initWithIdentifier:nil
+								   type:OCShareRoleTypeViewer
+							     shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
+							    permissions:OCSharePermissionsMaskRead
+						customizablePermissions:OCSharePermissionsMaskNone
+							      locations:OCLocationTypeDrive
+							     symbolName:@"eye.fill"
+							  localizedName:OCLocalizedString(@"Viewer", nil)
+						   localizedDescription:OCLocalizedString(@"Download and preview", nil)],
 
 				// ## Editor
 				// - files
-				[[OCShareRole alloc] initWithType:OCShareRoleTypeEditor
-						       shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
-						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|(resharingSupported ? OCSharePermissionsMaskShare : 0)
-					 customizablePermissions:OCSharePermissionsMaskNone
-						       locations:OCLocationTypeFile
-						      symbolName:@"pencil"
-						   localizedName:OCLocalizedString(@"Editor", nil)
-					    localizedDescription:OCLocalizedString(resharingSupported ? @"Edit, download, preview and share" : @"Edit, download and preview", nil)],
+				[[OCShareRole alloc] initWithIdentifier:nil
+								   type:OCShareRoleTypeEditor
+							     shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
+							    permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|(resharingSupported ? OCSharePermissionsMaskShare : 0)
+						customizablePermissions:OCSharePermissionsMaskNone
+							      locations:OCLocationTypeFile
+							     symbolName:@"pencil"
+							  localizedName:OCLocalizedString(@"Editor", nil)
+						   localizedDescription:OCLocalizedString(resharingSupported ? @"Edit, download, preview and share" : @"Edit, download and preview", nil)],
 
 				// - folders
-				[[OCShareRole alloc] initWithType:OCShareRoleTypeEditor
-						       shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
-						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete|(resharingSupported ? OCSharePermissionsMaskShare : 0)
-					 customizablePermissions:OCSharePermissionsMaskNone
-						       locations:OCLocationTypeFolder
-						      symbolName:@"pencil"
-						   localizedName:OCLocalizedString(@"Editor", nil)
-					    localizedDescription:OCLocalizedString(resharingSupported ? @"Upload, edit, delete, download, preview and share" : @"Upload, edit, delete, download and preview",nil)],
+				[[OCShareRole alloc] initWithIdentifier:nil
+								   type:OCShareRoleTypeEditor
+							     shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
+							    permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete|(resharingSupported ? OCSharePermissionsMaskShare : 0)
+						customizablePermissions:OCSharePermissionsMaskNone
+							      locations:OCLocationTypeFolder
+							     symbolName:@"pencil"
+							  localizedName:OCLocalizedString(@"Editor", nil)
+						   localizedDescription:OCLocalizedString(resharingSupported ? @"Upload, edit, delete, download, preview and share" : @"Upload, edit, delete, download and preview",nil)],
 
 				// - drives
-				[[OCShareRole alloc] initWithType:OCShareRoleTypeEditor
-						       shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
-						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete
-					 customizablePermissions:OCSharePermissionsMaskNone
-						       locations:OCLocationTypeDrive
-						      symbolName:@"pencil"
-						   localizedName:OCLocalizedString(@"Editor", nil)
-					    localizedDescription:OCLocalizedString(@"Upload, edit, delete, download and preview", nil)],
+				[[OCShareRole alloc] initWithIdentifier:nil
+								   type:OCShareRoleTypeEditor
+							     shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
+							    permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete
+						customizablePermissions:OCSharePermissionsMaskNone
+							      locations:OCLocationTypeDrive
+							     symbolName:@"pencil"
+							  localizedName:OCLocalizedString(@"Editor", nil)
+						   localizedDescription:OCLocalizedString(@"Upload, edit, delete, download and preview", nil)],
 
 				// ## Manager
 				// - drives
-				[[OCShareRole alloc] initWithType:OCShareRoleTypeManager
-						       shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
-						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete|(resharingSupported ? OCSharePermissionsMaskShare : 0)
-					 customizablePermissions:OCSharePermissionsMaskNone
-						       locations:OCLocationTypeDrive
-						      symbolName:@"person.fill"
-						   localizedName:OCLocalizedString(@"Manager", nil)
-					    localizedDescription:OCLocalizedString(resharingSupported ? @"Upload, edit, delete, download, preview and share" : @"Upload, edit, delete, download and preview", nil)],
+				[[OCShareRole alloc] initWithIdentifier:nil
+								   type:OCShareRoleTypeManager
+							     shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
+							    permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete|(resharingSupported ? OCSharePermissionsMaskShare : 0)
+						customizablePermissions:OCSharePermissionsMaskNone
+							      locations:OCLocationTypeDrive
+							     symbolName:@"person.fill"
+							  localizedName:OCLocalizedString(@"Manager", nil)
+						   localizedDescription:OCLocalizedString(resharingSupported ? @"Upload, edit, delete, download, preview and share" : @"Upload, edit, delete, download and preview", nil)],
 
 				// ## Custom
 				// - files
-				[[OCShareRole alloc] initWithType:OCShareRoleTypeCustom
-						       shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
-						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|(resharingSupported ? OCSharePermissionsMaskShare : 0)
-					 customizablePermissions:OCSharePermissionsMaskUpdate|(resharingSupported ? OCSharePermissionsMaskShare : 0)
-						       locations:OCLocationTypeFile
-						      symbolName:@"gearshape.fill"
-						   localizedName:OCLocalizedString(@"Custom", nil)
-					    localizedDescription:OCLocalizedString(@"Set detailed permissions", nil)],
+				[[OCShareRole alloc] initWithIdentifier:nil
+								   type:OCShareRoleTypeCustom
+							     shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
+							    permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|(resharingSupported ? OCSharePermissionsMaskShare : 0)
+						customizablePermissions:OCSharePermissionsMaskUpdate|(resharingSupported ? OCSharePermissionsMaskShare : 0)
+							      locations:OCLocationTypeFile
+							     symbolName:@"gearshape.fill"
+							  localizedName:OCLocalizedString(@"Custom", nil)
+						   localizedDescription:OCLocalizedString(@"Set detailed permissions", nil)],
 
 				// - folders, drives
-				[[OCShareRole alloc] initWithType:OCShareRoleTypeCustom
-						       shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
-						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete|(resharingSupported ? OCSharePermissionsMaskShare : 0)
-					 customizablePermissions:OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete|(resharingSupported ? OCSharePermissionsMaskShare : 0)
-						       locations:OCLocationTypeFolder|OCLocationTypeDrive
-						      symbolName:@"gearshape.fill"
-						   localizedName:OCLocalizedString(@"Custom", nil)
-					    localizedDescription:OCLocalizedString(@"Set detailed permissions", nil)],
+				[[OCShareRole alloc] initWithIdentifier:nil
+								   type:OCShareRoleTypeCustom
+							     shareTypes:OCShareTypesMaskUserShare|OCShareTypesMaskGroupShare
+							    permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete|(resharingSupported ? OCSharePermissionsMaskShare : 0)
+						customizablePermissions:OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete|(resharingSupported ? OCSharePermissionsMaskShare : 0)
+							      locations:OCLocationTypeFolder|OCLocationTypeDrive
+							     symbolName:@"gearshape.fill"
+							  localizedName:OCLocalizedString(@"Custom", nil)
+						   localizedDescription:OCLocalizedString(@"Set detailed permissions", nil)],
 			]];
 
 			// # LINKS
@@ -471,76 +504,82 @@
 			{
 				// ## Internal
 				// - files, folders
-				[_shareRoles addObjectsFromArray:@[
-					[[OCShareRole alloc] initWithType:OCShareRoleTypeInternal
-							       shareTypes:OCShareTypesMaskLink
-							     permissions:OCSharePermissionsMaskInternal
-						 customizablePermissions:OCSharePermissionsMaskNone
-							       locations:OCLocationTypeFile|OCLocationTypeFolder
-							      symbolName:@"person.fill"
-							   localizedName:OCLocalizedString(@"Invited persons", nil)
-						    localizedDescription:OCLocalizedString(@"Only invited persons have access. Login required.", nil)]
+				[_legacyShareRoles addObjectsFromArray:@[
+					[[OCShareRole alloc] initWithIdentifier:nil
+									   type:OCShareRoleTypeInternal
+								     shareTypes:OCShareTypesMaskLink
+								    permissions:OCSharePermissionsMaskInternal
+							customizablePermissions:OCSharePermissionsMaskNone
+								      locations:OCLocationTypeFile|OCLocationTypeFolder
+								     symbolName:@"person.fill"
+								  localizedName:OCLocalizedString(@"Invited persons", nil)
+							   localizedDescription:OCLocalizedString(@"Only invited persons have access. Login required.", nil)]
 				]];
 			}
 
-			[_shareRoles addObjectsFromArray:@[
+			[_legacyShareRoles addObjectsFromArray:@[
 				// ## Viewer
 				// - files, folders
-				[[OCShareRole alloc] initWithType:OCShareRoleTypeViewer
-						       shareTypes:OCShareTypesMaskLink
-						     permissions:OCSharePermissionsMaskRead
-					 customizablePermissions:OCSharePermissionsMaskNone
-						       locations:OCLocationTypeFile|OCLocationTypeFolder
-						      symbolName:@"eye.fill"
-						   localizedName:OCLocalizedString(@"Viewer", nil)
-					    localizedDescription:OCLocalizedString(@"Recipients can view and download contents.", nil)],
+				[[OCShareRole alloc] initWithIdentifier:nil
+								   type:OCShareRoleTypeViewer
+							     shareTypes:OCShareTypesMaskLink
+							    permissions:OCSharePermissionsMaskRead
+						customizablePermissions:OCSharePermissionsMaskNone
+							      locations:OCLocationTypeFile|OCLocationTypeFolder
+							     symbolName:@"eye.fill"
+							  localizedName:OCLocalizedString(@"Viewer", nil)
+						   localizedDescription:OCLocalizedString(@"Recipients can view and download contents.", nil)],
 
 				// ## Uploader
 				// - folders
-				[[OCShareRole alloc] initWithType:OCShareRoleTypeUploader
-						       shareTypes:OCShareTypesMaskLink
-						     permissions:OCSharePermissionsMaskCreate
-					 customizablePermissions:OCSharePermissionsMaskNone
-						       locations:OCLocationTypeFolder
-						      symbolName:@"arrow.up.circle.fill"
-						   localizedName:OCLocalizedString(@"Uploader", nil)
-					    localizedDescription:OCLocalizedString(@"Recipients can upload but existing contents are not revealed.", nil)],
+				[[OCShareRole alloc] initWithIdentifier:nil
+								   type:OCShareRoleTypeUploader
+							     shareTypes:OCShareTypesMaskLink
+							    permissions:OCSharePermissionsMaskCreate
+						customizablePermissions:OCSharePermissionsMaskNone
+							      locations:OCLocationTypeFolder
+							     symbolName:@"arrow.up.circle.fill"
+							  localizedName:OCLocalizedString(@"Uploader", nil)
+						   localizedDescription:OCLocalizedString(@"Recipients can upload but existing contents are not revealed.", nil)],
 
 				// ## Contributor
 				// - folders
-				[[OCShareRole alloc] initWithType:OCShareRoleTypeContributor
-						       shareTypes:OCShareTypesMaskLink
-						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskCreate
-					 customizablePermissions:OCSharePermissionsMaskNone
-						       locations:OCLocationTypeFolder
-						      symbolName:@"person.2"
-						   localizedName:OCLocalizedString(@"Contributor", nil)
-					    localizedDescription:OCLocalizedString(@"Recipients can view, download and upload contents.", nil)],
+				[[OCShareRole alloc] initWithIdentifier:nil
+								   type:OCShareRoleTypeContributor
+							     shareTypes:OCShareTypesMaskLink
+							    permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskCreate
+						customizablePermissions:OCSharePermissionsMaskNone
+							      locations:OCLocationTypeFolder
+							     symbolName:@"person.2"
+							  localizedName:OCLocalizedString(@"Contributor", nil)
+						   localizedDescription:OCLocalizedString(@"Recipients can view, download and upload contents.", nil)],
 
 				// ## Editor
 				// - files
-				[[OCShareRole alloc] initWithType:OCShareRoleTypeEditor
-						       shareTypes:OCShareTypesMaskLink
-						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate
-					 customizablePermissions:OCSharePermissionsMaskNone
-						       locations:OCLocationTypeFile
-						      symbolName:@"pencil"
-						   localizedName:OCLocalizedString(@"Editor", nil)
-					    localizedDescription:OCLocalizedString(@"Recipients can view, download and edit contents.", nil)],
+				[[OCShareRole alloc] initWithIdentifier:nil
+								   type:OCShareRoleTypeEditor
+							     shareTypes:OCShareTypesMaskLink
+							    permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate
+						customizablePermissions:OCSharePermissionsMaskNone
+							      locations:OCLocationTypeFile
+							     symbolName:@"pencil"
+							  localizedName:OCLocalizedString(@"Editor", nil)
+						   localizedDescription:OCLocalizedString(@"Recipients can view, download and edit contents.", nil)],
 
 				// - folders
-				[[OCShareRole alloc] initWithType:OCShareRoleTypeEditor
-						       shareTypes:OCShareTypesMaskLink
-						     permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete
-					 customizablePermissions:OCSharePermissionsMaskNone
-						       locations:OCLocationTypeFolder
-						      symbolName:@"pencil"
-						   localizedName:OCLocalizedString(@"Editor", nil)
-					    localizedDescription:OCLocalizedString(@"Recipients can view, download, edit, delete and upload contents.", nil)]
+				[[OCShareRole alloc] initWithIdentifier:nil
+								   type:OCShareRoleTypeEditor
+							     shareTypes:OCShareTypesMaskLink
+							    permissions:OCSharePermissionsMaskRead|OCSharePermissionsMaskUpdate|OCSharePermissionsMaskCreate|OCSharePermissionsMaskDelete
+						customizablePermissions:OCSharePermissionsMaskNone
+							      locations:OCLocationTypeFolder
+							     symbolName:@"pencil"
+							  localizedName:OCLocalizedString(@"Editor", nil)
+						   localizedDescription:OCLocalizedString(@"Recipients can view, download, edit, delete and upload contents.", nil)]
 			]];
 		}
 
-		roles = [_shareRoles filteredArrayUsingBlock:^BOOL(OCShareRole * _Nonnull role, BOOL * _Nonnull stop) {
+		roles = [_legacyShareRoles filteredArrayUsingBlock:^BOOL(OCShareRole * _Nonnull role, BOOL * _Nonnull stop) {
 			return (
 				// Role supports location
 				((role.locations & locationType) != 0) &&
@@ -554,7 +593,7 @@
 	return (roles);
 }
 
-- (nullable OCShareRole *)matchingShareRoleForShare:(OCShare *)share
+- (nullable OCShareRole *)matchingForShare:(OCShare *)share fromShareRoles:(NSArray<OCShareRole *> *)roles
 {
 	// First check for roles provided inside the share itself (ocis)
 	if (share.sharePermissions.count > 0)
@@ -568,8 +607,26 @@
 		}
 	}
 
+	// Next steps require roles
+	if (roles == nil)
+	{
+		return (nil);
+	}
+
+	// Next, check if there's an ID match between share and role
+	OCShareRoleID shareRoleID = share.firstRoleID;
+	if (shareRoleID != nil)
+	{
+		for (OCShareRole *role in roles)
+		{
+			if ([role.identifier isEqual:shareRoleID])
+			{
+				return (role);
+			}
+		}
+	}
+
 	// Then check for globally available roles (legacy)
-	NSArray<OCShareRole *> *roles = [self availableShareRolesForType:share.type location:share.itemLocation];
 	OCShareRole *customRole = nil;
 	OCShareRole *exactMatchingRole = nil;
 

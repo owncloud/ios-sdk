@@ -26,6 +26,9 @@
 	- Implementation: https://github.com/owncloud/core/blob/master/apps/files_sharing/lib/Controller/ShareesController.php
 */
 
+// OC 10
+#if OC_LEGACY_SUPPORT
+
 @implementation OCConnection (RecipientsLegacy)
 
 - (NSMutableArray <OCIdentity *> *)_recipientsFromJSONArray:(NSArray<NSDictionary<NSString *, id> *> *)jsonArray matchType:(OCIdentityMatchType)matchType addToArray:(NSMutableArray <OCIdentity *> *)recipientsArray
@@ -173,6 +176,8 @@
 }
 
 @end
+
+#endif /* OC_LEGACY_SUPPORT */
 
 /*
 {

@@ -28,6 +28,7 @@
 #import "OCODataDecoder.h"
 #import "OCMacros.h"
 #import "OCShare+GraphAPI.h"
+#import "NSError+OCError.h"
 
 @implementation OCConnection (GraphAPI)
 
@@ -143,10 +144,23 @@
 	return (permissionURL);
 }
 
-- (nullable NSProgress *)retrievePermissionsForDriveWithID:(OCDriveID)driveID item:(nullable OCItem *)item completionHandler:(OCConnectionShareRetrievalCompletionHandler)completionHandler
+- (nullable NSProgress *)retrievePermissionsForLocation:(OCLocation *)inLocation completionHandler:(OCConnectionShareRetrievalCompletionHandler)completionHandler
 {
-	OCLocation *location = [[OCLocation alloc] initWithBookmarkUUID:self.bookmark.uuid driveID:driveID path:item.path];
-	NSURL *permissionURL = [self permissionsURLForDriveWithID:driveID fileID:(item.isRoot ? nil : item.fileID) permissionID:nil];
+	// Check if inLocation is complete for using this API
+	if (!inLocation.isRoot && (inLocation.fileID == nil)) {
+		completionHandler(OCErrorWithDescription(OCErrorInsufficientParameters, @"Non-root location is missing fileID"), nil, nil, nil);
+		return(nil);
+	}
+	if (inLocation.driveID == nil) {
+		completionHandler(OCErrorWithDescription(OCErrorInsufficientParameters, @"Location is missing driveID"), nil, nil, nil);
+		return(nil);
+	}
+
+	// Retrieve permissions
+	OCLocation *location = [inLocation copy];
+	location.bookmarkUUID = self.bookmark.uuid;
+
+	NSURL *permissionURL = [self permissionsURLForDriveWithID:inLocation.driveID fileID:(inLocation.isRoot ? nil : inLocation.fileID) permissionID:nil];
 
 	return ([self requestODataAtURL:permissionURL requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:nil entityClass:GAPermission.class options:@{
 		OCODataOptionKeyLibreGraphDecoders: @[
@@ -162,7 +176,7 @@
 
 		NSMutableArray<OCShare *> *shares = [NSMutableArray new];
 		for (GAPermission *gaPermission in oDataResponse.result) {
-			[shares addObject:[OCShare shareFromGAPermission:gaPermission roleDefinitions:gaRoleDefinitions forLocation:location item:item category:OCShareCategoryByMe]];
+			[shares addObject:[OCShare shareFromGAPermission:gaPermission roleDefinitions:gaRoleDefinitions forLocation:location item:nil category:OCShareCategoryByMe]];
 		}
 
 		NSMutableArray<OCShareRole *> *roles = nil;

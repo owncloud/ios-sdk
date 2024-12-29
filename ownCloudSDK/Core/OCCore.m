@@ -265,7 +265,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		_unsolvedIssueSignatures = [NSMutableSet new];
 		_rejectedIssueSignatures = [NSMutableSet new];
 
-		_shareRoles = [NSMutableArray new];
+		_legacyShareRoles = [NSMutableArray new];
 
 		_vault = [[OCVault alloc] initWithBookmark:bookmark];
 

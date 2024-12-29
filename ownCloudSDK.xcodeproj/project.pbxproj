@@ -371,6 +371,8 @@
 		DC54396520D50B8A002BF291 /* OCCore+CommandDelete.m in Sources */ = {isa = PBXBuildFile; fileRef = DC54396320D50B8A002BF291 /* OCCore+CommandDelete.m */; };
 		DC545E7A203F7DD0006111FA /* OCUser.h in Headers */ = {isa = PBXBuildFile; fileRef = DC545E78203F7DD0006111FA /* OCUser.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC545E7B203F7DD0006111FA /* OCUser.m in Sources */ = {isa = PBXBuildFile; fileRef = DC545E79203F7DD0006111FA /* OCUser.m */; };
+		DC548D292D1570AA00900F4B /* OCConnection+SharingLegacy.m in Sources */ = {isa = PBXBuildFile; fileRef = DC548D282D1570AA00900F4B /* OCConnection+SharingLegacy.m */; };
+		DC548D2A2D1570AA00900F4B /* OCConnection+SharingLegacy.h in Headers */ = {isa = PBXBuildFile; fileRef = DC548D272D1570AA00900F4B /* OCConnection+SharingLegacy.h */; };
 		DC576EC6226484E30087316D /* OCBackgroundManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DC576EC4226484E30087316D /* OCBackgroundManager.h */; };
 		DC576EC7226484E30087316D /* OCBackgroundManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC576EC5226484E30087316D /* OCBackgroundManager.m */; };
 		DC576ECA226484F50087316D /* OCBackgroundTask.h in Headers */ = {isa = PBXBuildFile; fileRef = DC576EC8226484F50087316D /* OCBackgroundTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -413,6 +415,8 @@
 		DC6ABF7A25365CB100689C7B /* OCHostSimulator+BuiltIn.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6ABF7825365CB100689C7B /* OCHostSimulator+BuiltIn.m */; };
 		DC6B0472268D1950003FDEC1 /* OCBookmark+Prepopulation.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6B0470268D1950003FDEC1 /* OCBookmark+Prepopulation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC6B0473268D1950003FDEC1 /* OCBookmark+Prepopulation.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6B0471268D1950003FDEC1 /* OCBookmark+Prepopulation.m */; };
+		DC6B971A2D21DE7F0045E73F /* OCShareRole+GraphAPI.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6B97192D21DE7F0045E73F /* OCShareRole+GraphAPI.m */; };
+		DC6B971B2D21DE7F0045E73F /* OCShareRole+GraphAPI.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6B97182D21DE7F0045E73F /* OCShareRole+GraphAPI.h */; };
 		DC6BFFED231FB9F8005FA5CB /* OCEventRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6BFFEB231FB9F8005FA5CB /* OCEventRecord.h */; };
 		DC6BFFEE231FB9F8005FA5CB /* OCEventRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6BFFEC231FB9F8005FA5CB /* OCEventRecord.m */; };
 		DC6BFFF623206215005FA5CB /* OCEventQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6BFFF423206215005FA5CB /* OCEventQueue.h */; };
@@ -1458,6 +1462,8 @@
 		DC54396320D50B8A002BF291 /* OCCore+CommandDelete.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+CommandDelete.m"; sourceTree = "<group>"; };
 		DC545E78203F7DD0006111FA /* OCUser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCUser.h; sourceTree = "<group>"; };
 		DC545E79203F7DD0006111FA /* OCUser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCUser.m; sourceTree = "<group>"; };
+		DC548D272D1570AA00900F4B /* OCConnection+SharingLegacy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCConnection+SharingLegacy.h"; sourceTree = "<group>"; };
+		DC548D282D1570AA00900F4B /* OCConnection+SharingLegacy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+SharingLegacy.m"; sourceTree = "<group>"; };
 		DC576EC4226484E30087316D /* OCBackgroundManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCBackgroundManager.h; sourceTree = "<group>"; };
 		DC576EC5226484E30087316D /* OCBackgroundManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCBackgroundManager.m; sourceTree = "<group>"; };
 		DC576EC8226484F50087316D /* OCBackgroundTask.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCBackgroundTask.h; sourceTree = "<group>"; };
@@ -1497,6 +1503,8 @@
 		DC6ABF7825365CB100689C7B /* OCHostSimulator+BuiltIn.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCHostSimulator+BuiltIn.m"; sourceTree = "<group>"; };
 		DC6B0470268D1950003FDEC1 /* OCBookmark+Prepopulation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCBookmark+Prepopulation.h"; sourceTree = "<group>"; };
 		DC6B0471268D1950003FDEC1 /* OCBookmark+Prepopulation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCBookmark+Prepopulation.m"; sourceTree = "<group>"; };
+		DC6B97182D21DE7F0045E73F /* OCShareRole+GraphAPI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCShareRole+GraphAPI.h"; sourceTree = "<group>"; };
+		DC6B97192D21DE7F0045E73F /* OCShareRole+GraphAPI.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCShareRole+GraphAPI.m"; sourceTree = "<group>"; };
 		DC6BFFEB231FB9F8005FA5CB /* OCEventRecord.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCEventRecord.h; sourceTree = "<group>"; };
 		DC6BFFEC231FB9F8005FA5CB /* OCEventRecord.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCEventRecord.m; sourceTree = "<group>"; };
 		DC6BFFF423206215005FA5CB /* OCEventQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCEventQueue.h; sourceTree = "<group>"; };
@@ -2276,6 +2284,8 @@
 			children = (
 				DC0BE5B028F80BBA00CE2101 /* OCShareRole.m */,
 				DC0BE5AF28F80BBA00CE2101 /* OCShareRole.h */,
+				DC6B97192D21DE7F0045E73F /* OCShareRole+GraphAPI.m */,
+				DC6B97182D21DE7F0045E73F /* OCShareRole+GraphAPI.h */,
 				DCB330DC29F142FB00BFF393 /* OCShareRole+OCDataItem.m */,
 				DCB330DB29F142FB00BFF393 /* OCShareRole+OCDataItem.h */,
 			);
@@ -3987,6 +3997,8 @@
 			children = (
 				DCE784F722325D4F00733F01 /* OCConnection+RecipientsLegacy.m */,
 				DCBE9C6D2D07075300332D3B /* OCConnection+RecipientsLegacy.h */,
+				DC548D282D1570AA00900F4B /* OCConnection+SharingLegacy.m */,
+				DC548D272D1570AA00900F4B /* OCConnection+SharingLegacy.h */,
 			);
 			path = oc10;
 			sourceTree = "<group>";
@@ -4919,6 +4931,7 @@
 				DC9219E12964CB4500F538EE /* GAApplication.h in Headers */,
 				DC0376F2271B1D4600151E8C /* OCLocaleFilterVariables.h in Headers */,
 				DC45ABAE231018250065669D /* OCKeyValueRecord.h in Headers */,
+				DC6B971B2D21DE7F0045E73F /* OCShareRole+GraphAPI.h in Headers */,
 				DC510D2E27E1463900F2754F /* OCDataSourceSubscription.h in Headers */,
 				DC5D9E6824963DED00BFFE8E /* OCMessageChoice.h in Headers */,
 				DC51FD89247562C20069AB79 /* OCCellularManager.h in Headers */,
@@ -4931,6 +4944,7 @@
 				DCE62EAD2771ED5700E3193F /* OCResourceImage.h in Headers */,
 				DC07C2992124510200B815A4 /* OCExtensionTypes.h in Headers */,
 				DCA8DBA12D12DE33003CC6FA /* GAUnifiedRoleDefinition+ShareRole.h in Headers */,
+				DC548D2A2D1570AA00900F4B /* OCConnection+SharingLegacy.h in Headers */,
 				DC8556FF204F597800189B9A /* OCXMLParserNode.h in Headers */,
 				DC19BFED21CBACBC007C20D1 /* OCProcessManager.h in Headers */,
 				DC20DE8F21C104DE0096000B /* OCLogTag.h in Headers */,
@@ -5495,6 +5509,7 @@
 				DC9A116927CFCC1300D90BA4 /* GAPermission.m in Sources */,
 				DCC8FA042029BA7A00EB6701 /* OCVault.m in Sources */,
 				DC39DC5A204215A800189B9A /* NSProgress+OCEvent.m in Sources */,
+				DC6B971A2D21DE7F0045E73F /* OCShareRole+GraphAPI.m in Sources */,
 				DC3181682BDF882500E70392 /* OCSignalRecord.m in Sources */,
 				DC47E4C527A5820D0020E8EF /* GAItemReference.m in Sources */,
 				DCADC0402072774200DB8E83 /* OCQuery+Internal.m in Sources */,
@@ -5648,6 +5663,7 @@
 				DCE784F922325D4F00733F01 /* OCConnection+RecipientsLegacy.m in Sources */,
 				DC0BE5B228F80BBA00CE2101 /* OCShareRole.m in Sources */,
 				DCC26FC02B7397D400904000 /* OCPasswordPolicyRule+StandardRules.m in Sources */,
+				DC548D292D1570AA00900F4B /* OCConnection+SharingLegacy.m in Sources */,
 				DCC6567520CA695600110A97 /* OCCoreManager.m in Sources */,
 				DCF06B672CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.m in Sources */,
 				DC2F66A12603FCF6001BFDB6 /* OCCancelAction.m in Sources */,

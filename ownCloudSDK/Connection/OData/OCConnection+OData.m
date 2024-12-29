@@ -128,6 +128,7 @@
 	{
 		request.parameters = [additionalParameters mutableCopy];
 	}
+	[request setValue:@"application/json" forHeaderField:OCHTTPHeaderFieldNameContentType];
 	request.bodyData = postData;
 
 	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {

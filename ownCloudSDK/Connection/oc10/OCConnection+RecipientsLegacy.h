@@ -17,6 +17,10 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "OCFeatureAvailability.h"
+
+// OC 10
+#if OC_LEGACY_SUPPORT
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -27,3 +31,5 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 NS_ASSUME_NONNULL_END
+
+#endif /* OC_LEGACY_SUPPORT */

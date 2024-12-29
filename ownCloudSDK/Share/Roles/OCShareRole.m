@@ -17,13 +17,16 @@
  */
 
 #import "OCShareRole.h"
+#import "OCMacros.h"
 
 @implementation OCShareRole
 
-- (instancetype)initWithType:(OCShareRoleType)type shareTypes:(OCShareTypesMask)shareTypes permissions:(OCSharePermissionsMask)permissions customizablePermissions:(OCSharePermissionsMask)customizablePermissions locations:(OCLocationType)locations symbolName:(OCSymbolName)symbolName localizedName:(NSString *)localizedName localizedDescription:(NSString *)localizedDescription
+- (instancetype)initWithIdentifier:(OCShareRoleID)identifier type:(OCShareRoleType)type shareTypes:(OCShareTypesMask)shareTypes permissions:(OCSharePermissionsMask)permissions customizablePermissions:(OCSharePermissionsMask)customizablePermissions locations:(OCLocationType)locations symbolName:(OCSymbolName)symbolName localizedName:(NSString *)localizedName localizedDescription:(NSString *)localizedDescription
 {
 	if ((self = [super init]) != nil)
 	{
+		_identifier = identifier;
+
 		_type = type;
 		_shareTypes = shareTypes;
 
@@ -38,6 +41,33 @@
 	}
 
 	return (self);
+}
+
+- (BOOL)isEqual:(id)object
+{
+	OCShareRole *otherRole;
+
+	if ((otherRole = OCTypedCast(object, OCShareRole)) == nil)
+	{
+		return (NO);
+	}
+
+	if (OCNANotEqual(_identifier, otherRole.identifier) ||
+	    OCNANotEqual(_type, otherRole.type) ||
+	    (_shareTypes != otherRole.shareTypes) ||
+	    (_permissions != otherRole.permissions) ||
+	    (_customizablePermissions != otherRole.customizablePermissions) ||
+	    (_locations != otherRole.locations))
+	{
+		return (NO);
+	}
+
+	return (YES);
+}
+
+- (NSUInteger)hash
+{
+	return (_identifier.hash ^ _type.hash ^ ((NSUInteger)_shareTypes << 8) ^ ((NSUInteger)_permissions << 16) ^ ((NSUInteger)_customizablePermissions << 24) ^ ((NSUInteger)_locations << 32) ^ _symbolName.hash ^ _localizedName.hash ^ _localizedDescription.hash);
 }
 
 @end
