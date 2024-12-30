@@ -71,7 +71,7 @@
 		{
 			NSError *decodeError = nil;
 
-			GAODataError *dataError = [jsonDictionary objectForKey:@"error" ofClass:GAODataError.class inCollection:Nil required:NO context:nil error:&decodeError];
+			GAODataError *dataError = [NSDictionary object:jsonDictionary key:nil ofClass:GAODataError.class inCollection:Nil required:NO context:nil error:&decodeError];
 			returnError = dataError.nativeError;
 		}
 		else if ((jsonDictionary[valueKey] != nil) && (entityClass != nil))
