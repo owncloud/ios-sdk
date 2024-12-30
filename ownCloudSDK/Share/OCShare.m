@@ -144,6 +144,18 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 	return (nil);
 }
 
+- (NSArray<OCShareRoleID> *)roleIDs
+{
+	NSMutableArray<OCShareRoleID> *roleIDs = nil;
+	for (OCSharePermission *permission in _sharePermissions) {
+		if (permission.roleID != nil) {
+			if (roleIDs == nil) { roleIDs = [NSMutableArray new]; }
+			[roleIDs addObject:permission.roleID];
+		}
+	}
+	return (roleIDs);
+}
+
 - (BOOL)protectedByPassword
 {
 	if ((_password != nil) && ![_password isEqual:@""])
@@ -224,6 +236,7 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 			compareVar(_url) &&
 
 			(otherShare.permissions == self.permissions) &&
+			OCNAIsEqual(otherShare.roleIDs, self.roleIDs) &&
 
 			(otherShare.protectedByPassword == self.protectedByPassword) &&
 
@@ -441,10 +454,12 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 	OCShare *copiedShare = [self.class new];
 
 	copiedShare->_identifier = _identifier;
+
 	copiedShare->_type = _type;
 	copiedShare->_category = _category;
 
 	copiedShare->_itemLocation = _itemLocation;
+	copiedShare->_itemFileID = _itemFileID;
 	copiedShare->_itemType = _itemType;
 	copiedShare->_itemOwner = _itemOwner;
 	copiedShare->_itemMIMEType = _itemMIMEType;
@@ -468,6 +483,8 @@ BIT_ACCESSOR(canShare,	setCanShare,	OCSharePermissionsMaskShare);
 	copiedShare->_accepted = _accepted;
 
 	copiedShare->_state = _state;
+
+	copiedShare->_originGAPermission = _originGAPermission;
 
 	return (copiedShare);
 }
