@@ -43,6 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 // MARK: - Legacy implementations
 - (nullable OCProgress *)legacyCreateShare:(OCShare *)share options:(nullable OCShareOptions)options resultTarget:(OCEventTarget *)eventTarget;
+- (nullable OCProgress *)legacyUpdateShare:(OCShare *)share afterPerformingChanges:(void(^)(OCShare *share))performChanges resultTarget:(OCEventTarget *)eventTarget;
 
 @end
 
