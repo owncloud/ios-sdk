@@ -39,4 +39,6 @@ typedef NSMutableDictionary<NSString*,id>* GAGraphStruct; //!< A graph struct is
 
 @end
 
+#define GANull ((id)NSNull.null)
+
 NS_ASSUME_NONNULL_END

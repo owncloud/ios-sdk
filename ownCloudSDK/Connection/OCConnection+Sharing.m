@@ -46,6 +46,8 @@
 #import "OCSharePermission.h"
 #import "OCConnection+OData.h"
 #import "OCShare+GraphAPI.h"
+#import "GASharingLink.h"
+#import "GASharingLinkPassword.h"
 
 @implementation OCConnection (Sharing)
 
@@ -320,7 +322,7 @@
 		}
 		diCreateLink.expirationDateTime = share.expirationDate;
 		diCreateLink.displayName = share.name;
-		diCreateLink.type = share.sharePermissions.firstObject.roleID;
+		diCreateLink.type = share.firstRoleID;
 
 		progress = [self createODataObject:diCreateLink atURL:[[self URLForEndpoint:OCConnectionEndpointIDGraphDrivePermissions options:nil] URLByAppendingPathComponent:[NSString stringWithFormat:@"%@/items/%@/createLink",share.itemLocation.driveID,share.itemFileID]] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] parameters:nil responseEntityClass:GAPermission.class completionHandler:createCompletionHandler];
 	}
@@ -388,15 +390,26 @@
 
 - (nullable OCProgress *)updateShare:(OCShare *)share afterPerformingChanges:(void(^)(OCShare *share))performChanges resultTarget:(OCEventTarget *)eventTarget
 {
+	// OC 10
+	#if OC_LEGACY_SUPPORT
+	if (!self.useDriveAPI) {
+		return ([self legacyUpdateShare:share afterPerformingChanges:performChanges resultTarget:eventTarget]);
+	}
+	#endif /* OC_LEGACY_SUPPORT */
+
 	// Save previous values of editable properties
 	NSString *previousName = share.name;
 	NSString *previousPassword = share.password;
 	BOOL previousProtectedByPassword = share.protectedByPassword;
 	NSDate *previousExpirationDate = share.expirationDate;
-	OCSharePermissionsMask previousPermissions = share.permissions;
-	NSMutableDictionary<NSString *,NSString *> *changedValuesByPropertyNames = [NSMutableDictionary new];
-	NSMutableDictionary *userInfo = [NSMutableDictionary new];
+	NSArray<OCShareRoleID> *previousRoleIDs = share.roleIDs;
+	NSProgress *progress = nil;
 	BOOL returnLinkShareOnlyError = NO;
+
+	GAPermission *permissionUpdate = [GAPermission new];
+	BOOL permissionUpdateContainsChanges = NO;
+	NSString *newPassword = nil;
+	BOOL newPasswordSet = NO;
 
 	// Perform changes
 	share = [share copy];
@@ -407,7 +420,11 @@
 	{
 		if (share.type == OCShareTypeLink)
 		{
-			changedValuesByPropertyNames[@"name"] = (share.name != nil) ? share.name : @"";
+			if (permissionUpdate.link == nil) {
+				permissionUpdate.link = [GASharingLink new];
+			}
+			permissionUpdate.link.libreGraphDisplayName = (share.name != nil) ? share.name : GANull;
+			permissionUpdateContainsChanges = YES;
 		}
 		else
 		{
@@ -417,15 +434,21 @@
 
 	if ((OCNANotEqual(share.password, previousPassword)) || (share.protectedByPassword != previousProtectedByPassword))
 	{
-		if ((share.protectedByPassword != previousProtectedByPassword) && (previousProtectedByPassword))
-		{
-			// Remove password
-			share.password = @"";
-		}
-
+		// Changing password requires extra request
 		if (share.type == OCShareTypeLink)
 		{
-			changedValuesByPropertyNames[@"password"] = (share.password != nil) ? share.password : @"";
+			if ((share.protectedByPassword != previousProtectedByPassword) && (previousProtectedByPassword))
+			{
+				// Remove password
+				newPasswordSet = YES;
+				newPassword = @""; // empty password => no password
+			}
+			else
+			{
+				// Set new password
+				newPasswordSet = YES;
+				newPassword = (share.password != nil) ? share.password : @"";
+			}
 		}
 		else
 		{
@@ -435,26 +458,25 @@
 
 	if (OCNANotEqual(share.expirationDate, previousExpirationDate))
 	{
-		NSString *expirationDate = @"";
-
-		if (share.expirationDate != nil)
-		{
-			if (self.useDriveAPI)
-			{
-				expirationDate = share.expirationDate.compactISO8601String;
-			}
-			else
-			{
-				expirationDate = share.expirationDate.compactUTCStringDateOnly;
-			}
-		}
-
-		changedValuesByPropertyNames[@"expireDate"] = expirationDate;
+		permissionUpdate.expirationDateTime = (share.expirationDate != nil) ? share.expirationDate : GANull;
+		permissionUpdateContainsChanges = YES;
 	}
 
-	if (share.permissions != previousPermissions)
+	NSArray<OCShareRoleID> *roleIDs = share.roleIDs;
+	if (OCNANotEqual(roleIDs, previousRoleIDs))
 	{
-		changedValuesByPropertyNames[@"permissions"] = [NSString stringWithFormat:@"%ld", share.permissions];
+		if (share.type == OCShareTypeLink)
+		{
+			if (permissionUpdate.link == nil) {
+				permissionUpdate.link = [GASharingLink new];
+			}
+			permissionUpdate.link.type = roleIDs.firstObject;
+		}
+		else
+		{
+			permissionUpdate.roles = (roleIDs != nil) ? roleIDs : GANull;
+		}
+		permissionUpdateContainsChanges = YES;
 	}
 
 	if (returnLinkShareOnlyError)
@@ -463,7 +485,7 @@
 		return (nil);
 	}
 
-	if (changedValuesByPropertyNames.count == 0)
+	if (!permissionUpdateContainsChanges && !newPasswordSet)
 	{
 		// No changes => return immediately
 		[eventTarget handleEvent:[OCEvent eventForEventTarget:eventTarget type:OCEventTypeUpdateShare uuid:nil attributes:nil] sender:self];
@@ -472,145 +494,73 @@
 	else
 	{
 		// Changes => schedule requests
-		userInfo[@"shareID"] = share.identifier;
-		userInfo[@"updateProperties"] = changedValuesByPropertyNames;
+		void(^handleResult)(NSError * _Nullable error, OCShare * _Nullable updatedShare) = ^(NSError * _Nullable error, OCShare * _Nullable updatedShare) {
+			OCEvent *event = [OCEvent eventForEventTarget:eventTarget type:OCEventTypeUpdateShare uuid:nil attributes:nil];
 
-		return ([self _scheduleShareUpdateWithUserInfo:userInfo resultTarget:eventTarget]);
-	}
-}
-
-- (OCProgress *)_scheduleShareUpdateWithUserInfo:(NSDictionary *)inUserInfo resultTarget:(OCEventTarget *)eventTarget
-{
-	NSMutableDictionary *userInfo = [inUserInfo mutableCopy];
-	OCShareID shareID = userInfo[@"shareID"];
-	NSMutableDictionary<NSString *,NSString *> *changedValuesByPropertyNames = [userInfo[@"updateProperties"] mutableCopy];
-	NSString *updateProperty = nil;
-	NSString *updateValue = nil;
-	OCProgress *requestProgress = nil;
-
-	if (changedValuesByPropertyNames.count > 0)
-	{
-		updateProperty = changedValuesByPropertyNames.allKeys.firstObject;
-		updateValue = changedValuesByPropertyNames[updateProperty];
-	}
-
-	if ((updateProperty!=nil) && (updateValue!=nil))
-	{
-		// Remove from update dict
-		[changedValuesByPropertyNames removeObjectForKey:updateProperty];
-		userInfo[@"updateProperties"] = changedValuesByPropertyNames;
-		userInfo[@"lastChangedProperty"] = updateProperty;
-		userInfo[@"moreUpdatesPending"] = @(changedValuesByPropertyNames.count > 0);
-
-		// Compose and send request
-		OCHTTPRequest *request;
-
-		request = [OCHTTPRequest requestWithURL:[[self URLForEndpoint:OCConnectionEndpointIDShares options:nil] URLByAppendingPathComponent:shareID]];
-		request.method = OCHTTPMethodPUT;
-		request.requiredSignals = self.propFindSignals;
-
-		[request setValue:updateValue forParameter:updateProperty];
-
-		request.resultHandlerAction = @selector(_handleUpdateShareResult:error:);
-		request.eventTarget = eventTarget;
-		request.userInfo = userInfo;
-
-		request.forceCertificateDecisionDelegation = YES;
-
-		[self.commandPipeline enqueueRequest:request forPartitionID:self.partitionID];
-
-		requestProgress = request.progress;
-		requestProgress.progress.eventType = OCEventTypeUpdateShare;
-		requestProgress.progress.localizedDescription = OCLocalizedString(@"Updating share…",nil);
-	}
-	else
-	{
-		[eventTarget handleError:OCErrorWithDescription(OCErrorInsufficientParameters, @"Nothing provided to update") type:OCEventTypeUpdateShare uuid:nil sender:self];
-	}
-
-	return (requestProgress);
-}
-
-- (void)_handleUpdateShareResult:(OCHTTPRequest *)request error:(NSError *)error
-{
-	OCEvent *event;
-
-	if ((event = [OCEvent eventForEventTarget:request.eventTarget type:OCEventTypeUpdateShare uuid:request.identifier attributes:nil]) != nil)
-	{
-		if (error.isNetworkFailureError)
-		{
-			event.error = OCErrorWithDescriptionFromError(OCErrorNotAvailableOffline, OCLocalizedString(@"Sharing requires an active connection.",nil), error);
-		}
-		else if ((request.error != nil) && ![request.error.domain isEqual:OCHTTPStatusErrorDomain])
-		{
-			event.error = request.error;
-		}
-		else
-		{
-			NSArray <OCShare *> *shares = nil;
-			NSError *parseError = nil;
-
-			shares = [self _parseSharesResponse:request.httpResponse data:request.httpResponse.bodyData category:OCShareCategoryByMe error:&parseError status:NULL statusErrorMapper:^NSError *(OCSharingResponseStatus *status) {
-				NSError *error = nil;
-
-				switch (status.statusCode.integerValue)
-				{
-					case 100:
-					case OCHTTPStatusCodeOK: // 200
-						// Successful
-					break;
-
-					case OCHTTPStatusCodeBAD_REQUEST: // 400
-						// Wrong or no update parameter given
-						error = OCErrorWithDescription(OCErrorInsufficientParameters, status.message);
-					break;
-
-					case OCHTTPStatusCodeFORBIDDEN: // 403
-						// Public upload disabled by the admin
-						error = OCErrorWithDescription(OCErrorSharePublicUploadDisabled, status.message);
-					break;
-
-					case OCHTTPStatusCodeNOT_FOUND: // 404
-						// Share couldn't be updated
-						error = OCErrorWithDescription(OCErrorShareNotFound, status.message);
-					break;
-
-					default:
-						// Unknown error
-						error = status.error;
-					break;
+			if (error != nil) {
+				event.error = error;
+			} else {
+				if ([updatedShare.roleIDs isEqual:share.roleIDs]) {
+					updatedShare.sharePermissions = share.sharePermissions;
 				}
+				event.result = updatedShare;
+			}
 
-				return (error);
-			}];
+			[eventTarget handleEvent:event sender:self];
+		};
 
-			if (parseError == nil)
-			{
-				NSDictionary *userInfo = request.userInfo;
-				OCEventTarget *eventTarget = request.eventTarget;
-				BOOL moreUpdatesPending = ((NSNumber *)userInfo[@"moreUpdatesPending"]).boolValue;
-
-				if (moreUpdatesPending)
+		if (newPasswordSet)
+		{
+			// Update password
+			NSProgress *updateProgress = [self _updateShare:share password:newPassword completionHandler:^(NSError * _Nullable error, OCShare * _Nullable updatedShare) {
+				if ((error == nil) && permissionUpdateContainsChanges)
 				{
-					event = nil;
-					[self _scheduleShareUpdateWithUserInfo:userInfo resultTarget:eventTarget];
+					// Update permission after that
+					NSProgress *updateProgress = [self _updateShare:share withUpdate:permissionUpdate completionHandler:handleResult];
+					[progress addChild:updateProgress withPendingUnitCount:100];
 				}
 				else
 				{
-					event.result = shares.firstObject;
+					// Done, return result
+					handleResult(error, share);
 				}
-			}
-			else
-			{
-				event.error = parseError;
-			}
+			}];
+			[progress addChild:updateProgress withPendingUnitCount:100];
+		}
+		else if (permissionUpdateContainsChanges)
+		{
+			// Update permission
+			NSProgress *updateProgress = [self _updateShare:share withUpdate:permissionUpdate completionHandler:handleResult];
+			[progress addChild:updateProgress withPendingUnitCount:100];
 		}
 	}
 
-	if (event != nil)
-	{
-		[request.eventTarget handleEvent:event sender:self];
-	}
+	return (((progress != nil) ? [[OCProgress alloc] initRegisteredWithProgress:progress] : nil));
+}
+
+- (nullable NSProgress *)_updateShare:(OCShare *)share withUpdate:(GAPermission *)updatePermission completionHandler:(void(^)(NSError * _Nullable error, OCShare * _Nullable updatedShare))completionHandler
+{
+	// Reference: https://owncloud.dev/apis/http/graph/permissions/#updating-sharing-permission-post-drivesdrive-iditemsitem-idpermissionsperm-id
+	NSURL *url = [self permissionsURLForDriveWithID:share.itemLocation.driveID fileID:share.itemFileID permissionID:share.identifier];
+
+	return ([self updateODataObject:updatePermission atURL:url requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] parameters:nil responseEntityClass:GAPermission.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+		NSLog(@"Updated share permission: %@", response);
+		completionHandler(error, (response != nil) ? [OCShare shareFromGAPermission:response roleDefinitions:@[] forLocation:share.itemLocation item:nil category:OCShareCategoryByMe] : nil);
+	}]);
+}
+
+- (nullable NSProgress *)_updateShare:(OCShare *)share password:(NSString *)newPassword completionHandler:(void(^)(NSError * _Nullable error, OCShare * _Nullable updatedShare))completionHandler
+{
+	// Reference: https://owncloud.dev/apis/http/graph/permissions/#set-password-of-permission-post-drivesdrive-iditemsitem-idpermissionsperm-idsetpassword
+	NSURL *url = [[self permissionsURLForDriveWithID:share.itemLocation.driveID fileID:share.itemFileID permissionID:share.identifier] URLByAppendingPathComponent:@"setPassword"];
+
+	GASharingLinkPassword *sharingLinkPassword = [GASharingLinkPassword new];
+	sharingLinkPassword.password = newPassword;
+
+	return ([self createODataObject:sharingLinkPassword atURL:url requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] parameters:nil responseEntityClass:GAPermission.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+		NSLog(@"Updated share password: %@", response);
+		completionHandler(error, (response != nil) ? [OCShare shareFromGAPermission:response roleDefinitions:@[] forLocation:share.itemLocation item:nil category:OCShareCategoryByMe] : nil);
+	}]);
 }
 
 - (nullable OCProgress *)deleteShare:(OCShare *)share resultTarget:(OCEventTarget *)eventTarget
