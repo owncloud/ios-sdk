@@ -4632,6 +4632,15 @@
         }
       }
     },
+    "Can edit" : {
+
+    },
+    "Can upload" : {
+
+    },
+    "Can view" : {
+
+    },
     "Can't build custom scheme URL from %@." : {
       "localizations" : {
         "cs" : {
@@ -11477,6 +11486,9 @@
         }
       }
     },
+    "Invited people" : {
+
+    },
     "Invited persons" : {
       "comment" : "Share roles",
       "localizations" : {
@@ -12547,6 +12559,9 @@
           }
         }
       }
+    },
+    "Link works only for invited people. Login is required." : {
+
     },
     "Local ID" : {
       "localizations" : {
@@ -19340,6 +19355,9 @@
         }
       }
     },
+    "Secret File Drop" : {
+
+    },
     "Server detection failed because of too many redirects." : {
       "comment" : "OCErrorServerTooManyRedirects",
       "extractionState" : "manual",
@@ -24333,6 +24351,9 @@
         }
       }
     },
+    "Upload only, existing content is not revealed" : {
+
+    },
     "Upload, edit, delete, download and preview" : {
       "localizations" : {
         "cs" : {
@@ -25354,6 +25375,15 @@
           }
         }
       }
+    },
+    "View, download" : {
+
+    },
+    "View, upload, download" : {
+
+    },
+    "View, upload, edit, download, delete" : {
+
     },
     "Viewer" : {
       "localizations" : {
