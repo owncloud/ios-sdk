@@ -32,11 +32,11 @@
 	}
 
 	NSError *jsonError = nil;
-	NSDictionary <NSString *, id> *jsonDictionary = nil;
+	id jsonObj = nil;
 
-	if ((jsonDictionary = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
+	if ((jsonObj = [response bodyConvertedFromJSONWithError:&jsonError]) != nil)
 	{
-		OCODataResponse *decodedResponse = [OCODataDecoder decodeODataResponse:jsonDictionary entityClass:entityClass options:options];
+		OCODataResponse *decodedResponse = [OCODataDecoder decodeODataResponse:jsonObj entityClass:entityClass options:options];
 		completionHandler(decodedResponse.error, [(NSNumber *)options[OCODataOptionKeyReturnODataResponse] boolValue] ? decodedResponse : decodedResponse.result);
 	}
 	else

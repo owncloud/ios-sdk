@@ -18,6 +18,7 @@
 
 #import <UIKit/UIKit.h>
 #import "OCFeatureAvailability.h"
+#import "OCGroup.h"
 
 @class GAUser;
 @class GAIdentity;
@@ -58,6 +59,7 @@ typedef NS_ENUM(NSInteger, OCUserType) {
 @property(nullable,readonly) NSString *localizedInitials; //!< Returns localized initials for user
 
 @property(readonly,nonatomic,nullable) GAIdentity *gaIdentity;
+@property(strong,nullable) NSArray<OCGroupID> *groupMemberships;
 
 + (nullable NSString *)localizedInitialsForName:(NSString *)name;
 

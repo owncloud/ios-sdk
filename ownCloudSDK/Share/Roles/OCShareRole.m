@@ -91,6 +91,34 @@
 	return (_identifier.hash ^ _type.hash ^ ((NSUInteger)_shareTypes << 8) ^ ((NSUInteger)_permissions << 16) ^ ((NSUInteger)_customizablePermissions << 24) ^ ((NSUInteger)_locations << 32) ^ _symbolName.hash ^ _localizedName.hash ^ _localizedDescription.hash);
 }
 
++ (BOOL)isRoleID:(OCShareRoleID)identifier equalTo:(OCShareRoleID)otherIdentifier
+{
+	if ([identifier isEqual:otherIdentifier])
+	{
+		return(YES);
+	}
+
+	if (([identifier      isEqualToString:OCShareRoleIDManager] || [identifier      isEqualToString:OCShareRoleIDManagerV1]) &&
+	    ([otherIdentifier isEqualToString:OCShareRoleIDManager] || [otherIdentifier isEqualToString:OCShareRoleIDManagerV1]))
+	{
+		return (YES);
+	}
+
+	if (([identifier      isEqualToString:OCShareRoleIDEditor] || [identifier      isEqualToString:OCShareRoleIDEditorV1]) &&
+	    ([otherIdentifier isEqualToString:OCShareRoleIDEditor] || [otherIdentifier isEqualToString:OCShareRoleIDEditorV1]))
+	{
+		return (YES);
+	}
+
+	if (([identifier      isEqualToString:OCShareRoleIDViewer] || [identifier      isEqualToString:OCShareRoleIDViewerV1]) &&
+	    ([otherIdentifier isEqualToString:OCShareRoleIDViewer] || [otherIdentifier isEqualToString:OCShareRoleIDViewerV1]))
+	{
+		return (YES);
+	}
+
+	return (NO);
+}
+
 @end
 
 OCShareRoleType OCShareRoleTypeInternal = @"internal";

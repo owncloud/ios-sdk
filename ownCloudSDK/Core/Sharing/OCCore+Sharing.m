@@ -610,7 +610,16 @@
 	// Next steps require roles
 	if (roles == nil)
 	{
-		return (nil);
+		if (self.connection.globalShareRoles != nil)
+		{
+			// Use global share roles if no roles were provided
+			roles = self.connection.globalShareRoles;
+		}
+		else
+		{
+			// No roles were provided or found => return
+			return (nil);
+		}
 	}
 
 	// Next, check if there's an ID match between share and role

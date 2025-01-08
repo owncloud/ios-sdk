@@ -21,6 +21,7 @@
 #import "OCLogger.h"
 #import "GAUser.h"
 #import "GAIdentity.h"
+#import "GAGroup.h"
 
 @implementation OCUser
 
@@ -53,11 +54,12 @@
 	return (user);
 }
 
-+ (instancetype)userWithGraphDisplayname:(NSString *)displayName identifier:(NSString *)identifier userType:(NSString *)userType
++ (instancetype)userWithGraphDisplayname:(NSString *)displayName identifier:(NSString *)identifier userType:(NSString *)userType userName:(NSString *)userName
 {
 	OCUser *user = [OCUser new];
 
 	user.displayName = displayName;
+	user.userName = userName;
 	user.identifier = identifier;
 
 	if ([userType isEqual:@"Member"])
@@ -78,12 +80,29 @@
 
 + (instancetype)userWithGraphUser:(GAUser *)gaUser
 {
-	return ([self userWithGraphDisplayname:gaUser.displayName identifier:gaUser.identifier userType:gaUser.userType]);
+	OCUser *user = [self userWithGraphDisplayname:gaUser.displayName identifier:gaUser.identifier userType:gaUser.userType userName:gaUser.onPremisesSamAccountName];
+
+	if (gaUser.memberOf.count > 0)
+	{
+		NSMutableArray<OCGroupID> *groupIDs = [[NSMutableArray alloc] initWithCapacity:gaUser.memberOf.count];
+
+		for (GAGroup *group in gaUser.memberOf)
+		{
+			if (group.identifier != nil)
+			{
+				[groupIDs addObject:group.identifier];
+			}
+		}
+
+		user.groupMemberships = groupIDs;
+	}
+
+	return (user);
 }
 
 + (instancetype)userWithGraphIdentity:(GAIdentity *)gaIdentity
 {
-	return ([self userWithGraphDisplayname:([gaIdentity.displayName isEqual:@""] ? nil : gaIdentity.displayName) identifier:gaIdentity.identifier userType:gaIdentity.libreGraphUserType]);
+	return ([self userWithGraphDisplayname:([gaIdentity.displayName isEqual:@""] ? nil : gaIdentity.displayName) identifier:gaIdentity.identifier userType:gaIdentity.libreGraphUserType userName:nil]);
 }
 
 - (GAIdentity *)gaIdentity

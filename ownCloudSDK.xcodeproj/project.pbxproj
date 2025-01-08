@@ -632,7 +632,7 @@
 		DCA8925320F5F57D00AEFF98 /* NSObject+OCMockManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8925120F5F57D00AEFF98 /* NSObject+OCMockManager.m */; };
 		DCA8925820F5F8AC00AEFF98 /* OCMockTestClass.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8925520F5F8A600AEFF98 /* OCMockTestClass.m */; };
 		DCA8925B20F5F91300AEFF98 /* OCMockTestClass+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8925A20F5F91300AEFF98 /* OCMockTestClass+OCMocking.m */; };
-		DCA8DB912D11CB5C003CC6FA /* OCShareAction.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA8DB8F2D11CB5C003CC6FA /* OCShareAction.h */; };
+		DCA8DB912D11CB5C003CC6FA /* OCShareAction.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA8DB8F2D11CB5C003CC6FA /* OCShareAction.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCA8DB922D11CB5C003CC6FA /* OCShareAction.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA8DB902D11CB5C003CC6FA /* OCShareAction.m */; };
 		DCA8DB952D11D04B003CC6FA /* OCShareTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA8DB932D11D04B003CC6FA /* OCShareTypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCA8DB992D12C817003CC6FA /* OCShare+GraphAPI.h in Headers */ = {isa = PBXBuildFile; fileRef = DCA8DB972D12C817003CC6FA /* OCShare+GraphAPI.h */; };
