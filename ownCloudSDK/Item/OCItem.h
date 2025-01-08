@@ -63,9 +63,9 @@ typedef NS_OPTIONS(NSInteger, OCItemPermissions)
 	OCItemPermissionDelete		= (1<<6), 	//!< Code "D"	File or Folder	can delete file or folder
 	OCItemPermissionRename		= (1<<7), 	//!< Code "N"	File or Folder	can rename file or folder
 	OCItemPermissionMove		= (1<<8),	//!< Code "V"	File or Folder	can move file or folder
-
-	// unimplemented in parsing at the time of writing (2023-05-05)
-	OCItemPermissionDeniable	= (1<<9)	//!< Code "Z"	File or Folder	can limit access (experimental as of 2023-05-05)
+	OCItemPermissionDeniable	= (1<<9),	//!< Code "Z"	File or Folder	can limit access (experimental as of 2023-05-05)
+	OCItemPermissionTrashbinPurgable= (1<<10),	//!< Code "P"	File or Folder	Trashbin purgable (via https://github.com/owncloud/ocis/blob/621c863d9abdea5cb772b3e3804d2823fca93de2/docs/apis/http/webdav/_index.md?plain=1#L345C)
+	OCItemPermissionSecureViewable  = (1<<11),	//!< Code "X"	File or Folder	Securely Viewable (via https://github.com/owncloud/ocis/blob/621c863d9abdea5cb772b3e3804d2823fca93de2/docs/apis/http/webdav/_index.md?plain=1#L346C)
 } __attribute__((enum_extensibility(closed)));
 
 typedef NS_ENUM(NSInteger, OCItemThumbnailAvailability)

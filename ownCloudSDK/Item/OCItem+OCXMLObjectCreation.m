@@ -128,6 +128,18 @@
 								case 'V':
 									permissions |= OCItemPermissionMove;
 								break;
+
+								case 'Z':
+									permissions |= OCItemPermissionDeniable;
+								break;
+
+								case 'P':
+									permissions |= OCItemPermissionTrashbinPurgable;
+								break;
+
+								case 'X':
+									permissions |= OCItemPermissionSecureViewable;
+								break;
 							}
 						}
 					}

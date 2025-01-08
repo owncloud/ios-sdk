@@ -26,9 +26,10 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NS_ENUM(NSInteger, OCSharePermissionDriveRole) {
 	OCSharePermissionDriveRoleNone,
 
-	OCSharePermissionDriveRoleManager,
+	// Order allows numeric sorting by driveRole from most to least permissive
+	OCSharePermissionDriveRoleViewer,
 	OCSharePermissionDriveRoleEditor,
-	OCSharePermissionDriveRoleViewer
+	OCSharePermissionDriveRoleManager
 };
 
 @class GAPermission;
