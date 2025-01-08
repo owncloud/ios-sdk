@@ -38,12 +38,15 @@ NS_ASSUME_NONNULL_BEGIN
 @property(assign) OCLocationType locations; //!< Mask of OCLocationTypes this role can be used with
 
 @property(strong,nullable) NSNumber *weight; //!< Weight for ordering
+@property(strong,nullable) NSArray<OCShareActionID> *allowedActions; //!< For ocis share roles, optionally the allowed actions
 
 @property(strong,nonatomic,nullable) OCSymbolName symbolName;
 @property(strong) NSString *localizedName;
 @property(strong) NSString *localizedDescription;
 
 - (instancetype)initWithIdentifier:(nullable OCShareRoleID)identifier type:(OCShareRoleType)type shareTypes:(OCShareTypesMask)shareTypes permissions:(OCSharePermissionsMask)permissions customizablePermissions:(OCSharePermissionsMask)customizablePermissions locations:(OCLocationType)locations symbolName:(OCSymbolName)symbolName localizedName:(NSString *)localizedName localizedDescription:(NSString *)localizedDescription;
+
++ (BOOL)isRoleID:(OCShareRoleID)identifier equalTo:(OCShareRoleID)otherIdentifier;
 
 @end
 

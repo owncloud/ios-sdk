@@ -77,6 +77,6 @@ typedef NSString* OCShareState NS_TYPED_ENUM;
 
 typedef NSString* OCShareID;
 
-typedef NSString* OCShareActionID; //!< ocis graph action ID
+typedef NSString* OCShareActionID NS_TYPED_ENUM; //!< ocis graph action ID
 typedef NSString* OCShareRoleID NS_TYPED_ENUM; //!< ocis graph role ID
 
