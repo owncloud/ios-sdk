@@ -34,7 +34,31 @@
 
 		role.weight = self.libreGraphWeight;
 
-		// TODO: self.rolePermissions[0].allowedResourceActions -> integration into OCShareRolef
+		role.locations = OCLocationTypeUnknown;
+
+		NSMutableSet<OCShareActionID> *allowedActions = nil;
+
+		for (GAUnifiedRolePermission *rolePermission in self.rolePermissions)
+		{
+			if ([rolePermission.condition isEqual:@"exists @Resource.Root"]) {
+				role.locations |= OCLocationTypeDrive;
+			}
+
+			if ([rolePermission.condition isEqual:@"exists @Resource.Folder"]) {
+				role.locations |= OCLocationTypeFolder;
+			}
+
+			if ([rolePermission.condition isEqual:@"exists @Resource.File"]) {
+				role.locations |= OCLocationTypeFile;
+			}
+
+			if (rolePermission.allowedResourceActions != nil) {
+				if (allowedActions == nil) { allowedActions = [NSMutableSet new]; }
+				[allowedActions addObjectsFromArray:rolePermission.allowedResourceActions];
+			}
+		}
+
+		role.allowedActions = (allowedActions.count > 0) ? allowedActions.allObjects : nil;
 
 		_role = role;
 	}

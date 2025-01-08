@@ -196,6 +196,23 @@
 	return (nil);
 }
 
+- (id)bodyConvertedFromJSONWithError:(NSError **)outError
+{
+	id jsonObject;
+
+	if (self.bodyData == nil) { return(nil); }
+
+	if ((jsonObject = [NSJSONSerialization JSONObjectWithData:self.bodyData options:0 error:outError]) != nil)
+	{
+		if ([jsonObject isKindOfClass:NSArray.class] || [jsonObject isKindOfClass:NSDictionary.class])
+		{
+			return (jsonObject);
+		}
+	}
+
+	return (nil);
+}
+
 - (NSString *)responseDescriptionPrefixed:(BOOL)prefixed
 {
 	NSMutableString *responseDescription = [NSMutableString new];

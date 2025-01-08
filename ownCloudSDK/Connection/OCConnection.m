@@ -122,6 +122,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		OCConnectionEndpointIDWellKnown			: @".well-known",
 		OCConnectionEndpointIDCapabilities  		: @"ocs/v2.php/cloud/capabilities",			// Requested once on login
 		OCConnectionEndpointIDUser			: @"ocs/v2.php/cloud/user",				// Requested once on login
+		OCConnectionEndpointIDAssignmentsList		: @"api/v0/settings/assignments-list",			// Requested once on login (ocis only)
+		OCConnectionEndpointIDPermissionsList		: @"api/v0/settings/permissions-list",			// Requested once on login (ocis only)
 		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",				// Polled in intervals to detect changes to the root directory ETag
 		OCConnectionEndpointIDWebDAVMeta 	    	: @"remote.php/dav/meta",				// Metadata DAV endpoint, used for private link resolution
 		OCConnectionEndpointIDWebDAVSpaces		: @"remote.php/dav/spaces",				// Spaces DAV endpoint, used for f.ex. search (see ocis#9367)
@@ -131,9 +133,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		OCConnectionEndpointIDRecipients		: @"ocs/v2.php/apps/files_sharing/api/v1/sharees",	// Requested once per search string change when searching for recipients
 		OCConnectionEndpointIDAvatars			: @"remote.php/dav/avatars",				// Requested once per user per session (adding /[user]/[size-in-pixels])
 
+		OCConnectionEndpointIDGraphMe			: @"graph/v1.0/me",					// Me endpoint
 		OCConnectionEndpointIDGraphMeDrives		: @"graph/v1.0/me/drives",				// Drives of the user
 		OCConnectionEndpointIDGraphDrives		: @"graph/v1.0/drives",					// Drives
 		OCConnectionEndpointIDGraphDrivePermissions	: @"graph/v1beta1/drives",				// Drive permissions base
+		OCConnectionEndpointIDGraphRoleDefinitions	: @"graph/v1beta1/roleManagement/permissions/roleDefinitions", // Global role definitions
 		OCConnectionEndpointIDGraphUsers		: @"graph/v1.0/users",					// Users
 		OCConnectionEndpointIDGraphGroups		: @"graph/v1.0/groups",					// Groups
 
@@ -1534,6 +1538,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 														[self.bookmark addCapability:OCBookmarkCapabilityDrives];
 														saveBookmark = YES;
 													}
+
+													// Get a list of share roles
+													[self retrieveRoleDefinitionsWithCompletionHandler:^(NSError * _Nullable error, NSArray<OCShareRole *> * _Nullable shareRoles) {
+														if (error != nil)
+														{
+															OCLogError(@"Error retrieving global share roles: %@", shareRoles);
+														}
+													}];
 
 													// Get a list of drives
 													[self retrieveDriveListWithCompletionHandler:^(NSError * _Nullable error, NSArray<OCDrive *> * _Nullable drives) {
@@ -3390,6 +3402,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 OCConnectionEndpointID OCConnectionEndpointIDWellKnown = @"well-known";
 OCConnectionEndpointID OCConnectionEndpointIDCapabilities = @"endpoint-capabilities";
 OCConnectionEndpointID OCConnectionEndpointIDUser = @"endpoint-user";
+OCConnectionEndpointID OCConnectionEndpointIDAssignmentsList = @"endpoint-assigments-list";
+OCConnectionEndpointID OCConnectionEndpointIDPermissionsList = @"endpoint-permissions-list";
 OCConnectionEndpointID OCConnectionEndpointIDWebDAV = @"endpoint-webdav";
 OCConnectionEndpointID OCConnectionEndpointIDWebDAVMeta = @"endpoint-webdav-meta";
 OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot = @"endpoint-webdav-root";

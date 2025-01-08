@@ -58,6 +58,15 @@
 		sharesSortComparator =  [^NSComparisonResult(OCShare *  _Nonnull share1, OCShare *  _Nonnull share2) {
 			NSString *name1, *name2;
 
+			OCSharePermissionDriveRole role1 = share1.sharePermissions.firstObject.driveRole;
+			OCSharePermissionDriveRole role2 = share2.sharePermissions.firstObject.driveRole;
+
+			if (role1 != role2)
+			{
+				if (role1 > role2) { return (NSOrderedAscending); }
+				if (role1 < role2) { return (NSOrderedDescending); }
+			}
+
 			name1 = share1.itemLocation.lastPathComponent;
 			name2 = share2.itemLocation.lastPathComponent;
 

@@ -143,6 +143,8 @@ NS_ASSUME_NONNULL_BEGIN
 	NSArray<OCDrive *> *_drives;
 	NSMutableDictionary<OCDriveID, OCDrive *> *_drivesByID;
 
+	NSArray<OCShareRole *> *_globalShareRoles;
+
 	NSMutableSet<OCConnectionSignalID> *_signals;
 	NSSet<OCConnectionSignalID> *_actionSignals;
 	NSSet<OCConnectionSignalID> *_propFindSignals;
@@ -483,6 +485,8 @@ typedef void(^OCConnectionIdentityObjectsDetailsRetrievalCompletionHandler)(NSEr
 extern OCConnectionEndpointID OCConnectionEndpointIDWellKnown;
 extern OCConnectionEndpointID OCConnectionEndpointIDCapabilities;
 extern OCConnectionEndpointID OCConnectionEndpointIDUser;
+extern OCConnectionEndpointID OCConnectionEndpointIDAssignmentsList;
+extern OCConnectionEndpointID OCConnectionEndpointIDPermissionsList;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAV;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVMeta;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVSpaces; //!< Spaces DAV endpoint, used for f.ex. search (see ocis#9367)

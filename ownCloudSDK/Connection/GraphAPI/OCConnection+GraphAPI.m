@@ -18,6 +18,7 @@
 
 #import "OCConnection+GraphAPI.h"
 #import "OCConnection+OData.h"
+#import "GAUser.h"
 #import "GAIdentitySet.h"
 #import "GADrive.h"
 #import "GAPermission.h"
@@ -28,10 +29,38 @@
 #import "OCODataDecoder.h"
 #import "OCMacros.h"
 #import "OCShare+GraphAPI.h"
+#import "OCShareRole+GraphAPI.h"
 #import "NSError+OCError.h"
+#import "NSURL+OCURLQueryParameterExtensions.h"
+#import "GAPermission.h"
+#import "GAIdentity.h"
 
 @implementation OCConnection (GraphAPI)
 
+#pragma mark - User Info
+- (nullable NSProgress *)retrieveLoggedInGraphUserWithCompletionHandler:(OCRetrieveLoggedInGraphUserCompletionHandler)completionHandler
+{
+	return ([self requestODataAtURL:[[self URLForEndpoint:OCConnectionEndpointIDGraphMe options:nil] urlByAppendingQueryParameters:@{ @"$expand" : @"memberOf" } replaceExisting:NO] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:nil entityClass:GAUser.class options:nil completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+		OCUser *ocUser = nil;
+
+		if (error == nil)
+		{
+			// Convert GAUser to OCUser
+			if ([response isKindOfClass:GAUser.class])
+			{
+				ocUser = [OCUser userWithGraphUser:response];
+			}
+			else
+			{
+				error = OCError(OCErrorResponseUnknownFormat);
+			}
+		}
+
+		completionHandler(error, ocUser);
+	}]);
+}
+
+#pragma mark - Drives
 - (NSArray<OCDrive *> *)drives
 {
 	@synchronized (_drivesByID)
@@ -196,10 +225,115 @@
 	}]);
 }
 
+- (nullable NSArray<OCShareActionID> *)shareActionsForDrive:(OCDrive *)drive
+{
+	OCUser *loggedInUser = self.loggedInUser;
+	OCUserID userIdentifier = loggedInUser.identifier;
+	NSMutableSet<OCShareActionID> *shareActionsSet = [NSMutableSet new];
+
+	for (GAPermission *permission in drive.permissions)
+	{
+		if ( ((userIdentifier != nil) && ([permission.grantedToV2.user.identifier isEqual:userIdentifier])) ||
+		     ((loggedInUser.groupMemberships != nil) && (permission.grantedToV2.group.identifier != nil) && [loggedInUser.groupMemberships containsObject:permission.grantedToV2.group.identifier])
+		   )
+		{
+			for (OCShareRoleID roleID in permission.roles)
+			{
+				OCShareRole *globalRole;
+
+				if ((globalRole = [self globalShareRoleFor:roleID]) != nil)
+				{
+					if (globalRole.allowedActions != nil)
+					{
+						[shareActionsSet addObjectsFromArray:globalRole.allowedActions];
+					}
+				}
+			}
+		}
+	}
+
+	return ((shareActionsSet.count > 0) ? shareActionsSet.allObjects : nil);
+}
+
+#pragma mark - Share Rolees
+- (NSArray<OCShareRole *> *)globalShareRoles
+{
+	@synchronized(_drivesByID)
+	{
+		return (_globalShareRoles);
+	}
+}
+
+- (void)setGlobalShareRoles:(NSArray<OCShareRole *> *)globalShareRoles
+{
+	@synchronized(_drivesByID)
+	{
+		_globalShareRoles = globalShareRoles;
+	}
+}
+
+- (OCShareRole *)globalShareRoleFor:(OCShareRoleID)roleID
+{
+	@synchronized(_drivesByID)
+	{
+		for (OCShareRole *role in _globalShareRoles)
+		{
+			if ([OCShareRole isRoleID:role.identifier equalTo:roleID])
+			{
+				return (role);
+			}
+		}
+	}
+
+	return (nil);
+}
+
+- (nullable NSProgress *)retrieveRoleDefinitionsWithCompletionHandler:(OCRetrieveRoleDefinitionsCompletionHandler)completionHandler; //!< Retrieves the global list of all role definitions from the server
+{
+	return ([self requestODataAtURL:[self URLForEndpoint:OCConnectionEndpointIDGraphRoleDefinitions options:nil] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] selectEntityID:nil selectProperties:nil filterString:nil parameters:nil entityClass:GAUnifiedRoleDefinition.class options:nil completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+		NSMutableArray<OCShareRole *> *ocShareRoles = nil;
+
+		if (error == nil)
+		{
+			// Convert GADrives to OCDrives
+			NSArray<GAUnifiedRoleDefinition *> *gaRoleDefinitions;
+
+			if ((gaRoleDefinitions = OCTypedCast(response, NSArray)) != nil)
+			{
+				ocShareRoles = [NSMutableArray new];
+
+				for (GAUnifiedRoleDefinition *roleDefinition in gaRoleDefinitions)
+				{
+					OCShareRole *ocShareRole;
+
+					if ((ocShareRole = roleDefinition.role) != nil)
+					{
+						[ocShareRoles addObject:ocShareRole];
+					}
+				}
+
+				if (ocShareRoles.count > 0)
+				{
+					self.globalShareRoles = ocShareRoles;
+				}
+			}
+		}
+
+		OCLogDebug(@"Roles response: drives=%@, error=%@", ocShareRoles, error);
+
+		if (completionHandler != nil)
+		{
+			completionHandler(error, (ocShareRoles.count > 0) ? ocShareRoles : nil);
+		}
+	}]);
+}
+
 @end
 
+OCConnectionEndpointID OCConnectionEndpointIDGraphMe = @"endpoint-graph-me";
 OCConnectionEndpointID OCConnectionEndpointIDGraphMeDrives = @"meDrives";
 OCConnectionEndpointID OCConnectionEndpointIDGraphDrives = @"drives";
 OCConnectionEndpointID OCConnectionEndpointIDGraphDrivePermissions = @"endpoint-graph-drive-permissions";
+OCConnectionEndpointID OCConnectionEndpointIDGraphRoleDefinitions = @"endpoint-graph-role-definitions";
 OCConnectionEndpointID OCConnectionEndpointIDGraphUsers = @"endpoint-graph-users";
 OCConnectionEndpointID OCConnectionEndpointIDGraphGroups = @"endpoint-graph-groups";
