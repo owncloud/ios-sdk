@@ -36,6 +36,7 @@
 #import "OCAvatar.h"
 #import "OCDrive.h"
 #import "OCAppProviderApp.h"
+#import "OCFeatureAvailability.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
@@ -46,6 +47,7 @@
 @class OCServerInstance;
 @class OCTUSJobSegment;
 @class OCTUSJob;
+@class OCShareRole;
 
 typedef NSString* OCConnectionEndpointID NS_TYPED_ENUM;
 typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
@@ -140,6 +142,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSArray<OCDrive *> *_drives;
 	NSMutableDictionary<OCDriveID, OCDrive *> *_drivesByID;
+
+	NSArray<OCShareRole *> *_globalShareRoles;
 
 	NSMutableSet<OCConnectionSignalID> *_signals;
 	NSSet<OCConnectionSignalID> *_actionSignals;
@@ -288,7 +292,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 #pragma mark - SHARING
-typedef void(^OCConnectionShareRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCShare *> * _Nullable shares);
+typedef void(^OCConnectionShareRetrievalCompletionHandler)(NSError * _Nullable error, NSArray<OCShareActionID> * _Nullable allowedPermissionActions, NSArray<OCShareRole *> * _Nullable allowedRoles, NSArray<OCShare *> * _Nullable shares);
 typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCShare * _Nullable share);
 
 @interface OCConnection (Sharing)
@@ -345,13 +349,44 @@ typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCS
 
 @end
 
+#pragma mark - DRIVES
+typedef void(^OCConnectionDriveCompletionHandler)(NSError * _Nullable error, OCDrive * _Nullable newDrive);
+typedef void(^OCConnectionDriveManagementCompletionHandler)(NSError * _Nullable error);
+
+@interface OCConnection (Drives)
+
+#pragma mark - Creation
+- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes completionHandler:(OCConnectionDriveCompletionHandler)completionHandler;
+
+#pragma mark - Disable/Restore/Delete
+- (nullable NSProgress *)disableDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
+- (nullable NSProgress *)restoreDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
+- (nullable NSProgress *)deleteDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
+
+#pragma mark - Change attributes
+- (nullable NSProgress *)updateDrive:(OCDrive *)drive properties:(NSDictionary<OCDriveProperty, id> *)updateProperties completionHandler:(OCConnectionDriveCompletionHandler)completionHandler;
+//- (nullable NSProgress *)changeQuota:(nullable NSNumber *)quotaBytes ofDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
+//- (nullable NSProgress *)changeName:(nullable NSString *)name ofDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
+
+@end
+
 #pragma mark - RECIPIENTS
-typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCIdentity *> * _Nullable recipients);
+typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCIdentity *> * _Nullable recipients, BOOL finished);
+typedef void(^OCConnectionUserRetrievalCompletionHandler)(NSError * _Nullable error, OCUser * _Nullable user);
+typedef void(^OCConnectionGroupRetrievalCompletionHandler)(NSError * _Nullable error, OCGroup * _Nullable group);
+typedef void(^OCConnectionIdentityDetailsRetrievalCompletionHandler)(NSError * _Nullable error, OCIdentity * _Nullable identity);
+typedef void(^OCConnectionIdentityObjectsDetailsRetrievalCompletionHandler)(NSError * _Nullable error, NSArray* _Nullable identityObjects);
 
 @interface OCConnection (Recipients)
 
-#pragma mark - Retrieval
+#pragma mark - Search
 - (nullable NSProgress *)retrieveRecipientsForItemType:(OCItemType)itemType ofShareType:(nullable NSArray <OCShareTypeID> *)shareTypes searchTerm:(nullable NSString *)searchTerm maximumNumberOfRecipients:(NSUInteger)maximumNumberOfRecipients completionHandler:(OCConnectionRecipientsRetrievalCompletionHandler)completionHandler;
+
+#pragma mark - Lookup
+- (nullable NSProgress *)retrieveUserForID:(OCUserID)userID completionHandler:(OCConnectionUserRetrievalCompletionHandler)completionHandler; //!< Looks up a user with the server using its ID. GraphAPI / ocis-only
+- (nullable NSProgress *)retrieveGroupForID:(OCGroupID)groupID completionHandler:(OCConnectionGroupRetrievalCompletionHandler)completionHandler; //!< Looks up a group with the server using its ID. GraphAPI / ocis-only
+- (nullable NSProgress *)retrieveDetailsForIdentity:(OCIdentity *)identity completionHandler:(OCConnectionIdentityDetailsRetrievalCompletionHandler)completionHandler; //!< Retrieve full (user|group) details for identity. GraphAPI / ocis-only
+- (nullable NSProgress *)retrieveDetailsForObjects:(NSArray *)identityObjects asIdentities:(BOOL)asIdentities resolveIdentities:(BOOL)resolveIdentities completionHandler:(OCConnectionIdentityObjectsDetailsRetrievalCompletionHandler)completionHandler; //!< Retrieve full details for (user|group|identity) objects (can be mixed in array). If `asIdentities` is YES, the completionHandler will contain only OCIdentity instances. If `resolveIdentities` is YES, OCIdentity instances will be returned as OCUser and OCGroup where applicable. GraphAPI / ocis-only
 
 @end
 
@@ -442,6 +477,8 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 extern OCConnectionEndpointID OCConnectionEndpointIDWellKnown;
 extern OCConnectionEndpointID OCConnectionEndpointIDCapabilities;
 extern OCConnectionEndpointID OCConnectionEndpointIDUser;
+extern OCConnectionEndpointID OCConnectionEndpointIDAssignmentsList;
+extern OCConnectionEndpointID OCConnectionEndpointIDPermissionsList;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAV;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVMeta;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot; //!< Virtual, non-configurable endpoint, builds the root URL based on OCConnectionEndpointIDWebDAV and the username found in connection.loggedInUser

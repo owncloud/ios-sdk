@@ -14,30 +14,32 @@
  *
  */
 
-// occgen: includes
+// occgen: includes {"locked":true}
 #import <Foundation/Foundation.h>
 #import "GAGraphObject.h"
+#import "OCShareTypes.h"
 
 // occgen: forward declarations
+typedef NSString * GAPermissionUUID;
 @class GAIdentitySet;
 @class GASharePointIdentitySet;
 @class GASharingInvitation;
 @class GASharingLink;
 
-// occgen: type start
+// occgen: type start {"locked":true}
 NS_ASSUME_NONNULL_BEGIN
 @interface GAPermission : NSObject <GAGraphObject, NSSecureCoding>
 
-// occgen: type properties
-@property(strong, nullable) NSString *identifier; //!< The unique identifier of the permission among all permissions on the item. Read-only.
+// occgen: type properties { "customPropertyTypes" : { "identifier" : "GAPermissionUUID", "roles" : "NSArray<OCShareRoleID> *", "libreGraphPermissionsActions" : "NSArray<OCShareActionID> *" }}
+@property(strong, nullable) GAPermissionUUID identifier; //!< The unique identifier of the permission among all permissions on the item. Read-only.
 @property(strong, nullable) NSNumber *hasPassword; //!< [boolean] |
 @property(strong, nullable) NSDate *expirationDateTime; //!< [string:date-time] An optional expiration date which limits the permission in time.
 @property(strong, nullable) NSDate *createdDateTime; //!< [string:date-time] An optional creation date. Libregraph only.
 @property(strong, nullable) GASharePointIdentitySet *grantedToV2; //!< For user type permissions, the details of the users and applications for this permission. Only part of responses. Use the invitation property when creating shares.
 @property(strong, nullable) GASharingLink *link; //!< Provides the link details of the current permission, if it is a link type permissions.
-@property(strong, nullable) NSArray<NSString *> *roles;
+@property(strong, nullable) NSArray<OCShareRoleID> *roles;
 @property(strong, nullable) NSArray<GAIdentitySet *> *grantedToIdentities; //!< For link type permissions, the details of the identity to whom permission was granted. This could be used to grant access to a an external user that can be identified by email, aka guest accounts.
-@property(strong, nullable) NSArray<NSString *> *libreGraphPermissionsActions; //!< Use this to create a permission with custom actions.
+@property(strong, nullable) NSArray<OCShareActionID> *libreGraphPermissionsActions; //!< Use this to create a permission with custom actions.
 @property(strong, nullable) GASharingInvitation *invitation; //!< |
 
 // occgen: type protected {"locked":true}

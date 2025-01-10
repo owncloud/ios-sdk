@@ -1,13 +1,13 @@
 //
-//  OCGObject.m
+//  GAUnifiedRoleDefinition+ShareRole.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 26.01.22.
-//  Copyright © 2022 ownCloud GmbH. All rights reserved.
+//  Created by Felix Schwarz on 18.12.24.
+//  Copyright © 2024 ownCloud GmbH. All rights reserved.
 //
 
 /*
- * Copyright (C) 2022, ownCloud GmbH.
+ * Copyright (C) 2024, ownCloud GmbH.
  *
  * This code is covered by the GNU Public License Version 3.
  *
@@ -16,8 +16,12 @@
  *
  */
 
-#import "OCGObject.h"
+#import "GAUnifiedRoleDefinition.h"
 
-@implementation OCGObject
+NS_ASSUME_NONNULL_BEGIN
+
+@interface GAUnifiedRoleDefinition (ShareRole)
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -53,11 +53,11 @@
 // occgen: type protected {"locked":true}
 - (NSError *)nativeError
 {
-	NSError *error = [NSError errorWithDomain:OCErrorDomain code:OCErrorRequiredValueMissing userInfo:@{
-		@"gaError" : self
-	}];
+	NSMutableDictionary *userInfo = [NSMutableDictionary new];
+	userInfo[@"gaError"] = self;
+	userInfo[NSLocalizedDescriptionKey] = self.message;
 
-	return (error);
+	return ([NSError errorWithDomain:OCErrorDomain code:OCErrorRequiredValueMissing userInfo:userInfo]);
 }
 
 // occgen: type native deserialization
