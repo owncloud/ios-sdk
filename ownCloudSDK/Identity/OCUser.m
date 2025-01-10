@@ -80,7 +80,7 @@
 
 + (instancetype)userWithGraphUser:(GAUser *)gaUser
 {
-	OCUser *user = [self userWithGraphDisplayname:gaUser.displayName identifier:gaUser.identifier userType:gaUser.userType userName:gaUser.onPremisesSamAccountName];
+	OCUser *user = [self userWithGraphDisplayname:gaUser.displayName identifier:gaUser.identifier userType:gaUser.userType userName:([gaUser.onPremisesSamAccountName isEqual:@""] ? nil : gaUser.onPremisesSamAccountName)];
 
 	if (gaUser.memberOf.count > 0)
 	{
