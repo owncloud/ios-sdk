@@ -27,6 +27,8 @@
 {
 	NSMutableArray <id <OCClassSettingsSource>> *_sources;
 	NSMutableDictionary<OCClassSettingsIdentifier,NSMutableDictionary<OCClassSettingsKey,id> *> *_overrideValuesByKeyByIdentifier;
+
+	NSMutableSet <id<OCClassSettingsSource>> *_queriedSources;
 }
 
 @end
@@ -50,7 +52,7 @@
 	return(sharedClassSettings);
 }
 
--(instancetype)init
+- (instancetype)init
 {
 	if ((self = [super init]) != nil)
 	{
@@ -58,6 +60,7 @@
 		_actualValuesByKeyByIdentifier = [NSMutableDictionary new];
 
 		_flagsByKeyByIdentifier = [NSMutableDictionary new];
+		_queriedSources = [NSMutableSet new];
 	}
 
 	return (self);
@@ -237,6 +240,14 @@
 				{
 					NSDictionary<OCClassSettingsKey,id> *originalOverrideDict;
 
+					if ([_queriedSources containsObject:source]) {
+						// Avoid infinite loop with source, from which a settings request appears to have originated
+						continue;
+					} else {
+						// Add source to queriedSources, so it isn't queried again while it is queried (=> avoids infinite loops)
+						[_queriedSources addObject:source];
+					}
+
 					if ((originalOverrideDict = [source settingsForIdentifier:settingsIdentifier]) != nil)
 					{
 						NSDictionary<OCClassSettingsKey, NSError *> *validationErrorsByKey;
@@ -284,6 +295,9 @@
 							}
 						}
 					}
+
+					// Done querying source => remove from _queriedSources
+					[_queriedSources removeObject:source];
 				}
 
 				if (overrideDict != nil)
