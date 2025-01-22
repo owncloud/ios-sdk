@@ -63,11 +63,14 @@
 	switch (_memoryConfiguration)
 	{
 		case OCPlatformMemoryConfigurationDefault:
+			if (_cache == nil) {
+				_cache = [OCCache new];
+			}
 			_cache.countLimit = OCCacheLimitNone;
 		break;
 
 		case OCPlatformMemoryConfigurationMinimum:
-			_cache.countLimit = 0;
+			_cache = nil; // Do not perform any caching
 		break;
 	}
 }
