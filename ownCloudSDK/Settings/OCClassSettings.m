@@ -39,16 +39,23 @@
 {
 	static dispatch_once_t onceToken;
 	static OCClassSettings *sharedClassSettings = nil;
-	
+	__block BOOL addDefaultSources = NO;
+
 	dispatch_once(&onceToken, ^{
 		sharedClassSettings = [OCClassSettings new];
+		addDefaultSources = YES;
+	});
 
+	if (addDefaultSources)
+	{
+		// Add sources outside dispatch_once, so that calling OCLog / OCClassSettings.sharedSettings will not
+		// lead to a crash due to a call of dispatch_once from within the same dispatch_once
 		[sharedClassSettings addSource:[OCClassSettingsFlatSourceManagedConfiguration new]];
 		[sharedClassSettings addSource:[OCClassSettingsUserPreferences sharedUserPreferences]];
 		[sharedClassSettings addSource:[OCClassSettingsFlatSourcePostBuild sharedPostBuildSettings]];
 		[sharedClassSettings addSource:[[OCClassSettingsFlatSourceEnvironment alloc] initWithPrefix:@"oc:"]];
-	});
-	
+	}
+
 	return(sharedClassSettings);
 }
 
