@@ -327,8 +327,6 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 		_claimTokensByClaimIdentifier = [NSMapTable strongToWeakObjectsMapTable];
 
-		_thumbnailCache = [OCCache new];
-
 		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 		_connectivityQueue = dispatch_queue_create("OCCore connectivity queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 
@@ -1048,17 +1046,6 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	_memoryConfiguration = memoryConfiguration;
 
 	self.vault.resourceManager.memoryConfiguration = memoryConfiguration;
-
-	switch (_memoryConfiguration)
-	{
-		case OCPlatformMemoryConfigurationDefault:
-			_thumbnailCache.countLimit = OCCacheLimitNone;
-		break;
-
-		case OCPlatformMemoryConfigurationMinimum:
-			_thumbnailCache.countLimit = 0;
-		break;
-	}
 }
 
 #pragma mark - Inter-Process change notification/handling

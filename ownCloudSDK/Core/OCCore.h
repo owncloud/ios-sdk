@@ -224,7 +224,6 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	OCSignalManager *_signalManager;
 
-	OCCache<OCFileID,OCItemThumbnail *> *_thumbnailCache;
 	NSMutableDictionary <NSString *, NSMutableArray<OCCoreThumbnailRetrieveHandler> *> *_pendingThumbnailRequests;
 
 	NSMutableDictionary <OCIPCNotificationName, id> *_remoteSyncEngineTriggerAcknowledgements;
