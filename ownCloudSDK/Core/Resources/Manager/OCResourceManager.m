@@ -56,18 +56,21 @@
 	return (self);
 }
 
-- (void)setMemoryConfiguration:(OCCoreMemoryConfiguration)memoryConfiguration
+- (void)setMemoryConfiguration:(OCPlatformMemoryConfiguration)memoryConfiguration
 {
 	_memoryConfiguration = memoryConfiguration;
 
 	switch (_memoryConfiguration)
 	{
-		case OCCoreMemoryConfigurationDefault:
+		case OCPlatformMemoryConfigurationDefault:
+			if (_cache == nil) {
+				_cache = [OCCache new];
+			}
 			_cache.countLimit = OCCacheLimitNone;
 		break;
 
-		case OCCoreMemoryConfigurationMinimum:
-			_cache.countLimit = 1;
+		case OCPlatformMemoryConfigurationMinimum:
+			_cache = nil; // Do not perform any caching
 		break;
 	}
 }

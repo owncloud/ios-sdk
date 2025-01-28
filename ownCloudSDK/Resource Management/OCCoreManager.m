@@ -411,29 +411,6 @@
 	return (nil);
 }
 
-#pragma mark - Memory configuration
-- (void)setMemoryConfiguration:(OCCoreMemoryConfiguration)memoryConfiguration
-{
-	@synchronized (self)
-	{
-		_memoryConfiguration = memoryConfiguration;
-
-		[_coresByUUID enumerateKeysAndObjectsUsingBlock:^(NSUUID * _Nonnull key, OCCore * _Nonnull core, BOOL * _Nonnull stop) {
-			core.memoryConfiguration = memoryConfiguration;
-		}];
-
-		switch (memoryConfiguration)
-		{
-			case OCCoreMemoryConfigurationMinimum:
-				[OCSQLiteDB setMemoryLimit:(1 * 1024 * 512)]; // Set 0.5 MB memory limit for SQLite;
-			break;
-
-			default: break;
-		}
-
-	}
-}
-
 #pragma mark - Active run identifiers
 - (NSArray<OCCoreRunIdentifier> *)activeRunIdentifiers
 {

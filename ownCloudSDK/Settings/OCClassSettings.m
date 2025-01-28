@@ -27,6 +27,8 @@
 {
 	NSMutableArray <id <OCClassSettingsSource>> *_sources;
 	NSMutableDictionary<OCClassSettingsIdentifier,NSMutableDictionary<OCClassSettingsKey,id> *> *_overrideValuesByKeyByIdentifier;
+
+	NSMutableSet <id<OCClassSettingsSource>> *_queriedSources;
 }
 
 @end
@@ -37,20 +39,27 @@
 {
 	static dispatch_once_t onceToken;
 	static OCClassSettings *sharedClassSettings = nil;
-	
+	__block BOOL addDefaultSources = NO;
+
 	dispatch_once(&onceToken, ^{
 		sharedClassSettings = [OCClassSettings new];
+		addDefaultSources = YES;
+	});
 
+	if (addDefaultSources)
+	{
+		// Add sources outside dispatch_once, so that calling OCLog / OCClassSettings.sharedSettings will not
+		// lead to a crash due to a call of dispatch_once from within the same dispatch_once
 		[sharedClassSettings addSource:[OCClassSettingsFlatSourceManagedConfiguration new]];
 		[sharedClassSettings addSource:[OCClassSettingsUserPreferences sharedUserPreferences]];
 		[sharedClassSettings addSource:[OCClassSettingsFlatSourcePostBuild sharedPostBuildSettings]];
 		[sharedClassSettings addSource:[[OCClassSettingsFlatSourceEnvironment alloc] initWithPrefix:@"oc:"]];
-	});
-	
+	}
+
 	return(sharedClassSettings);
 }
 
--(instancetype)init
+- (instancetype)init
 {
 	if ((self = [super init]) != nil)
 	{
@@ -58,6 +67,7 @@
 		_actualValuesByKeyByIdentifier = [NSMutableDictionary new];
 
 		_flagsByKeyByIdentifier = [NSMutableDictionary new];
+		_queriedSources = [NSMutableSet new];
 	}
 
 	return (self);
@@ -101,7 +111,37 @@
 					_registeredMetaDataCollectionsByIdentifier[identifier] = registeredMetaDataCollections;
 				}
 
-				[registeredMetaDataCollections addObject:metaData];
+				if (OCPlatform.current.memoryConfiguration == OCPlatformMemoryConfigurationMinimum)
+				{
+					@autoreleasepool {
+						NSMutableDictionary<OCClassSettingsKey,OCClassSettingsMetadata> *filteredCollection = [NSMutableDictionary new];
+
+						for (OCClassSettingsKey settingsKey in metaData)
+						{
+							OCClassSettingsMetadata settingsMetadata = metaData[settingsKey];
+							id mdType = settingsMetadata[OCClassSettingsMetadataKeyType];
+							id mdPossibleKeys = settingsMetadata[OCClassSettingsMetadataKeyPossibleKeys];
+
+							if ((mdType != nil) || (mdPossibleKeys != nil))
+							{
+								NSMutableDictionary<OCClassSettingsMetadataKey,id> *filteredMetadata = [NSMutableDictionary new];
+								filteredMetadata[OCClassSettingsMetadataKeyType] = mdType;
+								filteredMetadata[OCClassSettingsMetadataKeyPossibleKeys] = mdPossibleKeys;
+
+								filteredCollection[settingsKey] = [[NSDictionary alloc] initWithDictionary:filteredMetadata];
+							}
+						}
+
+						if (filteredCollection.count > 0)
+						{
+							[registeredMetaDataCollections addObject:[[NSDictionary alloc] initWithDictionary:filteredCollection]];
+						}
+					}
+				}
+				else
+				{
+					[registeredMetaDataCollections addObject:metaData];
+				}
 			}
 
 			[self clearSourceCache];
@@ -237,6 +277,14 @@
 				{
 					NSDictionary<OCClassSettingsKey,id> *originalOverrideDict;
 
+					if ([_queriedSources containsObject:source]) {
+						// Avoid infinite loop with source, from which a settings request appears to have originated
+						continue;
+					} else {
+						// Add source to queriedSources, so it isn't queried again while it is queried (=> avoids infinite loops)
+						[_queriedSources addObject:source];
+					}
+
 					if ((originalOverrideDict = [source settingsForIdentifier:settingsIdentifier]) != nil)
 					{
 						NSDictionary<OCClassSettingsKey, NSError *> *validationErrorsByKey;
@@ -284,6 +332,9 @@
 							}
 						}
 					}
+
+					// Done querying source => remove from _queriedSources
+					[_queriedSources removeObject:source];
 				}
 
 				if (overrideDict != nil)

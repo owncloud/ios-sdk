@@ -1,4040 +1,4040 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "Auto-accepted.": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auto-accepted."
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Auto-accepted." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-accepted."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Automatisch akzeptiert."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch akzeptiert."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auto-accepted."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-accepted."
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auto-accepted."
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-accepted."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aceptar automáticamente."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aceptar automáticamente."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auto-accepted."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-accepted."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "자동 수락됨"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동 수락됨"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auto-accepted."
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-accepted."
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aceito automaticamente. "
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aceito automaticamente. "
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auto-accepted."
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-accepted."
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Принято автоматически."
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Принято автоматически."
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "U vetëpranua."
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "U vetëpranua."
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ยอมรับโดยอัตโนมัติ"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ยอมรับโดยอัตโนมัติ"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Otomatik olarak onaylandı."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otomatik olarak onaylandı."
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auto-accepted."
-          }
-        }
-      }
-    },
-    "Certificate Details": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate Details"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zertifikat-Details"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate Details"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate Details"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate Details"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate Details"
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate Details"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate Details"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate Details"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate Details"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate Details"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-accepted."
           }
         }
       }
     },
-    "Certificate chain": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate chain"
+    "businessCategory" : {
+      "comment" : "X.509 certificate fields",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Business category"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zertifikatskette"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organisationseinheit"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate chain"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Business category"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate chain"
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Business category"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate chain"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Categoría de negocio"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate chain"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Business category"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate chain"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사업 분류"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate chain"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Business category"
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate chain"
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Business category"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate chain"
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Business category"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate chain"
-          }
-        }
-      }
-    },
-    "Certificate has issues.": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate has issues."
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Categoria de negócio"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Es gibt Probleme mit dem Zertifikat."
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Categoria de negócio"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate has issues."
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "бизнес-категория"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate has issues."
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kategori biznes"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "El certificado tiene problemas"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ประเภทธุรกิจ"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate has issues."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İş dünyası kategorisi"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "인증서에 오류가 있습니다"
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate has issues."
-          }
-        },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate has issues."
-          }
-        },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certificate has issues."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O certificado tem problemas."
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O certificado tem problemas."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Проблемы с сертификатом."
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dëshmia ka probleme."
-          }
-        },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ใบรับรองมีปัญหา"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sertifikada hatalar mevcut."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "证书存在问题。"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "商务分类"
           }
         }
       }
     },
-    "Extensions": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extensions"
+    "Certificate chain" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erweiterungen"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikatskette"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extensions"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extensions"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extensiones"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extensions"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "확장프로그램"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extensions"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain"
           }
         },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extensions"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain"
           }
         },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extensions"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extensões"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extensões"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Расширения"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zgjerime"
-          }
-        },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ส่วนขยาย"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eklentiler"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "扩展"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain"
           }
         }
       }
     },
-    "Fingerprints": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fingerprints"
+    "Certificate Details" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate Details"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fingerabdrücke"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikat-Details"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fingerprints"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate Details"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fingerprints"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate Details"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Huellas digitales"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate Details"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fingerprints"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate Details"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "지문"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate Details"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fingerprints"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate Details"
           }
         },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fingerprints"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate Details"
           }
         },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fingerprints"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate Details"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impressões digitais"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Assinaturas Digitais"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Отпечатки"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Shenja gishtash"
-          }
-        },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ลายนิ้วมือ"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Parmak Izleri"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "指纹"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate Details"
           }
         }
       }
     },
-    "Hide ±": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide ±"
+    "Certificate has issues." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate has issues."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ausblenden ±"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es gibt Probleme mit dem Zertifikat."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide ±"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate has issues."
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide ±"
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate has issues."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esconder ±"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El certificado tiene problemas"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide ±"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate has issues."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "숨기기 ±"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인증서에 오류가 있습니다"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide ±"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate has issues."
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esconder ± "
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate has issues."
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide ±"
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate has issues."
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Скрыть ±"
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O certificado tem problemas."
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fshih ±"
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O certificado tem problemas."
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ซ่อน ±"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проблемы с сертификатом."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gizle ±"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dëshmia ka probleme."
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide ±"
-          }
-        }
-      }
-    },
-    "Hostname": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hostname"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ใบรับรองมีปัญหา"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hostname"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sertifikada hatalar mevcut."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hostname"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hostname"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nombre de equipo"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nom de l'hôte"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "호스트 이름"
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hostname"
-          }
-        },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hostname"
-          }
-        },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hostname"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nome do Host"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nome do Anfitrião"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Имя хоста"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Strehëemër"
-          }
-        },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ชื่อโฮสต์"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Makine adı"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "主机名"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "证书存在问题。"
           }
         }
       }
     },
-    "Intermediate Certificate": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intermediate Certificate"
+    "commonName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Common name"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zwischenzertifikat"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allgemeiner Name"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intermediate Certificate"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Common name"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intermediate Certificate"
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Common name"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intermediate Certificate"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre común"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intermediate Certificate"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Common name"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intermediate Certificate"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일반 이름"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intermediate Certificate"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Common name"
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intermediate Certificate"
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Common name"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intermediate Certificate"
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Common name"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intermediate Certificate"
-          }
-        }
-      }
-    },
-    "Issuer": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Issuer"
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nome comum"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aussteller"
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nome comum"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Issuer"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Общее имя"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Issuer"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emër i rëndomtë"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Emisor"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ชื่อสามัญ"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Émetteur"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ortak isim"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "발급자"
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Issuer"
-          }
-        },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Issuer"
-          }
-        },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Issuer"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gerador"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Emissor"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Издатель"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lëshues"
-          }
-        },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ผู้ออก"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sağlayıcı"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "颁发者"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "常用名"
           }
         }
       }
     },
-    "No issues found.": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No issues found."
+    "countryName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Country"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keine Probleme gefunden."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Land"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No issues found."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Country"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No issues found."
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Country"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se encontraron incovenientes."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "País"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No issues found."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pays"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "오류를 찾지 못했습니다"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "국가"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No issues found."
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Country"
           }
         },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No issues found."
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Country"
           }
         },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No issues found."
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Country"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Não foram encontrados problemas."
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "País"
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Não foram encontrados problemas."
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "País"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Проблемы не обнаружены."
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Страна"
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "S’u gjetën probleme."
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vend"
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ไม่พบปัญหา"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ประเทศ"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sorun bulunamadı."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ülke"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "没有发现问题。"
-          }
-        }
-      }
-    },
-    "Public Key": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Public Key"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Öffentlicher Schlüssel"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Public Key"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Public Key"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clave Pública"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Public Key"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "공용 키"
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Public Key"
-          }
-        },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Public Key"
-          }
-        },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Public Key"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chave pública"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chave Pública"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Открытый ключ"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kyç Publik"
-          }
-        },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "คีย์สาธารณะ"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ortak Anahtar"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "公钥"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "国家"
           }
         }
       }
     },
-    "Reason": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reason"
+    "Extensions" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensions"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Grund"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erweiterungen"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reason"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensions"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reason"
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensions"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Razón"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensiones"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reason"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensions"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "이유"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "확장프로그램"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reason"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensions"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Razão "
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensions"
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reason"
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensions"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Причина"
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensões"
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arsye"
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensões"
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "เหตุผล"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расширения"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sebep"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zgjerime"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reason"
-          }
-        }
-      }
-    },
-    "Root Certificate": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Root Certificate"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ส่วนขยาย"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Root-Zertifikat"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eklentiler"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Root Certificate"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Root Certificate"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Root Certificate"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Root Certificate"
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Root Certificate"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Root Certificate"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Root Certificate"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Root Certificate"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Root Certificate"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "扩展"
           }
         }
       }
     },
-    "Show ±": {
-      "comment": "OCCertificateViewController buttons",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show ±"
+    "Fingerprints" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fingerprints"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Anzeigen ±"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fingerabdrücke"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show ±"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fingerprints"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show ±"
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fingerprints"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mostrar ±"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Huellas digitales"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show ±"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fingerprints"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "보이기 ±"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지문"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show ±"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fingerprints"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mostrar ± "
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fingerprints"
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show ±"
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fingerprints"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Показать ±"
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impressões digitais"
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Shfaq ±"
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assinaturas Digitais"
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "แสดง ±"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отпечатки"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Göster ±"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shenja gishtash"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show ±"
-          }
-        }
-      }
-    },
-    "Subject": {
-      "comment": "OCCertificateViewController section titles",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Subject"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ลายนิ้วมือ"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Betreff"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parmak Izleri"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Subject"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Subject"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Asunto"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sujet"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "제목"
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Subject"
-          }
-        },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Subject"
-          }
-        },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Subject"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Assunto"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Assunto"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Тема"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Subjekt"
-          }
-        },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "หัวเรื่อง"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Konu"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "主题"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指纹"
           }
         }
       }
     },
-    "User-accepted.": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-accepted."
+    "Hide ±" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide ±"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vom Benutzer akzeptiert."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausblenden ±"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-accepted."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide ±"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-accepted."
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide ±"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usuario-aceptado"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esconder ±"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-accepted."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide ±"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "사용자 허가됨"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "숨기기 ±"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-accepted."
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide ±"
           }
         },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-accepted."
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esconder ± "
           }
         },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-accepted."
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide ±"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usuário aceito."
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрыть ±"
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Utilizador aceite."
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fshih ±"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Принято пользователем."
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ซ่อน ±"
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pranuar nga përdoruesi."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gizle ±"
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ผู้ใช้งานได้รับการยอมรับ"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kullanıcı taraflı kabul edildi."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "用户被接受。"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide ±"
           }
         }
       }
     },
-    "User-rejected.": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-rejected."
+    "Hostname" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostname"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vom Benutzer abgelehnt."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostname"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-rejected."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostname"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-rejected."
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostname"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usuario-rechazado"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de equipo"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-rejected."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nom de l'hôte"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "사용자가 거부했습니다."
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "호스트 이름"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-rejected."
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostname"
           }
         },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-rejected."
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostname"
           }
         },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User-rejected."
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostname"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usuário rejeitado."
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nome do Host"
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Utilizador rejeitado."
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nome do Anfitrião"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Отклонено пользователем."
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Имя хоста"
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hedhur poshtë nga përdoruesi."
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strehëemër"
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ผู้ใช้ที่ถูกปฏิเสธ"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ชื่อโฮสต์"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kullanıcı taraflı reddedildi"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Makine adı"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "用户被拒绝"
-          }
-        }
-      }
-    },
-    "Validating…": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validating…"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validiere…"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validating…"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validating…"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validating…"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validating…"
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validating…"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validating…"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validating…"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validating…"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validating…"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主机名"
           }
         }
       }
     },
-    "Validation Error": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validation Error"
+    "Intermediate Certificate" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intermediate Certificate"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validierungsfehler"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwischenzertifikat"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validation Error"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intermediate Certificate"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validation Error"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intermediate Certificate"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Error de validación"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intermediate Certificate"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erreur de Validation"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intermediate Certificate"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "확인 중 오류"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intermediate Certificate"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validation Error"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intermediate Certificate"
           }
         },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validation Error"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intermediate Certificate"
           }
         },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validation Error"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intermediate Certificate"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erro de validação"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erro de Validação"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ошибка проверки"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gabim Vleftësim"
-          }
-        },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ข้อผิดพลาดในการตรวจสอบ"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Doğrulama Hatası"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "验证错误"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intermediate Certificate"
           }
         }
       }
     },
-    "Validation Status": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validation Status"
+    "Issuer" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuer"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validierungsstatus"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aussteller"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validation Status"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuer"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validation Status"
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuer"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Estado de validación"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emisor"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validation Status"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Émetteur"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "확인 상태"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "발급자"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validation Status"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuer"
           }
         },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validation Status"
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuer"
           }
         },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Validation Status"
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuer"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Status de validação"
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerador"
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Estado da Validação"
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emissor"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Статус проверки"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Издатель"
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gjendje Vleftësimi"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lëshues"
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "สถานะการตรวจสอบ"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ผู้ออก"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Doğrulama Durumu"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sağlayıcı"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "验证状态"
-          }
-        }
-      }
-    },
-    "businessCategory": {
-      "comment": "X.509 certificate fields",
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Business category"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organisationseinheit"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Business category"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Business category"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Categoría de negocio"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Business category"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "사업 분류"
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Business category"
-          }
-        },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Business category"
-          }
-        },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Business category"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Categoria de negócio"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Categoria de negócio"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "бизнес-категория"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kategori biznes"
-          }
-        },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ประเภทธุรกิจ"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "İş dünyası kategorisi"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "商务分类"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "颁发者"
           }
         }
       }
     },
-    "commonName": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Common name"
+    "jurisdictionCountryName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction country"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Allgemeiner Name"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerichtsstand Land"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Common name"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction country"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Common name"
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction country"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nombre común"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "País de jurisdicción"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Common name"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction country"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "일반 이름"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "관할 국가"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Common name"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction country"
           }
         },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Common name"
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction country"
           }
         },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Common name"
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction country"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nome comum"
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "País de Jurisdição"
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nome comum"
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "País de jurisdição"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Общее имя"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Страна юрисдикции"
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Emër i rëndomtë"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vend juridiksioni"
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ชื่อสามัญ"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "สังกัดประเทศ"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ortak isim"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yargı yetkilisi ülke"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "常用名"
-          }
-        }
-      }
-    },
-    "countryName": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Country"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Land"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Country"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Country"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "País"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pays"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "국가"
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Country"
-          }
-        },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Country"
-          }
-        },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Country"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "País"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "País"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Страна"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vend"
-          }
-        },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ประเทศ"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ülke"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "国家"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "司法国籍"
           }
         }
       }
     },
-    "jurisdictionCountryName": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction country"
+    "jurisdictionLocalityName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction locality"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gerichtsstand Land"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerichtsstand Ort"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction country"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction locality"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction country"
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction locality"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "País de jurisdicción"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Localidad de jurisdicción"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction country"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction locality"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "관할 국가"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "관할 지역"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction country"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction locality"
           }
         },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction country"
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction locality"
           }
         },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction country"
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction locality"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "País de Jurisdição"
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local de Jurisdição"
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "País de jurisdição"
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Localidade de jurisdição"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Страна юрисдикции"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "местонахождение юрисдикции"
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vend juridiksioni"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokalitet juridiksioni"
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "สังกัดประเทศ"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "สังกัดท้องที่"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yargı yetkilisi ülke"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yargı yetkisi bölgesi"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "司法国籍"
-          }
-        }
-      }
-    },
-    "jurisdictionLocalityName": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction locality"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gerichtsstand Ort"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction locality"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction locality"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Localidad de jurisdicción"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction locality"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "관할 지역"
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction locality"
-          }
-        },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction locality"
-          }
-        },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction locality"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Local de Jurisdição"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Localidade de jurisdição"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "местонахождение юрисдикции"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lokalitet juridiksioni"
-          }
-        },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "สังกัดท้องที่"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yargı yetkisi bölgesi"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "司法地"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "司法地"
           }
         }
       }
     },
-    "jurisdictionStateOrProvinceName": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction state or province"
+    "jurisdictionStateOrProvinceName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction state or province"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gerichtsstand Bundesland"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerichtsstand Bundesland"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction state or province"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction state or province"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction state or province"
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction state or province"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Estado o provincia de jurisdicción"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado o provincia de jurisdicción"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction state or province"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction state or province"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "관할 주 또는 도"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "관할 주 또는 도"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction state or province"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction state or province"
           }
         },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction state or province"
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction state or province"
           }
         },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jurisdiction state or province"
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction state or province"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Estado ou província de jurisdição"
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado ou província de jurisdição"
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Concelho ou distrito de jurisdição"
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Concelho ou distrito de jurisdição"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Штат или область юрисдикции"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Штат или область юрисдикции"
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Shtet ose provincë juridiksioni"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shtet ose provincë juridiksioni"
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "จังหวัด"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "จังหวัด"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yargı devleti veya eyaleti"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yargı devleti veya eyaleti"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "司法州/省"
-          }
-        }
-      }
-    },
-    "keyBytes": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key bytes"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schlüsselbytes"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key bytes"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key bytes"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bytes de la clave"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key bytes"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "키 바이트"
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key bytes"
-          }
-        },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key bytes"
-          }
-        },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key bytes"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bytes da chave"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bytes chave"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Байты ключа"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bajte kyçi"
-          }
-        },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "คีย์ไบต์"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Anahtar baytları"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "密钥字节数"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "司法州/省"
           }
         }
       }
     },
-    "keyExponent": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key exponent"
+    "keyBytes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key bytes"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schlüsselexponent"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüsselbytes"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key exponent"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key bytes"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key exponent"
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key bytes"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Exponente de la clave"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bytes de la clave"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key exponent"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key bytes"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "키 지수"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "키 바이트"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key exponent"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key bytes"
           }
         },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key exponent"
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key bytes"
           }
         },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key exponent"
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key bytes"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expoente da chave"
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bytes da chave"
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expoente chave"
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bytes chave"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Экспонента ключа"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Байты ключа"
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eksponent kyçi"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bajte kyçi"
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "คีย์สัญลักษณ์"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "คีย์ไบต์"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Anahtar kuvveti"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anahtar baytları"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "公钥指数"
-          }
-        }
-      }
-    },
-    "keyInformation": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Information"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Information"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Information"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Information"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Información"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Information"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "정보"
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Information"
-          }
-        },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Information"
-          }
-        },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Information"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Informações"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Informação"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Информация"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hollësi"
-          }
-        },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "สารสนเทศ"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bilgi"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "信息"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "密钥字节数"
           }
         }
       }
     },
-    "keySizeInBits": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key size (bits)"
+    "keyExponent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key exponent"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schlüssellänge (Bits)"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüsselexponent"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key size (bits)"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key exponent"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key size (bits)"
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key exponent"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tamaño de la clave (bits)"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exponente de la clave"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key size (bits)"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key exponent"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "키의 크기 (bits)"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "키 지수"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key size (bits)"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key exponent"
           }
         },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key size (bits)"
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key exponent"
           }
         },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key size (bits)"
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key exponent"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tamanho da chave (bits)"
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expoente da chave"
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tamanho da chave (bits)"
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expoente chave"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Размер ключа (бит)"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экспонента ключа"
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Madhësi kyçi (bits)"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksponent kyçi"
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ขนาดคีย์ (บิต)"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "คีย์สัญลักษณ์"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Anahtar boyutu (bit)"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anahtar kuvveti"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "密钥大小（比特）"
-          }
-        }
-      }
-    },
-    "localityName": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Locality"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ort"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Locality"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Locality"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Localidad "
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Locality"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "지역"
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Locality"
-          }
-        },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Locality"
-          }
-        },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Locality"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Localidade"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Localização"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Местонахождение"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lokalitet"
-          }
-        },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ตำบล"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yerelleştirme"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "地区"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公钥指数"
           }
         }
       }
     },
-    "organizationName": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organization"
+    "keyInformation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Information"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organisation"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Information"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organization"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Information"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organisation"
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Information"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organización"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Información"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Société"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Information"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "조직"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정보"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organization"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Information"
           }
         },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organization"
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Information"
           }
         },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organization"
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Information"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organização"
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informações"
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organização"
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informação"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Организация"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Информация"
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ent"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hollësi"
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "หน่วยงาน"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "สารสนเทศ"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kurum"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bilgi"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "组织"
-          }
-        }
-      }
-    },
-    "organizationalUnitName": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organization Unit"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organisationseinheit"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organization Unit"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organisation Unit"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unidad de organización"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organization Unit"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "조직 단위"
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organization Unit"
-          }
-        },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organization Unit"
-          }
-        },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organization Unit"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unidade de Organização"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unidade de Organização"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Подразделение организации"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Njësi Enti"
-          }
-        },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "หน่วยองค์กร"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kurum Birimi"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "组织单元"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "信息"
           }
         }
       }
     },
-    "serialNumber": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Serial Number"
+    "keySizeInBits" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key size (bits)"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Seriennummer"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssellänge (Bits)"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Serial Number"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key size (bits)"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Serial Number"
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key size (bits)"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Número de Serie"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño de la clave (bits)"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Serial Number"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key size (bits)"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "시리얼 번호"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "키의 크기 (bits)"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Serial Number"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key size (bits)"
           }
         },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Serial Number"
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key size (bits)"
           }
         },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Serial Number"
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key size (bits)"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Número de série"
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho da chave (bits)"
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Número de Série"
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho da chave (bits)"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Серийный номер"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер ключа (бит)"
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Numër Serial"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Madhësi kyçi (bits)"
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "หมายเลขผลิตภัณฑ์"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ขนาดคีย์ (บิต)"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Seri Numarası"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anahtar boyutu (bit)"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "序列号"
-          }
-        }
-      }
-    },
-    "signatureAlgorithm": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Signature Algorithm"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Signaturalgorithmus"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Signature Algorithm"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Signature Algorithm"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Algoritmo de firma"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Signature Algorithm"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "지문 알고리즘"
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Signature Algorithm"
-          }
-        },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Signature Algorithm"
-          }
-        },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Signature Algorithm"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Algoritmo de Assinatura"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Algoritmo de Assinatura"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Алгоритм подписи"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Algoritëm Nënshkrimi"
-          }
-        },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "อัลกอริธึมลายเซ็น"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "İmza Algoritması"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "签名算法"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "密钥大小（比特）"
           }
         }
       }
     },
-    "stateOrProvinceName": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "State or province"
+    "localityName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locality"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bundesland oder Region"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ort"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "State or province"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locality"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "State or province"
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locality"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Estado o provincia"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Localidad "
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "État ou province"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locality"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "도 및 광역시"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지역"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "State or province"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locality"
           }
         },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "State or province"
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locality"
           }
         },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "State or province"
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locality"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Estado ou província"
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Localidade"
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Concelho ou distrito"
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Localização"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Область или район"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Местонахождение"
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Shtet ose provincë"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokalitet"
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "รัฐหรือจังหวัด"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ตำบล"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eyalet"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yerelleştirme"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "州/省"
-          }
-        }
-      }
-    },
-    "validFrom": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valid from"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gültig ab"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valid from"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valid from"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Válido desde"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valid from"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "올바른 양식"
-          }
-        },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valid from"
-          }
-        },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valid from"
-          }
-        },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valid from"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Válido de"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Válido de"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Действует начиная с"
-          }
-        },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "E vlefshme që nga"
-          }
-        },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ใช้ได้ตั้งแต่"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Geçerlilik başlangıcı"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "生效期"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "地区"
           }
         }
       }
     },
-    "validUntil": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valid until"
+    "No issues found." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No issues found."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gültig bis"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Probleme gefunden."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valid until"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No issues found."
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valid until"
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No issues found."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Válido hasta"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encontraron incovenientes."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valide jusqu'à"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No issues found."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "만료 기간:"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오류를 찾지 못했습니다"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valid until"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No issues found."
           }
         },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valid until"
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No issues found."
           }
         },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valid until"
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No issues found."
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Válido até"
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foram encontrados problemas."
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Válido até"
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foram encontrados problemas."
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Действительно до"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проблемы не обнаружены."
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "E vlefshme deri më"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "S’u gjetën probleme."
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ใช้ได้จนถึง"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ไม่พบปัญหา"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Geçerlilik bitişi"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sorun bulunamadı."
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "有效期至"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有发现问题。"
           }
         }
       }
     },
-    "version": {
-      "extractionState": "manual",
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version"
+    "organizationalUnitName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization Unit"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organisationseinheit"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization Unit"
           }
         },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version"
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organisation Unit"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Versión"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unidad de organización"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization Unit"
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "버전"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "조직 단위"
           }
         },
-        "mk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version"
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization Unit"
           }
         },
-        "nb-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version"
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization Unit"
           }
         },
-        "nn-NO": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version"
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization Unit"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Versão"
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unidade de Organização"
           }
         },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Versão"
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unidade de Organização"
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Версия"
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подразделение организации"
           }
         },
-        "sq": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version"
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Njësi Enti"
           }
         },
-        "th-TH": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "เวอร์ชัน"
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "หน่วยองค์กร"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sürüm"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurum Birimi"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "版本"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "组织单元"
+          }
+        }
+      }
+    },
+    "organizationName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organisation"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organisation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organización"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Société"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "조직"
+          }
+        },
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization"
+          }
+        },
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organização"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organização"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Организация"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ent"
+          }
+        },
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "หน่วยงาน"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurum"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "组织"
+          }
+        }
+      }
+    },
+    "Public Key" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public Key"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffentlicher Schlüssel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public Key"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public Key"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clave Pública"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public Key"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "공용 키"
+          }
+        },
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public Key"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public Key"
+          }
+        },
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public Key"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chave pública"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chave Pública"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открытый ключ"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kyç Publik"
+          }
+        },
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "คีย์สาธารณะ"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ortak Anahtar"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公钥"
+          }
+        }
+      }
+    },
+    "Reason" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reason"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grund"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reason"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reason"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Razón"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reason"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이유"
+          }
+        },
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reason"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Razão "
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reason"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Причина"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arsye"
+          }
+        },
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "เหตุผล"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sebep"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reason"
+          }
+        }
+      }
+    },
+    "Root Certificate" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root Certificate"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root-Zertifikat"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root Certificate"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root Certificate"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root Certificate"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root Certificate"
+          }
+        },
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root Certificate"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root Certificate"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root Certificate"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root Certificate"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root Certificate"
+          }
+        }
+      }
+    },
+    "serialNumber" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serial Number"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seriennummer"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serial Number"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serial Number"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Número de Serie"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serial Number"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시리얼 번호"
+          }
+        },
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serial Number"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serial Number"
+          }
+        },
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serial Number"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Número de série"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Número de Série"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Серийный номер"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Numër Serial"
+          }
+        },
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "หมายเลขผลิตภัณฑ์"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seri Numarası"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "序列号"
+          }
+        }
+      }
+    },
+    "Show ±" : {
+      "comment" : "OCCertificateViewController buttons",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show ±"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anzeigen ±"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show ±"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show ±"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar ±"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show ±"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보이기 ±"
+          }
+        },
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show ±"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar ± "
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show ±"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать ±"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shfaq ±"
+          }
+        },
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "แสดง ±"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Göster ±"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show ±"
+          }
+        }
+      }
+    },
+    "signatureAlgorithm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signature Algorithm"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signaturalgorithmus"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signature Algorithm"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signature Algorithm"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algoritmo de firma"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signature Algorithm"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지문 알고리즘"
+          }
+        },
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signature Algorithm"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signature Algorithm"
+          }
+        },
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signature Algorithm"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algoritmo de Assinatura"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algoritmo de Assinatura"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Алгоритм подписи"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algoritëm Nënshkrimi"
+          }
+        },
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "อัลกอริธึมลายเซ็น"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İmza Algoritması"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "签名算法"
+          }
+        }
+      }
+    },
+    "stateOrProvinceName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "State or province"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bundesland oder Region"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "State or province"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "State or province"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado o provincia"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "État ou province"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "도 및 광역시"
+          }
+        },
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "State or province"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "State or province"
+          }
+        },
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "State or province"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado ou província"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Concelho ou distrito"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Область или район"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shtet ose provincë"
+          }
+        },
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "รัฐหรือจังหวัด"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eyalet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "州/省"
+          }
+        }
+      }
+    },
+    "Subject" : {
+      "comment" : "OCCertificateViewController section titles",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subject"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Betreff"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subject"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subject"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asunto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sujet"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "제목"
+          }
+        },
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subject"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subject"
+          }
+        },
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subject"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assunto"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assunto"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тема"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subjekt"
+          }
+        },
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "หัวเรื่อง"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konu"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主题"
+          }
+        }
+      }
+    },
+    "User-accepted." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-accepted."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vom Benutzer akzeptiert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-accepted."
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-accepted."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuario-aceptado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-accepted."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용자 허가됨"
+          }
+        },
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-accepted."
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-accepted."
+          }
+        },
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-accepted."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuário aceito."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilizador aceite."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Принято пользователем."
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pranuar nga përdoruesi."
+          }
+        },
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ผู้ใช้งานได้รับการยอมรับ"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kullanıcı taraflı kabul edildi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用户被接受。"
+          }
+        }
+      }
+    },
+    "User-rejected." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-rejected."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vom Benutzer abgelehnt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-rejected."
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-rejected."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuario-rechazado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-rejected."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용자가 거부했습니다."
+          }
+        },
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-rejected."
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-rejected."
+          }
+        },
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-rejected."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuário rejeitado."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilizador rejeitado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отклонено пользователем."
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hedhur poshtë nga përdoruesi."
+          }
+        },
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ผู้ใช้ที่ถูกปฏิเสธ"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kullanıcı taraflı reddedildi"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用户被拒绝"
+          }
+        }
+      }
+    },
+    "Validating…" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validating…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validiere…"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validating…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validating…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validating…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validating…"
+          }
+        },
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validating…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validating…"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validating…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validating…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validating…"
+          }
+        }
+      }
+    },
+    "Validation Error" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Error"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validierungsfehler"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Error"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Error"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error de validación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erreur de Validation"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "확인 중 오류"
+          }
+        },
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Error"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Error"
+          }
+        },
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Error"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erro de validação"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erro de Validação"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ошибка проверки"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gabim Vleftësim"
+          }
+        },
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ข้อผิดพลาดในการตรวจสอบ"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doğrulama Hatası"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "验证错误"
+          }
+        }
+      }
+    },
+    "Validation Status" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Status"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validierungsstatus"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Status"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Status"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado de validación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Status"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "확인 상태"
+          }
+        },
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Status"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Status"
+          }
+        },
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Status"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status de validação"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado da Validação"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Статус проверки"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gjendje Vleftësimi"
+          }
+        },
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "สถานะการตรวจสอบ"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doğrulama Durumu"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "验证状态"
+          }
+        }
+      }
+    },
+    "validFrom" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid from"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gültig ab"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid from"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid from"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Válido desde"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid from"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "올바른 양식"
+          }
+        },
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid from"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid from"
+          }
+        },
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid from"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Válido de"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Válido de"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Действует начиная с"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E vlefshme që nga"
+          }
+        },
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ใช้ได้ตั้งแต่"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçerlilik başlangıcı"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生效期"
+          }
+        }
+      }
+    },
+    "validUntil" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid until"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gültig bis"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid until"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid until"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Válido hasta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valide jusqu'à"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "만료 기간:"
+          }
+        },
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid until"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid until"
+          }
+        },
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid until"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Válido até"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Válido até"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Действительно до"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E vlefshme deri më"
+          }
+        },
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ใช้ได้จนถึง"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçerlilik bitişi"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有效期至"
+          }
+        }
+      }
+    },
+    "version" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versión"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "버전"
+          }
+        },
+        "mk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
+        "nb-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
+        "nn-NO" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versão"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versão"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версия"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
+        "th-TH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "เวอร์ชัน"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sürüm"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "版本"
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

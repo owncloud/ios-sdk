@@ -36,7 +36,7 @@
 #import "OCAsyncSequentialQueue.h"
 #import "NSString+OCSQLTools.h"
 #import "OCItemPolicy.h"
-#import "OCCoreManager.h"
+#import "OCPlatform.h"
 #import "NSArray+OCSegmentedProcessing.h"
 #import "OCSQLiteDB+Internal.h"
 
@@ -50,7 +50,7 @@
 
 	OCAsyncSequentialQueue *_openQueue;
 	NSInteger _openCount;
-	OCCoreMemoryConfiguration _memoryConfiguration;
+	OCPlatformMemoryConfiguration _memoryConfiguration;
 
 	NSMutableSet<OCSyncRecordID> *_knownInvalidSyncRecordIDs;
 }
@@ -79,7 +79,7 @@
 
 		_selectItemRowsSQLQueryPrefix = @"SELECT mdID, mdTimestamp, syncAnchor, itemData";
 
-		_memoryConfiguration = OCCoreManager.sharedCoreManager.memoryConfiguration;
+		_memoryConfiguration = OCPlatform.current.memoryConfiguration;
 
 		_progressBySyncRecordID = [NSMutableDictionary new];
 		_ephermalParametersBySyncRecordID = [NSMutableDictionary new];
@@ -336,7 +336,7 @@
 				completionHandler(self, error);
 			}
 		}]];
-	} segmentSize:((_memoryConfiguration == OCCoreMemoryConfigurationMinimum) ? 10 : 200)];
+	} segmentSize:((_memoryConfiguration == OCPlatformMemoryConfigurationMinimum) ? 10 : 200)];
 }
 
 - (void)updateCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler
@@ -452,7 +452,7 @@
 				completionHandler(self, error);
 			}
 		}]];
-	} segmentSize:((_memoryConfiguration == OCCoreMemoryConfigurationMinimum) ? 10 : 200)];
+	} segmentSize:((_memoryConfiguration == OCPlatformMemoryConfigurationMinimum) ? 10 : 200)];
 }
 
 - (void)removeCacheItems:(NSArray <OCItem *> *)items syncAnchor:(OCSyncAnchor)syncAnchor completionHandler:(OCDatabaseCompletionHandler)completionHandler
