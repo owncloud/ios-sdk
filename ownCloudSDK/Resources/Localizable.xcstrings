@@ -8350,6 +8350,7 @@
       }
     },
     "Download, preview and share" : {
+      "extractionState" : "manual",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -8539,6 +8540,7 @@
       }
     },
     "Edit, download, preview and share" : {
+      "extractionState" : "manual",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -24420,6 +24422,7 @@
       }
     },
     "Upload, edit, delete, download, preview and share" : {
+      "extractionState" : "manual",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
