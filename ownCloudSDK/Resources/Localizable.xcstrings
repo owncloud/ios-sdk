@@ -2943,6 +2943,16 @@
         }
       }
     },
+    "Another version of %@ already exists in %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Another version of %1$@ already exists in %2$@."
+          }
+        }
+      }
+    },
     "At least {{min}} {{characterType}}" : {
       "comment" : "Password Policy Check",
       "extractionState" : "manual",

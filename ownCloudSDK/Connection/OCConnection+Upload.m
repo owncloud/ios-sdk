@@ -973,6 +973,13 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 						}
 						break;
 
+						case OCHTTPStatusCodeCONFLICT: {
+							NSString *errorDescription = nil;
+							errorDescription = [NSString stringWithFormat:OCLocalizedString(@"Another version of %@ already exists in %@.",nil), fileName, parentItem.name];
+							event.error = OCErrorWithDescription(OCErrorItemAlreadyExists, errorDescription);
+						}
+						break;
+
 						case OCHTTPStatusCodeINSUFFICIENT_STORAGE: {
 							NSString *errorDescription = nil;
 
