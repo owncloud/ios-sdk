@@ -60,6 +60,60 @@
 	}]);
 }
 
+- (nullable NSProgress *)retrievePermissionsListForUser:(OCUser *)user withCompletionHandler:(OCRetrieveUserPermissionsCompletionHandler)completionHandler
+{
+	if (!self.useDriveAPI) {
+		// Only available with Graph API
+		completionHandler(OCError(OCErrorFeatureNotImplemented), nil);
+		return (nil);
+	}
+
+	if (user.identifier == nil)
+	{
+		completionHandler(OCError(OCErrorInvalidParameter), nil);
+		return(nil);
+	}
+
+	OCHTTPRequest *request;
+	NSProgress *progress = nil;
+
+	request = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDPermissionsList options:nil]];
+	request.method = OCHTTPMethodPOST;
+	request.requiredSignals = [NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable];
+	[request setBodyWithJSON:@{
+		@"account_uuid" : user.identifier
+	}];
+
+	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
+		if (error != nil)
+		{
+			completionHandler(error, nil);
+		}
+		else
+		{
+			NSError *jsonError = nil;
+			NSDictionary *permissionsInfoDict;
+			NSArray<OCUserPermissionIdentifier> *permissionsArray = nil;
+
+			if ((permissionsInfoDict = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
+			{
+				permissionsArray = OCTypedCast(OCTypedCast(permissionsInfoDict, NSDictionary)[@"permissions"], NSArray);
+			}
+
+			if (permissionsArray != nil)
+			{
+				completionHandler(nil, [[OCUserPermissions alloc] initWith:permissionsArray]);
+			}
+			else
+			{
+				completionHandler((jsonError!=nil) ? jsonError : OCError(OCErrorResponseUnknownFormat), nil);
+			}
+		}
+	}];
+
+	return (progress);
+}
+
 #pragma mark - Drives
 - (NSArray<OCDrive *> *)drives
 {

@@ -26,11 +26,13 @@ NS_ASSUME_NONNULL_BEGIN
 typedef void(^OCRetrieveDriveListCompletionHandler)(NSError * _Nullable error, NSArray<OCDrive *> * _Nullable drives);
 typedef void(^OCRetrieveLoggedInGraphUserCompletionHandler)(NSError * _Nullable error, OCUser * _Nullable user);
 typedef void(^OCRetrieveRoleDefinitionsCompletionHandler)(NSError * _Nullable error, NSArray<OCShareRole *> * _Nullable shareRoles);
+typedef void(^OCRetrieveUserPermissionsCompletionHandler)(NSError * _Nullable error, OCUserPermissions * _Nullable userPermissions);
 
 @interface OCConnection (GraphAPI)
 
 #pragma mark - User Info
 - (nullable NSProgress *)retrieveLoggedInGraphUserWithCompletionHandler:(OCRetrieveLoggedInGraphUserCompletionHandler)completionHandler;
+- (nullable NSProgress *)retrievePermissionsListForUser:(OCUser *)user withCompletionHandler:(OCRetrieveUserPermissionsCompletionHandler)completionHandler;
 
 #pragma mark - Drives
 @property(strong,nullable,nonatomic) NSArray<OCDrive *> *drives; //!< Current list of known drives
