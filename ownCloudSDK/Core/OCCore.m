@@ -299,6 +299,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 		_drivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:nil];
 		_subscribedDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"subscribedDrives" versionedItemUpdateHandler:nil];
+		_disabledDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"disabledDrives" versionedItemUpdateHandler:nil];
 
 		_projectDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"subscribedDrives" versionedItemUpdateHandler:^NSArray<id<OCDataItem,OCDataItemVersioning>> * _Nullable(NSObject * _Nonnull object, NSString * _Nonnull keyPath, NSArray<OCDrive *> *  _Nullable activeDrives) {
 			return ([activeDrives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {

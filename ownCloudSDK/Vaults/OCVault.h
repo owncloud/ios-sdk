@@ -117,6 +117,7 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 
 	NSArray<OCDrive *> *_activeDrives;
 	NSArray<OCDrive *> *_subscribedDrives;
+	NSArray<OCDrive *> *_disabledDrives;
 	NSArray<OCDrive *> *_detachedDrives;
 	NSDictionary<OCDriveID, OCDrive *> *_activeDrivesByID;
 	NSDictionary<OCDriveID, OCDrive *> *_detachedDrivesByID;
@@ -179,6 +180,7 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 #pragma mark - Drives
 @property(strong,readonly,nonatomic) NSArray<OCDrive *> *activeDrives; //!< All drives returned by the server
 @property(strong,readonly,nonatomic) NSArray<OCDrive *> *subscribedDrives; //!< All drives the user is subscribed to
+@property(strong,readonly,nonatomic) NSArray<OCDrive *> *disabledDrives; //!< All disabled drives
 @property(strong,readonly,nonatomic) NSArray<OCDrive *> *detachedDrives; //!< Drives that no longer exist on the server but (may) have unsynced user data in them. Check OCDrive.detachedState.
 
 - (void)updateWithRemoteDrives:(NSArray<OCDrive *> *)newDrives; //!< Uses newDrives as new list of drives available on the server to update .activeDrives, .subscribedDrives and .detachedDrives.
