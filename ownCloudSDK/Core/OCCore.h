@@ -118,6 +118,7 @@ typedef void(^OCCoreClaimCompletionHandler)(NSError * _Nullable error, OCItem * 
 typedef void(^OCCoreCompletionHandler)(NSError * _Nullable error);
 typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 typedef void(^OCCoreSyncReasonCountChangeObserver)(OCCore *core, BOOL initial, NSDictionary<OCSyncReason, NSNumber *> * _Nullable countBySyncReason);
+typedef void(^OCCoreDriveCompletionHandler)(NSError * _Nullable error, OCDrive * _Nullable newDrive);
 
 typedef void(^OCCoreBusyStatusHandler)(NSProgress * _Nullable progress);
 
@@ -245,6 +246,7 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	OCDataSourceArray *_drivesDataSource;
 	OCDataSourceArray *_subscribedDrivesDataSource;
+	OCDataSourceArray *_disabledDrivesDataSource;
 	OCDataSourceArray *_personalDriveDataSource;
 	OCDataSourceArray *_shareJailDriveDataSource;
 	OCDataSourceArray *_projectDrivesDataSource;
@@ -509,6 +511,21 @@ typedef void(^OCCoreShareRoleRetrievalHandler)(NSError * _Nullable error, NSArra
 
 @interface OCCore (CommandUpdate)
 - (nullable NSProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(nullable NSDictionary<OCCoreOption,id> *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler; //!< resultHandler.parameter returns the OCConnectionPropertyUpdateResult
+@end
+
+@interface OCCore (DriveManagement)
+
+// Creation
+- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes completionHandler:(OCCoreDriveCompletionHandler)completionHandler;
+
+// Disable/Restore/Delete
+- (nullable NSProgress *)disableDrive:(OCDrive *)drive completionHandler:(OCCoreCompletionHandler)completionHandler;
+- (nullable NSProgress *)restoreDrive:(OCDrive *)drive completionHandler:(OCCoreCompletionHandler)completionHandler;
+- (nullable NSProgress *)deleteDrive:(OCDrive *)drive completionHandler:(OCCoreCompletionHandler)completionHandler;
+
+// Change attributes
+- (nullable NSProgress *)updateDrive:(OCDrive *)drive properties:(NSDictionary<OCDriveProperty, id> *)updateProperties completionHandler:(OCCoreDriveCompletionHandler)completionHandler;
+
 @end
 
 extern OCClassSettingsKey OCCoreAddAcceptLanguageHeader;

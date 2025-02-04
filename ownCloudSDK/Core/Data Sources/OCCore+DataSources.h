@@ -25,6 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Drives data sources (event-driven)
 @property(readonly,strong,nonatomic) OCDataSource *drivesDataSource; //!< ALL drives
 @property(readonly,strong,nonatomic) OCDataSource *subscribedDrivesDataSource; //!< Drives the user is subscribed to
+@property(readonly,strong,nonatomic) OCDataSource *disabledDrivesDataSource; //!< Drives that are disabled
 @property(readonly,strong,nonatomic) OCDataSource *personalDriveDataSource; //!< Personal drive
 @property(readonly,strong,nonatomic) OCDataSource *shareJailDriveDataSource; //!< Shares Jail drive
 @property(readonly,strong,nonatomic) OCDataSource *projectDrivesDataSource; //!< Spaces the user is subscribed to (applies filter on .subscribedDrivesDataSource)

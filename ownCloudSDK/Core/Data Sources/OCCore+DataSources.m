@@ -48,6 +48,11 @@
 	return (_projectDrivesDataSource);
 }
 
+- (OCDataSource *)disabledDrivesDataSource
+{
+	return (_disabledDrivesDataSource);
+}
+
 #pragma mark - Shared sort comparator
 + (NSComparator)sharesSortComparator
 {

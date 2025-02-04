@@ -367,8 +367,6 @@ typedef void(^OCConnectionDriveManagementCompletionHandler)(NSError * _Nullable 
 
 #pragma mark - Change attributes
 - (nullable NSProgress *)updateDrive:(OCDrive *)drive properties:(NSDictionary<OCDriveProperty, id> *)updateProperties completionHandler:(OCConnectionDriveCompletionHandler)completionHandler;
-//- (nullable NSProgress *)changeQuota:(nullable NSNumber *)quotaBytes ofDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
-//- (nullable NSProgress *)changeName:(nullable NSString *)name ofDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
 
 @end
 
