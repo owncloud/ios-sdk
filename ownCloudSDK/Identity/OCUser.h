@@ -19,6 +19,7 @@
 #import <UIKit/UIKit.h>
 #import "OCFeatureAvailability.h"
 #import "OCGroup.h"
+#import "OCUserPermissions.h"
 
 @class GAUser;
 @class GAIdentity;
@@ -60,6 +61,8 @@ typedef NS_ENUM(NSInteger, OCUserType) {
 
 @property(readonly,nonatomic,nullable) GAIdentity *gaIdentity;
 @property(strong,nullable) NSArray<OCGroupID> *groupMemberships;
+
+@property(strong,nullable) OCUserPermissions *permissions; //!< Permissions the user has on the server (to perform action)
 
 + (nullable NSString *)localizedInitialsForName:(NSString *)name;
 
