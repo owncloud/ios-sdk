@@ -15,6 +15,7 @@
 		599A45AB218C566C003CAB00 /* OCConnection+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = 599A45A9218C566C003CAB00 /* OCConnection+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		59F6476D219AD11600C016FD /* OCQuery+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = 59F6476B219AD11600C016FD /* OCQuery+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		59F6476E219AD11600C016FD /* OCQuery+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = 59F6476C219AD11600C016FD /* OCQuery+OCMocking.m */; };
+		DC00740A2D522BED00C1C6F7 /* OCCore+DriveManagement.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0074092D522BED00C1C6F7 /* OCCore+DriveManagement.m */; };
 		DC00DB1D219B120300C82737 /* OCHTTPDAVMultistatusResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = DC00DB1B219B120300C82737 /* OCHTTPDAVMultistatusResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC00DB1E219B120300C82737 /* OCHTTPDAVMultistatusResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = DC00DB1C219B120300C82737 /* OCHTTPDAVMultistatusResponse.m */; };
 		DC01969B20F74FC800C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = DC01969920F74FC700C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1105,6 +1106,7 @@
 		599A45A9218C566C003CAB00 /* OCConnection+OCMocking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OCConnection+OCMocking.h"; sourceTree = "<group>"; };
 		59F6476B219AD11600C016FD /* OCQuery+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCQuery+OCMocking.h"; sourceTree = "<group>"; };
 		59F6476C219AD11600C016FD /* OCQuery+OCMocking.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCQuery+OCMocking.m"; sourceTree = "<group>"; };
+		DC0074092D522BED00C1C6F7 /* OCCore+DriveManagement.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+DriveManagement.m"; sourceTree = "<group>"; };
 		DC00DB1B219B120300C82737 /* OCHTTPDAVMultistatusResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPDAVMultistatusResponse.h; sourceTree = "<group>"; };
 		DC00DB1C219B120300C82737 /* OCHTTPDAVMultistatusResponse.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHTTPDAVMultistatusResponse.m; sourceTree = "<group>"; };
 		DC01969920F74FC700C41B78 /* OCAuthenticationMethodBasicAuth+OCMocking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OCAuthenticationMethodBasicAuth+OCMocking.h"; sourceTree = "<group>"; };
@@ -2171,6 +2173,14 @@
 				4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */,
 			);
 			path = Records;
+			sourceTree = "<group>";
+		};
+		DC0074072D522BDC00C1C6F7 /* DriveManagement */ = {
+			isa = PBXGroup;
+			children = (
+				DC0074092D522BED00C1C6F7 /* OCCore+DriveManagement.m */,
+			);
+			path = DriveManagement;
 			sourceTree = "<group>";
 		};
 		DC0283652090A8EE005B6334 /* Images */ = {
@@ -3505,6 +3515,7 @@
 				DC8245B921FB334200775AB9 /* OCCore+Internal.h */,
 				DCE227D522D612C4000BE0A5 /* AvailableOffline */,
 				DCC599F122EEE64200499B29 /* Claims */,
+				DC0074072D522BDC00C1C6F7 /* DriveManagement */,
 				DCED67D427F1A79100686E4F /* Data Sources */,
 				DCE227CC22D60CF4000BE0A5 /* ItemPolicies */,
 				DC2F63602239453E0063C2DA /* Sharing */,
@@ -5809,6 +5820,7 @@
 				DC6CC3102642A0720040ECAC /* OCAuthenticationBrowserSessionMIBrowser.m in Sources */,
 				DCED67D327F1A48000686E4F /* OCDataTypes.m in Sources */,
 				DCB0A45A21B7F76800FAC4E9 /* NSError+OCDAVError.m in Sources */,
+				DC00740A2D522BED00C1C6F7 /* OCCore+DriveManagement.m in Sources */,
 				DCB330C729EF2F0F00BFF393 /* OCIdentity+DataItem.m in Sources */,
 				DCE62EAE2771ED5700E3193F /* OCResourceImage.m in Sources */,
 				DCDBEE342048A8BC00189B9A /* OCConnection+Authentication.m in Sources */,

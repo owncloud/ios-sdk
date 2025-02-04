@@ -732,6 +732,7 @@
 
 	[self willChangeValueForKey:@"activeDrives"];
 	[self willChangeValueForKey:@"subscribedDrives"];
+	[self willChangeValueForKey:@"disabledDrives"];
 	[self willChangeValueForKey:@"detachedDrives"];
 
 	@synchronized(self)
@@ -745,6 +746,10 @@
 			return ([driveList.subscribedDriveIDs containsObject:drive.identifier] && !drive.isDisabled);
 		}];
 
+		_disabledDrives = [driveList.drives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
+			return (drive.isDisabled);
+		}];
+
 		_detachedDrives = [driveList.detachedDrives copy];
 		_detachedDrivesByID = [_detachedDrives dictionaryUsingMapper:^OCDriveID(OCDrive *drive) {
 			return (drive.identifier);
@@ -752,6 +757,7 @@
 	}
 
 	[self didChangeValueForKey:@"detachedDrives"];
+	[self didChangeValueForKey:@"disabledDrives"];
 	[self didChangeValueForKey:@"subscribedDrives"];
 	[self didChangeValueForKey:@"activeDrives"];
 
