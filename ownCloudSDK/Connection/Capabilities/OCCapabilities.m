@@ -20,6 +20,8 @@
 #import "OCMacros.h"
 #import "OCConnection.h"
 
+#define WithDefault(val,def) (((val)==nil)?(def):(val))
+
 static NSInteger _defaultSharingSearchMinLength = 2;
 
 @interface OCCapabilities()
@@ -101,6 +103,11 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 @dynamic publicSharingPasswordEnforcedForReadWrite;
 @dynamic publicSharingPasswordEnforcedForReadWriteDelete;
 @dynamic publicSharingPasswordEnforcedForUploadOnly;
+@dynamic publicSharingPasswordBlockRemovalForReadOnly;
+@dynamic publicSharingPasswordBlockRemovalForReadWrite;
+@dynamic publicSharingPasswordBlockRemovalForReadWriteDelete;
+@dynamic publicSharingPasswordBlockRemovalForUploadOnly;
+
 @dynamic publicSharingExpireDateAddDefaultDate;
 @dynamic publicSharingExpireDateEnforceDateAndDaysDeterminesLastAllowedDate;
 @dynamic publicSharingDefaultExpireDateDays;
@@ -655,6 +662,26 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 - (OCCapabilityBool)publicSharingPasswordEnforcedForUploadOnly
 {
 	return (OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"password"][@"enforced_for"][@"upload_only"], NSNumber));
+}
+
+- (OCCapabilityBool)publicSharingPasswordBlockRemovalForReadOnly
+{
+	return (WithDefault(OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"password"][@"block_password_removal"][@"read_only"], NSNumber), @NO));
+}
+
+- (OCCapabilityBool)publicSharingPasswordBlockRemovalForReadWrite
+{
+	return (WithDefault(OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"password"][@"block_password_removal"][@"read_write"], NSNumber), @NO));
+}
+
+- (OCCapabilityBool)publicSharingPasswordBlockRemovalForReadWriteDelete
+{
+	return (WithDefault(OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"password"][@"block_password_removal"][@"read_write_delete"], NSNumber), @NO));
+}
+
+- (OCCapabilityBool)publicSharingPasswordBlockRemovalForUploadOnly
+{
+	return (WithDefault(OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"password"][@"block_password_removal"][@"upload_only"], NSNumber), @NO));
 }
 
 - (OCCapabilityBool)publicSharingExpireDateAddDefaultDate
