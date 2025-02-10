@@ -20,6 +20,7 @@
 #import "OCItem+OCXMLObjectCreation.h"
 #import "OCHTTPStatus.h"
 #import "OCChecksum.h"
+#import "OCDrive.h"
 
 @implementation OCItem (OCXMLObjectCreation)
 
@@ -73,6 +74,13 @@
 			} copy],
 
 			@"oc:id" : [^(OCItem *item, NSString *key, id value) {
+				if ([value isKindOfClass:[NSString class]])
+				{
+					item.fileID = value;
+				}
+			} copy],
+
+			@"oc:fileid" : [^(OCItem *item, NSString *key, id value) { // Returned in "oc:search-files" REPORT responses only (2024-10-31), identical to "oc:id"
 				if ([value isKindOfClass:[NSString class]])
 				{
 					item.fileID = value;
@@ -219,6 +227,13 @@
 				}
 			} copy],
 
+			@"oc:score": [^(OCItem *item, NSString *key, id value) {
+				if ([value isKindOfClass:NSString.class])
+				{
+					item.searchScore = @(((NSString *)value).doubleValue);
+				}
+			} copy],
+
 			@"d:quota-available-bytes" : [^(OCItem *item, NSString *key, id value) {
 				if ([value isKindOfClass:[NSString class]])
 				{
@@ -258,6 +273,7 @@
 		if ((item = [OCItem new]) != nil)
 		{
 			OCPath basePath;
+			NSDictionary<NSString *, OCDriveID> *drivePrefixMap;
 
 			// Remove base path (if applicable)
 			if ((basePath = xmlParser.options[@"basePath"]) != nil)
@@ -265,6 +281,20 @@
 				if ([itemPath hasPrefix:basePath])
 				{
 					itemPath = [itemPath substringFromIndex:basePath.length];
+				}
+			}
+
+			if ((drivePrefixMap = xmlParser.options[@"drivePrefixMap"]) != nil)
+			{
+				// Remove drive base path (for PROPFINDs returning items from different drives)
+				// and pre-assign driveID (in case it's missing in the response)
+				for (NSString *drivePrefixPath in drivePrefixMap)
+				{
+					if ([itemPath hasPrefix:drivePrefixPath])
+					{
+						itemPath = [itemPath substringFromIndex:drivePrefixPath.length-1];
+						item.driveID = drivePrefixMap[drivePrefixPath];
+					}
 				}
 			}
 

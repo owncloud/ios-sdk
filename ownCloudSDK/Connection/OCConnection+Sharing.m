@@ -944,7 +944,7 @@
 				NSArray <NSError *> *errors = nil;
 				NSArray <OCItem *> *items = nil;
 
-				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID driveID:nil withErrors:&errors]) != nil)
+				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path drives:nil reuseUsersByID:self->_usersByUserID driveID:nil withErrors:&errors]) != nil)
 				{
 					NSURL *privateLink;
 
@@ -1011,7 +1011,7 @@
 				NSArray <NSError *> *errors = nil;
 				NSArray <OCItem *> *items = nil;
 
-				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID driveID:nil withErrors:&errors]) != nil)
+				if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path drives:nil reuseUsersByID:self->_usersByUserID driveID:nil withErrors:&errors]) != nil)
 				{
 					OCLocation *location;
 
