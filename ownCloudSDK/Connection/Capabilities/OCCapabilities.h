@@ -114,6 +114,11 @@ typedef NSNumber* OCCapabilityBool;
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordEnforcedForReadWrite; //!< Controls whether a password is required for read-write links
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordEnforcedForReadWriteDelete; //!< Controls whether a password is required for read-write-delete links
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordEnforcedForUploadOnly; //!< Controls whether a password is required for upload-only links
+@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordBlockRemovalForReadOnly; //!< Controls whether the removal of a password is blocked for read-only links
+@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordBlockRemovalForReadWrite; //!< Controls whether the removal of a password is blocked for read-write links
+@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordBlockRemovalForReadWriteDelete; //!< Controls whether the removal of a password is blocked for read-write-delete links
+@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordBlockRemovalForUploadOnly; //!< Controls whether the removal of a password is blocked for upload-only links
+
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingExpireDateAddDefaultDate; //!< Controls whether a *default* expiration date should be set
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingExpireDateEnforceDateAndDaysDeterminesLastAllowedDate; //!< Controls whether .publicSharingDefaultExpireDateDays is enforced as maximum expiration date. Also, when set, an expiration date is REQUIRED.
 @property(readonly,nullable,nonatomic) NSNumber *publicSharingDefaultExpireDateDays;

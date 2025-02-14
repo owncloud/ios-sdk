@@ -483,6 +483,7 @@ extern OCClassSettingsKey OCConnectionPlainHTTPPolicy; //!< Either "warn" (for O
 extern OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink; //!< Controls whether private links are requested with regular PROPFINDs.
 extern OCClassSettingsKey OCConnectionTransparentTemporaryRedirect; //!< Allows (TRUE) transparent handling of 307 redirects at the HTTP pipeline level.
 extern OCClassSettingsKey OCConnectionValidatorFlags; //!< Allows fine-tuning the behavior of the connection validator.
+extern OCClassSettingsKey OCConnectionBlockPasswordRemovalDefault; //!< Controls the value of the `block_password_removal`-based capabilities if the server provides no value for it. This controls whether passwords can be removed from an existing link even though passwords need to be enforced on creation as per capabilities.
 
 extern OCConnectionOptionKey OCConnectionOptionRequestObserverKey;
 extern OCConnectionOptionKey OCConnectionOptionLastModificationDateKey; //!< Last modification date for uploads

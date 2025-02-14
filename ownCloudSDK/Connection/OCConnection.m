@@ -111,7 +111,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		OCConnectionPlainHTTPPolicy,
 		OCConnectionAlwaysRequestPrivateLink,
 		OCConnectionTransparentTemporaryRedirect,
-		OCConnectionValidatorFlags
+		OCConnectionValidatorFlags,
+		OCConnectionBlockPasswordRemovalDefault
 	]);
 }
 
@@ -155,7 +156,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		OCConnectionAllowCellular			: @(YES),
 		OCConnectionPlainHTTPPolicy			: @"warn",
 		OCConnectionAlwaysRequestPrivateLink		: @(NO),
-		OCConnectionTransparentTemporaryRedirect	: @(NO)
+		OCConnectionTransparentTemporaryRedirect	: @(NO),
+		OCConnectionBlockPasswordRemovalDefault		: @(YES)
 	});
 }
 
@@ -358,6 +360,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			OCClassSettingsMetadataKeyCategory	: @"Security",
 			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
+
+		OCConnectionBlockPasswordRemovalDefault : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"If a server does not provide `block_password_removal` information as part of its capabilities, this option provides the fallback value controlling whether passwords can (value: false) or can not (value: true) be removed from an existing link even if capabilities otherwise indicate passwords need to be enforced for links.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Security",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		}
 	});
 }
 
@@ -3410,6 +3420,7 @@ OCClassSettingsKey OCConnectionPlainHTTPPolicy = @"plain-http-policy";
 OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink = @"always-request-private-link";
 OCClassSettingsKey OCConnectionTransparentTemporaryRedirect = @"transparent-temporary-redirect";
 OCClassSettingsKey OCConnectionValidatorFlags = @"validator-flags";
+OCClassSettingsKey OCConnectionBlockPasswordRemovalDefault = @"block-password-removal-default";
 
 OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";
 OCConnectionOptionKey OCConnectionOptionLastModificationDateKey = @"last-modification-date";

@@ -19,6 +19,9 @@
 #import "OCCapabilities.h"
 #import "OCMacros.h"
 #import "OCConnection.h"
+#import "NSObject+OCClassSettings.h"
+
+#define WithDefault(val,def) (((val)==nil)?(def):(val))
 
 static NSInteger _defaultSharingSearchMinLength = 2;
 
@@ -101,6 +104,11 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 @dynamic publicSharingPasswordEnforcedForReadWrite;
 @dynamic publicSharingPasswordEnforcedForReadWriteDelete;
 @dynamic publicSharingPasswordEnforcedForUploadOnly;
+@dynamic publicSharingPasswordBlockRemovalForReadOnly;
+@dynamic publicSharingPasswordBlockRemovalForReadWrite;
+@dynamic publicSharingPasswordBlockRemovalForReadWriteDelete;
+@dynamic publicSharingPasswordBlockRemovalForUploadOnly;
+
 @dynamic publicSharingExpireDateAddDefaultDate;
 @dynamic publicSharingExpireDateEnforceDateAndDaysDeterminesLastAllowedDate;
 @dynamic publicSharingDefaultExpireDateDays;
@@ -658,6 +666,31 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 - (OCCapabilityBool)publicSharingPasswordEnforcedForUploadOnly
 {
 	return (OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"password"][@"enforced_for"][@"upload_only"], NSNumber));
+}
+
+- (OCCapabilityBool)_blockPasswordRemovalDefault
+{
+	return ([OCConnection classSettingForOCClassSettingsKey:OCConnectionBlockPasswordRemovalDefault]);
+}
+
+- (OCCapabilityBool)publicSharingPasswordBlockRemovalForReadOnly
+{
+	return (WithDefault(OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"password"][@"block_password_removal"][@"read_only"], NSNumber), self._blockPasswordRemovalDefault));
+}
+
+- (OCCapabilityBool)publicSharingPasswordBlockRemovalForReadWrite
+{
+	return (WithDefault(OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"password"][@"block_password_removal"][@"read_write"], NSNumber), self._blockPasswordRemovalDefault));
+}
+
+- (OCCapabilityBool)publicSharingPasswordBlockRemovalForReadWriteDelete
+{
+	return (WithDefault(OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"password"][@"block_password_removal"][@"read_write_delete"], NSNumber), self._blockPasswordRemovalDefault));
+}
+
+- (OCCapabilityBool)publicSharingPasswordBlockRemovalForUploadOnly
+{
+	return (WithDefault(OCTypedCast(_capabilities[@"files_sharing"][@"public"][@"password"][@"block_password_removal"][@"upload_only"], NSNumber), self._blockPasswordRemovalDefault));
 }
 
 - (OCCapabilityBool)publicSharingExpireDateAddDefaultDate
