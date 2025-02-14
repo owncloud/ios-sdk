@@ -130,6 +130,9 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 @dynamic federatedSharingIncoming;
 @dynamic federatedSharingOutgoing;
 
+#pragma mark - Search
+@dynamic serverSideSearchSupported;
+
 #pragma mark - Notifications
 @dynamic notificationEndpoints;
 
@@ -772,6 +775,59 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 	}
 
 	return (self.federatedSharingIncoming.boolValue || self.federatedSharingOutgoing.boolValue);
+}
+
+#pragma mark - Search
+- (BOOL)serverSideSearchSupported
+{
+	return (OCTypedCast(_capabilities[@"search"], NSDictionary) != nil);
+}
+
+- (NSArray<NSString *> *)enabledServerSideSearchProperties
+{
+	NSDictionary<NSString *, NSDictionary *> *searchCapabilityDict = OCTypedCast(_capabilities[@"search"], NSDictionary);
+	NSMutableArray<NSString *> *enabledProperties = nil;
+	if (searchCapabilityDict != nil)
+	{
+		NSDictionary<NSString *, NSDictionary *> *propertyListDict = OCTypedCast(searchCapabilityDict[@"property"], NSDictionary);
+		if (propertyListDict != nil)
+		{
+			for (NSString *property in propertyListDict)
+			{
+				NSDictionary<NSString *, id> *propertyDict = OCTypedCast(propertyListDict[property], NSDictionary);
+
+				if (propertyDict != nil)
+				{
+					if ([propertyDict[@"enabled"] isKindOfClass:NSNumber.class] && (((NSNumber *)propertyDict[@"enabled"]).boolValue))
+					{
+						if (enabledProperties == nil) { enabledProperties = [NSMutableArray new]; }
+						[enabledProperties addObject:property];
+					}
+				}
+			}
+		}
+	}
+
+	return (enabledProperties);
+}
+
+- (nullable NSArray<NSString *> *)supportedKeywordsForServerSideSearchProperty:(NSString *)searchPropertyName
+{
+	NSDictionary<NSString *, NSDictionary *> *searchCapabilityDict = OCTypedCast(_capabilities[@"search"], NSDictionary);
+	NSMutableArray<NSString *> *enabledProperties = nil;
+	if (searchCapabilityDict != nil)
+	{
+		NSDictionary<NSString *, NSDictionary *> *propertyListDict = OCTypedCast(searchCapabilityDict[@"property"], NSDictionary);
+		if (propertyListDict != nil)
+		{
+			NSDictionary<NSString *, id> *propertyDict = OCTypedCast(propertyListDict[searchPropertyName], NSDictionary);
+			if ((propertyDict != nil) && [propertyDict[@"keywords"] isKindOfClass:NSArray.class])
+			{
+				return (propertyDict[@"keywords"]);
+			}
+		}
+	}
+	return (nil);
 }
 
 #pragma mark - Notifications

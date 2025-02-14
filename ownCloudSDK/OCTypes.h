@@ -69,4 +69,6 @@ typedef NSMutableDictionary<NSString*,id<NSSecureCoding>>* OCMutableCodableDict;
 
 typedef NSString* OCActionTrackingID; //!< Identifier used to track a triggered action's progress / state
 
+typedef NSString *OCKQLQuery; //!< KQL query string
+
 #endif /* OCTypes_h */
