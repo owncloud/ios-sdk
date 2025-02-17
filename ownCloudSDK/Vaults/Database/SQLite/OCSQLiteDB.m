@@ -28,6 +28,7 @@
 #import "NSProgress+OCExtensions.h"
 #import "OCCoreManager.h"
 #import "OCSQLiteCollationLocalized.h"
+#import "OCPlatform.h"
 
 #import "OCExtension+License.h"
 
@@ -49,6 +50,11 @@ static NSMutableDictionary<NSString *, NSNumber *> *sOCSQliteDBSharedRunLoopThre
 + (void)load
 {
 	[[OCExtensionManager sharedExtensionManager] addExtension:[OCExtension licenseExtensionWithIdentifier:@"license.ISRunLoopThread" bundleOfClass:[OCRunLoopThread class] title:@"ISRunLoopThread" resourceName:@"ISRunLoopThread" fileExtension:@"LICENSE"]];
+
+	if (OCPlatform.current.memoryConfiguration == OCPlatformMemoryConfigurationMinimum)
+	{
+		[OCSQLiteDB setMemoryLimit:(1 * 1024 * 512)]; // Set 0.5 MB memory limit for SQLite;
+	}
 }
 
 + (BOOL)allowConcurrentFileAccess
@@ -72,7 +78,7 @@ static NSMutableDictionary<NSString *, NSNumber *> *sOCSQliteDBSharedRunLoopThre
 
 		_journalMode = OCSQLiteJournalModeDelete; // (SQLite default)
 
-		self.cacheStatements = (OCCoreManager.sharedCoreManager.memoryConfiguration != OCCoreMemoryConfigurationMinimum);
+		self.cacheStatements = (OCPlatform.current.memoryConfiguration != OCPlatformMemoryConfigurationMinimum);
 
 		#if TARGET_OS_IOS
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(shrinkMemory) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];

@@ -43,6 +43,7 @@
 #import "OCDataSourceComposition.h"
 #import "OCDataItemPresentable.h"
 #import "OCShareRole.h"
+#import "OCPlatform.h"
 
 @class OCCore;
 @class OCItem;
@@ -93,12 +94,6 @@ typedef NS_ENUM(NSUInteger, OCCoreConnectionStatusSignalState)
 	OCCoreConnectionStatusSignalStateTrue,  	//!< Signal state is true
 	OCCoreConnectionStatusSignalStateForceFalse,	//!< Signal state is force false (overriding any true + force true states)
 	OCCoreConnectionStatusSignalStateForceTrue   	//!< Signal state is force true (overriding any false states)
-} __attribute__((enum_extensibility(closed)));
-
-typedef NS_ENUM(NSUInteger, OCCoreMemoryConfiguration)
-{
-	OCCoreMemoryConfigurationDefault,	//!< Default memory configuration
-	OCCoreMemoryConfigurationMinimum	//!< Try using only the minimum amount of memory needed
 } __attribute__((enum_extensibility(closed)));
 
 typedef NS_ENUM(NSUInteger,OCCoreAvailableOfflineCoverage)
@@ -156,7 +151,7 @@ typedef id<NSObject> OCCoreItemTracking;
 	OCConnection *_connection;
 	BOOL _attemptConnect;
 
-	OCCoreMemoryConfiguration _memoryConfiguration;
+	OCPlatformMemoryConfiguration _memoryConfiguration;
 
 	NSMutableArray <OCQuery *> *_queries;
 
@@ -229,7 +224,6 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	OCSignalManager *_signalManager;
 
-	OCCache<OCFileID,OCItemThumbnail *> *_thumbnailCache;
 	NSMutableDictionary <NSString *, NSMutableArray<OCCoreThumbnailRetrieveHandler> *> *_pendingThumbnailRequests;
 
 	NSMutableDictionary <OCIPCNotificationName, id> *_remoteSyncEngineTriggerAcknowledgements;
@@ -310,7 +304,7 @@ typedef id<NSObject> OCCoreItemTracking;
 @property(readonly) OCVault *vault; //!< Vault managing storage and database access for this core.
 @property(readonly) OCConnection *connection; //!< Connection used by the core to make requests to the server.
 
-@property(assign,nonatomic) OCCoreMemoryConfiguration memoryConfiguration;
+@property(assign,nonatomic) OCPlatformMemoryConfiguration memoryConfiguration;
 
 @property(readonly,nonatomic) OCCoreState state;
 @property(copy) OCCoreStateChangedHandler stateChangedHandler;

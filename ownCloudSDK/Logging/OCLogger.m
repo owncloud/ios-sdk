@@ -957,8 +957,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCLogger)
 	static NSString *cachedLogIntro;
 	NSString *logIntro = nil;
 
-	@synchronized(self)
-	{
+	@autoreleasepool { @synchronized(self) {
 		if (cachedLogIntro == nil)
 		{
 			NSBundle *mainBundle = [NSBundle mainBundle];
@@ -991,7 +990,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCLogger)
 				UIDevice.currentDevice.model, // Device model
 				deviceModelID, // Device model ID
 				[[mainBundle preferredLocalizations] componentsJoinedByString:@", "],  // Localizations
-				[OCClassSettings.sharedSettings settingsSummaryForClasses:OCClassSettings.sharedSettings.snapshotClasses onlyPublic:YES]  // Class Settings
+				(OCPlatform.current.memoryConfiguration == OCPlatformMemoryConfigurationMinimum) ? @"omitted (minimum memory configuration)" :
+				[OCClassSettings.sharedSettings settingsSummaryForClasses:OCClassSettings.sharedSettings.snapshotClasses onlyPublic:YES] // Class Settings (omitted for minimum memory configuration as OCClassSettings.sharedSettings.snapshotClasses will traverse all classes, leading libSwiftCore.dylib to permanently allocate several MBytes of additional objects to serve to the ObjC runtime)
 			];
 
 			cachedLogIntro = logIntro;
@@ -1010,7 +1010,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCLogger)
 				logIntro = [logIntroFormat stringByReplacingOccurrencesOfString:@"{{stdIntro}}" withString:logIntro];
 			}
 		}
-	}
+	} }
 
 	return (logIntro);
 }

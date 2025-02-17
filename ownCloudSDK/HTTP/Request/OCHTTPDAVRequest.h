@@ -51,7 +51,7 @@ typedef NS_ENUM(NSInteger, OCPropfindDepth) {
 
 - (OCXMLNode *)xmlRequestPropAttribute;
 
-- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath reuseUsersByID:(NSMutableDictionary<NSString *,OCUser *> *)usersByUserID driveID:(OCDriveID)driveID withErrors:(NSArray <NSError *> **)errors;
+- (NSArray <OCItem *> *)responseItemsForBasePath:(NSString *)basePath drives:(NSArray<OCDrive *> *)drives reuseUsersByID:(NSMutableDictionary<NSString *,OCUser *> *)usersByUserID driveID:(OCDriveID)driveID withErrors:(NSArray <NSError *> **)errors;
 - (NSDictionary <OCPath, OCHTTPDAVMultistatusResponse *> *)multistatusResponsesForBasePath:(NSString *)basePath;
 
 @end

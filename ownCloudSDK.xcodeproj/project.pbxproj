@@ -432,6 +432,11 @@
 		DC6D38802C4E4ED300169BF5 /* OCWaitConditionAvailableOffline.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6D387E2C4E4ED300169BF5 /* OCWaitConditionAvailableOffline.m */; };
 		DC6D51D924A8BC4D006B75E6 /* OCNetworkMonitor.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6D51D724A8BC4C006B75E6 /* OCNetworkMonitor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC6D51DA24A8BC4D006B75E6 /* OCNetworkMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6D51D824A8BC4C006B75E6 /* OCNetworkMonitor.m */; };
+		DC6D937D2CD5762B00537645 /* OCConnection+Search.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6D937B2CD5762B00537645 /* OCConnection+Search.m */; };
+		DC6D93822CD6BEC900537645 /* OCCore+Search.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6D93802CD6BEC900537645 /* OCCore+Search.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC6D93832CD6BEC900537645 /* OCCore+Search.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6D93812CD6BEC900537645 /* OCCore+Search.m */; };
+		DC6D93862CD6BF3200537645 /* OCSearchResult.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6D93842CD6BF3200537645 /* OCSearchResult.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC6D93872CD6BF3200537645 /* OCSearchResult.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6D93852CD6BF3200537645 /* OCSearchResult.m */; };
 		DC6DB88221C26F4D00189B21 /* XCTestCase+Tagging.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6DB88121C26F4D00189B21 /* XCTestCase+Tagging.m */; };
 		DC6DEEAD24C5978E00E3772E /* OCHTTPPolicy.h in Headers */ = {isa = PBXBuildFile; fileRef = DC6DEEAB24C5978E00E3772E /* OCHTTPPolicy.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC6DEEAE24C5978E00E3772E /* OCHTTPPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6DEEAC24C5978E00E3772E /* OCHTTPPolicy.m */; };
@@ -916,6 +921,8 @@
 		DCF00BF527E28A77001F2AFC /* OCDataSourceSubscription+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF00BF327E28A77001F2AFC /* OCDataSourceSubscription+Internal.h */; };
 		DCF00BF627E28A77001F2AFC /* OCDataSourceSubscription+Internal.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF00BF427E28A77001F2AFC /* OCDataSourceSubscription+Internal.m */; };
 		DCF00C1927E698A4001F2AFC /* DataSourceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF00C1827E698A4001F2AFC /* DataSourceTests.m */; };
+		DCF06B662CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF06B642CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCF06B672CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF06B652CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.m */; };
 		DCF072E42798630900E0B01D /* OCResourceTextPlaceholder.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF072E22798630900E0B01D /* OCResourceTextPlaceholder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCF072E52798630900E0B01D /* OCResourceTextPlaceholder.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF072E32798630900E0B01D /* OCResourceTextPlaceholder.m */; };
 		DCF072E82798652500E0B01D /* OCResourceSourceAvatarPlaceholders.h in Headers */ = {isa = PBXBuildFile; fileRef = DCF072E62798652500E0B01D /* OCResourceSourceAvatarPlaceholders.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1489,6 +1496,11 @@
 		DC6D387E2C4E4ED300169BF5 /* OCWaitConditionAvailableOffline.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCWaitConditionAvailableOffline.m; sourceTree = "<group>"; };
 		DC6D51D724A8BC4C006B75E6 /* OCNetworkMonitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCNetworkMonitor.h; sourceTree = "<group>"; };
 		DC6D51D824A8BC4C006B75E6 /* OCNetworkMonitor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCNetworkMonitor.m; sourceTree = "<group>"; };
+		DC6D937B2CD5762B00537645 /* OCConnection+Search.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+Search.m"; sourceTree = "<group>"; };
+		DC6D93802CD6BEC900537645 /* OCCore+Search.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCore+Search.h"; sourceTree = "<group>"; };
+		DC6D93812CD6BEC900537645 /* OCCore+Search.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+Search.m"; sourceTree = "<group>"; };
+		DC6D93842CD6BF3200537645 /* OCSearchResult.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSearchResult.h; sourceTree = "<group>"; };
+		DC6D93852CD6BF3200537645 /* OCSearchResult.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSearchResult.m; sourceTree = "<group>"; };
 		DC6DB88021C26F4D00189B21 /* XCTestCase+Tagging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "XCTestCase+Tagging.h"; sourceTree = "<group>"; };
 		DC6DB88121C26F4D00189B21 /* XCTestCase+Tagging.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "XCTestCase+Tagging.m"; sourceTree = "<group>"; };
 		DC6DEEAB24C5978E00E3772E /* OCHTTPPolicy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPPolicy.h; sourceTree = "<group>"; };
@@ -1991,6 +2003,8 @@
 		DCF00BF327E28A77001F2AFC /* OCDataSourceSubscription+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCDataSourceSubscription+Internal.h"; sourceTree = "<group>"; };
 		DCF00BF427E28A77001F2AFC /* OCDataSourceSubscription+Internal.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCDataSourceSubscription+Internal.m"; sourceTree = "<group>"; };
 		DCF00C1827E698A4001F2AFC /* DataSourceTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DataSourceTests.m; sourceTree = "<group>"; };
+		DCF06B642CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCQueryCondition+KQLBuilder.h"; sourceTree = "<group>"; };
+		DCF06B652CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCQueryCondition+KQLBuilder.m"; sourceTree = "<group>"; };
 		DCF072E22798630900E0B01D /* OCResourceTextPlaceholder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCResourceTextPlaceholder.h; sourceTree = "<group>"; };
 		DCF072E32798630900E0B01D /* OCResourceTextPlaceholder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCResourceTextPlaceholder.m; sourceTree = "<group>"; };
 		DCF072E62798652500E0B01D /* OCResourceSourceAvatarPlaceholders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCResourceSourceAvatarPlaceholders.h; sourceTree = "<group>"; };
@@ -2659,6 +2673,8 @@
 				DC359690223FA7CC00C4D6E6 /* OCQueryCondition.h */,
 				DC35969522403E5B00C4D6E6 /* OCQueryCondition+SQLBuilder.m */,
 				DC35969422403E5B00C4D6E6 /* OCQueryCondition+SQLBuilder.h */,
+				DCF06B652CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.m */,
+				DCF06B642CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.h */,
 				DC3596992240EC0A00C4D6E6 /* OCQueryCondition+Item.m */,
 				DC3596982240EC0A00C4D6E6 /* OCQueryCondition+Item.h */,
 			);
@@ -3134,6 +3150,25 @@
 			path = Update;
 			sourceTree = "<group>";
 		};
+		DC6D937E2CD5879A00537645 /* Search */ = {
+			isa = PBXGroup;
+			children = (
+				DC6D937B2CD5762B00537645 /* OCConnection+Search.m */,
+			);
+			path = Search;
+			sourceTree = "<group>";
+		};
+		DC6D937F2CD6BE9C00537645 /* Search */ = {
+			isa = PBXGroup;
+			children = (
+				DC6D93812CD6BEC900537645 /* OCCore+Search.m */,
+				DC6D93802CD6BEC900537645 /* OCCore+Search.h */,
+				DC6D93852CD6BF3200537645 /* OCSearchResult.m */,
+				DC6D93842CD6BF3200537645 /* OCSearchResult.h */,
+			);
+			path = Search;
+			sourceTree = "<group>";
+		};
 		DC6DEEAA24C5977500E3772E /* Policy */ = {
 			isa = PBXGroup;
 			children = (
@@ -3426,6 +3461,7 @@
 				DC19BFE221CB9FAC007C20D1 /* FileProvider */,
 				DC2FED5D228D5577004FDEC6 /* Favorites */,
 				DC19BFE121CB9F4F007C20D1 /* Sync */,
+				DC6D937F2CD6BE9C00537645 /* Search */,
 				DC2F6377223A61A60063C2DA /* Core Query */,
 			);
 			path = Core;
@@ -3505,6 +3541,7 @@
 				DCCE49362684BBF5005961D8 /* DAVResponse */,
 				DCD63279223BB1930090169E /* Capabilities */,
 				DC85570A204FEA5E00189B9A /* Categories */,
+				DC6D937E2CD5879A00537645 /* Search */,
 				DCDB760F2739D26100EE7A06 /* ServerLocator */,
 			);
 			path = Connection;
@@ -4591,6 +4628,7 @@
 				DC4B1171220830F20062BCDD /* OCHTTPPipelineBackend.h in Headers */,
 				DC19BFD221CA6C15007C20D1 /* OCSyncIssueChoice.h in Headers */,
 				DCDB761E2739D4A300EE7A06 /* OCServerLocatorWebFinger.h in Headers */,
+				DC6D93822CD6BEC900537645 /* OCCore+Search.h in Headers */,
 				DCEE0B6F25E697AF006534B5 /* OCCoreManager+ItemResolution.h in Headers */,
 				DCC8FA21202B218100EB6701 /* OCAppIdentity.h in Headers */,
 				DCC3701324D4D134008B0DEB /* OCScanJobActivity.h in Headers */,
@@ -4715,6 +4753,7 @@
 				DC41C79025EA5F7A0074F23B /* OCResourceSource.h in Headers */,
 				DCF575DF27956D84003BEBBA /* OCViewProviderContext.h in Headers */,
 				DC701477220AE696009D4FD9 /* OCHTTPPipelineTask.h in Headers */,
+				DC6D93862CD6BF3200537645 /* OCSearchResult.h in Headers */,
 				DC47E4DD27A5820D0020E8EF /* GAODataError.h in Headers */,
 				DC622C4E29019515001D73A0 /* OCLocale+SystemLanguage.h in Headers */,
 				DC47E4D727A5820D0020E8EF /* GAQuota.h in Headers */,
@@ -4904,6 +4943,7 @@
 				DCAEB06921FA617D0067E147 /* OCActivity.h in Headers */,
 				DCFFF57E20D3A51C0096D2D3 /* OCSyncContext.h in Headers */,
 				DC0283632090A3E8005B6334 /* OCItemThumbnail.h in Headers */,
+				DCF06B662CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.h in Headers */,
 				DCADC04D2072D54200DB8E83 /* OCSQLiteTableSchema.h in Headers */,
 				DC73F3BF254BFE9900CE5FA9 /* NSArray+ObjCRuntime.h in Headers */,
 				DCC4F3FF27D75BF700ABF4C9 /* OCDataConverterPipeline.h in Headers */,
@@ -5372,6 +5412,7 @@
 				DCDD9B15222986D50052A001 /* OCShare+OCXMLObjectCreation.m in Sources */,
 				DC54396520D50B8A002BF291 /* OCCore+CommandDelete.m in Sources */,
 				DCF163F7274BA6C300E0182A /* OCSQLiteCollationLocalized.m in Sources */,
+				DC6D93872CD6BF3200537645 /* OCSearchResult.m in Sources */,
 				DC4B116E2208306C0062BCDD /* OCHTTPPipeline.m in Sources */,
 				DC8B7B3A22D88FFD00E63657 /* OCItemPolicyProcessor.m in Sources */,
 				DC8266602818972200F91F7D /* OCVaultLocation.m in Sources */,
@@ -5396,6 +5437,7 @@
 				DC7014262209CE7A009D4FD9 /* OCHTTPPipelineManager.m in Sources */,
 				DC6ABF6C2534633E00689C7B /* OCHostSimulatorManager.m in Sources */,
 				DCD2D40422F059190071FB8F /* OCClassSettingsUserPreferences.m in Sources */,
+				DC6D937D2CD5762B00537645 /* OCConnection+Search.m in Sources */,
 				DC5D9E6924963DED00BFFE8E /* OCMessageChoice.m in Sources */,
 				DCC26FBA2B722C8900904000 /* OCPasswordPolicyReport.m in Sources */,
 				DC855700204F597800189B9A /* OCXMLParserNode.m in Sources */,
@@ -5498,6 +5540,7 @@
 				DC0BE5B228F80BBA00CE2101 /* OCShareRole.m in Sources */,
 				DCC26FC02B7397D400904000 /* OCPasswordPolicyRule+StandardRules.m in Sources */,
 				DCC6567520CA695600110A97 /* OCCoreManager.m in Sources */,
+				DCF06B672CED34AB00B95D79 /* OCQueryCondition+KQLBuilder.m in Sources */,
 				DC2F66A12603FCF6001BFDB6 /* OCCancelAction.m in Sources */,
 				DC6DEEBA24C5C82400E3772E /* OCHTTPPolicyBookmark.m in Sources */,
 				DCEE0B7025E697AF006534B5 /* OCCoreManager+ItemResolution.m in Sources */,
@@ -5545,6 +5588,7 @@
 				DC85571D2050196000189B9A /* OCItem+OCXMLObjectCreation.m in Sources */,
 				DC7E0A702036F28B006111FA /* OCKeychain.m in Sources */,
 				DC826666281AC59D00F91F7D /* OCVFSCore.m in Sources */,
+				DC6D93832CD6BEC900537645 /* OCCore+Search.m in Sources */,
 				DC49B55428339BE200DAF13B /* NSArray+OCMapping.m in Sources */,
 				DC4AFAB1206A8C1D00189B9A /* OCSQLiteStatement.m in Sources */,
 				DCEEB2F6204802CF00189B9A /* OCIssue.m in Sources */,

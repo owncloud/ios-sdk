@@ -114,6 +114,11 @@ typedef NSNumber* OCCapabilityBool;
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordEnforcedForReadWrite; //!< Controls whether a password is required for read-write links
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordEnforcedForReadWriteDelete; //!< Controls whether a password is required for read-write-delete links
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordEnforcedForUploadOnly; //!< Controls whether a password is required for upload-only links
+@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordBlockRemovalForReadOnly; //!< Controls whether the removal of a password is blocked for read-only links
+@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordBlockRemovalForReadWrite; //!< Controls whether the removal of a password is blocked for read-write links
+@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordBlockRemovalForReadWriteDelete; //!< Controls whether the removal of a password is blocked for read-write-delete links
+@property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingPasswordBlockRemovalForUploadOnly; //!< Controls whether the removal of a password is blocked for upload-only links
+
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingExpireDateAddDefaultDate; //!< Controls whether a *default* expiration date should be set
 @property(readonly,nullable,nonatomic) OCCapabilityBool publicSharingExpireDateEnforceDateAndDaysDeterminesLastAllowedDate; //!< Controls whether .publicSharingDefaultExpireDateDays is enforced as maximum expiration date. Also, when set, an expiration date is REQUIRED.
 @property(readonly,nullable,nonatomic) NSNumber *publicSharingDefaultExpireDateDays;
@@ -136,6 +141,11 @@ typedef NSNumber* OCCapabilityBool;
 @property(readonly,nullable,nonatomic) OCCapabilityBool federatedSharingOutgoing;
 
 @property(readonly,nonatomic) BOOL federatedSharingSupported;
+
+#pragma mark - Search
+@property(readonly,nonatomic) BOOL serverSideSearchSupported; //!< Indicates if ocis-style KQL-based server-side search is available
+@property(readonly,nullable,nonatomic) NSArray<NSString *> *enabledServerSideSearchProperties; //!< Returns a list of enabled/supported server-side search properties (f.ex. "name", "mtime", "size", "mediatype", "type", "tag", "tags", "content", "scope")
+- (nullable NSArray<NSString *> *)supportedKeywordsForServerSideSearchProperty:(NSString *)searchPropertyName; //!< Returns the server-provided list of supported keywords for that property (f.ex. "document", "spreadsheet", … for "mediatype")
 
 #pragma mark - Notifications
 @property(readonly,nullable,nonatomic) NSArray<NSString *> *notificationEndpoints;

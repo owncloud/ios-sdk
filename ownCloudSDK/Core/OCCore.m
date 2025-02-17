@@ -327,8 +327,6 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 		_claimTokensByClaimIdentifier = [NSMapTable strongToWeakObjectsMapTable];
 
-		_thumbnailCache = [OCCache new];
-
 		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 		_connectivityQueue = dispatch_queue_create("OCCore connectivity queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 
@@ -410,7 +408,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		[self addSignalProvider:_connectingStatusSignalProvider];
 		[self addSignalProvider:_connectionStatusSignalProvider];
 
-		self.memoryConfiguration = OCCoreManager.sharedCoreManager.memoryConfiguration;
+		self.memoryConfiguration = OCPlatform.current.memoryConfiguration;
 
 		[self startIPCObservation];
 	}
@@ -755,7 +753,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 					}
 
 					// If app provider is available and enabled
-					if (OCCoreManager.sharedCoreManager.memoryConfiguration != OCCoreMemoryConfigurationMinimum) // only load app providers in memory configurations other than minimum
+					if (self.memoryConfiguration != OCPlatformMemoryConfigurationMinimum) // only load app providers in memory configurations other than minimum
 					{
 						OCAppProvider *latestSupportedAppProvider = self.connection.capabilities.latestSupportedAppProvider;
 
@@ -1043,22 +1041,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 }
 
 #pragma mark - Memory configuration
-- (void)setMemoryConfiguration:(OCCoreMemoryConfiguration)memoryConfiguration
+- (void)setMemoryConfiguration:(OCPlatformMemoryConfiguration)memoryConfiguration
 {
 	_memoryConfiguration = memoryConfiguration;
 
 	self.vault.resourceManager.memoryConfiguration = memoryConfiguration;
-
-	switch (_memoryConfiguration)
-	{
-		case OCCoreMemoryConfigurationDefault:
-			_thumbnailCache.countLimit = OCCacheLimitNone;
-		break;
-
-		case OCCoreMemoryConfigurationMinimum:
-			_thumbnailCache.countLimit = 1;
-		break;
-	}
 }
 
 #pragma mark - Inter-Process change notification/handling
