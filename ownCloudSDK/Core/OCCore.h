@@ -118,6 +118,7 @@ typedef void(^OCCoreClaimCompletionHandler)(NSError * _Nullable error, OCItem * 
 typedef void(^OCCoreCompletionHandler)(NSError * _Nullable error);
 typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 typedef void(^OCCoreSyncReasonCountChangeObserver)(OCCore *core, BOOL initial, NSDictionary<OCSyncReason, NSNumber *> * _Nullable countBySyncReason);
+typedef void(^OCCoreDriveCompletionHandler)(NSError * _Nullable error, OCDrive * _Nullable newDrive);
 
 typedef void(^OCCoreBusyStatusHandler)(NSProgress * _Nullable progress);
 
@@ -245,6 +246,7 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	OCDataSourceArray *_drivesDataSource;
 	OCDataSourceArray *_subscribedDrivesDataSource;
+	OCDataSourceArray *_disabledDrivesDataSource;
 	OCDataSourceArray *_personalDriveDataSource;
 	OCDataSourceArray *_shareJailDriveDataSource;
 	OCDataSourceArray *_projectDrivesDataSource;
@@ -289,7 +291,7 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	__weak id <OCCoreDelegate> _delegate;
 
-	NSMutableArray<OCShareRole *> *_shareRoles;
+	NSMutableArray<OCShareRole *> *_legacyShareRoles;
 
 	NSNumber *_rootQuotaBytesRemaining;
 	NSNumber *_rootQuotaBytesUsed;
@@ -420,6 +422,8 @@ typedef id<NSObject> OCCoreItemTracking;
 + (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType;
 @end
 
+typedef void(^OCCoreShareRoleRetrievalHandler)(NSError * _Nullable error, NSArray<OCShareRole *> * _Nullable roles);
+
 @interface OCCore (Sharing)
 /**
  Creates a new share on the server.
@@ -465,8 +469,8 @@ typedef id<NSObject> OCCoreItemTracking;
 - (nullable NSProgress *)retrievePrivateLinkForItem:(OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable privateLink))completionHandler; //!< Returns the private link for the item
 - (nullable NSProgress *)retrieveItemForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item))completionHandler; //!< Returns the item for the private link
 
-- (nullable NSArray<OCShareRole *> *)availableShareRolesForType:(OCShareType)type location:(OCLocation *)location; //!< Returns the share roles available for this location and type. Returns nil if none are available.
-- (nullable OCShareRole *)matchingShareRoleForShare:(OCShare *)share; //!< Returns the share role matching the provided item and share's permissions and location. Returns nil if none matches.
+- (void)availableShareRolesForType:(OCShareType)shareType location:(OCLocation *)location completionHandler:(OCCoreShareRoleRetrievalHandler)completionHandler; //!< Returns the share roles available for this location and type. Returns nil if none are available.
+- (nullable OCShareRole *)matchingForShare:(OCShare *)share fromShareRoles:(nullable NSArray<OCShareRole *> *)roles; //!< Returns the share role matching the provided item and share's permissions and location. Returns nil if none matches.
 
 @end
 
@@ -507,6 +511,21 @@ typedef id<NSObject> OCCoreItemTracking;
 
 @interface OCCore (CommandUpdate)
 - (nullable NSProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(nullable NSDictionary<OCCoreOption,id> *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler; //!< resultHandler.parameter returns the OCConnectionPropertyUpdateResult
+@end
+
+@interface OCCore (DriveManagement)
+
+// Creation
+- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes completionHandler:(OCCoreDriveCompletionHandler)completionHandler;
+
+// Disable/Restore/Delete
+- (nullable NSProgress *)disableDrive:(OCDrive *)drive completionHandler:(OCCoreCompletionHandler)completionHandler;
+- (nullable NSProgress *)restoreDrive:(OCDrive *)drive completionHandler:(OCCoreCompletionHandler)completionHandler;
+- (nullable NSProgress *)deleteDrive:(OCDrive *)drive completionHandler:(OCCoreCompletionHandler)completionHandler;
+
+// Change attributes
+- (nullable NSProgress *)updateDrive:(OCDrive *)drive properties:(NSDictionary<OCDriveProperty, id> *)updateProperties completionHandler:(OCCoreDriveCompletionHandler)completionHandler;
+
 @end
 
 extern OCClassSettingsKey OCCoreAddAcceptLanguageHeader;

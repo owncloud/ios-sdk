@@ -385,7 +385,7 @@
 	}];
 
 	NSMutableSet<OCDriveID> *newActiveDrivesIDs = [newRemoteDrives setUsingMapper:^OCDriveID(OCDrive *drive) {
-		if (drive.isDeactivated)
+		if (drive.isDisabled)
 		{
 			// Do not include deactivated drives in newDrivesIDs
 			return (nil);
@@ -443,7 +443,7 @@
 		// Find added drives
 		for (OCDrive *newRemoteDrive in newRemoteDrives)
 		{
-			if (![existingDrivesIDs containsObject:newRemoteDrive.identifier] && !newRemoteDrive.isDeactivated)
+			if (![existingDrivesIDs containsObject:newRemoteDrive.identifier] && !newRemoteDrive.isDisabled)
 			{
 				[remotelyAddedDrives addObject:newRemoteDrive];
 			}
@@ -484,7 +484,7 @@
 		// Find deactivated drives
 		for (OCDrive *newRemoteDrive in newRemoteDrives)
 		{
-			if ((newRemoteDrive.identifier != nil) && newRemoteDrive.isDeactivated)
+			if ((newRemoteDrive.identifier != nil) && newRemoteDrive.isDisabled)
 			{
 				OCDrive *existingDetachedDrive = [detachedDrives firstObjectMatching:^BOOL(OCDrive * _Nonnull detachedDrive) {
 					return ([detachedDrive.identifier isEqual:newRemoteDrive.identifier]);
@@ -732,6 +732,7 @@
 
 	[self willChangeValueForKey:@"activeDrives"];
 	[self willChangeValueForKey:@"subscribedDrives"];
+	[self willChangeValueForKey:@"disabledDrives"];
 	[self willChangeValueForKey:@"detachedDrives"];
 
 	@synchronized(self)
@@ -742,7 +743,11 @@
 		}];
 
 		_subscribedDrives = [driveList.drives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
-			return ([driveList.subscribedDriveIDs containsObject:drive.identifier] && !drive.isDeactivated);
+			return ([driveList.subscribedDriveIDs containsObject:drive.identifier] && !drive.isDisabled);
+		}];
+
+		_disabledDrives = [driveList.drives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
+			return (drive.isDisabled);
 		}];
 
 		_detachedDrives = [driveList.detachedDrives copy];
@@ -752,6 +757,7 @@
 	}
 
 	[self didChangeValueForKey:@"detachedDrives"];
+	[self didChangeValueForKey:@"disabledDrives"];
 	[self didChangeValueForKey:@"subscribedDrives"];
 	[self didChangeValueForKey:@"activeDrives"];
 

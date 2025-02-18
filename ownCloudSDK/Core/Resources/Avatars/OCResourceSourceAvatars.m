@@ -27,7 +27,7 @@
 
 @interface OCResourceSourceAvatars ()
 {
-	NSMutableSet<OCUserIdentifier> *_forceRefreshedAvatars;
+	NSMutableSet<OCUniqueUserIdentifier> *_forceRefreshedAvatars;
 }
 @end
 
@@ -60,9 +60,9 @@
 
 			if ((avatarImage = OCTypedCast(request.resource, OCResourceImage)) != nil)
 			{
-				OCUserIdentifier userIdentifier;
+				OCUniqueUserIdentifier userIdentifier;
 
-				if ((userIdentifier = user.userIdentifier) != nil)
+				if ((userIdentifier = user.uniqueIdentifier) != nil)
 				{
 					if (_forceRefreshedAvatars == nil)
 					{
@@ -134,7 +134,7 @@
 					OCResourceImage *resource = [[OCResourceImage alloc] initWithRequest:request];
 
 					// Map avatar to corresponding resource fields
-					resource.identifier = avatar.userIdentifier;
+					resource.identifier = avatar.uniqueUserIdentifier;
 					resource.version = avatar.eTag;
 					resource.quality = OCResourceQualityNormal;
 

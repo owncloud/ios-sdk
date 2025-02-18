@@ -1,13 +1,13 @@
 //
-//  OCGObject.h
+//  OCShareRole+GraphAPI.h
 //  ownCloudSDK
 //
-//  Created by Felix Schwarz on 26.01.22.
-//  Copyright © 2022 ownCloud GmbH. All rights reserved.
+//  Created by Felix Schwarz on 29.12.24.
+//  Copyright © 2024 ownCloud GmbH. All rights reserved.
 //
 
 /*
- * Copyright (C) 2022, ownCloud GmbH.
+ * Copyright (C) 2024, ownCloud GmbH.
  *
  * This code is covered by the GNU Public License Version 3.
  *
@@ -16,17 +16,13 @@
  *
  */
 
-#import <Foundation/Foundation.h>
-#import "OCGraphObject.h"
+#import <ownCloudSDK/ownCloudSDK.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NSString* OCGPropertyName;
-typedef NSString* OCGJSONName;
+@interface OCShareRole (GraphAPI)
 
-@interface OCGObject : NSObject
-
-//+ (NSDictionary<OCGPropertyName,OCGJSONName> *)jsonNameByPropertyName;
+@property(class,strong,nullable,readonly) NSArray<OCShareRole *> *linkShareRoles; //!< ocis link share roles (hard-coded, can't be retrieved from server)
 
 @end
 

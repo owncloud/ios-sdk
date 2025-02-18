@@ -18,8 +18,10 @@
 #import "GAUnifiedRoleDefinition.h"
 #import "GAUnifiedRolePermission.h"
 
-// occgen: type start
+// occgen: type start {"locked":true}
 @implementation GAUnifiedRoleDefinition
+
+@synthesize role = _role;
 
 // occgen: type serialization
 + (nullable instancetype)decodeGraphData:(GAGraphData)structure context:(nullable GAGraphContext *)context error:(NSError * _Nullable * _Nullable)outError

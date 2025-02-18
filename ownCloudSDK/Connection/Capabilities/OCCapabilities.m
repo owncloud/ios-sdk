@@ -68,6 +68,26 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 @dynamic davReports;
 @dynamic davPropfindSupportsDepthInfinity;
 
+#pragma mark - Spaces
+@dynamic spacesEnabled;
+@dynamic spacesVersion;
+@dynamic spacesProjects;
+@dynamic spacesShareJail;
+
+#pragma mark - Password Policy
+@dynamic passwordPolicyEnabled;
+@dynamic passwordPolicyMinCharacters;
+@dynamic passwordPolicyMaxCharacters;
+@dynamic passwordPolicyMinLowerCaseCharacters;
+@dynamic passwordPolicyMinUpperCaseCharacters;
+@dynamic passwordPolicyMinDigits;
+@dynamic passwordPolicyMinSpecialCharacters;
+@dynamic passwordPolicySpecialCharacters;
+
+#pragma mark - App Providers
+@dynamic appProviders;
+@dynamic latestSupportedAppProvider;
+
 #pragma mark - TUS
 @dynamic tusSupported;
 @dynamic tusCapabilities;
@@ -274,6 +294,16 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 - (NSString *)spacesVersion
 {
 	return (OCTypedCast(_capabilities[@"spaces"][@"version"], NSString));
+}
+
+- (OCCapabilityBool)spacesProjects
+{
+	return (OCTypedCast(_capabilities[@"spaces"][@"projects"], NSNumber));
+}
+
+- (OCCapabilityBool)spacesShareJail
+{
+	return (OCTypedCast(_capabilities[@"spaces"][@"share_jail"], NSNumber));
 }
 
 #pragma mark - Password Policy

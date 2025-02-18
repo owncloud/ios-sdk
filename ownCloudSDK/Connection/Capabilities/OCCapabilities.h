@@ -61,6 +61,8 @@ typedef NSNumber* OCCapabilityBool;
 #pragma mark - Spaces
 @property(readonly,nullable,nonatomic) OCCapabilityBool spacesEnabled;
 @property(readonly,nullable,nonatomic) NSString *spacesVersion;
+@property(readonly,nullable,nonatomic) OCCapabilityBool spacesProjects;
+@property(readonly,nullable,nonatomic) OCCapabilityBool spacesShareJail;
 
 #pragma mark - Password Policy
 @property(readonly,nonatomic) BOOL passwordPolicyEnabled;
