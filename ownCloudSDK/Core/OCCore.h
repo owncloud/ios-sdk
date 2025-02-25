@@ -526,6 +526,9 @@ typedef void(^OCCoreShareRoleRetrievalHandler)(NSError * _Nullable error, NSArra
 // Change attributes
 - (nullable NSProgress *)updateDrive:(OCDrive *)drive properties:(NSDictionary<OCDriveProperty, id> *)updateProperties completionHandler:(OCCoreDriveCompletionHandler)completionHandler;
 
+- (void)retrieveDrive:(OCDrive *)drive itemForResource:(OCDriveResource)resource completionHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item))completionHandler;
+- (nullable NSProgress *)updateDrive:(OCDrive *)drive resourceFor:(OCDriveResource)resource withItem:(nullable OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, OCDrive * _Nullable drive))completionHandler;
+
 @end
 
 extern OCClassSettingsKey OCCoreAddAcceptLanguageHeader;
@@ -535,6 +538,7 @@ extern OCClassSettingsKey OCCoreOverrideAvailabilitySignal;
 extern OCClassSettingsKey OCCoreActionConcurrencyBudgets;
 extern OCClassSettingsKey OCCoreCookieSupportEnabled;
 extern OCClassSettingsKey OCCoreScanForChangesInterval;
+extern OCClassSettingsKey OCCoreSpaceResourceFolderPath;
 
 extern OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter;
 extern OCDatabaseCounterIdentifier OCCoreSyncJournalCounter;
