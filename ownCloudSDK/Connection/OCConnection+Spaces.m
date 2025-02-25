@@ -24,11 +24,12 @@
 #import "OCConnection+GraphAPI.h"
 #import "OCMacros.h"
 #import "NSError+OCError.h"
+#import "NSURL+OCURLQueryParameterExtensions.h"
 
 @implementation OCConnection (Drives)
 
 #pragma mark - Creation
-- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes completionHandler:(OCConnectionDriveCompletionHandler)completionHandler
+- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes template:(nullable OCDriveTemplate)templateName completionHandler:(OCConnectionDriveCompletionHandler)completionHandler
 {
 	GADrive *drive = [GADrive new];
 	drive.name = name;
@@ -41,8 +42,16 @@
 		drive.quota = quota;
 	}
 
-	return ([self createODataObject:drive atURL:[self URLForEndpoint:OCConnectionEndpointIDGraphDrives options:nil] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] parameters:nil responseEntityClass:Nil completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
-		NSLog(@"New space: %@", response);
+	NSURL *creationURL = [self URLForEndpoint:OCConnectionEndpointIDGraphDrives options:nil];
+	if (templateName != nil)
+	{
+		creationURL = [creationURL urlByAppendingQueryParameters:@{
+			@"template" : templateName
+		} replaceExisting:NO];
+	}
+
+	return ([self createODataObject:drive atURL:creationURL requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] parameters:nil responseEntityClass:Nil completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+		OCLogDebug(@"New space: %@", response);
 		completionHandler(error, (response != nil) ? [OCDrive driveFromGADrive:(GADrive *)response] : nil);
 	}]);
 }
@@ -119,7 +128,7 @@
 	}
 
 	return ([self updateODataObject:gaDriveUpdate atURL:[[self URLForEndpoint:OCConnectionEndpointIDGraphDrives options:nil] URLByAppendingPathComponent:drive.identifier] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] parameters:nil responseEntityClass:GADrive.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
-		NSLog(@"Updated space: %@", response);
+		OCLogDebug(@"Updated space: %@", response);
 		completionHandler(error, (response != nil) ? [OCDrive driveFromGADrive:(GADrive *)response] : nil);
 	}]);
 }

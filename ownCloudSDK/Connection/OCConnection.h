@@ -359,7 +359,7 @@ typedef void(^OCConnectionDriveManagementCompletionHandler)(NSError * _Nullable 
 @interface OCConnection (Drives)
 
 #pragma mark - Creation
-- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes completionHandler:(OCConnectionDriveCompletionHandler)completionHandler;
+- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes template:(nullable OCDriveTemplate)templateName completionHandler:(OCConnectionDriveCompletionHandler)completionHandler;
 
 #pragma mark - Disable/Restore/Delete
 - (nullable NSProgress *)disableDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
