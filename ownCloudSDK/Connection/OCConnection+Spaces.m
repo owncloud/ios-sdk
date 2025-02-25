@@ -19,8 +19,11 @@
 #import "OCConnection.h"
 #import "GADrive.h"
 #import "GADriveUpdate.h"
+#import "GADriveItem.h"
 #import "OCConnection+OData.h"
 #import "OCConnection+GraphAPI.h"
+#import "OCMacros.h"
+#import "NSError+OCError.h"
 
 @implementation OCConnection (Drives)
 
@@ -118,6 +121,61 @@
 	return ([self updateODataObject:gaDriveUpdate atURL:[[self URLForEndpoint:OCConnectionEndpointIDGraphDrives options:nil] URLByAppendingPathComponent:drive.identifier] requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] parameters:nil responseEntityClass:GADrive.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
 		NSLog(@"Updated space: %@", response);
 		completionHandler(error, (response != nil) ? [OCDrive driveFromGADrive:(GADrive *)response] : nil);
+	}]);
+}
+
+- (NSProgress *)updateDrive:(OCDrive *)drive resourceFor:(OCDataItemPresentableResource)resource withItem:(nullable OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, OCDrive * _Nullable drive))completionHandler
+{
+	// Compose drive item
+	GADriveItem *driveItem = [GADriveItem new];
+
+	// - set special folder name based on OCDataItemPresentableResource
+	driveItem.specialFolder = [GASpecialFolder new];
+	if ([resource isEqual:OCDataItemPresentableResourceCoverImage]) {
+		driveItem.specialFolder.name = GASpecialFolderNameImage;
+	} else if ([resource isEqual:OCDataItemPresentableResourceCoverDescription]) {
+		driveItem.specialFolder.name = GASpecialFolderNameReadme;
+	} else {
+		// Unknown/unsupported resource type -> return error
+		completionHandler(OCError(OCErrorInvalidParameter), nil);
+	}
+
+	// - set item identifier
+	if (item != nil)
+	{
+		// update/set item as driveItem
+		driveItem.identifier = item.fileID;
+	}
+	else
+	{
+		// remove item as driveItem
+		driveItem.identifier = (OCFileID)NSNull.null;
+	}
+
+	// Compose drive update
+	GADriveUpdate *driveUpdate = [GADriveUpdate new];
+	driveUpdate.special = @[ driveItem ];
+
+	// Encode & send drive update
+	NSURL *url = [[self URLForEndpoint:OCConnectionEndpointIDGraphDrives options:nil] URLByAppendingPathComponent:drive.identifier];
+
+	return ([self updateODataObject:driveUpdate atURL:url requireSignals:[NSSet setWithObject:OCConnectionSignalIDAuthenticationAvailable] parameters:nil responseEntityClass:GADrive.class completionHandler:^(NSError * _Nullable error, id  _Nullable response) {
+		OCDrive *ocDrive = nil;
+
+		if (error == nil)
+		{
+			// Convert GADrive to OCDrive
+			GADrive *gaDrive;
+
+			if ((gaDrive = OCTypedCast(response, GADrive)) != nil)
+			{
+				ocDrive = [OCDrive driveFromGADrive:gaDrive];
+			}
+		}
+
+		OCLogDebug(@"Drives response: drive=%@, error=%@", ocDrive, error);
+
+		completionHandler(error, ocDrive);
 	}]);
 }
 
