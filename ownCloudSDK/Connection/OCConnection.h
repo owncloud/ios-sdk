@@ -368,7 +368,7 @@ typedef void(^OCConnectionDriveManagementCompletionHandler)(NSError * _Nullable 
 
 #pragma mark - Change attributes
 - (nullable NSProgress *)updateDrive:(OCDrive *)drive properties:(NSDictionary<OCDriveProperty, id> *)updateProperties completionHandler:(OCConnectionDriveCompletionHandler)completionHandler;
-- (nullable NSProgress *)updateDrive:(OCDrive *)drive resourceFor:(OCDataItemPresentableResource)resource withItem:(nullable OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, OCDrive * _Nullable drive))completionHandler; //!< Updates special items of a drive with the provided item.
+- (nullable NSProgress *)updateDrive:(OCDrive *)drive resourceFor:(OCDriveResource)resource withItem:(nullable OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, OCDrive * _Nullable drive))completionHandler; //!< Updates special items of a drive with the provided item.
 
 @end
 

@@ -124,16 +124,16 @@
 	}]);
 }
 
-- (NSProgress *)updateDrive:(OCDrive *)drive resourceFor:(OCDataItemPresentableResource)resource withItem:(nullable OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, OCDrive * _Nullable drive))completionHandler
+- (NSProgress *)updateDrive:(OCDrive *)drive resourceFor:(OCDriveResource)resource withItem:(nullable OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, OCDrive * _Nullable drive))completionHandler
 {
 	// Compose drive item
 	GADriveItem *driveItem = [GADriveItem new];
 
 	// - set special folder name based on OCDataItemPresentableResource
 	driveItem.specialFolder = [GASpecialFolder new];
-	if ([resource isEqual:OCDataItemPresentableResourceCoverImage]) {
+	if ([resource isEqual:OCDriveResourceCoverImage]) {
 		driveItem.specialFolder.name = GASpecialFolderNameImage;
-	} else if ([resource isEqual:OCDataItemPresentableResourceCoverDescription]) {
+	} else if ([resource isEqual:OCDriveResourceCoverDescription]) {
 		driveItem.specialFolder.name = GASpecialFolderNameReadme;
 	} else {
 		// Unknown/unsupported resource type -> return error

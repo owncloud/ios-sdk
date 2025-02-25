@@ -166,7 +166,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 						OCSyncActionCategoryDownloadWifiOnly   	    : @(2), // Limit number of concurrent downloads by WiFi-only transfers to 2 (leaving at least one spot empty for cellular)
 						OCSyncActionCategoryDownloadWifiAndCellular : @(3) // Limit number of concurrent downloads by WiFi and Cellular transfers to 3
 		},
-		OCCoreCookieSupportEnabled : @(YES)
+		OCCoreCookieSupportEnabled : @(YES),
+		OCCoreSpaceResourceFolderPath : @".space"
 	});
 }
 
@@ -2540,6 +2541,7 @@ OCClassSettingsKey OCCoreOverrideAvailabilitySignal = @"override-availability-si
 OCClassSettingsKey OCCoreActionConcurrencyBudgets = @"action-concurrency-budgets";
 OCClassSettingsKey OCCoreCookieSupportEnabled = @"cookie-support-enabled";
 OCClassSettingsKey OCCoreScanForChangesInterval = @"scan-for-changes-interval";
+OCClassSettingsKey OCCoreSpaceResourceFolderPath = @"space-resource-folder-path";
 
 OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter = @"syncAnchor";
 OCDatabaseCounterIdentifier OCCoreSyncJournalCounter = @"syncJournal";
