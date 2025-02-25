@@ -309,6 +309,8 @@ OCDriveProperty OCDrivePropertyName = @"name"; // Must correspond to GADriveUpda
 OCDriveProperty OCDrivePropertyDescription = @"desc"; // Must correspond to GADriveUpdate key path
 OCDriveProperty OCDrivePropertyQuotaTotal = @"quota.total"; // Must correspond to GADriveUpdate key path
 
+OCDriveTemplate OCDriveTemplateDefault = @"default";
+
 OCDriveResource OCDriveResourceCoverImage = @"image";
 OCDriveResource OCDriveResourceCoverDescription = @"description";
 OCDriveResource OCDriveResourceSpaceFolder = @"space-folder";

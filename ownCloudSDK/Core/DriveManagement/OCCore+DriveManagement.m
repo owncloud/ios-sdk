@@ -27,9 +27,9 @@
 @implementation OCCore (DriveManagement)
 
 // Creation
-- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes completionHandler:(OCCoreDriveCompletionHandler)completionHandler
+- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes template:(nullable OCDriveTemplate)template completionHandler:(OCCoreDriveCompletionHandler)completionHandler
 {
-	return ([self.connection createDriveWithName:name description:description quota:quotaBytes completionHandler:^(NSError * _Nullable error, OCDrive * _Nullable newDrive) {
+	return ([self.connection createDriveWithName:name description:description quota:quotaBytes template:template completionHandler:^(NSError * _Nullable error, OCDrive * _Nullable newDrive) {
 		if (error == nil) {
 			[self fetchUpdatesWithCompletionHandler:nil];
 		}

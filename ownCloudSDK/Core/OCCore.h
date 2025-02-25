@@ -516,7 +516,7 @@ typedef void(^OCCoreShareRoleRetrievalHandler)(NSError * _Nullable error, NSArra
 @interface OCCore (DriveManagement)
 
 // Creation
-- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes completionHandler:(OCCoreDriveCompletionHandler)completionHandler;
+- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes template:(nullable OCDriveTemplate)templateName completionHandler:(OCCoreDriveCompletionHandler)completionHandler;
 
 // Disable/Restore/Delete
 - (nullable NSProgress *)disableDrive:(OCDrive *)drive completionHandler:(OCCoreCompletionHandler)completionHandler;

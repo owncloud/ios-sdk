@@ -35,6 +35,8 @@ typedef NSString* OCDriveSpecialType NS_TYPED_ENUM;
 
 typedef NSString* OCDriveProperty NS_TYPED_ENUM;
 
+typedef NSString* OCDriveTemplate NS_TYPED_ENUM;
+
 typedef NSString* OCDriveResource NS_TYPED_ENUM;
 
 typedef NS_ENUM(NSInteger, OCDriveDetachedState)
@@ -101,6 +103,8 @@ extern OCDriveProperty OCDrivePropertyDescription; //!< The description of the s
 extern OCDriveProperty OCDrivePropertyQuotaTotal; //!< The quota total of / space available in the space in bytes
 
 extern OCDriveID OCDriveIDSharesJail; //!< The static UUID of the Shares Jail
+
+extern OCDriveTemplate OCDriveTemplateDefault; //!< The default template
 
 extern OCDriveResource OCDriveResourceCoverImage; //!< The cover image of a drive/space
 extern OCDriveResource OCDriveResourceCoverDescription; //!< The MD description of a drive/space
