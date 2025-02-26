@@ -118,7 +118,9 @@ typedef void(^OCCoreClaimCompletionHandler)(NSError * _Nullable error, OCItem * 
 typedef void(^OCCoreCompletionHandler)(NSError * _Nullable error);
 typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 typedef void(^OCCoreSyncReasonCountChangeObserver)(OCCore *core, BOOL initial, NSDictionary<OCSyncReason, NSNumber *> * _Nullable countBySyncReason);
-typedef void(^OCCoreDriveCompletionHandler)(NSError * _Nullable error, OCDrive * _Nullable newDrive);
+typedef void(^OCCoreDriveCompletionHandler)(NSError * _Nullable error, OCDrive * _Nullable drive);
+typedef void(^OCCoreItemCompletionHandler)(NSError * _Nullable error, OCItem * _Nullable item);
+
 
 typedef void(^OCCoreBusyStatusHandler)(NSProgress * _Nullable progress);
 
@@ -524,10 +526,10 @@ typedef void(^OCCoreShareRoleRetrievalHandler)(NSError * _Nullable error, NSArra
 - (nullable NSProgress *)deleteDrive:(OCDrive *)drive completionHandler:(OCCoreCompletionHandler)completionHandler;
 
 // Change attributes
-- (nullable NSProgress *)updateDrive:(OCDrive *)drive properties:(NSDictionary<OCDriveProperty, id> *)updateProperties completionHandler:(OCCoreDriveCompletionHandler)completionHandler;
+- (nullable NSProgress *)updateDrive:(OCDrive *)drive properties:(NSDictionary<OCDriveProperty, id> *)updateProperties completionHandler:(nullable OCCoreDriveCompletionHandler)completionHandler;
 
-- (void)retrieveDrive:(OCDrive *)drive itemForResource:(OCDriveResource)resource completionHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item))completionHandler;
-- (nullable NSProgress *)updateDrive:(OCDrive *)drive resourceFor:(OCDriveResource)resource withItem:(nullable OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, OCDrive * _Nullable drive))completionHandler;
+- (void)retrieveDrive:(OCDrive *)drive itemForResource:(OCDriveResource)resource completionHandler:(OCCoreItemCompletionHandler)completionHandler;
+- (nullable NSProgress *)updateDrive:(OCDrive *)drive resourceFor:(OCDriveResource)resource withItem:(nullable OCItem *)item completionHandler:(nullable OCCoreDriveCompletionHandler)completionHandler;
 
 @end
 

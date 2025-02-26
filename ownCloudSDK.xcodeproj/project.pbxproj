@@ -181,6 +181,8 @@
 		DC2D646821C3D71000EB26FD /* OCCore+Thumbnails.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2D646721C3D70F00EB26FD /* OCCore+Thumbnails.h */; };
 		DC2D649C21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2D649A21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC2D649D21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2D649B21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.m */; };
+		DC2EB43F2D6FBB4400100A67 /* OCVault+TemporaryTools.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2EB43E2D6FBB4400100A67 /* OCVault+TemporaryTools.m */; };
+		DC2EB4402D6FBB4400100A67 /* OCVault+TemporaryTools.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2EB43D2D6FBB4400100A67 /* OCVault+TemporaryTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC2F63632239455E0063C2DA /* OCRecipientSearchController.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2F63612239455E0063C2DA /* OCRecipientSearchController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC2F63642239455E0063C2DA /* OCRecipientSearchController.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F63622239455E0063C2DA /* OCRecipientSearchController.m */; };
 		DC2F63682239509E0063C2DA /* OCCore+Sharing.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F63662239509E0063C2DA /* OCCore+Sharing.m */; };
@@ -1276,6 +1278,8 @@
 		DC2D646721C3D70F00EB26FD /* OCCore+Thumbnails.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OCCore+Thumbnails.h"; sourceTree = "<group>"; };
 		DC2D649A21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCAuthenticationMethodOAuth2+OCMocking.h"; sourceTree = "<group>"; };
 		DC2D649B21C7B3DF00EB26FD /* OCAuthenticationMethodOAuth2+OCMocking.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCAuthenticationMethodOAuth2+OCMocking.m"; sourceTree = "<group>"; };
+		DC2EB43D2D6FBB4400100A67 /* OCVault+TemporaryTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCVault+TemporaryTools.h"; sourceTree = "<group>"; };
+		DC2EB43E2D6FBB4400100A67 /* OCVault+TemporaryTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCVault+TemporaryTools.m"; sourceTree = "<group>"; };
 		DC2F63612239455E0063C2DA /* OCRecipientSearchController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCRecipientSearchController.h; sourceTree = "<group>"; };
 		DC2F63622239455E0063C2DA /* OCRecipientSearchController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCRecipientSearchController.m; sourceTree = "<group>"; };
 		DC2F63662239509E0063C2DA /* OCCore+Sharing.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+Sharing.m"; sourceTree = "<group>"; };
@@ -3664,6 +3668,8 @@
 				DC82665D2818972200F91F7D /* OCVaultLocation.h */,
 				DCB4F6E628324A3A005AD181 /* OCVaultDriveList.m */,
 				DCB4F6E528324A3A005AD181 /* OCVaultDriveList.h */,
+				DC2EB43E2D6FBB4400100A67 /* OCVault+TemporaryTools.m */,
+				DC2EB43D2D6FBB4400100A67 /* OCVault+TemporaryTools.h */,
 				DC22669922817DC600FB29EE /* OCVault+Internal.m */,
 				DC22669822817DC600FB29EE /* OCVault+Internal.h */,
 				DCCE49312684B0EF005961D8 /* Prepopulation */,
@@ -4869,6 +4875,7 @@
 				DCCC85912CF87C8200251683 /* GAGraphStruct+Encoder.h in Headers */,
 				DC70147F220B0650009D4FD9 /* OCHTTPResponse.h in Headers */,
 				DCC8F9F6202855A200EB6701 /* OCShare.h in Headers */,
+				DC2EB4402D6FBB4400100A67 /* OCVault+TemporaryTools.h in Headers */,
 				DC47E4E827A5820D0020E8EF /* GAFolderView.h in Headers */,
 				DC27BBC32304A7CE002CC2F8 /* NSHTTPCookie+OCCookies.h in Headers */,
 				DCA35D6124CF704100DBE2B0 /* OCSyncAction+Diagnostic.h in Headers */,
@@ -5615,6 +5622,7 @@
 				DC62FD63211B11FD0034B628 /* OCItem+OCThumbnail.m in Sources */,
 				DCEEB2DD20430B1400189B9A /* NSURL+OCURLQueryParameterExtensions.m in Sources */,
 				DC47E4CC27A5820D0020E8EF /* GAFileSystemInfo.m in Sources */,
+				DC2EB43F2D6FBB4400100A67 /* OCVault+TemporaryTools.m in Sources */,
 				DC2F6376223A61990063C2DA /* OCCoreQuery.m in Sources */,
 				DCC8F9F7202855A200EB6701 /* OCShare.m in Sources */,
 				DC0CE19728C8907D009ABDFB /* OCResourceRequestURLItem.m in Sources */,

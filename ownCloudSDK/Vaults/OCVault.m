@@ -280,6 +280,16 @@
 	return (_temporaryDownloadURL);
 }
 
+- (NSURL *)temporaryUploadURL
+{
+	if (_temporaryUploadURL == nil)
+	{
+		_temporaryUploadURL = [self.rootURL URLByAppendingPathComponent:@"TemporaryUploads"];
+	}
+
+	return (_temporaryUploadURL);
+}
+
 - (NSURL *)bookmarkMetadataURL
 {
 	if (_bookmarkMetadataURL == nil)
