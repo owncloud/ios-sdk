@@ -75,13 +75,14 @@
 		if (error == nil) {
 			[self fetchUpdatesWithCompletionHandler:nil];
 		}
-		completionHandler(error, newDrive);
+		if (completionHandler != nil) {
+			completionHandler(error, newDrive);
+		}
 	}]);
 }
 
-- (void)retrieveDrive:(OCDrive *)drive itemForResource:(OCDriveResource)resource completionHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item))completionHandler
+- (void)retrieveDrive:(OCDrive *)drive itemForResource:(OCDriveResource)resource completionHandler:(nonnull OCCoreItemCompletionHandler)completionHandler
 {
-	NSError *error = nil;
 	GADriveItem *driveItem = nil;
 
 	if ([resource isEqual:OCDriveResourceCoverImage]) {
@@ -178,13 +179,15 @@
 	}
 }
 
-- (nullable NSProgress *)updateDrive:(OCDrive *)drive resourceFor:(OCDriveResource)resource withItem:(nullable OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, OCDrive * _Nullable drive))completionHandler
+- (nullable NSProgress *)updateDrive:(OCDrive *)drive resourceFor:(OCDriveResource)resource withItem:(nullable OCItem *)item completionHandler:(nullable OCCoreDriveCompletionHandler)completionHandler
 {
 	return ([self.connection updateDrive:drive resourceFor:resource withItem:item completionHandler:^(NSError * _Nullable error, OCDrive * _Nullable drive) {
 		if (error == nil) {
 			[self fetchUpdatesWithCompletionHandler:nil];
 		}
-		completionHandler(error, drive);
+		if (completionHandler != nil) {
+			completionHandler(error, drive);
+		}
 	}]);
 }
 

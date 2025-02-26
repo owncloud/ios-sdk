@@ -54,6 +54,8 @@
 		"TemporaryDownloads"/					- OCVault.temporaryDownloadURL
 			[Random UUID] (temporary files for downloads)
 
+		"TemporaryUploads"/					- OCVault.temporaryUploadURL
+			[Random UUID] (temporary files for uploads)
 
 		"messageQueue.dat"					- OCMessageQueue.globalQueue KVS
 
@@ -104,6 +106,7 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 	NSURL *_filesRootURL;
 	NSURL *_httpPipelineRootURL;
 	NSURL *_temporaryDownloadURL;
+	NSURL *_temporaryUploadURL;
 	NSURL *_bookmarkMetadataURL;
 	NSURL *_wipeContainerRootURL;
 	NSURL *_wipeContainerFilesRootURL;
@@ -144,6 +147,7 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 @property(nullable,readonly,nonatomic) NSURL *drivesRootURL; //!< The vault's root URL for drive folders
 @property(nullable,readonly,nonatomic) NSURL *httpPipelineRootURL; //!< The vault's root URL for HTTP pipeline data
 @property(nullable,readonly,nonatomic) NSURL *temporaryDownloadURL; //!< The vault's root URL for temporarily downloaded files.
+@property(nullable,readonly,nonatomic) NSURL *temporaryUploadURL; //!< The vault's root URL for temporary files for uploading.
 @property(nullable,readonly,nonatomic) NSURL *bookmarkMetadataURL; //!< The vault's root URL for bookmark metadata files.
 
 @property(nullable,readonly,nonatomic) NSURL *wipeContainerRootURL; //!< The vault's rootURL subfolder for items to erase.
