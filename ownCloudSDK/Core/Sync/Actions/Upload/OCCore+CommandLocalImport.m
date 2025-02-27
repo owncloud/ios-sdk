@@ -20,6 +20,7 @@
 #import "OCSyncActionUpload.h"
 #import "OCItem+OCFileURLMetadata.h"
 #import "OCCore+NameConflicts.h"
+#import "OCCore+Internal.h"
 
 #import <CoreServices/CoreServices.h>
 
@@ -63,6 +64,22 @@
 			{
 				newFileName = outSuggestedName;
 			}
+		}
+	}
+
+	// Replace existing
+	NSNumber *forceReplace = options[OCConnectionOptionForceReplaceKey];
+	if ((forceReplace != nil) && forceReplace.boolValue)
+	{
+		NSError *error = nil;
+		OCItem *existingItem = nil;
+
+		existingItem = [self cachedItemInParentLocation:parentItem.location withName:newFileName isDirectory:NO error:&error];
+
+		if (existingItem != nil)
+		{
+			// Schedule as local modification instead
+			return ([self reportLocalModificationOfItem:existingItem parentItem:parentItem withContentsOfFileAtURL:inputFileURL isSecurityScoped:isSecurityScoped options:options placeholderCompletionHandler:placeholderCompletionHandler resultHandler:resultHandler]);
 		}
 	}
 

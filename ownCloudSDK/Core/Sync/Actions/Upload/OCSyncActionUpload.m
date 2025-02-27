@@ -510,6 +510,13 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 			options[OCConnectionOptionForceReplaceKey] = @(YES);
 			self.options = options;
 
+			OCItem *preExistingItem = [self _preExistingItem];
+			if (preExistingItem != nil)
+			{
+				// Remove (possible) duplicate item from database
+				syncContext.removedItems = @[ preExistingItem ];
+			}
+
 			syncContext.updateStoredSyncRecordAfterItemUpdates = YES;
 
 			[syncContext transitionToState:OCSyncRecordStateReady withWaitConditions:nil];
