@@ -48,6 +48,7 @@
 #import "OCShare+GraphAPI.h"
 #import "GASharingLink.h"
 #import "GASharingLinkPassword.h"
+#import "OCODataDecoder.h"
 
 @implementation OCConnection (Sharing)
 
@@ -702,6 +703,20 @@
 					// Share couldn't be deleted
 					event.error = OCError(OCErrorShareNotFound);
 				break;
+
+				case OCHTTPStatusCodeFORBIDDEN:
+					{
+						NSDictionary* jsonObj = [request.httpResponse bodyConvertedDictionaryFromJSONWithError:NULL];
+						if ((jsonObj != nil) && (jsonObj[@"error"] != nil))
+						{
+							OCODataResponse *response = [OCODataDecoder decodeODataResponse:jsonObj entityClass:Nil options:Nil];
+							if (response.error != nil)
+							{
+								event.error = response.error;
+								break;
+							}
+						}
+					}
 
 				default:
 					// Unknown error
