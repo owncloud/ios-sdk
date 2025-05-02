@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3961F1122DC26828002FC44C /* NSError+OCChecksum.h in Headers */ = {isa = PBXBuildFile; fileRef = 3961F1112DC26825002FC44C /* NSError+OCChecksum.h */; };
+		3961F1142DC26845002FC44C /* NSError+OCChecksum.m in Sources */ = {isa = PBXBuildFile; fileRef = 3961F1132DC26840002FC44C /* NSError+OCChecksum.m */; };
+		396866412DC103D90085760C /* OCChecksumAlgorithmSHA3-256.m in Sources */ = {isa = PBXBuildFile; fileRef = 396866402DC103D90085760C /* OCChecksumAlgorithmSHA3-256.m */; };
+		396866422DC103D90085760C /* OCChecksumAlgorithmSHA3-256.h in Headers */ = {isa = PBXBuildFile; fileRef = 3968663F2DC103D90085760C /* OCChecksumAlgorithmSHA3-256.h */; };
 		4C7295E8228DAD6200FA4E68 /* OCLogFileRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */; };
 		4C7295EA228DB0A800FA4E68 /* OCLogFileRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C7295E9228DAD8400FA4E68 /* OCLogFileRecord.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5966C8D52195A11600C8875E /* OCCoreManager+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = 5966C8D32195A11600C8875E /* OCCoreManager+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1102,6 +1106,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		3961F1112DC26825002FC44C /* NSError+OCChecksum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSError+OCChecksum.h"; sourceTree = "<group>"; };
+		3961F1132DC26840002FC44C /* NSError+OCChecksum.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSError+OCChecksum.m"; sourceTree = "<group>"; };
+		3968663F2DC103D90085760C /* OCChecksumAlgorithmSHA3-256.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCChecksumAlgorithmSHA3-256.h"; sourceTree = "<group>"; };
+		396866402DC103D90085760C /* OCChecksumAlgorithmSHA3-256.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCChecksumAlgorithmSHA3-256.m"; sourceTree = "<group>"; };
 		4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCLogFileRecord.m; sourceTree = "<group>"; };
 		4C7295E9228DAD8400FA4E68 /* OCLogFileRecord.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCLogFileRecord.h; sourceTree = "<group>"; };
 		5966C8D32195A11600C8875E /* OCCoreManager+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCoreManager+OCMocking.h"; sourceTree = "<group>"; };
@@ -2352,6 +2360,10 @@
 				DC139CCA20DBBA8D0090175A /* OCChecksumAlgorithm.h */,
 				DC139CCF20DBC1690090175A /* OCChecksumAlgorithmSHA1.m */,
 				DC139CCE20DBC1690090175A /* OCChecksumAlgorithmSHA1.h */,
+				396866402DC103D90085760C /* OCChecksumAlgorithmSHA3-256.m */,
+				3968663F2DC103D90085760C /* OCChecksumAlgorithmSHA3-256.h */,
+				3961F1132DC26840002FC44C /* NSError+OCChecksum.m */,
+				3961F1112DC26825002FC44C /* NSError+OCChecksum.h */,
 			);
 			path = Checksums;
 			sourceTree = "<group>";
@@ -4788,6 +4800,7 @@
 				DCC832CE242BB05A00153F8C /* OCCore+MessageResponseHandler.h in Headers */,
 				DCFC9EDC28003F0D005D9144 /* GARemoteItem.h in Headers */,
 				DCC26FB12B718CA200904000 /* OCPasswordPolicyRule.h in Headers */,
+				3961F1122DC26828002FC44C /* NSError+OCChecksum.h in Headers */,
 				DCC8FA0F2029C6A400EB6701 /* OCQueryChangeSet.h in Headers */,
 				DC701484220B090B009D4FD9 /* OCHTTPTypes.h in Headers */,
 				DC708CCE2141306100FE43CA /* OCSyncActionCopyMove.h in Headers */,
@@ -4995,6 +5008,7 @@
 				DC2F636F2239557B0063C2DA /* OCShareQuery+Internal.h in Headers */,
 				DC3CE0402429FAA200AB8B88 /* OCMessage.h in Headers */,
 				DC6C0A4C2923A0050045FF2A /* OCBookmark+DataItem.h in Headers */,
+				396866422DC103D90085760C /* OCChecksumAlgorithmSHA3-256.h in Headers */,
 				DCC8FA2F202B405F00EB6701 /* OCEvent.h in Headers */,
 				DCD63276223BB1710090169E /* OCCapabilities.h in Headers */,
 				DC47E4D427A5820D0020E8EF /* GAPasswordProfile.h in Headers */,
@@ -5498,6 +5512,7 @@
 				DCAEB06A21FA617D0067E147 /* OCActivity.m in Sources */,
 				DC2FED61228D5589004FDEC6 /* OCCore+Favorites.m in Sources */,
 				DCC3701424D4D134008B0DEB /* OCScanJobActivity.m in Sources */,
+				396866412DC103D90085760C /* OCChecksumAlgorithmSHA3-256.m in Sources */,
 				DC29F4C324323C4900347658 /* OCMessageTemplate.m in Sources */,
 				DC9CE3D02D10416D00979C44 /* OCODataDecoder.m in Sources */,
 				DCEAF0472805B80D00980B6D /* OCResourceSourceDriveItems.m in Sources */,
@@ -5643,6 +5658,7 @@
 				DC34227B217CAA0B00705508 /* OCIPNotificationCenter.m in Sources */,
 				DCC8FA0C2029C0BE00EB6701 /* OCQueryFilter.m in Sources */,
 				DCA35D6224CF704100DBE2B0 /* OCSyncAction+Diagnostic.m in Sources */,
+				3961F1142DC26845002FC44C /* NSError+OCChecksum.m in Sources */,
 				DC49B5612837DCE700DAF13B /* OCItem+OCVFSItem.m in Sources */,
 				DCDBEE2C2048A6A800189B9A /* OCConnection+Setup.m in Sources */,
 				DC9B4FD22941FF540037F8F8 /* OCCertificateStore.m in Sources */,
