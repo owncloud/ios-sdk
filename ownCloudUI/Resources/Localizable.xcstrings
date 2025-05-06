@@ -3,6 +3,12 @@
   "strings" : {
     "Auto-accepted." : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-accepted."
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -111,6 +117,12 @@
       "comment" : "X.509 certificate fields",
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Business category"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -217,6 +229,12 @@
     },
     "Certificate chain" : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -323,6 +341,12 @@
     },
     "Certificate Details" : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate Details"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -429,6 +453,12 @@
     },
     "Certificate has issues." : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate has issues."
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -536,6 +566,12 @@
     "commonName" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Common name"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -643,6 +679,12 @@
     "countryName" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Country"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -749,6 +791,12 @@
     },
     "Extensions" : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensions"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -855,6 +903,12 @@
     },
     "Fingerprints" : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fingerprints"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -961,6 +1015,12 @@
     },
     "Hide ±" : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide ±"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1067,6 +1127,12 @@
     },
     "Hostname" : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostname"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1173,6 +1239,12 @@
     },
     "Intermediate Certificate" : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intermediate Certificate"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1279,6 +1351,12 @@
     },
     "Issuer" : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuer"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1386,6 +1464,12 @@
     "jurisdictionCountryName" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction country"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1493,6 +1577,12 @@
     "jurisdictionLocalityName" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction locality"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1600,6 +1690,12 @@
     "jurisdictionStateOrProvinceName" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction state or province"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1707,6 +1803,12 @@
     "keyBytes" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key bytes"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1814,6 +1916,12 @@
     "keyExponent" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key exponent"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1921,6 +2029,12 @@
     "keyInformation" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Information"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2028,6 +2142,12 @@
     "keySizeInBits" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key size (bits)"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2135,6 +2255,12 @@
     "localityName" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locality"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2241,6 +2367,12 @@
     },
     "No issues found." : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No issues found."
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2348,6 +2480,12 @@
     "organizationalUnitName" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization Unit"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2455,6 +2593,12 @@
     "organizationName" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2561,6 +2705,12 @@
     },
     "Public Key" : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public Key"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2667,6 +2817,12 @@
     },
     "Reason" : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reason"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2773,6 +2929,12 @@
     },
     "Root Certificate" : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root Certificate"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2880,6 +3042,12 @@
     "serialNumber" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serial Number"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2987,6 +3155,12 @@
     "Show ±" : {
       "comment" : "OCCertificateViewController buttons",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show ±"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3094,6 +3268,12 @@
     "signatureAlgorithm" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signature Algorithm"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3201,6 +3381,12 @@
     "stateOrProvinceName" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "State or province"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3308,6 +3494,12 @@
     "Subject" : {
       "comment" : "OCCertificateViewController section titles",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subject"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3414,6 +3606,12 @@
     },
     "User-accepted." : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-accepted."
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3520,6 +3718,12 @@
     },
     "User-rejected." : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-rejected."
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3626,6 +3830,12 @@
     },
     "Validating…" : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validating…"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3732,6 +3942,12 @@
     },
     "Validation Error" : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Error"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3838,6 +4054,12 @@
     },
     "Validation Status" : {
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Status"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3945,6 +4167,12 @@
     "validFrom" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid from"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4052,6 +4280,12 @@
     "validUntil" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid until"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4159,6 +4393,12 @@
     "version" : {
       "extractionState" : "manual",
       "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
