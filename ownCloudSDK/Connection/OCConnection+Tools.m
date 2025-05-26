@@ -66,6 +66,10 @@
 		{
 			endpointPath = [self classSettingForOCClassSettingsKey:endpoint];
 		}
+        
+        if (([((NSDictionary *)self.bookmark.userInfo[@"statusInfo"])[@"product"] isEqual:@"kiteworks"] || [self.product isEqual:@"kiteworks"]) && ![endpoint isEqual:OCConnectionEndpointIDWellKnown]) {
+            endpointPath = [@"kwdav" stringByAppendingPathComponent:endpointPath];
+        }
 
 		return (endpointPath);
 	}
