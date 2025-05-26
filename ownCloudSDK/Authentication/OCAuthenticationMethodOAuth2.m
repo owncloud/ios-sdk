@@ -394,7 +394,11 @@ OCAuthenticationMethodAutoRegister
 - (void)generateBookmarkAuthenticationDataWithConnection:(OCConnection *)connection options:(OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSError *error, OCAuthenticationMethodIdentifier authenticationMethodIdentifier, NSData *authenticationData))completionHandler
 {
 	if (completionHandler==nil) { return; }
-	
+    
+    if (self.clientSecret == nil) {
+        self.pkce = [OCPKCE new]; // Enable PKCE
+    }
+    
 	if ((options[OCAuthenticationMethodPresentingViewControllerKey] != nil) && (connection!=nil))
 	{
 		NSURL *authorizationRequestURL;

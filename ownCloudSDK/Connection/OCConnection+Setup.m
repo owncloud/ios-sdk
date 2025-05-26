@@ -68,7 +68,10 @@
 
 - (void)_prepareForSetupWithOptions:(NSDictionary<OCConnectionSetupOptionKey, id> *)options completionHandler:(void(^)(OCIssue *issue, NSURL *suggestedURL, NSArray <OCAuthenticationMethodIdentifier> *supportedMethods, NSArray <OCAuthenticationMethodIdentifier> *preferredAuthenticationMethods, OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions generationOptions))completionHandler
 {
-	NSString *statusEndpointPath = [self classSettingForOCClassSettingsKey:OCConnectionEndpointIDStatus];
+    NSString *statusEndpointPath = [self classSettingForOCClassSettingsKey:OCConnectionEndpointIDStatus];
+    NSString *statusEndpointKiteworksPath = [self classSettingForOCClassSettingsKey:OCConnectionEndpointIDKiteworksStatus];
+    
+    
 	NSMutableArray <OCIssue *> *issues = [NSMutableArray new];
 	NSMutableSet <OCCertificate *> *certificatesUsedInIssues = [NSMutableSet new];
 	__block NSUInteger requestCount=0, maxRequestCount = 30;
@@ -250,12 +253,13 @@
 		NSURL *redirectionURL = nil;
 		OCHTTPRequest *request = nil;
 		NSURL *statusURL = [url URLByAppendingPathComponent:statusEndpointPath];
-
-		if ((error = MakeJSONRequest(statusURL, NO, &request, &redirectionURL, &jsonDict)) == nil)
+        NSURL *statusKiteworksURL = [url URLByAppendingPathComponent:statusEndpointKiteworksPath];
+        
+		if (((error = MakeJSONRequest(statusURL, NO, &request, &redirectionURL, &jsonDict)) == nil && (jsonDict!=nil)) || (error = MakeJSONRequest(statusKiteworksURL, NO, &request, &redirectionURL, &jsonDict)) == nil)
 		{
 			if (((jsonDict!=nil) && (jsonDict[@"version"] == nil)) || (jsonDict==nil))
 			{
-				error = OCError(OCErrorServerDetectionFailed);
+                error = OCError(OCErrorServerDetectionFailed);
 			}
 			else
 			{
@@ -265,7 +269,8 @@
 				if ((jsonDict!=nil) && ((serverVersion = jsonDict[@"version"]) != nil))
 				{
 					product = jsonDict[@"productname"];
-
+                    self.product = product;
+                    
 					error = [self supportsServerVersion:serverVersion product:product longVersion:[OCConnection serverLongProductVersionStringFromServerStatus:jsonDict] allowHiddenVersion:YES];
 				}
 

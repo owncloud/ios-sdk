@@ -154,7 +154,7 @@ NS_ASSUME_NONNULL_BEGIN
 	BOOL _isValidatingConnection;
 	OCRateLimiter *_connectionValidationRateLimiter;
 	NSCountedSet<NSString *> *_connectionValidationTriggeringURLs;
-
+    NSString *_product;
 	NSMutableArray <OCConnectionAuthenticationAvailabilityHandler> *_pendingAuthenticationAvailabilityHandlers;
 
 	NSMutableDictionary<OCActionTrackingID, NSProgress *> *_progressByActionTrackingID;
@@ -192,6 +192,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,weak) id <OCConnectionDelegate> delegate;
 
 @property(nullable,weak) id <OCConnectionHostSimulator> hostSimulator;
+
+@property(nullable,strong) NSString *product;
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
@@ -447,6 +449,7 @@ extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVMeta;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot; //!< Virtual, non-configurable endpoint, builds the root URL based on OCConnectionEndpointIDWebDAV and the username found in connection.loggedInUser
 extern OCConnectionEndpointID OCConnectionEndpointIDPreview; //!< Virtual, non-configurable endpoint, builds the root URL for requesting previews based on OCConnectionEndpointIDWebDAV, the username found in connection.loggedInUser and the drive ID
 extern OCConnectionEndpointID OCConnectionEndpointIDStatus;
+extern OCConnectionEndpointID OCConnectionEndpointIDKiteworksStatus;
 extern OCConnectionEndpointID OCConnectionEndpointIDShares;
 extern OCConnectionEndpointID OCConnectionEndpointIDRemoteShares;
 extern OCConnectionEndpointID OCConnectionEndpointIDRecipients;
