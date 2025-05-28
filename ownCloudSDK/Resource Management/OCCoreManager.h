@@ -42,7 +42,6 @@ typedef void(^OCCoreManagerOfflineOperation)(OCBookmark *bookmark, dispatch_bloc
 @property(class, readonly, strong, nonatomic) OCCoreManager *sharedCoreManager;
 
 @property(assign) BOOL postFileProviderNotifications;
-@property(assign,nonatomic) OCCoreMemoryConfiguration memoryConfiguration;
 
 @property(readonly, nonatomic, strong) NSArray<OCCoreRunIdentifier> *activeRunIdentifiers;
 

@@ -96,7 +96,7 @@
 							if (!searchController.isWaitingForResults)
 							{
 								XCTWeakSelfAssert(searchController.recipients.count == 1);
-								XCTWeakSelfAssert(searchController.recipients.firstObject.type == OCRecipientTypeUser);
+								XCTWeakSelfAssert(searchController.recipients.firstObject.type == OCIdentityTypeUser);
 								XCTWeakSelfAssert([searchController.recipients.firstObject.user.userName isEqual:@"admin"]);
 
 								[expectReceiveSecondResults fulfill];

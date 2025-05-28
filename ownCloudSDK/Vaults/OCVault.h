@@ -44,6 +44,7 @@
 
 				[Bookmark UUID].ockvs			- OCVault.keyValueStoreURL
 
+				"BookmarkMetadata"/			- OCVault.bookmarkMetadataURL and +bookmarkMetadataURLForVaultUUID: (folder where (larger) bookmark metadata blobs are stored)
 				"Erasure"/				- OCVault.wipeContainerRootURL (folder whose contents should be erased)
 
 		"HTTPPipeline"/						- OCVault.httpPipelineRootURL
@@ -52,6 +53,9 @@
 
 		"TemporaryDownloads"/					- OCVault.temporaryDownloadURL
 			[Random UUID] (temporary files for downloads)
+
+		"TemporaryUploads"/					- OCVault.temporaryUploadURL
+			[Random UUID] (temporary files for uploads)
 
 		"messageQueue.dat"					- OCMessageQueue.globalQueue KVS
 
@@ -102,6 +106,8 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 	NSURL *_filesRootURL;
 	NSURL *_httpPipelineRootURL;
 	NSURL *_temporaryDownloadURL;
+	NSURL *_temporaryUploadURL;
+	NSURL *_bookmarkMetadataURL;
 	NSURL *_wipeContainerRootURL;
 	NSURL *_wipeContainerFilesRootURL;
 
@@ -114,6 +120,7 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 
 	NSArray<OCDrive *> *_activeDrives;
 	NSArray<OCDrive *> *_subscribedDrives;
+	NSArray<OCDrive *> *_disabledDrives;
 	NSArray<OCDrive *> *_detachedDrives;
 	NSDictionary<OCDriveID, OCDrive *> *_activeDrivesByID;
 	NSDictionary<OCDriveID, OCDrive *> *_detachedDrivesByID;
@@ -140,6 +147,8 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 @property(nullable,readonly,nonatomic) NSURL *drivesRootURL; //!< The vault's root URL for drive folders
 @property(nullable,readonly,nonatomic) NSURL *httpPipelineRootURL; //!< The vault's root URL for HTTP pipeline data
 @property(nullable,readonly,nonatomic) NSURL *temporaryDownloadURL; //!< The vault's root URL for temporarily downloaded files.
+@property(nullable,readonly,nonatomic) NSURL *temporaryUploadURL; //!< The vault's root URL for temporary files for uploading.
+@property(nullable,readonly,nonatomic) NSURL *bookmarkMetadataURL; //!< The vault's root URL for bookmark metadata files.
 
 @property(nullable,readonly,nonatomic) NSURL *wipeContainerRootURL; //!< The vault's rootURL subfolder for items to erase.
 @property(nullable,readonly,nonatomic) NSURL *wipeContainerFilesRootURL; //!< The vault's filesRootURL subfolder for items to erase.
@@ -175,6 +184,7 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 #pragma mark - Drives
 @property(strong,readonly,nonatomic) NSArray<OCDrive *> *activeDrives; //!< All drives returned by the server
 @property(strong,readonly,nonatomic) NSArray<OCDrive *> *subscribedDrives; //!< All drives the user is subscribed to
+@property(strong,readonly,nonatomic) NSArray<OCDrive *> *disabledDrives; //!< All disabled drives
 @property(strong,readonly,nonatomic) NSArray<OCDrive *> *detachedDrives; //!< Drives that no longer exist on the server but (may) have unsynced user data in them. Check OCDrive.detachedState.
 
 - (void)updateWithRemoteDrives:(NSArray<OCDrive *> *)newDrives; //!< Uses newDrives as new list of drives available on the server to update .activeDrives, .subscribedDrives and .detachedDrives.
@@ -199,6 +209,8 @@ typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem 
 + (nullable NSString *)rootPathRelativeToGroupContainerForVaultUUID:(NSUUID *)uuid;
 
 + (nullable NSString *)databaseFilePathRelativeToRootPathForVaultUUID:(NSUUID *)uuid;
+
++ (nullable NSURL *)bookmarkMetadataURLForVaultUUID:(NSUUID *)uuid;
 
 @property(nullable,readonly,nonatomic,class) NSURL *httpPipelineRootURL;
 

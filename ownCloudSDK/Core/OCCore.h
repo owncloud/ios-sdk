@@ -43,6 +43,7 @@
 #import "OCDataSourceComposition.h"
 #import "OCDataItemPresentable.h"
 #import "OCShareRole.h"
+#import "OCPlatform.h"
 
 @class OCCore;
 @class OCItem;
@@ -95,12 +96,6 @@ typedef NS_ENUM(NSUInteger, OCCoreConnectionStatusSignalState)
 	OCCoreConnectionStatusSignalStateForceTrue   	//!< Signal state is force true (overriding any false states)
 } __attribute__((enum_extensibility(closed)));
 
-typedef NS_ENUM(NSUInteger, OCCoreMemoryConfiguration)
-{
-	OCCoreMemoryConfigurationDefault,	//!< Default memory configuration
-	OCCoreMemoryConfigurationMinimum	//!< Try using only the minimum amount of memory needed
-} __attribute__((enum_extensibility(closed)));
-
 typedef NS_ENUM(NSUInteger,OCCoreAvailableOfflineCoverage)
 {
 	OCCoreAvailableOfflineCoverageNone,	//!< Item is not targeted by available offline item policy
@@ -123,6 +118,9 @@ typedef void(^OCCoreClaimCompletionHandler)(NSError * _Nullable error, OCItem * 
 typedef void(^OCCoreCompletionHandler)(NSError * _Nullable error);
 typedef void(^OCCoreStateChangedHandler)(OCCore *core);
 typedef void(^OCCoreSyncReasonCountChangeObserver)(OCCore *core, BOOL initial, NSDictionary<OCSyncReason, NSNumber *> * _Nullable countBySyncReason);
+typedef void(^OCCoreDriveCompletionHandler)(NSError * _Nullable error, OCDrive * _Nullable drive);
+typedef void(^OCCoreItemCompletionHandler)(NSError * _Nullable error, OCItem * _Nullable item);
+
 
 typedef void(^OCCoreBusyStatusHandler)(NSProgress * _Nullable progress);
 
@@ -156,7 +154,7 @@ typedef id<NSObject> OCCoreItemTracking;
 	OCConnection *_connection;
 	BOOL _attemptConnect;
 
-	OCCoreMemoryConfiguration _memoryConfiguration;
+	OCPlatformMemoryConfiguration _memoryConfiguration;
 
 	NSMutableArray <OCQuery *> *_queries;
 
@@ -229,7 +227,6 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	OCSignalManager *_signalManager;
 
-	OCCache<OCFileID,OCItemThumbnail *> *_thumbnailCache;
 	NSMutableDictionary <NSString *, NSMutableArray<OCCoreThumbnailRetrieveHandler> *> *_pendingThumbnailRequests;
 
 	NSMutableDictionary <OCIPCNotificationName, id> *_remoteSyncEngineTriggerAcknowledgements;
@@ -251,6 +248,7 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	OCDataSourceArray *_drivesDataSource;
 	OCDataSourceArray *_subscribedDrivesDataSource;
+	OCDataSourceArray *_disabledDrivesDataSource;
 	OCDataSourceArray *_personalDriveDataSource;
 	OCDataSourceArray *_shareJailDriveDataSource;
 	OCDataSourceArray *_projectDrivesDataSource;
@@ -295,7 +293,7 @@ typedef id<NSObject> OCCoreItemTracking;
 
 	__weak id <OCCoreDelegate> _delegate;
 
-	NSMutableArray<OCShareRole *> *_shareRoles;
+	NSMutableArray<OCShareRole *> *_legacyShareRoles;
 
 	NSNumber *_rootQuotaBytesRemaining;
 	NSNumber *_rootQuotaBytesUsed;
@@ -310,7 +308,7 @@ typedef id<NSObject> OCCoreItemTracking;
 @property(readonly) OCVault *vault; //!< Vault managing storage and database access for this core.
 @property(readonly) OCConnection *connection; //!< Connection used by the core to make requests to the server.
 
-@property(assign,nonatomic) OCCoreMemoryConfiguration memoryConfiguration;
+@property(assign,nonatomic) OCPlatformMemoryConfiguration memoryConfiguration;
 
 @property(readonly,nonatomic) OCCoreState state;
 @property(copy) OCCoreStateChangedHandler stateChangedHandler;
@@ -426,6 +424,8 @@ typedef id<NSObject> OCCoreItemTracking;
 + (BOOL)thumbnailSupportedForMIMEType:(NSString *)mimeType;
 @end
 
+typedef void(^OCCoreShareRoleRetrievalHandler)(NSError * _Nullable error, NSArray<OCShareRole *> * _Nullable roles);
+
 @interface OCCore (Sharing)
 /**
  Creates a new share on the server.
@@ -471,8 +471,8 @@ typedef id<NSObject> OCCoreItemTracking;
 - (nullable NSProgress *)retrievePrivateLinkForItem:(OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, NSURL * _Nullable privateLink))completionHandler; //!< Returns the private link for the item
 - (nullable NSProgress *)retrieveItemForPrivateLink:(NSURL *)privateLink completionHandler:(void(^)(NSError * _Nullable error, OCItem * _Nullable item))completionHandler; //!< Returns the item for the private link
 
-- (nullable NSArray<OCShareRole *> *)availableShareRolesForType:(OCShareType)type location:(OCLocation *)location; //!< Returns the share roles available for this location and type. Returns nil if none are available.
-- (nullable OCShareRole *)matchingShareRoleForShare:(OCShare *)share; //!< Returns the share role matching the provided item and share's permissions and location. Returns nil if none matches.
+- (void)availableShareRolesForType:(OCShareType)shareType location:(OCLocation *)location completionHandler:(OCCoreShareRoleRetrievalHandler)completionHandler; //!< Returns the share roles available for this location and type. Returns nil if none are available.
+- (nullable OCShareRole *)matchingForShare:(OCShare *)share fromShareRoles:(nullable NSArray<OCShareRole *> *)roles; //!< Returns the share role matching the provided item and share's permissions and location. Returns nil if none matches.
 
 @end
 
@@ -515,6 +515,24 @@ typedef id<NSObject> OCCoreItemTracking;
 - (nullable NSProgress *)updateItem:(OCItem *)item properties:(NSArray <OCItemPropertyName> *)properties options:(nullable NSDictionary<OCCoreOption,id> *)options resultHandler:(nullable OCCoreActionResultHandler)resultHandler; //!< resultHandler.parameter returns the OCConnectionPropertyUpdateResult
 @end
 
+@interface OCCore (DriveManagement)
+
+// Creation
+- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes template:(nullable OCDriveTemplate)templateName completionHandler:(OCCoreDriveCompletionHandler)completionHandler;
+
+// Disable/Restore/Delete
+- (nullable NSProgress *)disableDrive:(OCDrive *)drive completionHandler:(OCCoreCompletionHandler)completionHandler;
+- (nullable NSProgress *)restoreDrive:(OCDrive *)drive completionHandler:(OCCoreCompletionHandler)completionHandler;
+- (nullable NSProgress *)deleteDrive:(OCDrive *)drive completionHandler:(OCCoreCompletionHandler)completionHandler;
+
+// Change attributes
+- (nullable NSProgress *)updateDrive:(OCDrive *)drive properties:(NSDictionary<OCDriveProperty, id> *)updateProperties completionHandler:(nullable OCCoreDriveCompletionHandler)completionHandler;
+
+- (void)retrieveDrive:(OCDrive *)drive itemForResource:(OCDriveResource)resource completionHandler:(OCCoreItemCompletionHandler)completionHandler;
+- (nullable NSProgress *)updateDrive:(OCDrive *)drive resourceFor:(OCDriveResource)resource withItem:(nullable OCItem *)item completionHandler:(nullable OCCoreDriveCompletionHandler)completionHandler;
+
+@end
+
 extern OCClassSettingsKey OCCoreAddAcceptLanguageHeader;
 extern OCClassSettingsKey OCCoreThumbnailAvailableForMIMETypePrefixes;
 extern OCClassSettingsKey OCCoreOverrideReachabilitySignal;
@@ -522,6 +540,7 @@ extern OCClassSettingsKey OCCoreOverrideAvailabilitySignal;
 extern OCClassSettingsKey OCCoreActionConcurrencyBudgets;
 extern OCClassSettingsKey OCCoreCookieSupportEnabled;
 extern OCClassSettingsKey OCCoreScanForChangesInterval;
+extern OCClassSettingsKey OCCoreSpaceResourceFolderPath;
 
 extern OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter;
 extern OCDatabaseCounterIdentifier OCCoreSyncJournalCounter;

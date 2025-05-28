@@ -124,21 +124,6 @@
 			}];
 		}
 
-		// In parallel: remove thumbnails from in-memory cache for removed items
-		OCWaitWillStartTask(cacheUpdatesGroup);
-
-		dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-			for (OCItem *removeItem in removedItems)
-			{
-				if (removeItem.fileID != nil)
-				{
-					[self->_thumbnailCache removeObjectForKey:removeItem.fileID];
-				}
-			}
-
-			OCWaitDidFinishTask(cacheUpdatesGroup);
-		});
-
 		// Wait for updates to complete
 		OCWaitForCompletion(cacheUpdatesGroup);
 	}

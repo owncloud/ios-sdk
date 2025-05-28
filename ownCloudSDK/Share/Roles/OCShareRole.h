@@ -18,7 +18,7 @@
 
 #import <Foundation/Foundation.h>
 #import "OCSymbol.h"
-#import "OCShare.h"
+#import "OCShareTypes.h"
 #import "OCLocation.h"
 
 typedef NSString* OCShareRoleType NS_TYPED_ENUM;
@@ -26,6 +26,8 @@ typedef NSString* OCShareRoleType NS_TYPED_ENUM;
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCShareRole : NSObject
+
+@property(strong,nullable) OCShareRoleID identifier; //!< ocis role ID
 
 @property(strong) OCShareRoleType type; //!< Abstract, internal type (like "editor" or "viewer")
 
@@ -35,11 +37,16 @@ NS_ASSUME_NONNULL_BEGIN
 @property(assign) OCSharePermissionsMask customizablePermissions; //!< Mask of permissions the user is allowed to customize
 @property(assign) OCLocationType locations; //!< Mask of OCLocationTypes this role can be used with
 
-@property(strong) OCSymbolName symbolName;
+@property(strong,nullable) NSNumber *weight; //!< Weight for ordering
+@property(strong,nullable) NSArray<OCShareActionID> *allowedActions; //!< For ocis share roles, optionally the allowed actions
+
+@property(strong,nonatomic,nullable) OCSymbolName symbolName;
 @property(strong) NSString *localizedName;
 @property(strong) NSString *localizedDescription;
 
-- (instancetype)initWithType:(OCShareRoleType)type shareTypes:(OCShareTypesMask)shareTypes permissions:(OCSharePermissionsMask)permissions customizablePermissions:(OCSharePermissionsMask)customizablePermissions locations:(OCLocationType)locations symbolName:(OCSymbolName)symbolName localizedName:(NSString *)localizedName localizedDescription:(NSString *)localizedDescription;
+- (instancetype)initWithIdentifier:(nullable OCShareRoleID)identifier type:(OCShareRoleType)type shareTypes:(OCShareTypesMask)shareTypes permissions:(OCSharePermissionsMask)permissions customizablePermissions:(OCSharePermissionsMask)customizablePermissions locations:(OCLocationType)locations symbolName:(OCSymbolName)symbolName localizedName:(NSString *)localizedName localizedDescription:(NSString *)localizedDescription;
+
++ (BOOL)isRoleID:(OCShareRoleID)identifier equalTo:(OCShareRoleID)otherIdentifier;
 
 @end
 
@@ -50,5 +57,14 @@ extern OCShareRoleType OCShareRoleTypeEditor;
 extern OCShareRoleType OCShareRoleTypeContributor;
 extern OCShareRoleType OCShareRoleTypeManager;
 extern OCShareRoleType OCShareRoleTypeCustom;
+
+// as per https://github.com/owncloud/web/blob/6983ef727ea25430d57c7625ec53f0b249132246/packages/web-client/src/graph/drives/drives.ts#L9
+extern OCShareRoleID OCShareRoleIDManagerV1; //!< v1 role ID (textual)
+extern OCShareRoleID OCShareRoleIDViewerV1; //!< v1 role ID (textual)
+extern OCShareRoleID OCShareRoleIDEditorV1; //!< v1 role ID (textual)
+
+extern OCShareRoleID OCShareRoleIDManager; //!< v2 role ID (uuid)
+extern OCShareRoleID OCShareRoleIDViewer; //!< v2 role ID (uuid)
+extern OCShareRoleID OCShareRoleIDEditor; //!< v2 role ID (uuid)
 
 NS_ASSUME_NONNULL_END

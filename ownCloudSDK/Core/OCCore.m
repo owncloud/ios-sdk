@@ -166,7 +166,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 						OCSyncActionCategoryDownloadWifiOnly   	    : @(2), // Limit number of concurrent downloads by WiFi-only transfers to 2 (leaving at least one spot empty for cellular)
 						OCSyncActionCategoryDownloadWifiAndCellular : @(3) // Limit number of concurrent downloads by WiFi and Cellular transfers to 3
 		},
-		OCCoreCookieSupportEnabled : @(YES)
+		OCCoreCookieSupportEnabled : @(YES),
+		OCCoreSpaceResourceFolderPath : @".space"
 	});
 }
 
@@ -265,7 +266,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		_unsolvedIssueSignatures = [NSMutableSet new];
 		_rejectedIssueSignatures = [NSMutableSet new];
 
-		_shareRoles = [NSMutableArray new];
+		_legacyShareRoles = [NSMutableArray new];
 
 		_vault = [[OCVault alloc] initWithBookmark:bookmark];
 
@@ -299,6 +300,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 
 		_drivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"activeDrives" versionedItemUpdateHandler:nil];
 		_subscribedDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"subscribedDrives" versionedItemUpdateHandler:nil];
+		_disabledDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"disabledDrives" versionedItemUpdateHandler:nil];
 
 		_projectDrivesDataSource = [[OCDataSourceKVO alloc] initWithObject:_vault keyPath:@"subscribedDrives" versionedItemUpdateHandler:^NSArray<id<OCDataItem,OCDataItemVersioning>> * _Nullable(NSObject * _Nonnull object, NSString * _Nonnull keyPath, NSArray<OCDrive *> *  _Nullable activeDrives) {
 			return ([activeDrives filteredArrayUsingBlock:^BOOL(OCDrive * _Nonnull drive, BOOL * _Nonnull stop) {
@@ -326,8 +328,6 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		_availableOfflineIDs = [NSMutableSet new];
 
 		_claimTokensByClaimIdentifier = [NSMapTable strongToWeakObjectsMapTable];
-
-		_thumbnailCache = [OCCache new];
 
 		_queue = dispatch_queue_create("OCCore work queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
 		_connectivityQueue = dispatch_queue_create("OCCore connectivity queue", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
@@ -410,7 +410,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 		[self addSignalProvider:_connectingStatusSignalProvider];
 		[self addSignalProvider:_connectionStatusSignalProvider];
 
-		self.memoryConfiguration = OCCoreManager.sharedCoreManager.memoryConfiguration;
+		self.memoryConfiguration = OCPlatform.current.memoryConfiguration;
 
 		[self startIPCObservation];
 	}
@@ -755,7 +755,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 					}
 
 					// If app provider is available and enabled
-					if (OCCoreManager.sharedCoreManager.memoryConfiguration != OCCoreMemoryConfigurationMinimum) // only load app providers in memory configurations other than minimum
+					if (self.memoryConfiguration != OCPlatformMemoryConfigurationMinimum) // only load app providers in memory configurations other than minimum
 					{
 						OCAppProvider *latestSupportedAppProvider = self.connection.capabilities.latestSupportedAppProvider;
 
@@ -1043,22 +1043,11 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 }
 
 #pragma mark - Memory configuration
-- (void)setMemoryConfiguration:(OCCoreMemoryConfiguration)memoryConfiguration
+- (void)setMemoryConfiguration:(OCPlatformMemoryConfiguration)memoryConfiguration
 {
 	_memoryConfiguration = memoryConfiguration;
 
 	self.vault.resourceManager.memoryConfiguration = memoryConfiguration;
-
-	switch (_memoryConfiguration)
-	{
-		case OCCoreMemoryConfigurationDefault:
-			_thumbnailCache.countLimit = OCCacheLimitNone;
-		break;
-
-		case OCCoreMemoryConfigurationMinimum:
-			_thumbnailCache.countLimit = 1;
-		break;
-	}
 }
 
 #pragma mark - Inter-Process change notification/handling
@@ -2552,6 +2541,7 @@ OCClassSettingsKey OCCoreOverrideAvailabilitySignal = @"override-availability-si
 OCClassSettingsKey OCCoreActionConcurrencyBudgets = @"action-concurrency-budgets";
 OCClassSettingsKey OCCoreCookieSupportEnabled = @"cookie-support-enabled";
 OCClassSettingsKey OCCoreScanForChangesInterval = @"scan-for-changes-interval";
+OCClassSettingsKey OCCoreSpaceResourceFolderPath = @"space-resource-folder-path";
 
 OCDatabaseCounterIdentifier OCCoreSyncAnchorCounter = @"syncAnchor";
 OCDatabaseCounterIdentifier OCCoreSyncJournalCounter = @"syncJournal";

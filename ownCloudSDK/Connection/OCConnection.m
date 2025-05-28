@@ -111,7 +111,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		OCConnectionPlainHTTPPolicy,
 		OCConnectionAlwaysRequestPrivateLink,
 		OCConnectionTransparentTemporaryRedirect,
-		OCConnectionValidatorFlags
+		OCConnectionValidatorFlags,
+		OCConnectionBlockPasswordRemovalDefault
 	]);
 }
 
@@ -121,17 +122,25 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		OCConnectionEndpointIDWellKnown			: @".well-known",
 		OCConnectionEndpointIDCapabilities  		: @"ocs/v2.php/cloud/capabilities",			// Requested once on login
 		OCConnectionEndpointIDUser			: @"ocs/v2.php/cloud/user",				// Requested once on login
+		OCConnectionEndpointIDAssignmentsList		: @"api/v0/settings/assignments-list",			// Requested once on login (ocis only)
+		OCConnectionEndpointIDPermissionsList		: @"api/v0/settings/permissions-list",			// Requested once on login (ocis only)
 		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",				// Polled in intervals to detect changes to the root directory ETag
 		OCConnectionEndpointIDWebDAVMeta 	    	: @"remote.php/dav/meta",				// Metadata DAV endpoint, used for private link resolution
         OCConnectionEndpointIDStatus                 : @"status.php",                    // Requested during login and polled in intervals during maintenance mode
         OCConnectionEndpointIDKiteworksStatus   : @"kwdav/status.php",                    // Requested during login and polled in intervals during maintenance mode
+		OCConnectionEndpointIDWebDAVSpaces		: @"remote.php/dav/spaces",				// Spaces DAV endpoint, used for f.ex. search (see ocis#9367)
 		OCConnectionEndpointIDShares			: @"ocs/v2.php/apps/files_sharing/api/v1/shares",	// Polled in intervals to detect changes if OCShareQuery is used with the interval option
 		OCConnectionEndpointIDRemoteShares		: @"ocs/v2.php/apps/files_sharing/api/v1/remote_shares",// Polled in intervals to detect changes if OCShareQuery is used with the interval option
 		OCConnectionEndpointIDRecipients		: @"ocs/v2.php/apps/files_sharing/api/v1/sharees",	// Requested once per search string change when searching for recipients
 		OCConnectionEndpointIDAvatars			: @"remote.php/dav/avatars",				// Requested once per user per session (adding /[user]/[size-in-pixels])
 
+		OCConnectionEndpointIDGraphMe			: @"graph/v1.0/me",					// Me endpoint
 		OCConnectionEndpointIDGraphMeDrives		: @"graph/v1.0/me/drives",				// Drives of the user
-		OCConnectionEndpointIDGraphDrives		: @"graph/v1.0/drives",				// Drives
+		OCConnectionEndpointIDGraphDrives		: @"graph/v1.0/drives",					// Drives
+		OCConnectionEndpointIDGraphDrivePermissions	: @"graph/v1beta1/drives",				// Drive permissions base
+		OCConnectionEndpointIDGraphRoleDefinitions	: @"graph/v1beta1/roleManagement/permissions/roleDefinitions", // Global role definitions
+		OCConnectionEndpointIDGraphUsers		: @"graph/v1.0/users",					// Users
+		OCConnectionEndpointIDGraphGroups		: @"graph/v1.0/groups",					// Groups
 
 		OCConnectionPreferredAuthenticationMethodIDs 	: @[ OCAuthenticationMethodIdentifierOpenIDConnect, OCAuthenticationMethodIdentifierOAuth2, OCAuthenticationMethodIdentifierBasicAuth ],
 		OCConnectionCertificateExtendedValidationRule	: @"bookmarkCertificate == serverCertificate",
@@ -155,7 +164,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		OCConnectionAllowCellular			: @(YES),
 		OCConnectionPlainHTTPPolicy			: @"warn",
 		OCConnectionAlwaysRequestPrivateLink		: @(NO),
-		OCConnectionTransparentTemporaryRedirect	: @(NO)
+		OCConnectionTransparentTemporaryRedirect	: @(NO),
+		OCConnectionBlockPasswordRemovalDefault		: @(YES)
 	});
 }
 
@@ -282,6 +292,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
             OCClassSettingsMetadataKeyFlags        : @(OCClassSettingsFlagDenyUserPreferences)
         },
 
+		OCConnectionEndpointIDWebDAVSpaces : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to as for WebDAV spaces.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
 		OCConnectionEndpointIDShares : @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
 			OCClassSettingsMetadataKeyDescription 	: @"Path of the shares API endpoint.",
@@ -358,6 +376,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			OCClassSettingsMetadataKeyCategory	: @"Security",
 			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
+
+		OCConnectionBlockPasswordRemovalDefault : @{
+			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeBoolean,
+			OCClassSettingsMetadataKeyDescription 	: @"If a server does not provide `block_password_removal` information as part of its capabilities, this option provides the fallback value controlling whether passwords can (value: false) or can not (value: true) be removed from an existing link even if capabilities otherwise indicate passwords need to be enforced for links.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Security",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		}
 	});
 }
 
@@ -1522,6 +1548,14 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 														saveBookmark = YES;
 													}
 
+													// Get a list of share roles
+													[self retrieveRoleDefinitionsWithCompletionHandler:^(NSError * _Nullable error, NSArray<OCShareRole *> * _Nullable shareRoles) {
+														if (error != nil)
+														{
+															OCLogError(@"Error retrieving global share roles: %@", shareRoles);
+														}
+													}];
+
 													// Get a list of drives
 													[self retrieveDriveListWithCompletionHandler:^(NSError * _Nullable error, NSArray<OCDrive *> * _Nullable drives) {
 														if (error!=nil)
@@ -2037,7 +2071,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 			// OCLogDebug(@"Error: %@ - Response: %@", OCLogPrivate(error), ((request.downloadRequest && (request.downloadedFileURL != nil)) ? OCLogPrivate([NSString stringWithContentsOfURL:request.downloadedFileURL encoding:NSUTF8StringEncoding error:NULL]) : nil));
 
-			items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:_usersByUserID driveID:driveID withErrors:&errors];
+			items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path drives:nil reuseUsersByID:_usersByUserID driveID:driveID withErrors:&errors];
 
 			if ((items.count == 0) && (errors.count > 0) && (event.error == nil))
 			{
@@ -3298,7 +3332,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 				if (endpointURL != nil)
 				{
-					if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path reuseUsersByID:self->_usersByUserID driveID:nil withErrors:&errors]) != nil)
+					if ((items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path drives:nil reuseUsersByID:self->_usersByUserID driveID:nil withErrors:&errors]) != nil)
 					{
 						event.result = items;
 					}
@@ -3377,9 +3411,12 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 OCConnectionEndpointID OCConnectionEndpointIDWellKnown = @"well-known";
 OCConnectionEndpointID OCConnectionEndpointIDCapabilities = @"endpoint-capabilities";
 OCConnectionEndpointID OCConnectionEndpointIDUser = @"endpoint-user";
+OCConnectionEndpointID OCConnectionEndpointIDAssignmentsList = @"endpoint-assigments-list";
+OCConnectionEndpointID OCConnectionEndpointIDPermissionsList = @"endpoint-permissions-list";
 OCConnectionEndpointID OCConnectionEndpointIDWebDAV = @"endpoint-webdav";
 OCConnectionEndpointID OCConnectionEndpointIDWebDAVMeta = @"endpoint-webdav-meta";
 OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot = @"endpoint-webdav-root";
+OCConnectionEndpointID OCConnectionEndpointIDWebDAVSpaces = @"endpoint-webdav-spaces";
 OCConnectionEndpointID OCConnectionEndpointIDPreview = @"endpoint-preview";
 OCConnectionEndpointID OCConnectionEndpointIDStatus = @"endpoint-status";
 OCConnectionEndpointID OCConnectionEndpointIDKiteworksStatus = @"endpoint-kiteworks-status";
@@ -3410,6 +3447,7 @@ OCClassSettingsKey OCConnectionPlainHTTPPolicy = @"plain-http-policy";
 OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink = @"always-request-private-link";
 OCClassSettingsKey OCConnectionTransparentTemporaryRedirect = @"transparent-temporary-redirect";
 OCClassSettingsKey OCConnectionValidatorFlags = @"validator-flags";
+OCClassSettingsKey OCConnectionBlockPasswordRemovalDefault = @"block-password-removal-default";
 
 OCConnectionOptionKey OCConnectionOptionRequestObserverKey = @"request-observer";
 OCConnectionOptionKey OCConnectionOptionLastModificationDateKey = @"last-modification-date";

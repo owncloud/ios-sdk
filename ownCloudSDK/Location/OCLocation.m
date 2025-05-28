@@ -271,6 +271,7 @@
 		_bookmarkUUID = [decoder decodeObjectOfClass:NSUUID.class forKey:@"bookmarkUUID"];
 		_driveID = [decoder decodeObjectOfClass:NSString.class forKey:@"driveID"];
 		_path = [decoder decodeObjectOfClass:NSString.class forKey:@"path"];
+		_fileID = [decoder decodeObjectOfClass:NSString.class forKey:@"fileID"];
 	}
 
 	return (self);
@@ -281,6 +282,7 @@
 	[coder encodeObject:_bookmarkUUID forKey:@"bookmarkUUID"];
 	[coder encodeObject:_driveID forKey:@"driveID"];
 	[coder encodeObject:_path forKey:@"path"];
+	[coder encodeObject:_fileID forKey:@"fileID"];
 }
 
 #pragma mark - Copying
@@ -291,6 +293,7 @@
 	location->_bookmarkUUID = _bookmarkUUID;
 	location->_driveID = _driveID;
 	location->_path = _path;
+	location->_fileID = _fileID;
 
 	return (location);
 }
@@ -307,7 +310,7 @@
 #pragma mark - Comparison
 - (NSUInteger)hash
 {
-	return (_driveID.hash ^ _path.hash);
+	return (_driveID.hash ^ _path.hash ^ _fileID.hash);
 }
 
 - (BOOL)isEqual:(id)object

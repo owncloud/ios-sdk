@@ -192,6 +192,11 @@
 	return (self.capabilities.spacesEnabled.boolValue || [self.bookmark hasCapability:OCBookmarkCapabilityDrives]);
 }
 
+- (BOOL)isKiteworksServer
+{
+    return (([((NSDictionary *)self.bookmark.userInfo[@"statusInfo"])[@"product"] isEqual:@"kiteworks"] || [self.product isEqualToString:@"kiteworks"]));
+}
+
 #pragma mark - Checks
 - (NSError *)supportsServerVersion:(NSString *)serverVersion product:(NSString *)product longVersion:(NSString *)longVersion allowHiddenVersion:(BOOL)allowHiddenVersion
 {

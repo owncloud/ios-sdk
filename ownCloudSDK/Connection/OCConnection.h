@@ -36,6 +36,8 @@
 #import "OCAvatar.h"
 #import "OCDrive.h"
 #import "OCAppProviderApp.h"
+#import "OCFeatureAvailability.h"
+#import "OCDataItemPresentable.h"
 
 @class OCBookmark;
 @class OCAuthenticationMethod;
@@ -46,6 +48,7 @@
 @class OCServerInstance;
 @class OCTUSJobSegment;
 @class OCTUSJob;
+@class OCShareRole;
 
 typedef NSString* OCConnectionEndpointID NS_TYPED_ENUM;
 typedef NSString* OCConnectionOptionKey NS_TYPED_ENUM;
@@ -141,6 +144,8 @@ NS_ASSUME_NONNULL_BEGIN
 	NSArray<OCDrive *> *_drives;
 	NSMutableDictionary<OCDriveID, OCDrive *> *_drivesByID;
 
+	NSArray<OCShareRole *> *_globalShareRoles;
+
 	NSMutableSet<OCConnectionSignalID> *_signals;
 	NSSet<OCConnectionSignalID> *_actionSignals;
 	NSSet<OCConnectionSignalID> *_propFindSignals;
@@ -218,6 +223,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSProgress *)retrieveItemListAtLocation:(OCLocation *)location depth:(NSUInteger)depth options:(nullable OCConnectionOptions)options completionHandler:(void(^)(NSError * _Nullable error, NSArray <OCItem *> * _Nullable items))completionHandler; //!< Retrieves the items at the specified path with options
 - (nullable NSProgress *)retrieveItemListAtLocation:(OCLocation *)location depth:(NSUInteger)depth options:(nullable OCConnectionOptions)options resultTarget:(OCEventTarget *)eventTarget; //!< Retrieves the items at the specified path, with options to schedule on the background queue and with a "not before" date.
 
+- (NSMutableArray <OCXMLNode *> *)_davItemAttributes; //!< Returns a newly created array of XML nodes that are requested by a PROPFIND by default
+
 #pragma mark - Actions
 - (nullable OCProgress *)createFolder:(NSString *)folderName inside:(OCItem *)parentItem options:(nullable OCConnectionOptions)options resultTarget:(OCEventTarget *)eventTarget;
 
@@ -290,7 +297,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 #pragma mark - SHARING
-typedef void(^OCConnectionShareRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCShare *> * _Nullable shares);
+typedef void(^OCConnectionShareRetrievalCompletionHandler)(NSError * _Nullable error, NSArray<OCShareActionID> * _Nullable allowedPermissionActions, NSArray<OCShareRole *> * _Nullable allowedRoles, NSArray<OCShare *> * _Nullable shares);
 typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCShare * _Nullable share);
 
 @interface OCConnection (Sharing)
@@ -347,13 +354,43 @@ typedef void(^OCConnectionShareCompletionHandler)(NSError * _Nullable error, OCS
 
 @end
 
+#pragma mark - DRIVES
+typedef void(^OCConnectionDriveCompletionHandler)(NSError * _Nullable error, OCDrive * _Nullable newDrive);
+typedef void(^OCConnectionDriveManagementCompletionHandler)(NSError * _Nullable error);
+
+@interface OCConnection (Drives)
+
+#pragma mark - Creation
+- (nullable NSProgress *)createDriveWithName:(NSString *)name description:(nullable NSString *)description quota:(nullable NSNumber *)quotaBytes template:(nullable OCDriveTemplate)templateName completionHandler:(OCConnectionDriveCompletionHandler)completionHandler;
+
+#pragma mark - Disable/Restore/Delete
+- (nullable NSProgress *)disableDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
+- (nullable NSProgress *)restoreDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
+- (nullable NSProgress *)deleteDrive:(OCDrive *)drive completionHandler:(OCConnectionDriveManagementCompletionHandler)completionHandler;
+
+#pragma mark - Change attributes
+- (nullable NSProgress *)updateDrive:(OCDrive *)drive properties:(NSDictionary<OCDriveProperty, id> *)updateProperties completionHandler:(OCConnectionDriveCompletionHandler)completionHandler;
+- (nullable NSProgress *)updateDrive:(OCDrive *)drive resourceFor:(OCDriveResource)resource withItem:(nullable OCItem *)item completionHandler:(void(^)(NSError * _Nullable error, OCDrive * _Nullable drive))completionHandler; //!< Updates special items of a drive with the provided item.
+
+@end
+
 #pragma mark - RECIPIENTS
-typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCIdentity *> * _Nullable recipients);
+typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nullable error, NSArray <OCIdentity *> * _Nullable recipients, BOOL finished);
+typedef void(^OCConnectionUserRetrievalCompletionHandler)(NSError * _Nullable error, OCUser * _Nullable user);
+typedef void(^OCConnectionGroupRetrievalCompletionHandler)(NSError * _Nullable error, OCGroup * _Nullable group);
+typedef void(^OCConnectionIdentityDetailsRetrievalCompletionHandler)(NSError * _Nullable error, OCIdentity * _Nullable identity);
+typedef void(^OCConnectionIdentityObjectsDetailsRetrievalCompletionHandler)(NSError * _Nullable error, NSArray* _Nullable identityObjects);
 
 @interface OCConnection (Recipients)
 
-#pragma mark - Retrieval
+#pragma mark - Search
 - (nullable NSProgress *)retrieveRecipientsForItemType:(OCItemType)itemType ofShareType:(nullable NSArray <OCShareTypeID> *)shareTypes searchTerm:(nullable NSString *)searchTerm maximumNumberOfRecipients:(NSUInteger)maximumNumberOfRecipients completionHandler:(OCConnectionRecipientsRetrievalCompletionHandler)completionHandler;
+
+#pragma mark - Lookup
+- (nullable NSProgress *)retrieveUserForID:(OCUserID)userID completionHandler:(OCConnectionUserRetrievalCompletionHandler)completionHandler; //!< Looks up a user with the server using its ID. GraphAPI / ocis-only
+- (nullable NSProgress *)retrieveGroupForID:(OCGroupID)groupID completionHandler:(OCConnectionGroupRetrievalCompletionHandler)completionHandler; //!< Looks up a group with the server using its ID. GraphAPI / ocis-only
+- (nullable NSProgress *)retrieveDetailsForIdentity:(OCIdentity *)identity completionHandler:(OCConnectionIdentityDetailsRetrievalCompletionHandler)completionHandler; //!< Retrieve full (user|group) details for identity. GraphAPI / ocis-only
+- (nullable NSProgress *)retrieveDetailsForObjects:(NSArray *)identityObjects asIdentities:(BOOL)asIdentities resolveIdentities:(BOOL)resolveIdentities completionHandler:(OCConnectionIdentityObjectsDetailsRetrievalCompletionHandler)completionHandler; //!< Retrieve full details for (user|group|identity) objects (can be mixed in array). If `asIdentities` is YES, the completionHandler will contain only OCIdentity instances. If `resolveIdentities` is YES, OCIdentity instances will be returned as OCUser and OCGroup where applicable. GraphAPI / ocis-only
 
 @end
 
@@ -436,16 +473,26 @@ typedef void(^OCConnectionRecipientsRetrievalCompletionHandler)(NSError * _Nulla
 
 #pragma mark - API Switches
 @property(readonly,nonatomic) BOOL useDriveAPI; //!< Returns YES if the server supports the drive API and it should be used.
+@property(readonly,nonatomic) BOOL isKiteworksServer; //!< Returns YES if the server is a Kiteworks server.
 
 #pragma mark - Checks
 - (nullable NSError *)supportsServerVersion:(NSString *)serverVersion product:(NSString *)product longVersion:(NSString *)longVersion allowHiddenVersion:(BOOL)allowHiddenVersion;
 @end
 
+@interface OCConnection (Search)
+
+- (nullable OCProgress *)searchFilesWithPattern:(NSString *)pattern limit:(nullable NSNumber *)limit options:(nullable NSDictionary<OCConnectionOptionKey,id> *)options resultTarget:(OCEventTarget *)eventTarget;
+
+@end
+
 extern OCConnectionEndpointID OCConnectionEndpointIDWellKnown;
 extern OCConnectionEndpointID OCConnectionEndpointIDCapabilities;
 extern OCConnectionEndpointID OCConnectionEndpointIDUser;
+extern OCConnectionEndpointID OCConnectionEndpointIDAssignmentsList;
+extern OCConnectionEndpointID OCConnectionEndpointIDPermissionsList;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAV;
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVMeta;
+extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVSpaces; //!< Spaces DAV endpoint, used for f.ex. search (see ocis#9367)
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot; //!< Virtual, non-configurable endpoint, builds the root URL based on OCConnectionEndpointIDWebDAV and the username found in connection.loggedInUser
 extern OCConnectionEndpointID OCConnectionEndpointIDPreview; //!< Virtual, non-configurable endpoint, builds the root URL for requesting previews based on OCConnectionEndpointIDWebDAV, the username found in connection.loggedInUser and the drive ID
 extern OCConnectionEndpointID OCConnectionEndpointIDStatus;
@@ -477,6 +524,7 @@ extern OCClassSettingsKey OCConnectionPlainHTTPPolicy; //!< Either "warn" (for O
 extern OCClassSettingsKey OCConnectionAlwaysRequestPrivateLink; //!< Controls whether private links are requested with regular PROPFINDs.
 extern OCClassSettingsKey OCConnectionTransparentTemporaryRedirect; //!< Allows (TRUE) transparent handling of 307 redirects at the HTTP pipeline level.
 extern OCClassSettingsKey OCConnectionValidatorFlags; //!< Allows fine-tuning the behavior of the connection validator.
+extern OCClassSettingsKey OCConnectionBlockPasswordRemovalDefault; //!< Controls the value of the `block_password_removal`-based capabilities if the server provides no value for it. This controls whether passwords can be removed from an existing link even though passwords need to be enforced on creation as per capabilities.
 
 extern OCConnectionOptionKey OCConnectionOptionRequestObserverKey;
 extern OCConnectionOptionKey OCConnectionOptionLastModificationDateKey; //!< Last modification date for uploads

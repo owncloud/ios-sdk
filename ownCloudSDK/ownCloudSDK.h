@@ -76,6 +76,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCCore+ItemUpdates.h>
 #import <ownCloudSDK/OCCore+DirectURL.h>
 #import <ownCloudSDK/OCCore+NameConflicts.h>
+#import <ownCloudSDK/OCCore+Search.h>
+#import <ownCloudSDK/OCSearchResult.h>
 #import <ownCloudSDK/OCScanJobActivity.h>
 #import <ownCloudSDK/NSString+NameConflicts.h>
 #import <ownCloudSDK/NSProgress+OCEvent.h>
@@ -159,6 +161,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCEventTarget.h>
 
 #import <ownCloudSDK/OCVault.h>
+#import <ownCloudSDK/OCVault+TemporaryTools.h>
 #import <ownCloudSDK/OCVaultLocation.h>
 #import <ownCloudSDK/OCDatabase.h>
 #import <ownCloudSDK/OCDatabase+Versions.h>
@@ -228,6 +231,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCQueryFilter.h>
 #import <ownCloudSDK/OCQueryCondition.h>
 #import <ownCloudSDK/OCQueryCondition+Item.h>
+#import <ownCloudSDK/OCQueryCondition+KQLBuilder.h>
 #import <ownCloudSDK/OCQueryChangeSet.h>
 
 #import <ownCloudSDK/OCItem.h>
@@ -239,10 +243,13 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCShare+OCDataItem.h>
 #import <ownCloudSDK/OCShareRole.h>
 #import <ownCloudSDK/OCShareRole+OCDataItem.h>
+#import <ownCloudSDK/OCSharePermission.h>
+#import <ownCloudSDK/OCShareAction.h>
 #import <ownCloudSDK/OCUser.h>
 #import <ownCloudSDK/OCGroup.h>
 #import <ownCloudSDK/OCIdentity.h>
 #import <ownCloudSDK/OCIdentity+DataItem.h>
+#import <ownCloudSDK/OCUserPermissions.h>
 
 #import <ownCloudSDK/OCRecipientSearchController.h>
 #import <ownCloudSDK/OCShareQuery.h>
@@ -358,3 +365,8 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCStatistic.h>
 
 #import <ownCloudSDK/OCSignal.h>
+
+#import <ownCloudSDK/GAUnifiedRolePermission.h>
+#import <ownCloudSDK/GAUnifiedRoleDefinition.h>
+#import <ownCloudSDK/GAQuota.h>
+#import <ownCloudSDK/GASharePointIdentitySet.h>

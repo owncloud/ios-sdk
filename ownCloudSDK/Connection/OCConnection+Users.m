@@ -19,6 +19,7 @@
 #import "OCConnection.h"
 #import "OCUser.h"
 #import "NSError+OCError.h"
+#import "OCConnection+GraphAPI.h"
 #import "OCMacros.h"
 
 @implementation OCConnection (Users)
@@ -31,6 +32,28 @@
 
 - (NSProgress *)retrieveLoggedInUserWithRequestCustomization:(void(^)(OCHTTPRequest *request))requestCustomizer completionHandler:(void(^)(NSError *error, OCUser *loggedInUser))completionHandler
 {
+	if (self.useDriveAPI && !self.isKiteworksServer && (requestCustomizer == nil)) {
+		// Use Graph API (has no support for request customizer for now, but can be added later)
+		return ([self retrieveLoggedInGraphUserWithCompletionHandler:^(NSError * _Nullable error, OCUser * _Nullable user) {
+			if (error != nil)
+			{
+				completionHandler(error, user);
+			}
+			else
+			{
+				// Retrieve and add the permissions for the current user
+				[self retrievePermissionsListForUser:user withCompletionHandler:^(NSError * _Nullable error, OCUserPermissions * _Nullable userPermissions) {
+					if (error == nil)
+					{
+						user.permissions = userPermissions;
+					}
+
+					completionHandler(nil, user);
+				}];
+			}
+		}]);
+	}
+
 	OCHTTPRequest *request;
 	NSProgress *progress = nil;
 

@@ -20,16 +20,24 @@
 #import "OCTypes.h"
 #import "OCQuota.h"
 #import "OCDataTypes.h"
+#import "OCIdentity.h"
 
 @class GADrive;
 @class OCLocation;
+@class GAPermission;
 
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NSString *OCDriveType NS_TYPED_ENUM;
 typedef NSString* OCDriveAlias;
 
-typedef NSString *OCDriveSpecialType NS_TYPED_ENUM;
+typedef NSString* OCDriveSpecialType NS_TYPED_ENUM;
+
+typedef NSString* OCDriveProperty NS_TYPED_ENUM;
+
+typedef NSString* OCDriveTemplate NS_TYPED_ENUM;
+
+typedef NSString* OCDriveResource NS_TYPED_ENUM;
 
 typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 {
@@ -49,10 +57,10 @@ typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 
 @property(readonly,nonatomic,nullable) OCDriveSpecialType specialType; //!< Convenience accessor to determine if a drive is the personal or shares jail drive.
 
-@property(readonly,nonatomic) BOOL isDeactivated;
+@property(readonly,nonatomic) BOOL isDisabled;
 
-@property(strong,nullable,nonatomic) NSString *name;
-@property(strong,nullable) NSString *desc;
+@property(strong,nullable,nonatomic) NSString *name; //!< Name of the drive/space
+@property(strong,nullable) NSString *desc; //!< Description ("subtitle") of the drive/space. A long-form "description" can be stored inside the space as ".space/readme.md".
 
 @property(strong,nullable) NSURL *davRootURL;
 
@@ -64,6 +72,8 @@ typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 
 @property(strong,nonatomic,readonly) OCLocation *rootLocation;
 @property(strong,nonatomic,readonly) OCFileETag rootETag;
+
+@property(strong,nonatomic,nullable,readonly) NSArray<GAPermission *> *permissions;
 
 #pragma mark - Detached management
 @property(readonly,nonatomic) BOOL isDetached;
@@ -88,7 +98,17 @@ extern OCDriveSpecialType OCDriveSpecialTypePersonal;	//!< The user's personal s
 extern OCDriveSpecialType OCDriveSpecialTypeShares;	//!< The Shares Jail space
 extern OCDriveSpecialType OCDriveSpecialTypeSpace;	//!< Regular project spaces
 
+extern OCDriveProperty OCDrivePropertyName; //!< The name of the space
+extern OCDriveProperty OCDrivePropertyDescription; //!< The description of the space
+extern OCDriveProperty OCDrivePropertyQuotaTotal; //!< The quota total of / space available in the space in bytes
+
 extern OCDriveID OCDriveIDSharesJail; //!< The static UUID of the Shares Jail
+
+extern OCDriveTemplate OCDriveTemplateDefault; //!< The default template
+
+extern OCDriveResource OCDriveResourceCoverImage; //!< The cover image of a drive/space
+extern OCDriveResource OCDriveResourceCoverDescription; //!< The MD description of a drive/space
+extern OCDriveResource OCDriveResourceSpaceFolder; //!< The folder typically used to store a drive's/space's cover image and/or MD description.
 
 #define OCDriveIDNil ((OCDriveID)NSNull.null)
 #define OCDriveIDWrap(driveID) ((OCDriveID)((driveID == nil) ? OCDriveIDNil : driveID))

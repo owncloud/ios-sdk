@@ -20,4 +20,23 @@
 
 @implementation GAGraphContext
 
++ (GAGraphContext *)defaultContext
+{
+	// Use defaults (return error if required value is missing)
+	return (nil);
+}
+
++ (GAGraphContext *)relaxedContext
+{
+	static dispatch_once_t onceToken;
+	static GAGraphContext *relaxedContext;
+
+	dispatch_once(&onceToken, ^{
+		relaxedContext = [GAGraphContext new];
+		relaxedContext.ignoreRequirements = YES; // Do not return an error if a required value is missing
+	});
+
+	return (relaxedContext);
+}
+
 @end

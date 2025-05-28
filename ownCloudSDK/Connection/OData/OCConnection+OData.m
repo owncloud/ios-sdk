@@ -18,10 +18,34 @@
 
 #import "OCConnection+OData.h"
 #import "GAODataError.h"
+#import "NSError+OCError.h"
+#import "OCODataDecoder.h"
 
 @implementation OCConnection (OData)
 
-- (NSProgress *)requestODataAtURL:(NSURL *)url requireSignals:(nullable NSSet<OCConnectionSignalID> *)requiredSignals selectEntityID:(nullable OCODataEntityID)selectEntityID selectProperties:(nullable NSArray<OCODataProperty> *)selectProperties filterString:(nullable OCODataFilterString)filterString entityClass:(Class)entityClass completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler
+- (void)decodeODataResponse:(OCHTTPResponse *)response error:(nullable NSError *)error entityClass:(nullable Class)entityClass options:(nullable OCODataOptions)options completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler
+{
+	if (error != nil)
+	{
+		completionHandler(error, nil);
+		return;
+	}
+
+	NSError *jsonError = nil;
+	id jsonObj = nil;
+
+	if ((jsonObj = [response bodyConvertedFromJSONWithError:&jsonError]) != nil)
+	{
+		OCODataResponse *decodedResponse = [OCODataDecoder decodeODataResponse:jsonObj entityClass:entityClass options:options];
+		completionHandler(decodedResponse.error, [(NSNumber *)options[OCODataOptionKeyReturnODataResponse] boolValue] ? decodedResponse : decodedResponse.result);
+	}
+	else
+	{
+		completionHandler(jsonError, nil);
+	}
+}
+
+- (NSProgress *)requestODataAtURL:(NSURL *)url requireSignals:(nullable NSSet<OCConnectionSignalID> *)requiredSignals selectEntityID:(nullable OCODataEntityID)selectEntityID selectProperties:(nullable NSArray<OCODataProperty> *)selectProperties filterString:(nullable OCODataFilterString)filterString parameters:(nullable NSDictionary<NSString *,NSString *> *)additionalParameters entityClass:(Class)entityClass options:(nullable OCODataOptions)options completionHandler:(nonnull OCConnectionODataRequestCompletionHandler)completionHandler
 {
 	OCHTTPRequest *request;
 	NSProgress *progress = nil;
@@ -52,6 +76,12 @@
 		requestParameters[@"$filter"] = filterString;
 	}
 
+	// Additional parameters
+	if (additionalParameters.count > 0)
+	{
+		[requestParameters addEntriesFromDictionary:additionalParameters];
+	}
+
 	// Compose HTTP request
 	request = [OCHTTPRequest requestWithURL:url];
 	request.requiredSignals = requiredSignals; // self.actionSignals;
@@ -61,48 +91,64 @@
 	}
 
 	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
-		NSDictionary <NSString *, id> *jsonDictionary = nil;
-		NSError *returnError = error;
-		id returnResult = nil;
-
-		if (error == nil)
-		{
-			NSError *jsonError = nil;
-
-			if ((jsonDictionary = [response bodyConvertedDictionaryFromJSONWithError:&jsonError]) != nil)
-			{
-				if (jsonDictionary[@"error"])
-				{
-					NSError *decodeError = nil;
-
-					GAODataError *dataError = [jsonDictionary objectForKey:@"error" ofClass:GAODataError.class inCollection:Nil required:NO context:nil error:&decodeError];
-					returnError = dataError.nativeError;
-				}
-				else if (jsonDictionary[@"value"])
-				{
-					if ([jsonDictionary[@"value"] isKindOfClass:NSArray.class])
-					{
-						returnResult = [jsonDictionary objectForKey:@"value" ofClass:entityClass inCollection:NSArray.class required:NO context:nil error:&returnError];
-					}
-					else
-					{
-						returnResult = [jsonDictionary objectForKey:@"value" ofClass:entityClass inCollection:Nil required:NO context:nil error:&returnError];
-					}
-				}
-			}
-			else if (jsonError != nil)
-			{
-				returnError = jsonError;
-			}
-
-		}
-
-		OCLogDebug(@"OData response: returnResult=%@, error=%@, json: %@", returnResult, returnError, jsonDictionary);
-
-		completionHandler(returnError, returnResult);
+		[self decodeODataResponse:response error:error entityClass:entityClass options:options completionHandler:completionHandler];
 	}];
 
 	return (progress);
 }
 
+- (nullable NSProgress *)_sendODataObject:(id<GAGraphObject>)object atURL:(NSURL *)url withMethod:(OCHTTPMethod)httpMethod requireSignals:(nullable NSSet<OCConnectionSignalID> *)requiredSignals parameters:(nullable NSDictionary<NSString *,NSString *> *)additionalParameters responseEntityClass:(nullable Class)responseEntityClass completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler
+{
+	NSProgress *progress = nil;
+	NSError *error = nil;
+	GAGraphStruct graphStruct = nil;
+	NSData *postData = nil;
+
+	// Encode object to JSON
+	graphStruct = [object encodeToGraphStructWithContext:nil error:&error];
+	if (error != nil) {
+		completionHandler(error, nil);
+		return(nil);
+	}
+	if (graphStruct != nil)
+	{
+		postData = [NSJSONSerialization dataWithJSONObject:graphStruct options:0 error:&error];
+		if (error != nil) {
+			completionHandler(error, nil);
+			return(nil);
+		}
+	}
+
+	OCHTTPRequest *request;
+
+	request = [OCHTTPRequest requestWithURL:url];
+	request.method = httpMethod;
+	request.requiredSignals = requiredSignals; // self.actionSignals;
+	if (additionalParameters.count > 0)
+	{
+		request.parameters = [additionalParameters mutableCopy];
+	}
+	[request setValue:@"application/json" forHeaderField:OCHTTPHeaderFieldNameContentType];
+	request.bodyData = postData;
+
+	progress = [self sendRequest:request ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
+		[self decodeODataResponse:response error:error entityClass:((responseEntityClass != nil) ? responseEntityClass : object.class) options:nil completionHandler:completionHandler];
+	}];
+
+	return (progress);
+}
+
+- (nullable NSProgress *)createODataObject:(id<GAGraphObject>)object atURL:(NSURL *)url requireSignals:(nullable NSSet<OCConnectionSignalID> *)requiredSignals parameters:(nullable NSDictionary<NSString *,NSString *> *)additionalParameters responseEntityClass:(nullable Class)responseEntityClass completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler
+{
+	return ([self _sendODataObject:object atURL:url withMethod:OCHTTPMethodPOST requireSignals:requiredSignals parameters:additionalParameters responseEntityClass:responseEntityClass completionHandler:completionHandler]);
+}
+
+- (nullable NSProgress *)updateODataObject:(id<GAGraphObject>)object atURL:(NSURL *)url requireSignals:(nullable NSSet<OCConnectionSignalID> *)requiredSignals parameters:(nullable NSDictionary<NSString *,NSString *> *)additionalParameters responseEntityClass:(nullable Class)responseEntityClass completionHandler:(OCConnectionODataRequestCompletionHandler)completionHandler
+{
+	return ([self _sendODataObject:object atURL:url withMethod:OCHTTPMethodPATCH requireSignals:requiredSignals parameters:additionalParameters responseEntityClass:responseEntityClass completionHandler:completionHandler]);
+}
+
 @end
+
+OCODataOptionKey OCODataOptionKeyReturnODataResponse = @"returnODataResponse";
+OCODataOptionKey OCODataOptionKeyValueKey = @"valueKey";
