@@ -184,7 +184,7 @@
 		_syncActivity = [decoder decodeIntegerForKey:@"syncActivity"];
 		_syncActivityCounts = [decoder decodeObjectOfClasses:[[NSSet alloc] initWithObjects:[NSCountedSet class], NSNumber.class, nil] forKey:@"syncActivityCounts"];
 
-		_size = [decoder decodeIntegerForKey:@"size"];
+        _size = [decoder decodeIntegerForKey:@"size"];
 		_creationDate = [decoder decodeObjectOfClass:NSDate.class forKey:@"creationDate"];
 		_lastModified = [decoder decodeObjectOfClass:NSDate.class forKey:@"lastModified"];
 		_lastUsed = [decoder decodeObjectOfClass:NSDate.class forKey:@"lastUsed"];

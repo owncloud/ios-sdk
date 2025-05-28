@@ -126,8 +126,9 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		OCConnectionEndpointIDPermissionsList		: @"api/v0/settings/permissions-list",			// Requested once on login (ocis only)
 		OCConnectionEndpointIDWebDAV 	    		: @"remote.php/dav/files",				// Polled in intervals to detect changes to the root directory ETag
 		OCConnectionEndpointIDWebDAVMeta 	    	: @"remote.php/dav/meta",				// Metadata DAV endpoint, used for private link resolution
+        OCConnectionEndpointIDStatus                 : @"status.php",                    // Requested during login and polled in intervals during maintenance mode
+        OCConnectionEndpointIDKiteworksStatus   : @"kwdav/status.php",                    // Requested during login and polled in intervals during maintenance mode
 		OCConnectionEndpointIDWebDAVSpaces		: @"remote.php/dav/spaces",				// Spaces DAV endpoint, used for f.ex. search (see ocis#9367)
-		OCConnectionEndpointIDStatus 	    		: @"status.php",					// Requested during login and polled in intervals during maintenance mode
 		OCConnectionEndpointIDShares			: @"ocs/v2.php/apps/files_sharing/api/v1/shares",	// Polled in intervals to detect changes if OCShareQuery is used with the interval option
 		OCConnectionEndpointIDRemoteShares		: @"ocs/v2.php/apps/files_sharing/api/v1/remote_shares",// Polled in intervals to detect changes if OCShareQuery is used with the interval option
 		OCConnectionEndpointIDRecipients		: @"ocs/v2.php/apps/files_sharing/api/v1/sharees",	// Requested once per search string change when searching for recipients
@@ -274,18 +275,26 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
 			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
+        
+        OCConnectionEndpointIDStatus : @{
+            OCClassSettingsMetadataKeyType         : OCClassSettingsMetadataTypeString,
+            OCClassSettingsMetadataKeyDescription     : @"Endpoint to retrieve basic status information and detect an ownCloud installation.",
+            OCClassSettingsMetadataKeyStatus    : OCClassSettingsKeyStatusAdvanced,
+            OCClassSettingsMetadataKeyCategory    : @"Endpoints",
+            OCClassSettingsMetadataKeyFlags        : @(OCClassSettingsFlagDenyUserPreferences)
+        },
+        
+        OCConnectionEndpointIDKiteworksStatus : @{
+            OCClassSettingsMetadataKeyType         : OCClassSettingsMetadataTypeString,
+            OCClassSettingsMetadataKeyDescription     : @"Endpoint to retrieve basic status information and detect an ownCloud installation.",
+            OCClassSettingsMetadataKeyStatus    : OCClassSettingsKeyStatusAdvanced,
+            OCClassSettingsMetadataKeyCategory    : @"Endpoints",
+            OCClassSettingsMetadataKeyFlags        : @(OCClassSettingsFlagDenyUserPreferences)
+        },
 
 		OCConnectionEndpointIDWebDAVSpaces : @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
 			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to as for WebDAV spaces.",
-			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
-			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
-			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
-		},
-
-		OCConnectionEndpointIDStatus : @{
-			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
-			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to retrieve basic status information and detect an ownCloud installation.",
 			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
 			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
 			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
@@ -1405,9 +1414,9 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				}
 			};
 		};
-
+    
 		// Check status
-		if ((statusRequest =  [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
+		if ((statusRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil || (statusRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDKiteworksStatus options:nil]]) != nil)
 		{
 			[self sendRequest:statusRequest ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				self.connectionInitializationPhaseCompleted = YES;
@@ -1672,8 +1681,8 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 - (NSProgress *)requestServerStatusWithCompletionHandler:(void(^)(NSError *error, OCHTTPRequest *request, NSDictionary<NSString *,id> *statusInfo))completionHandler
 {
 	OCHTTPRequest *statusRequest;
-
-	if ((statusRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
+    
+	if ((statusRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil || (statusRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDKiteworksStatus options:nil]]) != nil)
 	{
 		[self sendRequest:statusRequest ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 			if ((error == nil) && (response.status.isSuccess))
@@ -3410,6 +3419,7 @@ OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot = @"endpoint-webdav-root
 OCConnectionEndpointID OCConnectionEndpointIDWebDAVSpaces = @"endpoint-webdav-spaces";
 OCConnectionEndpointID OCConnectionEndpointIDPreview = @"endpoint-preview";
 OCConnectionEndpointID OCConnectionEndpointIDStatus = @"endpoint-status";
+OCConnectionEndpointID OCConnectionEndpointIDKiteworksStatus = @"endpoint-kiteworks-status";
 OCConnectionEndpointID OCConnectionEndpointIDShares = @"endpoint-shares";
 OCConnectionEndpointID OCConnectionEndpointIDRemoteShares = @"endpoint-remote-shares";
 OCConnectionEndpointID OCConnectionEndpointIDRecipients = @"endpoint-recipients";

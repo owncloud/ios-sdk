@@ -66,6 +66,10 @@
 		{
 			endpointPath = [self classSettingForOCClassSettingsKey:endpoint];
 		}
+        
+        if (self.isKiteworksServer && ![endpoint isEqual:OCConnectionEndpointIDWellKnown]) {
+            endpointPath = [@"kwdav" stringByAppendingPathComponent:endpointPath];
+        }
 
 		return (endpointPath);
 	}

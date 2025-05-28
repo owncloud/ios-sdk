@@ -159,7 +159,7 @@ NS_ASSUME_NONNULL_BEGIN
 	BOOL _isValidatingConnection;
 	OCRateLimiter *_connectionValidationRateLimiter;
 	NSCountedSet<NSString *> *_connectionValidationTriggeringURLs;
-
+    NSString *_product;
 	NSMutableArray <OCConnectionAuthenticationAvailabilityHandler> *_pendingAuthenticationAvailabilityHandlers;
 
 	NSMutableDictionary<OCActionTrackingID, NSProgress *> *_progressByActionTrackingID;
@@ -197,6 +197,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,weak) id <OCConnectionDelegate> delegate;
 
 @property(nullable,weak) id <OCConnectionHostSimulator> hostSimulator;
+
+@property(nullable,strong) NSString *product;
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
@@ -471,6 +473,7 @@ typedef void(^OCConnectionIdentityObjectsDetailsRetrievalCompletionHandler)(NSEr
 
 #pragma mark - API Switches
 @property(readonly,nonatomic) BOOL useDriveAPI; //!< Returns YES if the server supports the drive API and it should be used.
+@property(readonly,nonatomic) BOOL isKiteworksServer; //!< Returns YES if the server is a Kiteworks server.
 
 #pragma mark - Checks
 - (nullable NSError *)supportsServerVersion:(NSString *)serverVersion product:(NSString *)product longVersion:(NSString *)longVersion allowHiddenVersion:(BOOL)allowHiddenVersion;
@@ -493,6 +496,7 @@ extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVSpaces; //!< Spaces DA
 extern OCConnectionEndpointID OCConnectionEndpointIDWebDAVRoot; //!< Virtual, non-configurable endpoint, builds the root URL based on OCConnectionEndpointIDWebDAV and the username found in connection.loggedInUser
 extern OCConnectionEndpointID OCConnectionEndpointIDPreview; //!< Virtual, non-configurable endpoint, builds the root URL for requesting previews based on OCConnectionEndpointIDWebDAV, the username found in connection.loggedInUser and the drive ID
 extern OCConnectionEndpointID OCConnectionEndpointIDStatus;
+extern OCConnectionEndpointID OCConnectionEndpointIDKiteworksStatus;
 extern OCConnectionEndpointID OCConnectionEndpointIDShares;
 extern OCConnectionEndpointID OCConnectionEndpointIDRemoteShares;
 extern OCConnectionEndpointID OCConnectionEndpointIDRecipients;
