@@ -55,7 +55,8 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 		OCAuthenticationMethodOpenIDConnectPrompt      : @"select_account consent",
 		OCAuthenticationMethodOpenIDRegisterClient     : @(YES),
 		OCAuthenticationMethodOpenIDRegisterClientNameTemplate : @"ownCloud/{{os.name}} {{app.version}}",
-		OCAuthenticationMethodOpenIDFallbackOnClientRegistrationFailure : @(YES)
+		OCAuthenticationMethodOpenIDFallbackOnClientRegistrationFailure : @(YES),
+		OCAuthenticationMethodOpenIDConnectPostLogoutRedirectURI : @""
 	} metadata:@{
 		OCAuthenticationMethodOpenIDConnectRedirectURI : @{
 			OCClassSettingsMetadataKeyType 	      : OCClassSettingsMetadataTypeString,
@@ -85,6 +86,11 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 		OCAuthenticationMethodOpenIDFallbackOnClientRegistrationFailure : @{
 			OCClassSettingsMetadataKeyType        : OCClassSettingsMetadataTypeBoolean,
 			OCClassSettingsMetadataKeyDescription : @"If client registration is enabled, but registration fails, controls if the error should be ignored and the default client ID and secret should be used instead.",
+			OCClassSettingsMetadataKeyCategory    : @"OIDC"
+		},
+		OCAuthenticationMethodOpenIDConnectPostLogoutRedirectURI : @{
+			OCClassSettingsMetadataKeyType        : OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription : @"OpenID Connect Post Logout Redirect URI. If not set, defaults to the OpenID Connect Redirect URI.",
 			OCClassSettingsMetadataKeyCategory    : @"OIDC"
 		}
 	}];
@@ -819,8 +825,8 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 		}
 		
 		// Add post_logout_redirect_uri if configured
-		NSString *postLogoutRedirectURI = [self classSettingForOCClassSettingsKey:@"oidc-post-logout-redirect-uri"];
-		if (postLogoutRedirectURI == nil)
+		NSString *postLogoutRedirectURI = [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOpenIDConnectPostLogoutRedirectURI];
+		if ((postLogoutRedirectURI == nil) || (postLogoutRedirectURI.length == 0))
 		{
 			// Use the app's redirect URI as default
 			postLogoutRedirectURI = [self redirectURIForConnection:connection];
@@ -901,6 +907,7 @@ OCAuthenticationMethodIdentifier OCAuthenticationMethodIdentifierOpenIDConnect =
 OCClassSettingsKey OCAuthenticationMethodOpenIDConnectRedirectURI = @"oidc-redirect-uri";
 OCClassSettingsKey OCAuthenticationMethodOpenIDConnectScope = @"oidc-scope";
 OCClassSettingsKey OCAuthenticationMethodOpenIDConnectPrompt = @"oidc-prompt";
+OCClassSettingsKey OCAuthenticationMethodOpenIDConnectPostLogoutRedirectURI = @"oidc-post-logout-redirect-uri";
 OCClassSettingsKey OCAuthenticationMethodOpenIDRegisterClient = @"oidc-register-client";
 OCClassSettingsKey OCAuthenticationMethodOpenIDRegisterClientNameTemplate = @"oidc-register-client-name-template";
 OCClassSettingsKey OCAuthenticationMethodOpenIDFallbackOnClientRegistrationFailure = @"oidc-fallback-on-client-registration-failure";
