@@ -348,12 +348,12 @@ OCAuthenticationMethodAutoRegister
 				else
 				{
 					// Add as Authorization header
-					revocationRequest.authorizationHeaderValue = [OCAuthenticationMethod basicAuthorizationValueForUsername:clientID passphrase:clientSecret];
+					[revocationRequest setValue:[OCAuthenticationMethod basicAuthorizationValueForUsername:clientID passphrase:clientSecret] forHeaderField:OCHTTPHeaderFieldNameAuthorization];
 				}
 			}
 			
 			// Send revocation request
-			[[connection sendRequest:revocationRequest ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
+			[connection sendRequest:revocationRequest ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				if (error != nil)
 				{
 					OCLogError(@"Token revocation failed with error: %@", error);
@@ -375,7 +375,7 @@ OCAuthenticationMethodAutoRegister
 				{
 					completionHandler(nil, nil);
 				}
-			}] startWithRunLoopMode:NSDefaultRunLoopMode];
+			}];
 			
 			return;
 		}
