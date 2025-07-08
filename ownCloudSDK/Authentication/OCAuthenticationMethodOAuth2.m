@@ -321,7 +321,7 @@ OCAuthenticationMethodAutoRegister
 			// Create revocation request
 			OCHTTPRequest *revocationRequest = [OCHTTPRequest requestWithURL:revocationEndpointURL];
 			revocationRequest.method = OCHTTPMethodPOST;
-			revocationRequest.requiredSignals = connection.bookmark.certificateStore.requiredSignals;
+			revocationRequest.requiredSignals = connection.authSignals;
 			
 			// Set up request parameters
 			NSDictionary<NSString *, NSString *> *parameters = @{
