@@ -217,6 +217,13 @@ OCAuthenticationMethodAutoRegister
 	return ([self.class tokenEndpointURLForConnection:connection options:options]);
 }
 
+- (NSURL *)revocationEndpointURLForConnection:(OCConnection *)connection options:(OCAuthenticationMethodDetectionOptions)options
+{
+	// OAuth2 does not have a standard revocation endpoint in its basic configuration
+	// Subclasses can override this to provide revocation endpoint if available
+	return (nil);
+}
+
 - (NSString *)redirectURIForConnection:(OCConnection *)connection
 {
 	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2RedirectURI]);
@@ -289,6 +296,102 @@ OCAuthenticationMethodAutoRegister
 	}
 
 	return (nil);
+}
+
+- (void)deauthenticateConnection:(OCConnection *)connection withCompletionHandler:(OCAuthenticationMethodAuthenticationCompletionHandler)completionHandler
+{
+	// OAuth2 token revocation implementation (RFC 7009)
+	NSURL *revocationEndpointURL = [self revocationEndpointURLForConnection:connection options:nil];
+	
+	if (revocationEndpointURL != nil)
+	{
+		// Get current tokens
+		NSDictionary<NSString *, id> *authSecret = [self cachedAuthenticationSecretForConnection:connection];
+		NSString *accessToken = [authSecret valueForKeyPath:OA2AccessToken];
+		NSString *refreshToken = [authSecret valueForKeyPath:OA2RefreshToken];
+		
+		if (refreshToken != nil || accessToken != nil)
+		{
+			// Prefer revoking refresh token as it will also invalidate access tokens
+			NSString *tokenToRevoke = refreshToken ?: accessToken;
+			NSString *tokenTypeHint = refreshToken ? @"refresh_token" : @"access_token";
+			
+			OCLogDebug(@"Revoking OAuth2 token at %@", revocationEndpointURL);
+			
+			// Create revocation request
+			OCHTTPRequest *revocationRequest = [OCHTTPRequest requestWithURL:revocationEndpointURL];
+			revocationRequest.method = OCHTTPMethodPOST;
+			revocationRequest.requiredSignals = connection.bookmark.certificateStore.requiredSignals;
+			
+			// Set up request parameters
+			NSDictionary<NSString *, NSString *> *parameters = @{
+				@"token" : tokenToRevoke,
+				@"token_type_hint" : tokenTypeHint
+			};
+			
+			[revocationRequest addParameters:parameters];
+			
+			// Add client credentials if needed
+			NSString *clientID = self.clientID;
+			NSString *clientSecret = self.clientSecret;
+			
+			if (clientID != nil && clientSecret != nil)
+			{
+				if ([self sendClientIDAndSecretInPOSTBody])
+				{
+					// Add to POST body
+					[revocationRequest addParameters:@{
+						@"client_id" : clientID,
+						@"client_secret" : clientSecret
+					}];
+				}
+				else
+				{
+					// Add as Authorization header
+					revocationRequest.authorizationHeaderValue = [OCAuthenticationMethod basicAuthorizationValueForUsername:clientID passphrase:clientSecret];
+				}
+			}
+			
+			// Send revocation request
+			[[connection sendRequest:revocationRequest ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
+				if (error != nil)
+				{
+					OCLogError(@"Token revocation failed with error: %@", error);
+				}
+				else if (response.status.code == OCHTTPStatusCodeOK)
+				{
+					OCLogDebug(@"Token revocation successful");
+				}
+				else
+				{
+					OCLogWarning(@"Token revocation returned status %ld", (long)response.status.code);
+				}
+				
+				// Clear cached authentication data regardless of revocation result
+				[self flushCachedAuthenticationSecret];
+				
+				// Call completion handler
+				if (completionHandler != nil)
+				{
+					completionHandler(nil, nil);
+				}
+			}] startWithRunLoopMode:NSDefaultRunLoopMode];
+			
+			return;
+		}
+	}
+	
+	// No revocation endpoint or no tokens to revoke
+	OCLogDebug(@"OAuth2 deauthentication - no revocation endpoint available or no tokens to revoke");
+	
+	// Clear cached authentication data
+	[self flushCachedAuthenticationSecret];
+	
+	// Call completion handler to indicate deauthentication is complete
+	if (completionHandler != nil)
+	{
+		completionHandler(nil, nil);
+	}
 }
 
 #pragma mark - Authentication Method Detection
