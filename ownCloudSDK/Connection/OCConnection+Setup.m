@@ -642,6 +642,10 @@
 	if (completionHandler != nil)
 	{
 		NSMutableDictionary<OCAuthenticationMethodKey, id> *detectionOptions = [NSMutableDictionary new];
+        
+        if (self.isKiteworksServer) {
+            detectionOptions[OCAuthenticationMethodSkipWWWAuthenticateChecksKey] = @(YES);
+        }
 
 		if (webFingerAccountInfoURL != nil)
 		{
