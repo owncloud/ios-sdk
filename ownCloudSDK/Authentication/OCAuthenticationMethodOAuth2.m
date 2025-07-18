@@ -397,9 +397,9 @@ OCAuthenticationMethodAutoRegister
     
     if (connection.isKiteworksServer) {
         [OCClassSettings.sharedSettings registerDefaults:@{
-            //OCAuthenticationMethodOAuth2AuthorizationEndpoint : @"index.php/apps/oauth2/authorize",
-            //OCAuthenticationMethodOAuth2TokenEndpoint       : @"index.php/apps/oauth2/api/v1/token",
-            //OCAuthenticationMethodOAuth2RedirectURI       : @"oc://ios.owncloud.com",
+            OCAuthenticationMethodOAuth2AuthorizationEndpoint : @"index.php/apps/oauth2/authorize",
+            OCAuthenticationMethodOAuth2TokenEndpoint       : @"index.php/apps/oauth2/api/v1/token",
+            OCAuthenticationMethodOAuth2RedirectURI       : @"oc://ios.owncloud.com",
             OCAuthenticationMethodOAuth2ClientID           : @"d6744713-58c9-5a2c-aeb3-55cf6a6ad64f",
             OCAuthenticationMethodOAuth2ClientSecret       : ((NSString *)NSNull.null),
             OCAuthenticationMethodOAuth2PostClientIDAndSecret : @(YES)
