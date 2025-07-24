@@ -62,7 +62,7 @@
 
 - (nullable NSProgress *)retrievePermissionsListForUser:(OCUser *)user withCompletionHandler:(OCRetrieveUserPermissionsCompletionHandler)completionHandler
 {
-	if (!self.useDriveAPI) {
+	if (!self.useDriveAPI || self.isKiteworksServer) {
 		// Only available with Graph API
 		completionHandler(OCError(OCErrorFeatureNotImplemented), nil);
 		return (nil);

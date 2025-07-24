@@ -164,18 +164,18 @@
 - (NSString *)name
 {
 	OCDriveSpecialType specialType = self.specialType;
-
-	if (specialType == OCDriveTypeKiteworks)
+	
+	if ([specialType isEqual:OCDriveTypeKiteworks])
 	{
 		return (_name);
 	}
 	
-	if (specialType == OCDriveSpecialTypePersonal)
+	if ([specialType isEqual:OCDriveSpecialTypePersonal])
 	{
 		return (OCLocalizedString(@"Personal",nil));
 	}
-
-	if (specialType == OCDriveSpecialTypeShares)
+	
+	if ([specialType isEqual:OCDriveSpecialTypeShares])
 	{
 		return (OCLocalizedString(@"Shared with me",nil));
 	}

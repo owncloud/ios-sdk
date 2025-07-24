@@ -401,10 +401,10 @@ OCAuthenticationMethodAutoRegister
 			OCAuthenticationMethodOAuth2ClientSecret       : ((NSString *)NSNull.null),
 			OCAuthenticationMethodOAuth2PostClientIDAndSecret : @(YES)
 		} metadata:nil forClass:[self class]];
-	}
-	
-	if (self.clientSecret == nil) {
-		self.pkce = [OCPKCE new]; // Enable PKCE
+		
+		if (self.clientSecret == nil) {
+			self.pkce = [OCPKCE new]; // Enable PKCE
+		}
 	}
     
 	if ((options[OCAuthenticationMethodPresentingViewControllerKey] != nil) && (connection!=nil))
