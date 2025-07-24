@@ -1432,7 +1432,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 		};
 		
 		// Check status
-		if ((statusRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil || (statusRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDKiteworksStatus options:nil]]) != nil)
+		if ((statusRequest =  [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
 		{
 			[self sendRequest:statusRequest ephermalCompletionHandler:CompletionHandlerWithResultHandler(^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 				self.connectionInitializationPhaseCompleted = YES;
@@ -1698,7 +1698,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 {
 	OCHTTPRequest *statusRequest;
 	
-	if ((statusRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil || (statusRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDKiteworksStatus options:nil]]) != nil)
+	if ((statusRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
 	{
 		[self sendRequest:statusRequest ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
 			if ((error == nil) && (response.status.isSuccess))
