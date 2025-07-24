@@ -630,6 +630,7 @@ OCBookmarkUserInfoKey OCBookmarkUserInfoKeyBookmarkCreation = @"bookmark-creatio
 
 OCBookmarkCapability OCBookmarkCapabilityDrives = @"drives";
 OCBookmarkCapability OCBookmarkCapabilityFavorites = @"favorites";
+OCBookmarkCapability OCBookmarkCapabilityKiteworks = @"kiteworks";
 
 NSNotificationName OCBookmarkAuthenticationDataChangedNotification = @"OCBookmarkAuthenticationDataChanged";
 NSNotificationName OCBookmarkUpdatedNotification = @"OCBookmarkUpdatedNotification";

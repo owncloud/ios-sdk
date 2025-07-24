@@ -276,6 +276,22 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
+		OCConnectionEndpointIDStatus : @{
+			OCClassSettingsMetadataKeyType		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription	: @"Endpoint to retrieve basic status information and detect an ownCloud installation.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
+		OCConnectionEndpointIDKiteworksStatus : @{
+			OCClassSettingsMetadataKeyType		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription	: @"Endpoint to retrieve basic status information and detect an ownCloud installation.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
+		},
+
 		OCConnectionEndpointIDWebDAVSpaces : @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
 			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to as for WebDAV spaces.",
@@ -1414,7 +1430,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				}
 			};
 		};
-    
+		
 		// Check status
 		if ((statusRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil || (statusRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDKiteworksStatus options:nil]]) != nil)
 		{
@@ -1681,7 +1697,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 - (NSProgress *)requestServerStatusWithCompletionHandler:(void(^)(NSError *error, OCHTTPRequest *request, NSDictionary<NSString *,id> *statusInfo))completionHandler
 {
 	OCHTTPRequest *statusRequest;
-    
+	
 	if ((statusRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil || (statusRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDKiteworksStatus options:nil]]) != nil)
 	{
 		[self sendRequest:statusRequest ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {

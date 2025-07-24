@@ -395,20 +395,17 @@ OCAuthenticationMethodAutoRegister
 {
 	if (completionHandler==nil) { return; }
     
-    if (connection.isKiteworksServer) {
-        [OCClassSettings.sharedSettings registerDefaults:@{
-            OCAuthenticationMethodOAuth2AuthorizationEndpoint : @"index.php/apps/oauth2/authorize",
-            OCAuthenticationMethodOAuth2TokenEndpoint       : @"index.php/apps/oauth2/api/v1/token",
-            OCAuthenticationMethodOAuth2RedirectURI       : @"oc://ios.owncloud.com",
-            OCAuthenticationMethodOAuth2ClientID           : @"d6744713-58c9-5a2c-aeb3-55cf6a6ad64f",
-            OCAuthenticationMethodOAuth2ClientSecret       : ((NSString *)NSNull.null),
-            OCAuthenticationMethodOAuth2PostClientIDAndSecret : @(YES)
-        } metadata:nil forClass:[self class]];
-    }
-    
-    if (self.clientSecret == nil) {
-        self.pkce = [OCPKCE new]; // Enable PKCE
-    }
+	if (connection.isKiteworksServer) {
+		[OCClassSettings.sharedSettings registerDefaults:@{
+			OCAuthenticationMethodOAuth2ClientID           : @"d6744713-58c9-5a2c-aeb3-55cf6a6ad64f",
+			OCAuthenticationMethodOAuth2ClientSecret       : ((NSString *)NSNull.null),
+			OCAuthenticationMethodOAuth2PostClientIDAndSecret : @(YES)
+		} metadata:nil forClass:[self class]];
+	}
+	
+	if (self.clientSecret == nil) {
+		self.pkce = [OCPKCE new]; // Enable PKCE
+	}
     
 	if ((options[OCAuthenticationMethodPresentingViewControllerKey] != nil) && (connection!=nil))
 	{
@@ -487,22 +484,22 @@ OCAuthenticationMethodAutoRegister
 						OCLogDebug(@"Auth session concluded with authorization code: %@", OCLogPrivate(authorizationCode));
 
 						// Send Access Token Request
-						[self 	sendTokenRequestToConnection:connection
-						       	withParameters:@{
-								// OAuth2
-								@"grant_type"    : @"authorization_code",
-								@"code"		 : authorizationCode,
-								@"redirect_uri"  : [self redirectURIForConnection:connection],
-
-								// OAuth2 PKCE
-								@"code_verifier" : (self.pkce.codeVerifier != nil) ? self.pkce.codeVerifier : ((NSString *)NSNull.null)
-							}
-							options:options
-							requestType:OCAuthenticationOAuth2TokenRequestTypeAuthorizationCode
-							completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData){
-								OCLogDebug(@"Bookmark generation concludes with error=%@", error);
-								completionHandler(error, self.class.identifier, authenticationData);
-							}
+						[self sendTokenRequestToConnection:connection
+											withParameters:@{
+							// OAuth2
+							@"grant_type"    : @"authorization_code",
+							@"code"		 : authorizationCode,
+							@"redirect_uri"  : [self redirectURIForConnection:connection],
+							
+							// OAuth2 PKCE
+							@"code_verifier" : (self.pkce.codeVerifier != nil) ? self.pkce.codeVerifier : ((NSString *)NSNull.null)
+						}
+												   options:options
+											   requestType:OCAuthenticationOAuth2TokenRequestTypeAuthorizationCode
+										 completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData){
+							OCLogDebug(@"Bookmark generation concludes with error=%@", error);
+							completionHandler(error, self.class.identifier, authenticationData);
+						}
 						];
 					}
 					else
@@ -810,7 +807,7 @@ OCAuthenticationMethodAutoRegister
 		{
 			OCLogDebug(@"Sending token refresh request for connection (expiry=%@)..", authSecret[OA2ExpirationDate]);
 
-			[self 	sendTokenRequestToConnection:connection
+			[self sendTokenRequestToConnection:connection
 				withParameters:[self tokenRefreshParametersForRefreshToken:refreshToken connection:connection]
 				options:nil
 				requestType:OCAuthenticationOAuth2TokenRequestTypeRefreshToken

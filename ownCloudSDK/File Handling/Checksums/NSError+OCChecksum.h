@@ -22,8 +22,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSInteger, OCChecksumErrorCode)
 {
-    OCChecksumErrorCodeEVPMDCTXFailed = 1,
-    OCChecksumErrorCodeEVPDIGESTINITEX
+	OCChecksumErrorCodeEVPMDCTXFailed = 1,
+	OCChecksumErrorCodeEVPDIGESTINITEX
 };
 
 extern NSErrorDomain OCChecksumErrorDomain;

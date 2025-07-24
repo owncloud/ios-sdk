@@ -159,7 +159,7 @@ NS_ASSUME_NONNULL_BEGIN
 	BOOL _isValidatingConnection;
 	OCRateLimiter *_connectionValidationRateLimiter;
 	NSCountedSet<NSString *> *_connectionValidationTriggeringURLs;
-    NSString *_product;
+	NSString *_product;
 	NSMutableArray <OCConnectionAuthenticationAvailabilityHandler> *_pendingAuthenticationAvailabilityHandlers;
 
 	NSMutableDictionary<OCActionTrackingID, NSProgress *> *_progressByActionTrackingID;
@@ -197,8 +197,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nullable,weak) id <OCConnectionDelegate> delegate;
 
 @property(nullable,weak) id <OCConnectionHostSimulator> hostSimulator;
-
-@property(nullable,strong) NSString *product;
 
 #pragma mark - Init
 - (instancetype)init NS_UNAVAILABLE; //!< Always returns nil. Please use the designated initializer instead.
