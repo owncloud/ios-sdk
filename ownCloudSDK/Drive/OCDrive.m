@@ -133,6 +133,12 @@
 #pragma mark - Special types
 - (OCDriveSpecialType)specialType
 {
+	// Kiteworks folder
+	if ([self.type isEqual:OCDriveTypeKiteworks])
+	{
+		return (OCDriveTypeKiteworks);
+	}
+	
 	// Personal space, identified by type
 	if ([self.type isEqual:OCDriveTypePersonal])
 	{
@@ -159,10 +165,14 @@
 {
 	OCDriveSpecialType specialType = self.specialType;
 
-    // Uncommented Personal drive name until new capability spaces > has_multiple_personal_spaces is available, to use name for Kiteworks build
+	if (specialType == OCDriveTypeKiteworks)
+	{
+		return (_name);
+	}
+	
 	if (specialType == OCDriveSpecialTypePersonal)
 	{
-        //return (OCLocalizedString(@"Personal",nil));
+		return (OCLocalizedString(@"Personal",nil));
 	}
 
 	if (specialType == OCDriveSpecialTypeShares)
@@ -298,9 +308,10 @@
 
 OCDriveType OCDriveTypePersonal = @"personal";
 OCDriveType OCDriveTypeVirtual = @"virtual";
-OCDriveType OCDriveTypeProject = @"project"; // @"project";
+OCDriveType OCDriveTypeProject = @"project";
 OCDriveType OCDriveTypeMountpoint = @"mountpoint";
 OCDriveType OCDriveTypeShare = @"share";
+OCDriveType OCDriveTypeKiteworks = @"kiteworks";
 
 OCDriveSpecialType OCDriveSpecialTypePersonal = @"personal";
 OCDriveSpecialType OCDriveSpecialTypeShares = @"shares";

@@ -179,6 +179,10 @@
 			if ((gaDrive = OCTypedCast(response, GADrive)) != nil)
 			{
 				ocDrive = [OCDrive driveFromGADrive:gaDrive];
+				
+				if (self.isKiteworksServer && [ocDrive.type isEqualToString:OCDriveTypePersonal]) {
+					ocDrive.type = OCDriveTypeKiteworks;
+				}
 			}
 		}
 

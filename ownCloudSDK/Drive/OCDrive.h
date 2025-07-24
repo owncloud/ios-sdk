@@ -93,6 +93,7 @@ extern OCDriveType OCDriveTypeVirtual;	//!< Virtual space containing all items s
 extern OCDriveType OCDriveTypeProject;	//!< Regular spaces
 extern OCDriveType OCDriveTypeMountpoint; //!< Accepted shared items
 extern OCDriveType OCDriveTypeShare;
+extern OCDriveType OCDriveTypeKiteworks;	//!< A users Kiteworks space
 
 extern OCDriveSpecialType OCDriveSpecialTypePersonal;	//!< The user's personal space
 extern OCDriveSpecialType OCDriveSpecialTypeShares;	//!< The Shares Jail space

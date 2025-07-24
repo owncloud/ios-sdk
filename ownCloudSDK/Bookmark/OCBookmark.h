@@ -103,6 +103,7 @@ extern OCBookmarkUserInfoKey OCBookmarkUserInfoKeyBookmarkCreation; //!<  .userI
 
 extern OCBookmarkCapability OCBookmarkCapabilityDrives; //!< This bookmark is drive-based.
 extern OCBookmarkCapability OCBookmarkCapabilityFavorites; //!< This bookmark supports favorites.
+extern OCBookmarkCapability OCBookmarkCapabilityKiteworks; //!< This bookmark is a Kiteworks server.
 
 extern NSNotificationName OCBookmarkAuthenticationDataChangedNotification; //!< Name of notification that is sent whenever a bookmark's authenticationData is changed. The object of the notification is the bookmark. Sent only if .authenticationDataStorage is OCBookmarkAuthenticationDataStorageKeychain.
 
