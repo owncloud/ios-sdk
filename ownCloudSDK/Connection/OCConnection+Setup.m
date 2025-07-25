@@ -273,12 +273,13 @@
 				// (this way, we make sure that errors for the kwdav status endpoint won't end up as error messages
 				// for OC10/ocis servers and lead to confusion there)
 				error = kwError;
-				jsonDict = kwJSONDict;
+				request = kwRequest;
 				redirectionURL = kwRedirectionURL;
+				jsonDict = kwJSONDict;
 			}
 		}
 
-		if ((error == nil) && (jsonDict != nil))
+		if (error == nil)
 		{
 			if (((jsonDict!=nil) && (jsonDict[@"version"] == nil)) || (jsonDict==nil))
 			{
