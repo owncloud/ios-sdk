@@ -17,13 +17,23 @@
  */
 
 #import "OCChecksumAlgorithmSHA3-256.h"
-#import "NSError+OCChecksum.h"
 #import "NSData+OCHash.h"
 #import "sha3.h"
 
+#import "OCExtensionManager.h"
+#import "OCExtension+License.h"
+
 @implementation OCChecksumAlgorithmSHA3
 
-OCChecksumAlgorithmAutoRegister
++ (void)load
+{
+	// Register SHA3-256 library license
+	// (via https://github.com/brainhub/SHA3IUF/tree/master)
+	[[OCExtensionManager sharedExtensionManager] addExtension:[OCExtension licenseExtensionWithIdentifier:@"license.SHA3-256" bundleOfClass:OCChecksumAlgorithmSHA3.class title:@"SHA3-256" resourceName:@"SHA3" fileExtension:@"LICENSE"]];
+
+	// Register algorithm
+	[OCChecksumAlgorithm registerAlgorithmClass:self];
+}
 
 + (OCChecksumAlgorithmIdentifier)identifier
 {

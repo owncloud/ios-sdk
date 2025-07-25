@@ -261,14 +261,6 @@ OCAuthenticationMethodAutoRegister
 	return (nil);
 }
 
-- (NSString *)clientSecretForConnection:(OCConnection *)connection {
-	if (connection.isKiteworksServer)
-	{
-		return nil;
-	}
-	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientSecret]);
-}
-
 - (NSString *)clientIDForConnection:(OCConnection *)connection
 {
 	if (connection.isKiteworksServer)
@@ -276,6 +268,15 @@ OCAuthenticationMethodAutoRegister
 		return @"d6744713-58c9-5a2c-aeb3-55cf6a6ad64f";
 	}
 	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientID]);
+}
+
+- (NSString *)clientSecretForConnection:(OCConnection *)connection
+{
+	if (connection.isKiteworksServer)
+	{
+		return nil;
+	}
+	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientSecret]);
 }
 
 #pragma mark - Authentication / Deauthentication ("Login / Logout")
@@ -402,10 +403,9 @@ OCAuthenticationMethodAutoRegister
 {
 	if (completionHandler==nil) { return; }
     
-	if (connection.isKiteworksServer) {
-		if ([self clientSecretForConnection:connection] == nil) {
-			self.pkce = [OCPKCE new]; // Enable PKCE
-		}
+	if (connection.isKiteworksServer)
+	{
+		self.pkce = [OCPKCE new]; // Enable PKCE
 	}
     
 	if ((options[OCAuthenticationMethodPresentingViewControllerKey] != nil) && (connection!=nil))
@@ -417,7 +417,7 @@ OCAuthenticationMethodAutoRegister
 		NSDictionary<NSString *,NSString *> *parameters = @{
 			// OAuth2
 			@"response_type"  	 : @"code",
-			@"client_id" 	  	 : [self clientSecretForConnection:connection],
+			@"client_id" 	  	 : [self clientIDForConnection:connection],
 			@"redirect_uri"   	 : [self redirectURIForConnection:connection],
 
 			@"state"		 : (self.state != nil) ? self.state : ((NSString *)NSNull.null),
@@ -485,22 +485,22 @@ OCAuthenticationMethodAutoRegister
 						OCLogDebug(@"Auth session concluded with authorization code: %@", OCLogPrivate(authorizationCode));
 
 						// Send Access Token Request
-						[self sendTokenRequestToConnection:connection
-											withParameters:@{
-							// OAuth2
-							@"grant_type"    : @"authorization_code",
-							@"code"		 : authorizationCode,
-							@"redirect_uri"  : [self redirectURIForConnection:connection],
-							
-							// OAuth2 PKCE
-							@"code_verifier" : (self.pkce.codeVerifier != nil) ? self.pkce.codeVerifier : ((NSString *)NSNull.null)
-						}
-												   options:options
-											   requestType:OCAuthenticationOAuth2TokenRequestTypeAuthorizationCode
-										 completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData){
-							OCLogDebug(@"Bookmark generation concludes with error=%@", error);
-							completionHandler(error, self.class.identifier, authenticationData);
-						}
+						[self 	sendTokenRequestToConnection:connection
+						       	withParameters:@{
+								// OAuth2
+								@"grant_type"    : @"authorization_code",
+								@"code"		 : authorizationCode,
+								@"redirect_uri"  : [self redirectURIForConnection:connection],
+
+								// OAuth2 PKCE
+								@"code_verifier" : (self.pkce.codeVerifier != nil) ? self.pkce.codeVerifier : ((NSString *)NSNull.null)
+							}
+							options:options
+							requestType:OCAuthenticationOAuth2TokenRequestTypeAuthorizationCode
+							completionHandler:^(NSError *error, NSDictionary *jsonResponseDict, NSData *authenticationData){
+								OCLogDebug(@"Bookmark generation concludes with error=%@", error);
+								completionHandler(error, self.class.identifier, authenticationData);
+							}
 						];
 					}
 					else
@@ -808,7 +808,7 @@ OCAuthenticationMethodAutoRegister
 		{
 			OCLogDebug(@"Sending token refresh request for connection (expiry=%@)..", authSecret[OA2ExpirationDate]);
 
-			[self sendTokenRequestToConnection:connection
+			[self 	sendTokenRequestToConnection:connection
 				withParameters:[self tokenRefreshParametersForRefreshToken:refreshToken connection:connection]
 				options:nil
 				requestType:OCAuthenticationOAuth2TokenRequestTypeRefreshToken
@@ -1178,6 +1178,7 @@ OCAuthenticationMethodAutoRegister
 	{
 		return (YES);
 	}
+
 	NSNumber *forcePostClientIDAndSecret = [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2PostClientIDAndSecret];
 	return ((forcePostClientIDAndSecret != nil) && forcePostClientIDAndSecret.boolValue);
 }

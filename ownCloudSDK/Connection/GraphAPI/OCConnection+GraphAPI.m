@@ -186,7 +186,7 @@
 
 					if ((ocDrive = [OCDrive driveFromGADrive:drive]) != nil)
 					{
-						ocDrive.isKiteworksServer = self.isKiteworksServer;
+						ocDrive.isOnKiteworksServer = self.isKiteworksServer;
 						[ocDrives addObject:ocDrive];
 					}
 				}

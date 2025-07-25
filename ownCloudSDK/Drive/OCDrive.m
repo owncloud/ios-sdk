@@ -159,7 +159,7 @@
 {
 	OCDriveSpecialType specialType = self.specialType;
 	
-	if (self.isKiteworksServer)
+	if (self.isOnKiteworksServer)
 	{
 		return (_name);
 	}

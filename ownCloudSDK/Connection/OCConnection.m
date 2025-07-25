@@ -276,22 +276,6 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
-		OCConnectionEndpointIDStatus : @{
-			OCClassSettingsMetadataKeyType		: OCClassSettingsMetadataTypeString,
-			OCClassSettingsMetadataKeyDescription	: @"Endpoint to retrieve basic status information and detect an ownCloud installation.",
-			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
-			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
-			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
-		},
-
-		OCConnectionEndpointIDKiteworksStatus : @{
-			OCClassSettingsMetadataKeyType		: OCClassSettingsMetadataTypeString,
-			OCClassSettingsMetadataKeyDescription	: @"Endpoint to retrieve basic status information and detect an ownCloud installation.",
-			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
-			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
-			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
-		},
-
 		OCConnectionEndpointIDWebDAVSpaces : @{
 			OCClassSettingsMetadataKeyType 		: OCClassSettingsMetadataTypeString,
 			OCClassSettingsMetadataKeyDescription 	: @"Endpoint to as for WebDAV spaces.",
@@ -307,13 +291,13 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
 			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
-        
+
 		OCConnectionEndpointIDKiteworksStatus : @{
-			OCClassSettingsMetadataKeyType         : OCClassSettingsMetadataTypeString,
-			OCClassSettingsMetadataKeyDescription     : @"Endpoint to retrieve basic status information and detect an ownCloud installation.",
-			OCClassSettingsMetadataKeyStatus    : OCClassSettingsKeyStatusAdvanced,
-			OCClassSettingsMetadataKeyCategory    : @"Endpoints",
-			OCClassSettingsMetadataKeyFlags        : @(OCClassSettingsFlagDenyUserPreferences)
+			OCClassSettingsMetadataKeyType		: OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription	: @"Endpoint to retrieve basic status information and detect a Kiteworks installation.",
+			OCClassSettingsMetadataKeyStatus	: OCClassSettingsKeyStatusAdvanced,
+			OCClassSettingsMetadataKeyCategory	: @"Endpoints",
+			OCClassSettingsMetadataKeyFlags		: @(OCClassSettingsFlagDenyUserPreferences)
 		},
 
 		OCConnectionEndpointIDShares : @{
@@ -1430,7 +1414,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 				}
 			};
 		};
-		
+
 		// Check status
 		if ((statusRequest =  [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
 		{

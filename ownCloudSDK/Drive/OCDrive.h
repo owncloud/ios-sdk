@@ -87,7 +87,7 @@ typedef NS_ENUM(NSInteger, OCDriveDetachedState)
 - (BOOL)isSubstantiallyDifferentFrom:(OCDrive *)drive;
 
 #pragma mark - API Switches
-@property(assign,nonatomic) BOOL isKiteworksServer; //!< Returns YES if the server is a Kiteworks server.
+@property(assign,nonatomic) BOOL isOnKiteworksServer; //!< Returns YES if the drive is on a Kiteworks server.
 
 @end
 

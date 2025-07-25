@@ -70,8 +70,6 @@
 {
 	NSString *statusEndpointPath = [self classSettingForOCClassSettingsKey:OCConnectionEndpointIDStatus];
 	NSString *statusEndpointKiteworksPath = [self classSettingForOCClassSettingsKey:OCConnectionEndpointIDKiteworksStatus];
-	
-	
 	NSMutableArray <OCIssue *> *issues = [NSMutableArray new];
 	NSMutableSet <OCCertificate *> *certificatesUsedInIssues = [NSMutableSet new];
 	__block NSUInteger requestCount=0, maxRequestCount = 30;
@@ -254,8 +252,33 @@
 		OCHTTPRequest *request = nil;
 		NSURL *statusURL = [url URLByAppendingPathComponent:statusEndpointPath];
 		NSURL *statusKiteworksURL = [url URLByAppendingPathComponent:statusEndpointKiteworksPath];
-		
-		if (((error = MakeJSONRequest(statusURL, NO, &request, &redirectionURL, &jsonDict)) == nil && (jsonDict!=nil)) || (error = MakeJSONRequest(statusKiteworksURL, NO, &request, &redirectionURL, &jsonDict)) == nil)
+
+		// Check for ownCloud server first
+		error = MakeJSONRequest(statusURL, NO, &request, &redirectionURL, &jsonDict);
+
+		if ((error != nil) || (jsonDict == nil) || // In case of HTTP or JSON error ..
+		   ((error == nil) && (jsonDict != nil) && (jsonDict[@"productname"] == nil))) // .. or in case the format isn't what's expected ..
+		{
+			// .. send a request to the Kiteworks kwdav status endpoint as well ..
+			OCHTTPRequest *kwRequest = nil;
+			NSURL *kwRedirectionURL = nil;
+			NSDictionary *kwJSONDict = nil;
+			NSError *kwError = nil;
+
+			kwError = MakeJSONRequest(statusKiteworksURL, NO, &kwRequest, &kwRedirectionURL, &kwJSONDict);
+
+			if ((kwError == nil) && (kwJSONDict != nil) && (jsonDict[@"productname"] != nil))
+			{
+				// .. and ONLY if the output looks right, use that request's results instead.
+				// (this way, we make sure that errors for the kwdav status endpoint won't end up as error messages
+				// for OC10/ocis servers and lead to confusion there)
+				error = kwError;
+				jsonDict = kwJSONDict;
+				redirectionURL = kwRedirectionURL;
+			}
+		}
+
+		if ((error == nil) && (jsonDict != nil))
 		{
 			if (((jsonDict!=nil) && (jsonDict[@"version"] == nil)) || (jsonDict==nil))
 			{
@@ -269,7 +292,9 @@
 				if ((jsonDict!=nil) && ((serverVersion = jsonDict[@"version"]) != nil))
 				{
 					product = jsonDict[@"productname"];
-					if ([product isEqual:@"kiteworks"]) {
+
+					if ([product isEqual:@"kiteworks"])
+					{
 						[self.bookmark addCapability:OCBookmarkCapabilityKiteworks];
 					}
 					
@@ -645,10 +670,11 @@
 	{
 		NSMutableDictionary<OCAuthenticationMethodKey, id> *detectionOptions = [NSMutableDictionary new];
 		
-		if (self.isKiteworksServer) {
+		if (self.isKiteworksServer)
+		{
 			detectionOptions[OCAuthenticationMethodSkipWWWAuthenticateChecksKey] = @(YES);
 		}
-		
+
 		if (webFingerAccountInfoURL != nil)
 		{
 			detectionOptions[OCAuthenticationMethodWebFingerAccountLookupURLKey] = webFingerAccountInfoURL;
