@@ -140,8 +140,8 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 {
 	NSMutableDictionary<NSString *, NSString *> *refreshParameters = [[super tokenRefreshParametersForRefreshToken:refreshToken connection:connection] mutableCopy];
 
-	refreshParameters[@"client_id"] = self.clientID;
-	refreshParameters[@"client_secret"] = self.clientSecret;
+	refreshParameters[@"client_id"] = [self clientIDForConnection:connection];
+	refreshParameters[@"client_secret"] = [self clientSecretForConnection:connection];
 	refreshParameters[@"scope"] = self.scope;
 
 	return (refreshParameters);
@@ -161,8 +161,8 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 			clientSecret = authSecret[OIDCKeyPathClientSecret];
 		}
 
-		if (clientID == nil) { clientID = self.clientID; }
-		if (clientSecret == nil) { clientSecret = self.clientSecret; }
+		if (clientID == nil) { clientID = [self clientIDForConnection:connection]; }
+		if (clientSecret == nil) { clientSecret = [self clientSecretForConnection:connection]; }
 
 		OCTLogDebug(@[@"ClientRegistration"], @"Sending token refrsh request with clientID=%@, clientSecret=%@", OCLogPrivate(clientID), OCLogPrivate(clientSecret));
 
@@ -273,14 +273,14 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 	OCHTTPRequest *openidClientRegistrationRequest;
 
 	// Check if we have a valid registration
-	if ((self.clientID != nil) && (self.clientSecret != nil) && // clientID and clientSecret exist
+	if (([self clientIDForConnection:connection] != nil) && ([self clientSecretForConnection:connection] != nil) && // clientID and clientSecret exist
 	    [self.clientRegistrationEndpointURL isEqual:registrationEndpointURL] && // the registration endpoint hasn't changed
 	    ( (self.clientRegistrationExpirationDate==nil) || // either: a) the combination does not expire
 	      ((self.clientRegistrationExpirationDate != nil) && (self.clientRegistrationExpirationDate.timeIntervalSinceNow > 60)) // or: b) it expires, but the expiry date has not yet been reached (with a safety margin of 60 seconds)
 	    )
 	   )
 	{
-		OCTLogDebug(@[@"ClientRegistration"], @"Using cached client ID/secret from previous registration (expiring %@): %@/%@", self.clientRegistrationExpirationDate, OCLogPrivate(self.clientID), OCLogPrivate(self.clientSecret));
+		OCTLogDebug(@[@"ClientRegistration"], @"Using cached client ID/secret from previous registration (expiring %@): %@/%@", self.clientRegistrationExpirationDate, OCLogPrivate([self clientIDForConnection:connection]), OCLogPrivate([self clientSecretForConnection:connection]));
 		completionHandler(nil);
 		return;
 	}
@@ -534,24 +534,24 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 
 }
 
-- (NSString *)clientID
+- (NSString *)clientIDForConnection:(OCConnection *)connection
 {
 	if (self.hasClientRegistration)
 	{
 		return (_clientID);
 	}
 
-	return ([super clientID]);
+	return ([super clientIDForConnection:connection]);
 }
 
-- (NSString *)clientSecret
+- (NSString *)clientSecretForConnection:(OCConnection *)connection
 {
 	if (self.hasClientRegistration)
 	{
 		return (_clientSecret);
 	}
 
-	return ([super clientSecret]);
+	return ([super clientSecretForConnection:connection]);
 }
 
 - (NSDictionary<NSString *, id> *)clientRegistrationResponse
@@ -720,7 +720,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 	}];
 }
 
-- (BOOL)sendClientIDAndSecretInPOSTBody
+- (BOOL)sendClientIDAndSecretInPOSTBodyForConnection:(OCConnection *)connection
 {
 	if (_openIDConfig != nil)
 	{
@@ -742,7 +742,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 		}
 	}
 
-	return ([super sendClientIDAndSecretInPOSTBody]);
+	return ([super sendClientIDAndSecretInPOSTBodyForConnection:connection]);
 }
 
 #pragma mark - Generate bookmark authentication data
