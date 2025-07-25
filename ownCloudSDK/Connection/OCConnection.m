@@ -1681,7 +1681,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 - (NSProgress *)requestServerStatusWithCompletionHandler:(void(^)(NSError *error, OCHTTPRequest *request, NSDictionary<NSString *,id> *statusInfo))completionHandler
 {
 	OCHTTPRequest *statusRequest;
-	
+
 	if ((statusRequest = [OCHTTPRequest requestWithURL:[self URLForEndpoint:OCConnectionEndpointIDStatus options:nil]]) != nil)
 	{
 		[self sendRequest:statusRequest ephermalCompletionHandler:^(OCHTTPRequest *request, OCHTTPResponse *response, NSError *error) {
