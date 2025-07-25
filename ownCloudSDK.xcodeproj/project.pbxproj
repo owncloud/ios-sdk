@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3961F1122DC26828002FC44C /* NSError+OCChecksum.h in Headers */ = {isa = PBXBuildFile; fileRef = 3961F1112DC26825002FC44C /* NSError+OCChecksum.h */; };
-		3961F1142DC26845002FC44C /* NSError+OCChecksum.m in Sources */ = {isa = PBXBuildFile; fileRef = 3961F1132DC26840002FC44C /* NSError+OCChecksum.m */; };
 		396866412DC103D90085760C /* OCChecksumAlgorithmSHA3-256.m in Sources */ = {isa = PBXBuildFile; fileRef = 396866402DC103D90085760C /* OCChecksumAlgorithmSHA3-256.m */; };
 		396866422DC103D90085760C /* OCChecksumAlgorithmSHA3-256.h in Headers */ = {isa = PBXBuildFile; fileRef = 3968663F2DC103D90085760C /* OCChecksumAlgorithmSHA3-256.h */; };
 		4C7295E8228DAD6200FA4E68 /* OCLogFileRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */; };
@@ -1006,7 +1004,6 @@
 		DCFFF57E20D3A51C0096D2D3 /* OCSyncContext.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFFF57C20D3A51C0096D2D3 /* OCSyncContext.h */; };
 		DCFFF57F20D3A51C0096D2D3 /* OCSyncContext.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFFF57D20D3A51C0096D2D3 /* OCSyncContext.m */; };
 		FFC6BD5A2E3384C800FF5E84 /* sha3.c in Sources */ = {isa = PBXBuildFile; fileRef = FFC6BD542E3384C800FF5E84 /* sha3.c */; };
-		FFC6BD5B2E3384C800FF5E84 /* sha3sum.c in Sources */ = {isa = PBXBuildFile; fileRef = FFC6BD552E3384C800FF5E84 /* sha3sum.c */; };
 		FFC6BD5C2E3384C800FF5E84 /* sha3.h in Headers */ = {isa = PBXBuildFile; fileRef = FFC6BD532E3384C800FF5E84 /* sha3.h */; };
 /* End PBXBuildFile section */
 
@@ -1109,8 +1106,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		3961F1112DC26825002FC44C /* NSError+OCChecksum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSError+OCChecksum.h"; sourceTree = "<group>"; };
-		3961F1132DC26840002FC44C /* NSError+OCChecksum.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSError+OCChecksum.m"; sourceTree = "<group>"; };
 		3968663F2DC103D90085760C /* OCChecksumAlgorithmSHA3-256.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCChecksumAlgorithmSHA3-256.h"; sourceTree = "<group>"; };
 		396866402DC103D90085760C /* OCChecksumAlgorithmSHA3-256.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCChecksumAlgorithmSHA3-256.m"; sourceTree = "<group>"; };
 		4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCLogFileRecord.m; sourceTree = "<group>"; };
@@ -2026,6 +2021,7 @@
 		DCE741D729B7DD5000BFF393 /* OCServerInstance.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCServerInstance.m; sourceTree = "<group>"; };
 		DCE741DA29B7EA7000BFF393 /* OCBookmark+ServerInstance.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCBookmark+ServerInstance.h"; sourceTree = "<group>"; };
 		DCE741DB29B7EA7000BFF393 /* OCBookmark+ServerInstance.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCBookmark+ServerInstance.m"; sourceTree = "<group>"; };
+		DCE744F92E33D40F006847B9 /* SHA3.LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = SHA3.LICENSE; sourceTree = "<group>"; };
 		DCE784F722325D4F00733F01 /* OCConnection+RecipientsLegacy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+RecipientsLegacy.m"; sourceTree = "<group>"; };
 		DCE784FA2232748100733F01 /* OCHTTPResponse+DAVError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCHTTPResponse+DAVError.h"; sourceTree = "<group>"; };
 		DCE784FB2232748100733F01 /* OCHTTPResponse+DAVError.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCHTTPResponse+DAVError.m"; sourceTree = "<group>"; };
@@ -2126,7 +2122,6 @@
 		DCFFF57D20D3A51C0096D2D3 /* OCSyncContext.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncContext.m; sourceTree = "<group>"; };
 		FFC6BD532E3384C800FF5E84 /* sha3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sha3.h; sourceTree = "<group>"; };
 		FFC6BD542E3384C800FF5E84 /* sha3.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sha3.c; sourceTree = "<group>"; };
-		FFC6BD552E3384C800FF5E84 /* sha3sum.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sha3sum.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2360,7 +2355,6 @@
 		DC139CC220DBB7780090175A /* Checksums */ = {
 			isa = PBXGroup;
 			children = (
-				FFC6BD572E3384C800FF5E84 /* SHA3 */,
 				DC139CC720DBB8440090175A /* OCChecksum.m */,
 				DC139CC620DBB8440090175A /* OCChecksum.h */,
 				DC139CCB20DBBA8D0090175A /* OCChecksumAlgorithm.m */,
@@ -2369,8 +2363,7 @@
 				DC139CCE20DBC1690090175A /* OCChecksumAlgorithmSHA1.h */,
 				396866402DC103D90085760C /* OCChecksumAlgorithmSHA3-256.m */,
 				3968663F2DC103D90085760C /* OCChecksumAlgorithmSHA3-256.h */,
-				3961F1132DC26840002FC44C /* NSError+OCChecksum.m */,
-				3961F1112DC26825002FC44C /* NSError+OCChecksum.h */,
+				FFC6BD572E3384C800FF5E84 /* SHA3 */,
 			);
 			path = Checksums;
 			sourceTree = "<group>";
@@ -4654,9 +4647,9 @@
 		FFC6BD572E3384C800FF5E84 /* SHA3 */ = {
 			isa = PBXGroup;
 			children = (
-				FFC6BD532E3384C800FF5E84 /* sha3.h */,
+				DCE744F92E33D40F006847B9 /* SHA3.LICENSE */,
 				FFC6BD542E3384C800FF5E84 /* sha3.c */,
-				FFC6BD552E3384C800FF5E84 /* sha3sum.c */,
+				FFC6BD532E3384C800FF5E84 /* sha3.h */,
 			);
 			path = SHA3;
 			sourceTree = "<group>";
@@ -4817,7 +4810,6 @@
 				DCC832CE242BB05A00153F8C /* OCCore+MessageResponseHandler.h in Headers */,
 				DCFC9EDC28003F0D005D9144 /* GARemoteItem.h in Headers */,
 				DCC26FB12B718CA200904000 /* OCPasswordPolicyRule.h in Headers */,
-				3961F1122DC26828002FC44C /* NSError+OCChecksum.h in Headers */,
 				DCC8FA0F2029C6A400EB6701 /* OCQueryChangeSet.h in Headers */,
 				DC701484220B090B009D4FD9 /* OCHTTPTypes.h in Headers */,
 				DC708CCE2141306100FE43CA /* OCSyncActionCopyMove.h in Headers */,
@@ -5676,7 +5668,6 @@
 				DC34227B217CAA0B00705508 /* OCIPNotificationCenter.m in Sources */,
 				DCC8FA0C2029C0BE00EB6701 /* OCQueryFilter.m in Sources */,
 				DCA35D6224CF704100DBE2B0 /* OCSyncAction+Diagnostic.m in Sources */,
-				3961F1142DC26845002FC44C /* NSError+OCChecksum.m in Sources */,
 				DC49B5612837DCE700DAF13B /* OCItem+OCVFSItem.m in Sources */,
 				DCDBEE2C2048A6A800189B9A /* OCConnection+Setup.m in Sources */,
 				DC9B4FD22941FF540037F8F8 /* OCCertificateStore.m in Sources */,
@@ -5888,7 +5879,6 @@
 				DCFE682528D865BD00091D2A /* NSDictionary+OCFormEncoding.m in Sources */,
 				DCAEB06E21FA63D80067E147 /* OCSyncRecordActivity.m in Sources */,
 				FFC6BD5A2E3384C800FF5E84 /* sha3.c in Sources */,
-				FFC6BD5B2E3384C800FF5E84 /* sha3sum.c in Sources */,
 				DCE784FD2232748100733F01 /* OCHTTPResponse+DAVError.m in Sources */,
 				DC47E4DC27A5820D0020E8EF /* GAODataErrorMain.m in Sources */,
 				DC179CD620948DF30018DF7F /* NSProgress+OCExtensions.m in Sources */,

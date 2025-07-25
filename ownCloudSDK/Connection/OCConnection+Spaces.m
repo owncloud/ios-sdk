@@ -179,7 +179,7 @@
 			if ((gaDrive = OCTypedCast(response, GADrive)) != nil)
 			{
 				ocDrive = [OCDrive driveFromGADrive:gaDrive];
-				ocDrive.isKiteworksServer = self.isKiteworksServer;
+				ocDrive.isOnKiteworksServer = self.isKiteworksServer;
 			}
 		}
 
