@@ -261,14 +261,21 @@ OCAuthenticationMethodAutoRegister
 	return (nil);
 }
 
-- (NSString *)clientID
-{
-	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientID]);
+- (NSString *)clientSecretForConnection:(OCConnection *)connection {
+	if (connection.isKiteworksServer)
+	{
+		return nil;
+	}
+	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientSecret]);
 }
 
-- (NSString *)clientSecret
+- (NSString *)clientIDForConnection:(OCConnection *)connection
 {
-	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientSecret]);
+	if (connection.isKiteworksServer)
+	{
+		return @"d6744713-58c9-5a2c-aeb3-55cf6a6ad64f";
+	}
+	return ([self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2ClientID]);
 }
 
 #pragma mark - Authentication / Deauthentication ("Login / Logout")
@@ -396,13 +403,7 @@ OCAuthenticationMethodAutoRegister
 	if (completionHandler==nil) { return; }
     
 	if (connection.isKiteworksServer) {
-		[OCClassSettings.sharedSettings registerDefaults:@{
-			OCAuthenticationMethodOAuth2ClientID           : @"d6744713-58c9-5a2c-aeb3-55cf6a6ad64f",
-			OCAuthenticationMethodOAuth2ClientSecret       : ((NSString *)NSNull.null),
-			OCAuthenticationMethodOAuth2PostClientIDAndSecret : @(YES)
-		} metadata:nil forClass:[self class]];
-		
-		if (self.clientSecret == nil) {
+		if ([self clientSecretForConnection:connection] == nil) {
 			self.pkce = [OCPKCE new]; // Enable PKCE
 		}
 	}
@@ -416,7 +417,7 @@ OCAuthenticationMethodAutoRegister
 		NSDictionary<NSString *,NSString *> *parameters = @{
 			// OAuth2
 			@"response_type"  	 : @"code",
-			@"client_id" 	  	 : [self clientID],
+			@"client_id" 	  	 : [self clientSecretForConnection:connection],
 			@"redirect_uri"   	 : [self redirectURIForConnection:connection],
 
 			@"state"		 : (self.state != nil) ? self.state : ((NSString *)NSNull.null),
@@ -769,7 +770,7 @@ OCAuthenticationMethodAutoRegister
 
 - (NSString *)tokenRequestAuthorizationHeaderForType:(OCAuthenticationOAuth2TokenRequestType)requestType connection:(OCConnection *)connection
 {
-	return ([OCAuthenticationMethod basicAuthorizationValueForUsername:self.clientID passphrase:self.clientSecret]);
+	return ([OCAuthenticationMethod basicAuthorizationValueForUsername:[self clientIDForConnection:connection] passphrase:[self clientSecretForConnection:connection]]);
 }
 
 - (void)_refreshTokenForConnection:(OCConnection *)connection availabilityHandler:(OCConnectionAuthenticationAvailabilityHandler)availabilityHandler
@@ -931,7 +932,7 @@ OCAuthenticationMethodAutoRegister
 		[tokenRequest addParameters:parameters];
 
 		// Add client ID and client secret as authentication header or as parameters
-		if ([self sendClientIDAndSecretInPOSTBody])
+		if ([self sendClientIDAndSecretInPOSTBodyForConnection:connection])
 		{
 			// Include Client ID and Client Secret as parameters in the POST body
 			//
@@ -948,7 +949,7 @@ OCAuthenticationMethodAutoRegister
 			// > be transmitted in the request-body and MUST NOT be included in the
 			// > request URI.
 
-			NSString *clientID = self.clientID, *clientSecret = self.clientSecret;
+			NSString *clientID = [self clientIDForConnection:connection], *clientSecret = [self clientSecretForConnection:connection];
 
 			if ((clientID != nil) && (clientSecret != nil))
 			{
@@ -1172,8 +1173,11 @@ OCAuthenticationMethodAutoRegister
 	}
 }
 
-- (BOOL)sendClientIDAndSecretInPOSTBody
-{
+- (BOOL)sendClientIDAndSecretInPOSTBodyForConnection:(OCConnection *)connection {
+	if (connection.isKiteworksServer)
+	{
+		return (YES);
+	}
 	NSNumber *forcePostClientIDAndSecret = [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOAuth2PostClientIDAndSecret];
 	return ((forcePostClientIDAndSecret != nil) && forcePostClientIDAndSecret.boolValue);
 }

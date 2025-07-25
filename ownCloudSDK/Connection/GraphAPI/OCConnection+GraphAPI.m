@@ -186,9 +186,7 @@
 
 					if ((ocDrive = [OCDrive driveFromGADrive:drive]) != nil)
 					{
-						if (self.isKiteworksServer && [ocDrive.type isEqualToString:OCDriveTypePersonal]) {
-							ocDrive.type = OCDriveTypeKiteworks;
-						}
+						ocDrive.isKiteworksServer = self.isKiteworksServer;
 						[ocDrives addObject:ocDrive];
 					}
 				}
