@@ -904,6 +904,7 @@
 		DCE741D929B7DD5000BFF393 /* OCServerInstance.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE741D729B7DD5000BFF393 /* OCServerInstance.m */; };
 		DCE741DC29B7EA7000BFF393 /* OCBookmark+ServerInstance.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE741DA29B7EA7000BFF393 /* OCBookmark+ServerInstance.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCE741DD29B7EA7000BFF393 /* OCBookmark+ServerInstance.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE741DB29B7EA7000BFF393 /* OCBookmark+ServerInstance.m */; };
+		DCE744FA2E33E33A006847B9 /* SHA3IUF.LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = DCE744F92E33D40F006847B9 /* SHA3IUF.LICENSE */; };
 		DCE784F922325D4F00733F01 /* OCConnection+RecipientsLegacy.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE784F722325D4F00733F01 /* OCConnection+RecipientsLegacy.m */; };
 		DCE784FC2232748100733F01 /* OCHTTPResponse+DAVError.h in Headers */ = {isa = PBXBuildFile; fileRef = DCE784FA2232748100733F01 /* OCHTTPResponse+DAVError.h */; };
 		DCE784FD2232748100733F01 /* OCHTTPResponse+DAVError.m in Sources */ = {isa = PBXBuildFile; fileRef = DCE784FB2232748100733F01 /* OCHTTPResponse+DAVError.m */; };
@@ -2021,7 +2022,7 @@
 		DCE741D729B7DD5000BFF393 /* OCServerInstance.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCServerInstance.m; sourceTree = "<group>"; };
 		DCE741DA29B7EA7000BFF393 /* OCBookmark+ServerInstance.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCBookmark+ServerInstance.h"; sourceTree = "<group>"; };
 		DCE741DB29B7EA7000BFF393 /* OCBookmark+ServerInstance.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCBookmark+ServerInstance.m"; sourceTree = "<group>"; };
-		DCE744F92E33D40F006847B9 /* SHA3.LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = SHA3.LICENSE; sourceTree = "<group>"; };
+		DCE744F92E33D40F006847B9 /* SHA3IUF.LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = SHA3IUF.LICENSE; sourceTree = "<group>"; };
 		DCE784F722325D4F00733F01 /* OCConnection+RecipientsLegacy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCConnection+RecipientsLegacy.m"; sourceTree = "<group>"; };
 		DCE784FA2232748100733F01 /* OCHTTPResponse+DAVError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCHTTPResponse+DAVError.h"; sourceTree = "<group>"; };
 		DCE784FB2232748100733F01 /* OCHTTPResponse+DAVError.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCHTTPResponse+DAVError.m"; sourceTree = "<group>"; };
@@ -4647,7 +4648,7 @@
 		FFC6BD572E3384C800FF5E84 /* SHA3 */ = {
 			isa = PBXGroup;
 			children = (
-				DCE744F92E33D40F006847B9 /* SHA3.LICENSE */,
+				DCE744F92E33D40F006847B9 /* SHA3IUF.LICENSE */,
 				FFC6BD542E3384C800FF5E84 /* sha3.c */,
 				FFC6BD532E3384C800FF5E84 /* sha3.h */,
 			);
@@ -5388,6 +5389,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC31816D2BDF882500E70392 /* Signal Handling.md in Resources */,
+				DCE744FA2E33E33A006847B9 /* SHA3IUF.LICENSE in Resources */,
 				DCE0FEB02C77CEFA005E4423 /* Localizable.xcstrings in Resources */,
 				DCC8F9CA202853B300EB6701 /* LICENSE in Resources */,
 				DC446C8A206B8FBF00189B9A /* ISRunLoopThread.LICENSE in Resources */,

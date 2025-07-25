@@ -29,7 +29,7 @@
 {
 	// Register SHA3-256 library license
 	// (via https://github.com/brainhub/SHA3IUF/tree/master)
-	[[OCExtensionManager sharedExtensionManager] addExtension:[OCExtension licenseExtensionWithIdentifier:@"license.SHA3-256" bundleOfClass:OCChecksumAlgorithmSHA3.class title:@"SHA3-256" resourceName:@"SHA3" fileExtension:@"LICENSE"]];
+	[[OCExtensionManager sharedExtensionManager] addExtension:[OCExtension licenseExtensionWithIdentifier:@"license.SHA3-256" bundleOfClass:OCChecksumAlgorithmSHA3.class title:@"SHA3IUF" resourceName:@"SHA3IUF" fileExtension:@"LICENSE"]];
 
 	// Register algorithm
 	[OCChecksumAlgorithm registerAlgorithmClass:self];
