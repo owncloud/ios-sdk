@@ -385,7 +385,7 @@
 {
 	if (capability == nil)
 	{
-		OCLogError(@"Attempt to add nil capability to bookmark %@", self);
+		OCLogError(@"Attempt to remove nil capability to bookmark %@", self);
 		return;
 	}
 
@@ -395,7 +395,7 @@
 
 		[capabilities removeObject:capability];
 
-		_capabilities = [_capabilities copy];
+		_capabilities = [capabilities copy];
 	}
 }
 

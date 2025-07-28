@@ -194,7 +194,7 @@
 
 - (BOOL)isKiteworksServer
 {
-	return (([((NSDictionary *)self.bookmark.userInfo[@"statusInfo"])[@"product"] isEqual:@"kiteworks"] || [self.bookmark hasCapability:OCBookmarkCapabilityKiteworks]));
+	return ([self.bookmark hasCapability:OCBookmarkCapabilityKiteworks]);
 }
 
 #pragma mark - Checks
