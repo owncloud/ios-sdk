@@ -267,7 +267,7 @@
 
 			kwError = MakeJSONRequest(statusKiteworksURL, NO, &kwRequest, &kwRedirectionURL, &kwJSONDict);
 
-			if ((kwError == nil) && (kwJSONDict != nil) && (jsonDict[@"productname"] != nil))
+			if ((kwError == nil) && (kwJSONDict != nil) && (kwJSONDict[@"productname"] != nil))
 			{
 				// .. and ONLY if the output looks right, use that request's results instead.
 				// (this way, we make sure that errors for the kwdav status endpoint won't end up as error messages
