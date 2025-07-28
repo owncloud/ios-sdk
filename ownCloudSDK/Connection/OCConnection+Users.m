@@ -32,7 +32,7 @@
 
 - (NSProgress *)retrieveLoggedInUserWithRequestCustomization:(void(^)(OCHTTPRequest *request))requestCustomizer completionHandler:(void(^)(NSError *error, OCUser *loggedInUser))completionHandler
 {
-	if (self.useDriveAPI && (requestCustomizer == nil)) {
+	if (self.useDriveAPI && !self.isKiteworksServer && (requestCustomizer == nil)) {
 		// Use Graph API (has no support for request customizer for now, but can be added later)
 		return ([self retrieveLoggedInGraphUserWithCompletionHandler:^(NSError * _Nullable error, OCUser * _Nullable user) {
 			if (error != nil)

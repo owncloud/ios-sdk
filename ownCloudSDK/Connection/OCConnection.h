@@ -471,6 +471,7 @@ typedef void(^OCConnectionIdentityObjectsDetailsRetrievalCompletionHandler)(NSEr
 
 #pragma mark - API Switches
 @property(readonly,nonatomic) BOOL useDriveAPI; //!< Returns YES if the server supports the drive API and it should be used.
+@property(readonly,nonatomic) BOOL isKiteworksServer; //!< Returns YES if the server is a Kiteworks server.
 
 #pragma mark - Checks
 - (nullable NSError *)supportsServerVersion:(NSString *)serverVersion product:(NSString *)product longVersion:(NSString *)longVersion allowHiddenVersion:(BOOL)allowHiddenVersion;
