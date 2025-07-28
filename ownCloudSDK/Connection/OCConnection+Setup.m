@@ -78,6 +78,9 @@
 	NSURL *webFingerAlternativeIDPBaseURL = nil;
 	NSURL *refererForIDPURL = nil;
 
+	// Clear Kiteworks flag to return path composition to original state
+	[self.bookmark removeCapability:OCBookmarkCapabilityKiteworks];
+
 	// Tools
 	void (^AddIssue)(OCIssue *issue) = ^(OCIssue *issue) {
 		@synchronized(self)
@@ -298,7 +301,7 @@
 					{
 						[self.bookmark addCapability:OCBookmarkCapabilityKiteworks];
 					}
-					
+
 					error = [self supportsServerVersion:serverVersion product:product longVersion:[OCConnection serverLongProductVersionStringFromServerStatus:jsonDict] allowHiddenVersion:YES];
 				}
 
