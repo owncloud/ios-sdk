@@ -951,12 +951,18 @@ OCAuthenticationMethodAutoRegister
 
 			NSString *clientID = [self clientIDForConnection:connection], *clientSecret = [self clientSecretForConnection:connection];
 
-			if ((clientID != nil) && (clientSecret != nil))
+			if (clientID != nil)
 			{
 				[tokenRequest addParameters:@{
 					@"client_id" : clientID,
-					@"client_secret" : clientSecret
 				}];
+
+				if (clientSecret != nil)
+				{
+					[tokenRequest addParameters:@{
+						@"client_secret" : clientSecret
+					}];
+				}
 			}
 		}
 		else

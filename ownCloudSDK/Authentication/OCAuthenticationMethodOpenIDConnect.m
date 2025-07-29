@@ -164,7 +164,7 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 		if (clientID == nil) { clientID = [self clientIDForConnection:connection]; }
 		if (clientSecret == nil) { clientSecret = [self clientSecretForConnection:connection]; }
 
-		OCTLogDebug(@[@"ClientRegistration"], @"Sending token refrsh request with clientID=%@, clientSecret=%@", OCLogPrivate(clientID), OCLogPrivate(clientSecret));
+		OCTLogDebug(@[@"ClientRegistration"], @"Sending token refresh request with clientID=%@, clientSecret=%@", OCLogPrivate(clientID), OCLogPrivate(clientSecret));
 
 		return ([OCAuthenticationMethod basicAuthorizationValueForUsername:clientID passphrase:clientSecret]);
 	}
