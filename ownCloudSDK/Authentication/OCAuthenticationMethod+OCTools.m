@@ -27,6 +27,7 @@
 
 + (NSString *)basicAuthorizationValueForUsername:(NSString *)username passphrase:(NSString *)passPhrase
 {
+	if (passPhrase == nil) { passPhrase = @""; }
 	return ([NSString stringWithFormat:@"Basic %@", [[[NSString stringWithFormat:@"%@:%@", username, passPhrase] dataUsingEncoding:NSUTF8StringEncoding] base64EncodedStringWithOptions:0]]);
 }
 
