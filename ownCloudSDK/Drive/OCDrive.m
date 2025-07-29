@@ -229,6 +229,8 @@
 
 		_detachedState = [decoder decodeIntegerForKey:@"detachedState"];
 		_detachedSinceDate = [decoder decodeObjectOfClass:NSDate.class forKey:@"detachedSinceDate"];
+
+		_isOnKiteworksServer = [decoder decodeBoolForKey:@"isOnKiteworksServer"];
 	}
 
 	return (self);
@@ -250,6 +252,8 @@
 
 	[coder encodeInteger:_detachedState forKey:@"detachedState"];
 	[coder encodeObject:_detachedSinceDate forKey:@"detachedSinceDate"];
+
+	[coder encodeBool:_isOnKiteworksServer forKey:@"isOnKiteworksServer"];
 }
 
 #pragma mark - OCDataItem / OCDataItemVersion compliance
