@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -690,6 +690,7 @@
 		DCBE9C6F2D07075300332D3B /* OCConnection+Recipients.m in Sources */ = {isa = PBXBuildFile; fileRef = DCBE9C6E2D07075300332D3B /* OCConnection+Recipients.m */; };
 		DCBE9C702D07075300332D3B /* OCConnection+RecipientsLegacy.h in Headers */ = {isa = PBXBuildFile; fileRef = DCBE9C6D2D07075300332D3B /* OCConnection+RecipientsLegacy.h */; };
 		DCBE9C782D078CB600332D3B /* OCConnection+Spaces.m in Sources */ = {isa = PBXBuildFile; fileRef = DCBE9C772D078CB600332D3B /* OCConnection+Spaces.m */; };
+		DCC1D15B2E3A1AF000CD6175 /* SHA3IUF in Frameworks */ = {isa = PBXBuildFile; productRef = DCC1D15A2E3A1AF000CD6175 /* SHA3IUF */; };
 		DCC26FAD2B718C3300904000 /* OCPasswordPolicy.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC26FAB2B718C3300904000 /* OCPasswordPolicy.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DCC26FAE2B718C3300904000 /* OCPasswordPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC26FAC2B718C3300904000 /* OCPasswordPolicy.m */; };
 		DCC26FB12B718CA200904000 /* OCPasswordPolicyRule.h in Headers */ = {isa = PBXBuildFile; fileRef = DCC26FAF2B718CA200904000 /* OCPasswordPolicyRule.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1004,8 +1005,6 @@
 		DCFF1AB121655C8800ABE40A /* OCItem+OCFileURLMetadata.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFF1AAF21655C8800ABE40A /* OCItem+OCFileURLMetadata.m */; };
 		DCFFF57E20D3A51C0096D2D3 /* OCSyncContext.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFFF57C20D3A51C0096D2D3 /* OCSyncContext.h */; };
 		DCFFF57F20D3A51C0096D2D3 /* OCSyncContext.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFFF57D20D3A51C0096D2D3 /* OCSyncContext.m */; };
-		FFC6BD5A2E3384C800FF5E84 /* sha3.c in Sources */ = {isa = PBXBuildFile; fileRef = FFC6BD542E3384C800FF5E84 /* sha3.c */; };
-		FFC6BD5C2E3384C800FF5E84 /* sha3.h in Headers */ = {isa = PBXBuildFile; fileRef = FFC6BD532E3384C800FF5E84 /* sha3.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -2121,8 +2120,6 @@
 		DCFF1AAF21655C8800ABE40A /* OCItem+OCFileURLMetadata.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCItem+OCFileURLMetadata.m"; sourceTree = "<group>"; };
 		DCFFF57C20D3A51C0096D2D3 /* OCSyncContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCSyncContext.h; sourceTree = "<group>"; };
 		DCFFF57D20D3A51C0096D2D3 /* OCSyncContext.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCSyncContext.m; sourceTree = "<group>"; };
-		FFC6BD532E3384C800FF5E84 /* sha3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sha3.h; sourceTree = "<group>"; };
-		FFC6BD542E3384C800FF5E84 /* sha3.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sha3.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2167,6 +2164,7 @@
 			files = (
 				DC98BDF821E73EFF003B5658 /* Network.framework in Frameworks */,
 				DCFF1AAD216552C100ABE40A /* AuthenticationServices.framework in Frameworks */,
+				DCC1D15B2E3A1AF000CD6175 /* SHA3IUF in Frameworks */,
 				DCC8FA082029BB1200EB6701 /* libsqlite3.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4649,8 +4647,6 @@
 			isa = PBXGroup;
 			children = (
 				DCE744F92E33D40F006847B9 /* SHA3IUF.LICENSE */,
-				FFC6BD542E3384C800FF5E84 /* sha3.c */,
-				FFC6BD532E3384C800FF5E84 /* sha3.h */,
 			);
 			path = SHA3;
 			sourceTree = "<group>";
@@ -5095,7 +5091,6 @@
 				DCCE49342684B148005961D8 /* OCVault+Prepopulation.h in Headers */,
 				DCEAA0D025CEB7F90017F99B /* OCLockRequest.h in Headers */,
 				DC2F63632239455E0063C2DA /* OCRecipientSearchController.h in Headers */,
-				FFC6BD5C2E3384C800FF5E84 /* sha3.h in Headers */,
 				DCA8DB952D11D04B003CC6FA /* OCShareTypes.h in Headers */,
 				DC381FCB22C8146F00284699 /* NSString+NameConflicts.h in Headers */,
 				DC708CE8214135FE00FE43CA /* OCSyncActionUpload.h in Headers */,
@@ -5238,6 +5233,7 @@
 			);
 			name = ownCloudSDK;
 			packageProductDependencies = (
+				DCC1D15A2E3A1AF000CD6175 /* SHA3IUF */,
 			);
 			productName = ownCloudSDK;
 			productReference = DCC8F9AB202852A200EB6701 /* ownCloudSDK.framework */;
@@ -5300,6 +5296,7 @@
 					};
 					DCC8F9AA202852A200EB6701 = {
 						CreatedOnToolsVersion = 9.2;
+						LastSwiftMigration = 1640;
 						ProvisioningStyle = Automatic;
 					};
 					DCC8F9B3202852A200EB6701 = {
@@ -5335,6 +5332,7 @@
 			mainGroup = DCC8F9A1202852A200EB6701;
 			packageReferences = (
 				3924AB5327FC6A030055DC8A /* XCRemoteSwiftPackageReference "OpenSSL" */,
+				DCC1D1592E3A1AF000CD6175 /* XCLocalSwiftPackageReference "ownCloudSDK/External/SHA3IUF" */,
 			);
 			productRefGroup = DCC8F9AC202852A200EB6701 /* Products */;
 			projectDirPath = "";
@@ -5880,7 +5878,6 @@
 				DCE17BC226B5A7E400B7C7DD /* OCHTTPRequest+Stream.m in Sources */,
 				DCFE682528D865BD00091D2A /* NSDictionary+OCFormEncoding.m in Sources */,
 				DCAEB06E21FA63D80067E147 /* OCSyncRecordActivity.m in Sources */,
-				FFC6BD5A2E3384C800FF5E84 /* sha3.c in Sources */,
 				DCE784FD2232748100733F01 /* OCHTTPResponse+DAVError.m in Sources */,
 				DC47E4DC27A5820D0020E8EF /* GAODataErrorMain.m in Sources */,
 				DC179CD620948DF30018DF7F /* NSProgress+OCExtensions.m in Sources */,
@@ -6355,6 +6352,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
@@ -6376,6 +6374,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -6384,6 +6384,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = YES;
@@ -6404,6 +6405,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -6512,6 +6515,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		DCC1D1592E3A1AF000CD6175 /* XCLocalSwiftPackageReference "ownCloudSDK/External/SHA3IUF" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ownCloudSDK/External/SHA3IUF;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		3924AB5327FC6A030055DC8A /* XCRemoteSwiftPackageReference "OpenSSL" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -6524,6 +6534,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		DCC1D15A2E3A1AF000CD6175 /* SHA3IUF */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SHA3IUF;
+		};
 		DCE2F04D27FDE01D00E9E136 /* OpenSSL */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3924AB5327FC6A030055DC8A /* XCRemoteSwiftPackageReference "OpenSSL" */;

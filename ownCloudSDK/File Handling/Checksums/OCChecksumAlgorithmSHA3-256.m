@@ -18,7 +18,8 @@
 
 #import "OCChecksumAlgorithmSHA3-256.h"
 #import "NSData+OCHash.h"
-#import "sha3.h"
+
+@import SHA3IUF;
 
 #import "OCExtensionManager.h"
 #import "OCExtension+License.h"
