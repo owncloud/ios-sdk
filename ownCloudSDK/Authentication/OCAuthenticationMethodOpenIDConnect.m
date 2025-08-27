@@ -55,7 +55,8 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 		OCAuthenticationMethodOpenIDConnectPrompt      : @"select_account consent",
 		OCAuthenticationMethodOpenIDRegisterClient     : @(YES),
 		OCAuthenticationMethodOpenIDRegisterClientNameTemplate : @"ownCloud/{{os.name}} {{app.version}}",
-		OCAuthenticationMethodOpenIDFallbackOnClientRegistrationFailure : @(YES)
+		OCAuthenticationMethodOpenIDFallbackOnClientRegistrationFailure : @(YES),
+		OCAuthenticationMethodOpenIDConnectPostLogoutRedirectURI : @""
 	} metadata:@{
 		OCAuthenticationMethodOpenIDConnectRedirectURI : @{
 			OCClassSettingsMetadataKeyType 	      : OCClassSettingsMetadataTypeString,
@@ -85,6 +86,11 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 		OCAuthenticationMethodOpenIDFallbackOnClientRegistrationFailure : @{
 			OCClassSettingsMetadataKeyType        : OCClassSettingsMetadataTypeBoolean,
 			OCClassSettingsMetadataKeyDescription : @"If client registration is enabled, but registration fails, controls if the error should be ignored and the default client ID and secret should be used instead.",
+			OCClassSettingsMetadataKeyCategory    : @"OIDC"
+		},
+		OCAuthenticationMethodOpenIDConnectPostLogoutRedirectURI : @{
+			OCClassSettingsMetadataKeyType        : OCClassSettingsMetadataTypeString,
+			OCClassSettingsMetadataKeyDescription : @"OpenID Connect Post Logout Redirect URI. If not set, defaults to the OpenID Connect Redirect URI.",
 			OCClassSettingsMetadataKeyCategory    : @"OIDC"
 		}
 	}];
@@ -782,6 +788,118 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 	}];
 }
 
+#pragma mark - Logout Support
+- (NSURL *)revocationEndpointURLForConnection:(OCConnection *)connection options:(OCAuthenticationMethodDetectionOptions)options
+{
+	// First check if OIDC metadata has a revocation endpoint
+	NSString *revocationEndpointURLString;
+	
+	if ((revocationEndpointURLString = OCTypedCast(_openIDConfig[@"revocation_endpoint"], NSString)) != nil)
+	{
+		return ([NSURL URLWithString:revocationEndpointURLString]);
+	}
+	
+	// Fall back to parent implementation
+	return ([super revocationEndpointURLForConnection:connection options:options]);
+}
+
+- (void)deauthenticateConnection:(OCConnection *)connection withCompletionHandler:(OCAuthenticationMethodAuthenticationCompletionHandler)completionHandler
+{
+	// Check for OIDC end_session_endpoint
+	NSString *endSessionEndpointURLString = OCTypedCast(_openIDConfig[@"end_session_endpoint"], NSString);
+	
+	if (endSessionEndpointURLString != nil)
+	{
+		// Get current ID token for logout hint
+		NSDictionary<NSString *, id> *authSecret = [self cachedAuthenticationSecretForConnection:connection];
+		NSString *idToken = [authSecret valueForKeyPath:@"tokenResponse.id_token"];
+		
+		// Build logout URL with parameters
+		NSURLComponents *logoutURLComponents = [NSURLComponents componentsWithString:endSessionEndpointURLString];
+		NSMutableArray<NSURLQueryItem *> *queryItems = [NSMutableArray new];
+		
+		// Add id_token_hint if available (recommended by OIDC spec)
+		if (idToken != nil)
+		{
+			[queryItems addObject:[NSURLQueryItem queryItemWithName:@"id_token_hint" value:idToken]];
+		}
+		
+		// Add post_logout_redirect_uri if configured
+		NSString *postLogoutRedirectURI = [self classSettingForOCClassSettingsKey:OCAuthenticationMethodOpenIDConnectPostLogoutRedirectURI];
+		if ((postLogoutRedirectURI == nil) || (postLogoutRedirectURI.length == 0))
+		{
+			// Use the app's redirect URI as default
+			postLogoutRedirectURI = [self redirectURIForConnection:connection];
+		}
+		
+		if (postLogoutRedirectURI != nil)
+		{
+			[queryItems addObject:[NSURLQueryItem queryItemWithName:@"post_logout_redirect_uri" value:postLogoutRedirectURI]];
+		}
+		
+		// Add state parameter for security
+		NSString *state = [[NSUUID UUID] UUIDString];
+		[queryItems addObject:[NSURLQueryItem queryItemWithName:@"state" value:state]];
+		
+		if (queryItems.count > 0)
+		{
+			logoutURLComponents.queryItems = queryItems;
+		}
+		
+		NSURL *logoutURL = logoutURLComponents.URL;
+		
+		OCLogDebug(@"Performing OIDC logout at %@", logoutURL);
+		
+		// Open logout URL in browser (similar to authentication flow)
+		NSError *error = nil;
+		id authenticationSession = nil;
+		
+		if ([OCAuthenticationMethodOAuth2 startAuthenticationSession:&authenticationSession 
+														  forURL:logoutURL 
+														  scheme:[self redirectURIForConnection:connection]
+														 options:nil
+											  completionHandler:^(NSURL *callbackURL, NSError *sessionError) {
+			if (sessionError != nil)
+			{
+				OCLogError(@"OIDC logout session failed: %@", sessionError);
+			}
+			else
+			{
+				OCLogDebug(@"OIDC logout session completed");
+			}
+			
+			// Clear cached authentication data regardless of logout result
+			[self flushCachedAuthenticationSecret];
+			
+			// Reset OIDC configuration
+			self->_openIDConfig = nil;
+			self->_clientRegistrationResponse = nil;
+			self->_clientRegistrationEndpointURL = nil;
+			self->_clientRegistrationExpirationDate = nil;
+			self->_clientName = nil;
+			self->_clientID = nil;
+			self->_clientSecret = nil;
+			
+			// Call completion handler
+			if (completionHandler != nil)
+			{
+				completionHandler(nil, nil);
+			}
+		}])
+		{
+			// Authentication session started successfully
+			return;
+		}
+		else
+		{
+			OCLogError(@"Failed to start OIDC logout session: %@", error);
+		}
+	}
+	
+	// Fall back to OAuth2 token revocation if no end_session_endpoint
+	[super deauthenticateConnection:connection withCompletionHandler:completionHandler];
+}
+
 @end
 
 OCAuthenticationMethodIdentifier OCAuthenticationMethodIdentifierOpenIDConnect = @"com.owncloud.openid-connect";
@@ -789,6 +907,7 @@ OCAuthenticationMethodIdentifier OCAuthenticationMethodIdentifierOpenIDConnect =
 OCClassSettingsKey OCAuthenticationMethodOpenIDConnectRedirectURI = @"oidc-redirect-uri";
 OCClassSettingsKey OCAuthenticationMethodOpenIDConnectScope = @"oidc-scope";
 OCClassSettingsKey OCAuthenticationMethodOpenIDConnectPrompt = @"oidc-prompt";
+OCClassSettingsKey OCAuthenticationMethodOpenIDConnectPostLogoutRedirectURI = @"oidc-post-logout-redirect-uri";
 OCClassSettingsKey OCAuthenticationMethodOpenIDRegisterClient = @"oidc-register-client";
 OCClassSettingsKey OCAuthenticationMethodOpenIDRegisterClientNameTemplate = @"oidc-register-client-name-template";
 OCClassSettingsKey OCAuthenticationMethodOpenIDFallbackOnClientRegistrationFailure = @"oidc-fallback-on-client-registration-failure";
