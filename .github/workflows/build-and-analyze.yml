@@ -22,4 +22,5 @@ jobs:
           scheme: ownCloudSDK
           action: build
           platform: iOS
-          platform-version: 18.2
+          platform-version: 18.6
+          xcode: 16.4
