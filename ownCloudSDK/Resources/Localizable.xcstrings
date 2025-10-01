@@ -3620,7 +3620,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Another version of %1$@ already exists in %2$@."
+            "value" : "In %2$@ existiert bereits eine andere Version von %1$@."
           }
         },
         "en" : {
@@ -5889,7 +5889,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Can edit"
+            "value" : "Kann bearbeiten"
           }
         },
         "en" : {
@@ -6001,7 +6001,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Can upload"
+            "value" : "Kann hochladen"
           }
         },
         "en" : {
@@ -6113,7 +6113,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Can view"
+            "value" : "Kann betrachten"
           }
         },
         "en" : {
@@ -10722,7 +10722,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ausführung beenden"
+            "value" : "Ausführung beenden (entfernen)"
           }
         },
         "en" : {
@@ -14996,7 +14996,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invited people"
+            "value" : "Eingeladene Personen"
           }
         },
         "en" : {
@@ -16467,7 +16467,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Link works only for invited people. Login is required."
+            "value" : "Link funktioniert nur für eingeladene Personen. Login erforderlich."
           }
         },
         "en" : {
@@ -16805,7 +16805,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sperrung invalidiert."
+            "value" : "Lock invalidiert."
           }
         },
         "en" : {
@@ -21651,7 +21651,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Empfangende können hochladen, aber existierende Inhalte werden nicht angezeigt."
+            "value" : "Empfänger können hochladen, aber existierende Inhalte werden nicht angezeigt."
           }
         },
         "en" : {
@@ -21987,7 +21987,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Empfangende können Inhalte sehen, herunterladen und hochladen."
+            "value" : "Empfänger können Inhalte sehen, herunterladen und hochladen."
           }
         },
         "en" : {
@@ -22099,7 +22099,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Empfangende können Inhalte sehen, herunterladen, ändern, löschen und hochladen."
+            "value" : "Empfänger können Inhalte sehen, herunterladen, ändern, löschen und hochladen."
           }
         },
         "en" : {
@@ -25261,7 +25261,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Secret File Drop"
+            "value" : "Briefkasten"
           }
         },
         "en" : {
@@ -31704,7 +31704,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Upload only, existing content is not revealed"
+            "value" : "Nur Upload, bereits bestehender Inhalt bleibt verborgen"
           }
         },
         "en" : {
@@ -33162,7 +33162,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "View, download"
+            "value" : "Betrachten, herunterladen"
           }
         },
         "en" : {
@@ -33274,7 +33274,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "View, upload, download"
+            "value" : "Betrachten, hochladen, herunterladen"
           }
         },
         "en" : {
@@ -33386,7 +33386,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "View, upload, edit, download, delete"
+            "value" : "Betrachten, hochladen, bearbeiten, herunterladen, löschen"
           }
         },
         "en" : {
