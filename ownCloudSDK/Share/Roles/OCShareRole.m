@@ -55,7 +55,15 @@
 			@"58c63c02-1d89-4572-916a-870abc5a1b7d" : @"pencil",			// UnifiedRoleSpaceEditor
 			@"312c0871-5ef7-4b3a-85b6-0e4074c64049" : @"person.fill", 		// UnifiedRoleManager
 			@"1c996275-f1c9-4e71-abdf-a42f6495e960" : @"arrow.up.circle.fill",	// UnifiedRoleUploader
-			@"aa97fe03-7980-45ac-9e50-b325749fd7e6" : @"shield"			// UnifiedRoleSecureView
+			@"aa97fe03-7980-45ac-9e50-b325749fd7e6" : @"shield",			// UnifiedRoleSecureView
+
+			// ByCS roles, based on https://0276.drive.bycs.de/themes/bycs/theme.json
+			@"e8ea8b21-abd4-45d2-b893-8d1546378e9e" : @"pencil", 			// UnifiedRoleEditorListGrants / "Kann bearbeiten ohne Historie" (can edit without history)
+			@"0911d62b-1e3f-4778-8b1b-903b7e4e8476" : @"pencil", 			// UnifiedRoleEditorListGrantsWithVersions / "Kann bearbeiten" (can edit)
+			@"3284f2d5-0070-4ad8-ac40-c247f7c1fb27" : @"pencil",			// UnifiedRoleSpaceEditorWithoutVersions
+			@"b173329d-cf2e-42f0-a595-ee410645d840" : @"pencil",			// UnifiedRoleFileEditorListGrantsWithVersions
+			@"c1235aea-d106-42db-8458-7d5610fb0a67" : @"pencil",			// UnifiedRoleFileEditorListGrants
+			@"d5041006-ebb3-4b4a-b6a4-7c180ecfb17d" : @"eye.fill"			// UnifiedRoleViewerListGrants
 		};
 
 		return roleIDToSymbolMap[_identifier];
