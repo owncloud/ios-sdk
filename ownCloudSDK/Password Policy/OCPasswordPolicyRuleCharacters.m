@@ -18,8 +18,6 @@
 
 #import "OCPasswordPolicyRuleCharacters.h"
 #import "OCMacros.h"
-#import "OCLocale.h"
-#import "OCLocaleFilterVariables.h"
 
 @implementation OCPasswordPolicyRuleCharacters
 

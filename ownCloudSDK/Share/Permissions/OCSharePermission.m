@@ -19,7 +19,7 @@
 #import "OCSharePermission.h"
 #import "OCShareAction.h"
 #import "OCShareRole.h"
-#import "OCLocale.h"
+#import "OCMacros.h"
 
 #import "GAUnifiedRoleDefinition.h"
 

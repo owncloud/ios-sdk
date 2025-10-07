@@ -43,6 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+// Export OCLocalized* symbols for use in (Swift) app - make sure it doesn't override the SDK-specific OCLocalizedString
 static inline NSString *OCLocalizedString(NSString *key, NSString * _Nullable comment) {
     return [OCLocale localizeString:key];
 }
@@ -50,5 +51,12 @@ static inline NSString *OCLocalizedString(NSString *key, NSString * _Nullable co
 static inline NSString *OCLocalizedFormat(NSString *string, OCLocaleOptions _Nullable variables) {
     return [OCLocale localizeString: string options: @{ OCLocaleOptionKeyVariables : variables }];
 }
+
+// Override for (SDK) ObjC code, so the localization strings for that are used (macros are not visibleto Swift code)
+#define OCLocalizedString(key,comment) [OCLocale localizeString:key bundleOfClass:[self class]]
+#define OCLocalizedViaLocalizationBundle(key) [OCLocale localizeString:key bundle:localizationBundle]
+#define OCLocalizedFormat(key,variables) [OCLocale localizeString:key bundleOfClass:[self class] options:@{ OCLocaleOptionKeyVariables : variables }]
+
+#define OCLocalized(key) OCLocalizedString(key,nil)
 
 NS_ASSUME_NONNULL_END

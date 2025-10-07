@@ -19,11 +19,10 @@
 #import "OCConnection+SharingLegacy.h"
 #import "NSDate+OCDateParser.h"
 #import "NSProgress+OCEvent.h"
-#import "OCLocale.h"
+#import "OCMacros.h"
 #import "NSError+OCNetworkFailure.h"
 #import "NSError+OCError.h"
 #import "OCXMLParserNode.h"
-#import "OCMacros.h"
 
 // OC 10
 #if OC_LEGACY_SUPPORT

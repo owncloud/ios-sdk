@@ -23,8 +23,6 @@
 #import "OCPasswordPolicyRule+StandardRules.h"
 
 #import "OCMacros.h"
-#import "OCLocale.h"
-#import "OCLocaleFilterVariables.h"
 #import "OCPasswordPolicyRuleByteLength.h"
 
 @implementation OCCapabilities (PasswordPolicy)
