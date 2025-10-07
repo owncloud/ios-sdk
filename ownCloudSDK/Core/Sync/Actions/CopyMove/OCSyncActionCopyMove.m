@@ -18,7 +18,6 @@
 
 #import "OCSyncActionCopyMove.h"
 #import "NSError+OCNetworkFailure.h"
-#import "OCLocaleFilterVariables.h"
 
 @interface OCSyncActionCopyMove ()
 {

@@ -19,8 +19,6 @@
 #import "OCPasswordPolicyRule+StandardRules.h"
 #import "OCPasswordPolicyRuleCharacters.h"
 #import "OCMacros.h"
-#import "OCLocale.h"
-#import "OCLocaleFilterVariables.h"
 
 @implementation OCPasswordPolicyRule (StandardRules)
 

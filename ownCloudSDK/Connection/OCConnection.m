@@ -53,7 +53,6 @@
 #import "OCBookmarkManager.h"
 #import "OCConnection+GraphAPI.h"
 #import "NSError+OCNetworkFailure.h"
-#import "OCLocaleFilterVariables.h"
 
 // Imported to use the identifiers in OCConnectionPreferredAuthenticationMethodIDs only
 #import "OCAuthenticationMethodOpenIDConnect.h"

@@ -18,8 +18,6 @@
 
 #import "OCPasswordPolicyRuleByteLength.h"
 #import "OCMacros.h"
-#import "OCLocale.h"
-#import "OCLocaleFilterVariables.h"
 
 @implementation OCPasswordPolicyRuleByteLength
 

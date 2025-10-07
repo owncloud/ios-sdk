@@ -23,7 +23,6 @@
 #import "OCShareQuery.h"
 #import "OCLogger.h"
 #import "NSProgress+OCExtensions.h"
-#import "OCMacros.h"
 #import "NSError+OCError.h"
 #import "OCDatabase.h"
 #import "OCDatabaseConsistentOperation.h"
@@ -71,6 +70,7 @@
 #import "OCLocale+SystemLanguage.h"
 #import "OCCore+DataSources.h"
 #import "OCSignalManager.h"
+#import "OCMacros.h"
 
 @interface OCCore ()
 {
