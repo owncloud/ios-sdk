@@ -6113,7 +6113,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kann betrachten"
+            "value" : "Kann anzeigen"
           }
         },
         "en" : {
@@ -21763,7 +21763,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Empfangende können Inhalte sehen und herunterladen."
+            "value" : "Empfangende können Inhalte anzeigen und herunterladen."
           }
         },
         "en" : {
@@ -21875,7 +21875,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Empfangende können Inhalte einsehen, herunterladen und bearbeiten."
+            "value" : "Empfangende können Inhalte anzeigen, herunterladen und bearbeiten."
           }
         },
         "en" : {
@@ -21987,7 +21987,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Empfänger können Inhalte sehen, herunterladen und hochladen."
+            "value" : "Empfänger können Inhalte anzeigen, herunterladen und hochladen."
           }
         },
         "en" : {
@@ -22099,7 +22099,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Empfänger können Inhalte sehen, herunterladen, ändern, löschen und hochladen."
+            "value" : "Empfänger können Inhalte anzeigen, herunterladen, ändern, löschen und hochladen."
           }
         },
         "en" : {
@@ -33162,7 +33162,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Betrachten, herunterladen"
+            "value" : "Anzeigen, herunterladen"
           }
         },
         "en" : {
@@ -33274,7 +33274,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Betrachten, hochladen, herunterladen"
+            "value" : "Anzeigen, hochladen, herunterladen"
           }
         },
         "en" : {
@@ -33386,7 +33386,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Betrachten, hochladen, bearbeiten, herunterladen, löschen"
+            "value" : "Anzeigen, hochladen, bearbeiten, herunterladen, löschen"
           }
         },
         "en" : {
