@@ -33162,7 +33162,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anzeigen, herunterladen"
+            "value" : "Ansehen, herunterladen"
           }
         },
         "en" : {
@@ -33274,7 +33274,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anzeigen, hochladen, herunterladen"
+            "value" : "Ansehen, hochladen, herunterladen"
           }
         },
         "en" : {
@@ -33386,7 +33386,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anzeigen, hochladen, bearbeiten, herunterladen, löschen"
+            "value" : "Ansehen, hochladen, bearbeiten, herunterladen, löschen"
           }
         },
         "en" : {
