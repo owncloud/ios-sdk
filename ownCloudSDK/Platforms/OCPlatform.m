@@ -42,7 +42,8 @@
 
 		if ([OCAppIdentity.sharedAppIdentity.componentIdentifier isEqual:OCAppComponentIdentifierFileProviderExtension] ||
 		    [OCAppIdentity.sharedAppIdentity.componentIdentifier isEqual:OCAppComponentIdentifierFileProviderUIExtension] ||
-		    [OCAppIdentity.sharedAppIdentity.componentIdentifier isEqual:OCAppComponentIdentifierShareExtension])
+		    [OCAppIdentity.sharedAppIdentity.componentIdentifier isEqual:OCAppComponentIdentifierShareExtension] ||
+		    [OCAppIdentity.sharedAppIdentity.componentIdentifier isEqual:OCAppComponentIdentifierIntentsExtension])
 		{
 			_memoryConfiguration = OCPlatformMemoryConfigurationMinimum;
 		}
