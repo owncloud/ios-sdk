@@ -45,10 +45,22 @@
             "value" : "Auto-accepted."
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-accepted."
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "자동 수락됨"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-accepted."
           }
         },
         "mk" : {
@@ -91,6 +103,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "U vetëpranua."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-accepted."
           }
         },
         "th-TH" : {
@@ -159,10 +177,22 @@
             "value" : "Business category"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Business category"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "사업 분류"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Business category"
           }
         },
         "mk" : {
@@ -205,6 +235,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kategori biznes"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Business category"
           }
         },
         "th-TH" : {
@@ -271,7 +307,19 @@
             "value" : "Certificate chain"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain"
+          }
+        },
         "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain"
+          }
+        },
+        "lo" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Certificate chain"
@@ -314,6 +362,12 @@
           }
         },
         "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain"
+          }
+        },
+        "sv" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Certificate chain"
@@ -383,7 +437,19 @@
             "value" : "Certificate Details"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate Details"
+          }
+        },
         "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate Details"
+          }
+        },
+        "lo" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Certificate Details"
@@ -426,6 +492,12 @@
           }
         },
         "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate Details"
+          }
+        },
+        "sv" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Certificate Details"
@@ -495,10 +567,22 @@
             "value" : "Certificate has issues."
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate has issues."
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "인증서에 오류가 있습니다"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate has issues."
           }
         },
         "mk" : {
@@ -541,6 +625,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dëshmia ka probleme."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate has issues."
           }
         },
         "th-TH" : {
@@ -608,10 +698,22 @@
             "value" : "Common name"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Common name"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "일반 이름"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Common name"
           }
         },
         "mk" : {
@@ -654,6 +756,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Emër i rëndomtë"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Common name"
           }
         },
         "th-TH" : {
@@ -721,10 +829,22 @@
             "value" : "Pays"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Country"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "국가"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Country"
           }
         },
         "mk" : {
@@ -767,6 +887,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vend"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Country"
           }
         },
         "th-TH" : {
@@ -833,10 +959,22 @@
             "value" : "Extensions"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensions"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "확장프로그램"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensions"
           }
         },
         "mk" : {
@@ -879,6 +1017,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zgjerime"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensions"
           }
         },
         "th-TH" : {
@@ -945,10 +1089,22 @@
             "value" : "Fingerprints"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fingerprints"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "지문"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fingerprints"
           }
         },
         "mk" : {
@@ -991,6 +1147,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Shenja gishtash"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fingerprints"
           }
         },
         "th-TH" : {
@@ -1057,10 +1219,22 @@
             "value" : "Hide ±"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide ±"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "숨기기 ±"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide ±"
           }
         },
         "mk" : {
@@ -1103,6 +1277,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fshih ±"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide ±"
           }
         },
         "th-TH" : {
@@ -1169,10 +1349,22 @@
             "value" : "Nom de l'hôte"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostname"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "호스트 이름"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostname"
           }
         },
         "mk" : {
@@ -1215,6 +1407,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Strehëemër"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostname"
           }
         },
         "th-TH" : {
@@ -1281,7 +1479,19 @@
             "value" : "Intermediate Certificate"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intermediate Certificate"
+          }
+        },
         "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intermediate Certificate"
+          }
+        },
+        "lo" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Intermediate Certificate"
@@ -1324,6 +1534,12 @@
           }
         },
         "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intermediate Certificate"
+          }
+        },
+        "sv" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Intermediate Certificate"
@@ -1393,10 +1609,22 @@
             "value" : "Émetteur"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuer"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "발급자"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuer"
           }
         },
         "mk" : {
@@ -1439,6 +1667,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lëshues"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issuer"
           }
         },
         "th-TH" : {
@@ -1506,10 +1740,22 @@
             "value" : "Jurisdiction country"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction country"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "관할 국가"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction country"
           }
         },
         "mk" : {
@@ -1552,6 +1798,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vend juridiksioni"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction country"
           }
         },
         "th-TH" : {
@@ -1619,10 +1871,22 @@
             "value" : "Jurisdiction locality"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction locality"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "관할 지역"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction locality"
           }
         },
         "mk" : {
@@ -1665,6 +1929,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lokalitet juridiksioni"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction locality"
           }
         },
         "th-TH" : {
@@ -1732,10 +2002,22 @@
             "value" : "Jurisdiction state or province"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction state or province"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "관할 주 또는 도"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction state or province"
           }
         },
         "mk" : {
@@ -1778,6 +2060,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Shtet ose provincë juridiksioni"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurisdiction state or province"
           }
         },
         "th-TH" : {
@@ -1845,10 +2133,22 @@
             "value" : "Key bytes"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key bytes"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "키 바이트"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key bytes"
           }
         },
         "mk" : {
@@ -1891,6 +2191,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bajte kyçi"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key bytes"
           }
         },
         "th-TH" : {
@@ -1958,10 +2264,22 @@
             "value" : "Key exponent"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key exponent"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "키 지수"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key exponent"
           }
         },
         "mk" : {
@@ -2004,6 +2322,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eksponent kyçi"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key exponent"
           }
         },
         "th-TH" : {
@@ -2071,10 +2395,22 @@
             "value" : "Information"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Information"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "정보"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Information"
           }
         },
         "mk" : {
@@ -2117,6 +2453,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hollësi"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Information"
           }
         },
         "th-TH" : {
@@ -2184,10 +2526,22 @@
             "value" : "Key size (bits)"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key size (bits)"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "키의 크기 (bits)"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key size (bits)"
           }
         },
         "mk" : {
@@ -2230,6 +2584,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Madhësi kyçi (bits)"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key size (bits)"
           }
         },
         "th-TH" : {
@@ -2297,10 +2657,22 @@
             "value" : "Locality"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locality"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "지역"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locality"
           }
         },
         "mk" : {
@@ -2343,6 +2715,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lokalitet"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locality"
           }
         },
         "th-TH" : {
@@ -2409,10 +2787,22 @@
             "value" : "No issues found."
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No issues found."
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "오류를 찾지 못했습니다"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No issues found."
           }
         },
         "mk" : {
@@ -2455,6 +2845,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "S’u gjetën probleme."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No issues found."
           }
         },
         "th-TH" : {
@@ -2522,10 +2918,22 @@
             "value" : "Organization Unit"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization Unit"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "조직 단위"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization Unit"
           }
         },
         "mk" : {
@@ -2568,6 +2976,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Njësi Enti"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization Unit"
           }
         },
         "th-TH" : {
@@ -2635,10 +3049,22 @@
             "value" : "Société"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "조직"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization"
           }
         },
         "mk" : {
@@ -2681,6 +3107,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ent"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization"
           }
         },
         "th-TH" : {
@@ -2747,10 +3179,22 @@
             "value" : "Public Key"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public Key"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "공용 키"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public Key"
           }
         },
         "mk" : {
@@ -2793,6 +3237,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kyç Publik"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public Key"
           }
         },
         "th-TH" : {
@@ -2859,10 +3309,22 @@
             "value" : "Reason"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reason"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "이유"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reason"
           }
         },
         "mk" : {
@@ -2905,6 +3367,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Arsye"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reason"
           }
         },
         "th-TH" : {
@@ -2971,7 +3439,19 @@
             "value" : "Root Certificate"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root Certificate"
+          }
+        },
         "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root Certificate"
+          }
+        },
+        "lo" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Root Certificate"
@@ -3014,6 +3494,12 @@
           }
         },
         "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root Certificate"
+          }
+        },
+        "sv" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Root Certificate"
@@ -3084,10 +3570,22 @@
             "value" : "Serial Number"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serial Number"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "시리얼 번호"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serial Number"
           }
         },
         "mk" : {
@@ -3130,6 +3628,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Numër Serial"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serial Number"
           }
         },
         "th-TH" : {
@@ -3197,10 +3701,22 @@
             "value" : "Show ±"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show ±"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "보이기 ±"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show ±"
           }
         },
         "mk" : {
@@ -3243,6 +3759,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Shfaq ±"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show ±"
           }
         },
         "th-TH" : {
@@ -3310,10 +3832,22 @@
             "value" : "Signature Algorithm"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signature Algorithm"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "지문 알고리즘"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signature Algorithm"
           }
         },
         "mk" : {
@@ -3356,6 +3890,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Algoritëm Nënshkrimi"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signature Algorithm"
           }
         },
         "th-TH" : {
@@ -3423,10 +3963,22 @@
             "value" : "État ou province"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "State or province"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "도 및 광역시"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "State or province"
           }
         },
         "mk" : {
@@ -3469,6 +4021,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Shtet ose provincë"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "State or province"
           }
         },
         "th-TH" : {
@@ -3536,10 +4094,22 @@
             "value" : "Sujet"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subject"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "제목"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subject"
           }
         },
         "mk" : {
@@ -3582,6 +4152,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Subjekt"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subject"
           }
         },
         "th-TH" : {
@@ -3648,10 +4224,22 @@
             "value" : "User-accepted."
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-accepted."
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "사용자 허가됨"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-accepted."
           }
         },
         "mk" : {
@@ -3694,6 +4282,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pranuar nga përdoruesi."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-accepted."
           }
         },
         "th-TH" : {
@@ -3760,10 +4354,22 @@
             "value" : "User-rejected."
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-rejected."
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "사용자가 거부했습니다."
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-rejected."
           }
         },
         "mk" : {
@@ -3806,6 +4412,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hedhur poshtë nga përdoruesi."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User-rejected."
           }
         },
         "th-TH" : {
@@ -3872,7 +4484,19 @@
             "value" : "Validating…"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validating…"
+          }
+        },
         "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validating…"
+          }
+        },
+        "lo" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Validating…"
@@ -3915,6 +4539,12 @@
           }
         },
         "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validating…"
+          }
+        },
+        "sv" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Validating…"
@@ -3984,10 +4614,22 @@
             "value" : "Erreur de Validation"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Error"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "확인 중 오류"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Error"
           }
         },
         "mk" : {
@@ -4030,6 +4672,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gabim Vleftësim"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Error"
           }
         },
         "th-TH" : {
@@ -4096,10 +4744,22 @@
             "value" : "Validation Status"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Status"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "확인 상태"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Status"
           }
         },
         "mk" : {
@@ -4142,6 +4802,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gjendje Vleftësimi"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validation Status"
           }
         },
         "th-TH" : {
@@ -4209,10 +4875,22 @@
             "value" : "Valid from"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid from"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "올바른 양식"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid from"
           }
         },
         "mk" : {
@@ -4255,6 +4933,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "E vlefshme që nga"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid from"
           }
         },
         "th-TH" : {
@@ -4322,10 +5006,22 @@
             "value" : "Valide jusqu'à"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid until"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "만료 기간:"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid until"
           }
         },
         "mk" : {
@@ -4368,6 +5064,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "E vlefshme deri më"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid until"
           }
         },
         "th-TH" : {
@@ -4435,10 +5137,22 @@
             "value" : "Version"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "버전"
+          }
+        },
+        "lo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
           }
         },
         "mk" : {
@@ -4478,6 +5192,12 @@
           }
         },
         "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
+        "sv" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Version"
