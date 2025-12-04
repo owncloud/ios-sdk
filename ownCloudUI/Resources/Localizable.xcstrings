@@ -48,7 +48,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Auto-accepted."
+            "value" : "Accettato automaticamente."
           }
         },
         "ko" : {
@@ -180,7 +180,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Business category"
+            "value" : "Categoria aziendale"
           }
         },
         "ko" : {
@@ -310,7 +310,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Certificate chain"
+            "value" : "Catena di certificati"
           }
         },
         "ko" : {
@@ -440,7 +440,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Certificate Details"
+            "value" : "Dettagli del certificato"
           }
         },
         "ko" : {
@@ -570,7 +570,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Certificate has issues."
+            "value" : "Il certificato presenta dei problemi."
           }
         },
         "ko" : {
@@ -832,7 +832,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Country"
+            "value" : "Paese"
           }
         },
         "ko" : {
@@ -962,7 +962,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Extensions"
+            "value" : "Estensioni"
           }
         },
         "ko" : {
@@ -1092,7 +1092,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fingerprints"
+            "value" : "Impronte digitali"
           }
         },
         "ko" : {
@@ -1222,7 +1222,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hide ±"
+            "value" : "Nascondi ±"
           }
         },
         "ko" : {
@@ -1352,7 +1352,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hostname"
+            "value" : "Nome host"
           }
         },
         "ko" : {
@@ -1482,7 +1482,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Intermediate Certificate"
+            "value" : "Certificato intermedio"
           }
         },
         "ko" : {
@@ -1612,7 +1612,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Issuer"
+            "value" : "Emittente"
           }
         },
         "ko" : {
@@ -1743,7 +1743,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jurisdiction country"
+            "value" : "Giurisdizione competente - Paese"
           }
         },
         "ko" : {
@@ -1874,7 +1874,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jurisdiction locality"
+            "value" : "Giurisdizione competente - Località"
           }
         },
         "ko" : {
