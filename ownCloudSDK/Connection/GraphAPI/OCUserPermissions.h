@@ -30,6 +30,8 @@ NS_ASSUME_NONNULL_BEGIN
 // MARK: - Permissions
 @property(readonly,strong) NSArray<OCUserPermissionIdentifier> *identifiers;
 @property(readonly) BOOL canCreateSpaces;
+@property(readonly) BOOL canEditSpaces;
+@property(readonly) BOOL canDisableSpaces;
 
 @end
 
