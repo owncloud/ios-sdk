@@ -28,6 +28,8 @@
 
 		// Extract permissions
 		_canCreateSpaces = [_identifiers containsObject:@"Drives.Create.all"];
+		_canEditSpaces = [_identifiers containsObject:@"Drives.ReadWrite.all"];
+		_canDisableSpaces = [_identifiers containsObject:@"Drives.DeleteProject.all"];
 	}
 
 	return (self);
