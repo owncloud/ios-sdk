@@ -9858,7 +9858,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "copy"
+            "value" : "copia"
           }
         },
         "ko" : {
@@ -9988,7 +9988,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Copying %@ to %@…"
+            "value" : "Copia di %@ in %@…"
           }
         },
         "ko" : {
@@ -10118,7 +10118,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Couldn't copy %@ to %@, because an item called %@ already exists there."
+            "value" : "Impossibile copiare %@ in %@, poichè un elemento con nome %@ esiste già in quella posizione."
           }
         },
         "ko" : {
@@ -10248,7 +10248,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Couldn't create %@"
+            "value" : "Impossibile creare %@"
           }
         },
         "ko" : {
@@ -10378,7 +10378,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Couldn't delete %@"
+            "value" : "Impossibile cancellare %@"
           }
         },
         "ko" : {
@@ -10508,7 +10508,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Couldn't download %@"
+            "value" : "Impossibile scaricare %@"
           }
         },
         "ko" : {
@@ -10638,7 +10638,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Couldn't move %@ to %@, because an item called %@ already exists there."
+            "value" : "Impossibile spostare %@ in %@, poichè un elemento con nome %@ esiste già in quella posizione."
           }
         },
         "ko" : {
@@ -10768,7 +10768,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Couldn't rename %@ to %@, because another item with that name already exists."
+            "value" : "Impossibile rinominare %@ a %@, poichè esiste già un altro elemento con lo stesso nome."
           }
         },
         "ko" : {
@@ -10898,7 +10898,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Couldn't upload %@"
+            "value" : "Impossibile caricare %@"
           }
         },
         "ko" : {
@@ -11029,7 +11029,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Creating folder %@…"
+            "value" : "Cartella %@ in creazione…"
           }
         },
         "ko" : {
@@ -11159,7 +11159,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Creating share for %@…"
+            "value" : "Creazione della condivisione di %@…"
           }
         },
         "ko" : {
@@ -11289,7 +11289,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Custom"
+            "value" : "Personalizzato"
           }
         },
         "ko" : {
@@ -11419,7 +11419,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Database size"
+            "value" : "Dimensione database"
           }
         },
         "ko" : {
@@ -11551,7 +11551,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Database upgrade required. Please open the app to perform the upgrade."
+            "value" : "Aggiornamento del database richiesto. Apri l'app per eseguire l'aggiornamento."
           }
         },
         "ko" : {
@@ -11681,7 +11681,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Database Version"
+            "value" : "Versione database "
           }
         },
         "ko" : {
@@ -11811,7 +11811,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Delete"
+            "value" : "Cancellare"
           }
         },
         "ko" : {
@@ -11941,7 +11941,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Delete Authentication Data"
+            "value" : "Cancella dati di autenticazione"
           }
         },
         "ko" : {
@@ -12071,7 +12071,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Delete Database"
+            "value" : "Cancella Database"
           }
         },
         "ko" : {
@@ -12202,7 +12202,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deleting %@…"
+            "value" : "Cancellazione di %@…"
           }
         },
         "ko" : {
@@ -12332,7 +12332,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deleting share for %@…"
+            "value" : "Cancellazione della condivisione di %@…"
           }
         },
         "ko" : {
@@ -12462,7 +12462,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deschedule (remove)"
+            "value" : "Annullare programmazione (rimuovere)"
           }
         },
         "ko" : {
@@ -12592,7 +12592,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "digits"
+            "value" : "cifre"
           }
         },
         "ko" : {
@@ -12722,7 +12722,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Download and preview"
+            "value" : "Scarica e mostra anteprima"
           }
         },
         "ko" : {
@@ -12853,7 +12853,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Download, preview and share"
+            "value" : "Scarica, mostra anteprima e condividi"
           }
         },
         "ko" : {
@@ -12984,7 +12984,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Downloading %@…"
+            "value" : "Scaricando %@…"
           }
         },
         "ko" : {
@@ -13115,7 +13115,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Edit, download, preview and share"
+            "value" : "Modifica, scarica, mostra anteprima e condividi"
           }
         },
         "ko" : {
@@ -13375,7 +13375,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Error"
+            "value" : "Errore"
           }
         },
         "ko" : {
@@ -13505,7 +13505,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Error copying %@"
+            "value" : "Errore durante la copia di %@"
           }
         },
         "ko" : {
@@ -13635,7 +13635,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Error deleting %@"
+            "value" : "Errore durante la cancellazione di %@"
           }
         },
         "ko" : {
@@ -13765,7 +13765,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Error moving %@"
+            "value" : "Errore durante lo spostamento di %@"
           }
         },
         "ko" : {
@@ -13895,7 +13895,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Error renaming %@"
+            "value" : "Errore rinominando %@"
           }
         },
         "ko" : {
@@ -14025,7 +14025,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Error updating %@ metadata"
+            "value" : "Errore aggiornando i metadata di %@"
           }
         },
         "ko" : {
@@ -14155,7 +14155,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Error uploading %@"
+            "value" : "Errore durante il caricamento di %@"
           }
         },
         "ko" : {
@@ -14285,7 +14285,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Events"
+            "value" : "Eventi"
           }
         },
         "ko" : {
@@ -14545,7 +14545,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Failed"
+            "value" : "Fallito"
           }
         },
         "ko" : {
