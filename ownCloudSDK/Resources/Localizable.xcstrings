@@ -48,7 +48,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "\"%@\" has been modified locally"
+            "value" : "\"%@\" è stato modificato localmente"
           }
         },
         "ko" : {
@@ -179,7 +179,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "\"%@\" metadata for %@ couldn't be updated"
+            "value" : "Non è stato possibile aggiornare i metadati \"%@\" per %@"
           }
         },
         "ko" : {
@@ -309,7 +309,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "\"%@\" was modified locally before the download completed."
+            "value" : "\"%@\" è stato modificato localmente prima del completamento del download."
           }
         },
         "ko" : {
@@ -439,7 +439,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "{{itemName}} can't be copied into itself."
+            "value" : "{{itemName}} non può essere copiato su se stesso."
           }
         },
         "ko" : {
@@ -569,7 +569,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "{{itemName}} can't be moved into itself."
+            "value" : "{{itemName}} non può essere spostato in se stesso."
           }
         },
         "ko" : {
@@ -700,7 +700,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "{{itemName}} is currently processed on the server and can't be downloaded until it finishes processing."
+            "value" : "{{itemName}} è attualmente elaborato sul server e non può essere scaricato fino al termine dell'elaborazione."
           }
         },
         "ko" : {
@@ -1093,7 +1093,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ already exists"
+            "value" : "%@ esiste già"
           }
         },
         "ko" : {
@@ -1223,7 +1223,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ can't be copied to %@."
+            "value" : "%@ non può essere copiato in %@."
           }
         },
         "ko" : {
@@ -1353,7 +1353,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ can't be moved to %@."
+            "value" : "%@ non può essere spostato in %@."
           }
         },
         "ko" : {
@@ -1483,7 +1483,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ couldn't be renamed to %@."
+            "value" : "%@ non è stato possibile rinominato in %@."
           }
         },
         "ko" : {
@@ -1614,7 +1614,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ changed on the server. Really delete it?"
+            "value" : "%@ modificato sul server. Confermi la cancellazione?"
           }
         },
         "ko" : {
@@ -1744,7 +1744,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ couldn't be deleted"
+            "value" : "non è stato possibile eliminare %@ "
           }
         },
         "ko" : {
@@ -1874,7 +1874,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ couldn't be renamed to %2$@."
+            "value" : "%1$@ non è stato possibile rinominarlo in %2$@."
           }
         },
         "ko" : {
@@ -2004,7 +2004,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ has changed on the server since you requested its deletion."
+            "value" : "%@ è cambiato sul server da quando hai richiesto la sua cancellazione."
           }
         },
         "ko" : {
@@ -2918,7 +2918,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Accepting share…"
+            "value" : "Accettare la quota..."
           }
         },
         "ko" : {
@@ -3309,7 +3309,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Allow cellular access"
+            "value" : "Consenti l'accesso cellulare"
           }
         },
         "ko" : {
@@ -3439,7 +3439,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "An error occured trying to validate the certificate for %@."
+            "value" : "Si è verificato un errore durante la convalida del certificato per %@."
           }
         },
         "ko" : {
@@ -3569,7 +3569,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "An exception occured attempting to perform an action (\"%@\"). The action has been removed from the sync queue and may not have completed. If logging is enabled, the exception has been logged."
+            "value" : "Si è verificata un'eccezione nel tentativo di eseguire un'azione (\"%@\"). L'azione è stata rimossa dalla coda di sincronizzazione e potrebbe non essere stata completata. Se la registrazione è abilitata, l'eccezione è stata registrata."
           }
         },
         "ko" : {
@@ -3701,7 +3701,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "An exception occured."
+            "value" : "Si è verificata un'eccezione."
           }
         },
         "ko" : {
@@ -3833,7 +3833,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "An operation failed due to outdated cache information."
+            "value" : "Un'operazione non è riuscita a causa di informazioni sulla cache obsolete."
           }
         },
         "ko" : {
@@ -3964,7 +3964,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Another item named %@ already exists in %@."
+            "value" : "Un altro elemento denominato %@ esiste già in %@."
           }
         },
         "ko" : {
@@ -4096,7 +4096,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Another item policy of the same kind already includes the item, making the addition of this item policy redundant."
+            "value" : "Un'altra regola oggetto dello stesso tipo include già questo oggetto, rendendo l'aggiunta di questa regola oggetto ridondante."
           }
         },
         "ko" : {
@@ -4226,7 +4226,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Another version of %1$@ already exists in %2$@."
+            "value" : "Un'altra versione di %1$@ esiste già in %2$@."
           }
         },
         "ko" : {
@@ -4358,7 +4358,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "At least {{min}} {{characterType}}"
+            "value" : "Minimo {{min}} {{characterType}}"
           }
         },
         "ko" : {
@@ -4490,7 +4490,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "At least {{min}} special characters: {{specialCharacters}}"
+            "value" : "Minimo {{min}} caratteri speciali: {{specialCharacters}}"
           }
         },
         "ko" : {
@@ -4622,7 +4622,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "At most {{byteLength}} bytes."
+            "value" : "Al massimo {{byteLength}} bytes."
           }
         },
         "ko" : {
@@ -4754,7 +4754,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "At most {{max}} {{characterType}}"
+            "value" : "Al massimo {{max}} {{characterType}}"
           }
         },
         "ko" : {
@@ -4884,7 +4884,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Auth Data"
+            "value" : "Dati di autenticazione"
           }
         },
         "ko" : {
@@ -5014,7 +5014,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Auth Method"
+            "value" : "Metodo di autenticazione"
           }
         },
         "ko" : {
@@ -5144,7 +5144,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Auth Validation Date"
+            "value" : "Data di convalida dell'autenticazione"
           }
         },
         "ko" : {
@@ -5406,7 +5406,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Authentication method not allowed. Re-authentication needed."
+            "value" : "Metodo di autenticazione non consentito. E' necessario autenticarsi nuovamente."
           }
         },
         "ko" : {
@@ -5538,7 +5538,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Authentication method unknown."
+            "value" : "Metodo di autenticazione sconosciuto."
           }
         },
         "ko" : {
@@ -5670,7 +5670,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Authorization failed because data was missing from the secret data for the authentication method."
+            "value" : "L'autorizzazione non è riuscita perché mancavano alcuni dati dai dati segreti per il metodo di autenticazione."
           }
         },
         "ko" : {
@@ -5802,7 +5802,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Authorization failed because no authorization data was set for the authentication method."
+            "value" : "Autorizzazione non riuscita perché non sono stati impostati dati di autorizzazione per il metodo di autenticazione."
           }
         },
         "ko" : {
@@ -5934,7 +5934,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Authorization failed because the server returned a redirect. Authorization may be successful when retried with the redirect URL."
+            "value" : "L'autorizzazione non è riuscita perché il server ha restituito un reindirizzamento. L'autorizzazione può avere successo provando ad utilizzare l'URL di reindirizzamento."
           }
         },
         "ko" : {
@@ -6066,7 +6066,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Authorization failed."
+            "value" : "Autorizzazione fallita."
           }
         },
         "ko" : {
@@ -6198,7 +6198,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Authorization needs to be retried."
+            "value" : "E' necessario ritentare l'autorizzazione."
           }
         },
         "ko" : {
@@ -6593,7 +6593,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Between {{min}} and {{max}} {{characterType}}"
+            "value" : "Tra {{min}} e {{max}} {{characterType}}"
           }
         },
         "ko" : {
@@ -6725,7 +6725,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bookmark created with a newer app version. Please update the app."
+            "value" : "Segnalibro creato con una versione più recente dell'app. Si prega di aggiornare l'app."
           }
         },
         "ko" : {
@@ -6855,7 +6855,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Can edit"
+            "value" : "Può modificare"
           }
         },
         "ko" : {
@@ -6985,7 +6985,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Can upload"
+            "value" : "Può caricare"
           }
         },
         "ko" : {
@@ -7115,7 +7115,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Can view"
+            "value" : "Può visualizzare"
           }
         },
         "ko" : {
@@ -7245,7 +7245,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Can't build custom scheme URL from %@."
+            "value" : "Impossibile creare uno schema URL personalizzato da %@."
           }
         },
         "ko" : {
@@ -7377,7 +7377,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Can't open authorization URL with custom scheme."
+            "value" : "Non è possibile aprire un URL  di autorizzazione con uno schema personalizzato."
           }
         },
         "ko" : {
@@ -7508,7 +7508,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Can't open custom scheme URL %@."
+            "value" : "Impossibile aprire un URL con schema personalizzato %@."
           }
         },
         "ko" : {
@@ -7638,7 +7638,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cancel"
+            "value" : "Annulla"
           }
         },
         "ko" : {
@@ -7768,7 +7768,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Certificate"
+            "value" : "Certificato"
           }
         },
         "ko" : {
@@ -7899,7 +7899,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Certificate changed"
+            "value" : "Certificato modificato"
           }
         },
         "ko" : {
@@ -8029,7 +8029,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Certificate Date"
+            "value" : "Data del certificato"
           }
         },
         "ko" : {
@@ -8159,7 +8159,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Certificate for %@ passed validation."
+            "value" : "Convalida del certificato per %@ superata."
           }
         },
         "ko" : {
@@ -8289,7 +8289,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Certificates"
+            "value" : "Certificati"
           }
         },
         "ko" : {
@@ -8420,7 +8420,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "characters"
+            "value" : "caratteri"
           }
         },
         "ko" : {
@@ -8550,7 +8550,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Class"
+            "value" : "Classe"
           }
         },
         "ko" : {
@@ -8682,7 +8682,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Client registration failed."
+            "value" : "Registrazione del client non riuscita."
           }
         },
         "ko" : {
@@ -8812,7 +8812,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Closing vault…"
+            "value" : "Chiusura della cassaforte…"
           }
         },
         "ko" : {
@@ -8942,7 +8942,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connected"
+            "value" : "Connesso"
           }
         },
         "ko" : {
@@ -9072,7 +9072,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connecting"
+            "value" : "In connessione"
           }
         },
         "ko" : {
@@ -9203,7 +9203,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connecting…"
+            "value" : "Connessione in corso…"
           }
         },
         "ko" : {
@@ -9333,7 +9333,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connection refused"
+            "value" : "Connessione rifiutata"
           }
         },
         "ko" : {
@@ -9465,7 +9465,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connection validation failed."
+            "value" : "Convalida della connessione non riuscita."
           }
         },
         "ko" : {
@@ -9597,7 +9597,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Construction of URL Session Task failed."
+            "value" : "Costruzione dell'attività di sessione URL non riuscita."
           }
         },
         "ko" : {
@@ -9727,7 +9727,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Contributor"
+            "value" : "Collaboratore"
           }
         },
         "ko" : {
@@ -14675,7 +14675,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fetching updates…"
+            "value" : "Recupero aggiornamenti..."
           }
         },
         "ko" : {
@@ -14805,7 +14805,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fetching user information…"
+            "value" : "Recupero delle informazioni dell'utente..."
           }
         },
         "ko" : {
@@ -15065,7 +15065,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "File modified locally"
+            "value" : "File modificato localmente"
           }
         },
         "ko" : {
@@ -15197,7 +15197,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "File not found."
+            "value" : "File non trovato."
           }
         },
         "ko" : {
@@ -15458,7 +15458,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Folders"
+            "value" : "Cartelle"
           }
         },
         "ko" : {
@@ -15590,7 +15590,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Generic graph error."
+            "value" : "Errore grafico generico."
           }
         },
         "ko" : {
@@ -15720,7 +15720,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Identifier"
+            "value" : "Identificativo"
           }
         },
         "ko" : {
@@ -15850,7 +15850,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "In progress since"
+            "value" : "In corso da"
           }
         },
         "ko" : {
@@ -15981,7 +15981,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Insecure HTTP URL"
+            "value" : "URL HTTP non sicuro"
           }
         },
         "ko" : {
@@ -16111,7 +16111,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Insecure HTTP URL forbidden"
+            "value" : "URL HTTP non sicuro vietato"
           }
         },
         "ko" : {
@@ -16243,7 +16243,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Insufficient parameters."
+            "value" : "Parametri insufficienti."
           }
         },
         "ko" : {
@@ -16373,7 +16373,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Insufficient permissions"
+            "value" : "Permessi insufficienti"
           }
         },
         "ko" : {
@@ -16505,7 +16505,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Internal error."
+            "value" : "Errore interno"
           }
         },
         "ko" : {
@@ -16635,7 +16635,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invalid checksum"
+            "value" : "Checksum non valido"
           }
         },
         "ko" : {
@@ -16767,7 +16767,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invalid parameter."
+            "value" : "Parametro non valido."
           }
         },
         "ko" : {
@@ -16898,7 +16898,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invalid rule without minimum and maximum count"
+            "value" : "Regola non valida senza conteggio minimo e massimo"
           }
         },
         "ko" : {
@@ -17030,7 +17030,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invalid type."
+            "value" : "Tipo non valido."
           }
         },
         "ko" : {
@@ -17160,7 +17160,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invalidate"
+            "value" : "Invalidare"
           }
         },
         "ko" : {
@@ -17290,7 +17290,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invalidate Login Data"
+            "value" : "Invalida i dati di accesso"
           }
         },
         "ko" : {
@@ -17420,7 +17420,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invited people"
+            "value" : "Persone invitate"
           }
         },
         "ko" : {
@@ -17551,7 +17551,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invited persons"
+            "value" : "Persone invitate"
           }
         },
         "ko" : {
@@ -17681,7 +17681,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Issues were found while validating the certificate for %@."
+            "value" : "Sono stati riscontrati problemi durante la convalida del certificato per %@."
           }
         },
         "ko" : {
@@ -17811,7 +17811,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Item"
+            "value" : "Oggetto"
           }
         },
         "ko" : {
@@ -17943,7 +17943,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Item is currently processing."
+            "value" : "L'oggetto è attualmente in fase di elaborazione."
           }
         },
         "ko" : {
@@ -18075,7 +18075,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Item is not a directory."
+            "value" : "L'oggetto non è una directory."
           }
         },
         "ko" : {
@@ -18207,7 +18207,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Item not available offline."
+            "value" : "Oggetto non disponibile offline."
           }
         },
         "ko" : {
@@ -18339,7 +18339,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Item not found."
+            "value" : "Oggetto non trovato."
           }
         },
         "ko" : {
@@ -18471,7 +18471,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Favorite"
+            "value" : "Preferito"
           }
         },
         "ko" : {
@@ -18603,7 +18603,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Last modified"
+            "value" : "Ultima modifica"
           }
         },
         "ko" : {
@@ -18735,7 +18735,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Local attributes"
+            "value" : "Attributi locali"
           }
         },
         "ko" : {
@@ -18865,7 +18865,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keep both"
+            "value" : "Mantieni entrambi"
           }
         },
         "ko" : {
@@ -18995,7 +18995,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lane ID"
+            "value" : "ID corsia"
           }
         },
         "ko" : {
@@ -19125,7 +19125,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Link works only for invited people. Login is required."
+            "value" : "Il link funziona solo per le persone invitate. Il login è obbligatorio."
           }
         },
         "ko" : {
@@ -19255,7 +19255,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Local ID"
+            "value" : "ID locale"
           }
         },
         "ko" : {
@@ -19385,7 +19385,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Localized Description"
+            "value" : "Descrizione localizzata"
           }
         },
         "ko" : {
@@ -19517,7 +19517,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lock invalidated."
+            "value" : "Blocco invalidato."
           }
         },
         "ko" : {
@@ -19647,7 +19647,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Log file"
+            "value" : "File di registro"
           }
         },
         "ko" : {
@@ -19777,7 +19777,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Log HTTP requests and responses"
+            "value" : "Registra le richieste e le risposte HTTP"
           }
         },
         "ko" : {
@@ -19907,7 +19907,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Log internal file operations"
+            "value" : "Registra le operazioni su file interne"
           }
         },
         "ko" : {
@@ -20037,7 +20037,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Login as user %@ required. Please retry."
+            "value" : "E' richiesto l'accesso come utente %@ . Si prega di riprovare."
           }
         },
         "ko" : {
@@ -20168,7 +20168,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Longer than {{byteLength}} bytes in {{encoding}} encoding."
+            "value" : "Più lungo di {{byteLength}} byte nella codifica {{encoding}}."
           }
         },
         "ko" : {
@@ -20298,7 +20298,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "lower-case characters"
+            "value" : "Caratteri minuscoli"
           }
         },
         "ko" : {
@@ -20428,7 +20428,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Making %1$@ available offline also covers %2$@, which was previously requested as being available offline."
+            "value" : "Rendere %1$@ disponibile offline copre anche %2$@, che era stato precedentemente richiesto come disponibile offline."
           }
         },
         "ko" : {
@@ -20558,7 +20558,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Making %1$@ available offline also covers %2$@, whose offline availability has previously been requested."
+            "value" : "Rendere %1$@ disponibile offline copre anche %2$@, la cui disponibilità offline è stata precedentemente richiesta."
           }
         },
         "ko" : {
@@ -20688,7 +20688,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Manager"
+            "value" : "Gestore"
           }
         },
         "ko" : {
@@ -20820,7 +20820,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Missing Drive ID."
+            "value" : "ID unità mancante."
           }
         },
         "ko" : {
@@ -20950,7 +20950,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Moving %@ to %@…"
+            "value" : "Spostamento di %@ a %@..."
           }
         },
         "ko" : {
@@ -21080,7 +21080,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Name"
+            "value" : "Nome"
           }
         },
         "ko" : {
@@ -21210,7 +21210,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Network unavailable"
+            "value" : "Rete non disponibile"
           }
         },
         "ko" : {
@@ -21342,7 +21342,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No certificate was returned for a request despite this being a HTTPS connection (should never occur in production, but only if you forgot to provide a certificate during simulated responses to HTTPS requests)."
+            "value" : "Nessun certificato è stato restituito per una richiesta nonostante si trattasse di una connessione HTTPS (non dovrebbe mai verificarsi in produzione, ma solo se hai dimenticato di fornire un certificato durante le risposte simulate alle richieste HTTPS)."
           }
         },
         "ko" : {
@@ -21474,7 +21474,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No data converter available for conversion."
+            "value" : "Nessun convertitore disponibile per la conversione."
           }
         },
         "ko" : {
@@ -21606,7 +21606,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Not authorized to access shares."
+            "value" : "Non autorizzato ad accedere alle condivisioni."
           }
         },
         "ko" : {
@@ -21738,7 +21738,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Not available offline."
+            "value" : "Non disponibile offline."
           }
         },
         "ko" : {
@@ -21868,7 +21868,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Not enough space left on the server to upload %@."
+            "value" : "Spazio su server insufficiente a caricare %@."
           }
         },
         "ko" : {
@@ -22000,7 +22000,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Object does not return DataItemType."
+            "value" : "L'oggetto non restituisce DataItemType."
           }
         },
         "ko" : {
@@ -22131,7 +22131,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Offline"
+            "value" : "Non in linea"
           }
         },
         "ko" : {
@@ -22262,7 +22262,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Offline (no WiFi connection)"
+            "value" : "Non in linea (nessuna connessione WiFi)"
           }
         },
         "ko" : {
@@ -22393,7 +22393,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Offline availability of %1$@ is already ensured by having made %2$@ available offline."
+            "value" : "La disponibilità offline di %1$@ è già garantita avendo reso %2$@ disponibile offline."
           }
         },
         "ko" : {
@@ -22654,7 +22654,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Online"
+            "value" : "In linea"
           }
         },
         "ko" : {
@@ -22784,7 +22784,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Only invited persons have access. Login required."
+            "value" : "Solo le persone invitate possono accedere. Login richiesto."
           }
         },
         "ko" : {
@@ -22914,7 +22914,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opening vault…"
+            "value" : "Apertura del cassaforte..."
           }
         },
         "ko" : {
@@ -23045,7 +23045,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Operation forbidden"
+            "value" : "Operazione vietata"
           }
         },
         "ko" : {
@@ -23175,7 +23175,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Origin Process"
+            "value" : "Processo di origine"
           }
         },
         "ko" : {
@@ -23305,7 +23305,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Origin Process Valid"
+            "value" : "Processo di origine valido"
           }
         },
         "ko" : {
@@ -23435,7 +23435,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Origin URL"
+            "value" : "URL di origine"
           }
         },
         "ko" : {
@@ -23567,7 +23567,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Other item policies of the same kind covering subsets of this item policy become redundant by the addition of this item policy."
+            "value" : "Altre policy oggetto dello stesso tipo che coprono i sottoinsiemi di questa diventano ridondanti con questa aggiunta."
           }
         },
         "ko" : {
@@ -23697,7 +23697,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Overwrite modified file"
+            "value" : "Sovrascrivi il file modificato"
           }
         },
         "ko" : {
@@ -23829,7 +23829,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Password can't be converted to {{encoding}}."
+            "value" : "La password non può essere convertita in {{encoding}}."
           }
         },
         "ko" : {
@@ -23960,7 +23960,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pending"
+            "value" : "In sospeso"
           }
         },
         "ko" : {
@@ -24091,7 +24091,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Personal"
+            "value" : "Personale"
           }
         },
         "ko" : {
@@ -24221,7 +24221,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Please check if you have sufficient permissions to delete %@."
+            "value" : "Controlla se hai autorizzazioni sufficienti per eliminare %@."
           }
         },
         "ko" : {
@@ -24352,7 +24352,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Populating database…"
+            "value" : "Compilazione del database…"
           }
         },
         "ko" : {
@@ -24482,7 +24482,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Previous token refresh attempts indicated an invalid refresh token."
+            "value" : "I precedenti tentativi di aggiornamento del token hanno evidenziato un token di aggiornamento non valido."
           }
         },
         "ko" : {
@@ -24614,7 +24614,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Private link format invalid."
+            "value" : "Formato link privato non valido."
           }
         },
         "ko" : {
@@ -24745,7 +24745,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Proceed"
+            "value" : "Procedere"
           }
         },
         "ko" : {
@@ -24875,7 +24875,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Process Sync Records"
+            "value" : "Processa i record di sincronizzazione"
           }
         },
         "ko" : {
@@ -25007,7 +25007,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Public upload was disabled by the administrator."
+            "value" : "Il caricamento pubblico è stato disabilitato dall'amministratore."
           }
         },
         "ko" : {
@@ -25137,7 +25137,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recipients can upload but existing contents are not revealed."
+            "value" : "I destinatari possono caricare ma i contenuti esistenti non vengono visualizzati."
           }
         },
         "ko" : {
@@ -25267,7 +25267,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recipients can view and download contents."
+            "value" : "I destinatari possono visualizzare e scaricare i contenuti."
           }
         },
         "ko" : {
@@ -25397,7 +25397,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recipients can view, download and edit contents."
+            "value" : "I destinatari possono visualizzare, scaricare e modificare i contenuti."
           }
         },
         "ko" : {
@@ -25527,7 +25527,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recipients can view, download and upload contents."
+            "value" : "I destinatari possono visualizzare, scaricare e caricare contenuti."
           }
         },
         "ko" : {
@@ -25657,7 +25657,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recipients can view, download, edit, delete and upload contents."
+            "value" : "I destinatari possono visualizzare, scaricare, modificare, eliminare e caricare contenuti."
           }
         },
         "ko" : {
@@ -25787,7 +25787,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Redirection"
+            "value" : "Reindirizzamento"
           }
         },
         "ko" : {
@@ -25917,7 +25917,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rejecting share…"
+            "value" : "Rifiuto della condivisione..."
           }
         },
         "ko" : {
@@ -26047,7 +26047,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Remove Database Version"
+            "value" : "Rimuovi la versione del database"
           }
         },
         "ko" : {
@@ -26177,7 +26177,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Removed Items"
+            "value" : "Oggetti rimossi"
           }
         },
         "ko" : {
@@ -26307,7 +26307,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Removing local copy of %@…"
+            "value" : "Rimozione della copia locale di %@…"
           }
         },
         "ko" : {
@@ -26437,7 +26437,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Renaming %@ to %@…"
+            "value" : "Rinominare %@ in %@..."
           }
         },
         "ko" : {
@@ -26567,7 +26567,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Replace"
+            "value" : "Sostituire"
           }
         },
         "ko" : {
@@ -26699,7 +26699,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Request completed with error."
+            "value" : "Richiesta completata con errori."
           }
         },
         "ko" : {
@@ -26831,7 +26831,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Request couldn't be scheduled because the underlying URL session has been invalidated."
+            "value" : "Non è stato possibile programmare la richiesta perché la sessione URL sottostante è stata invalidata."
           }
         },
         "ko" : {
@@ -26963,7 +26963,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Request timed out"
+            "value" : "Richiesta scaduta"
           }
         },
         "ko" : {
@@ -27095,7 +27095,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Request was cancelled because the server certificate was rejected."
+            "value" : "La richiesta è stata annullata perché il certificato del server è stato rifiutato."
           }
         },
         "ko" : {
@@ -27227,7 +27227,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Request was cancelled."
+            "value" : "La richiesta è stata annullata."
           }
         },
         "ko" : {
@@ -27359,7 +27359,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Request was dropped by the NSURLSession."
+            "value" : "La richiesta è stata abbandonata dalla NSURLSession."
           }
         },
         "ko" : {
@@ -27491,7 +27491,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Request was removed before scheduling."
+            "value" : "La richiesta è stata rimossa prima della programmazione."
           }
         },
         "ko" : {
@@ -27623,7 +27623,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Required value missing."
+            "value" : "Valore richiesto mancante."
           }
         },
         "ko" : {
@@ -27754,7 +27754,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reschedule"
+            "value" : "Ripianificare"
           }
         },
         "ko" : {
@@ -27886,7 +27886,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Resolution of private link failed."
+            "value" : "Risoluzione del collegamento privato non riuscita."
           }
         },
         "ko" : {
@@ -28018,7 +28018,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Resource does not exist."
+            "value" : "La risorsa non esiste."
           }
         },
         "ko" : {
@@ -28150,7 +28150,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Resource not found."
+            "value" : "Risorsa non trovata."
           }
         },
         "ko" : {
@@ -28282,7 +28282,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Response was in an unknown format."
+            "value" : "La risposta era in un formato sconosciuto."
           }
         },
         "ko" : {
@@ -28412,7 +28412,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Retrieving capabilities…"
+            "value" : "Recupero delle possibilità…"
           }
         },
         "ko" : {
@@ -28543,7 +28543,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Retrieving file list for %@…"
+            "value" : "Recupero dell'elenco dei file di %@…"
           }
         },
         "ko" : {
@@ -28673,7 +28673,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Retrieving items for %@"
+            "value" : "Recupero degli oggetti di %@"
           }
         },
         "ko" : {
@@ -28803,7 +28803,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Retrieving metadata…"
+            "value" : "Recupero dei metadati..."
           }
         },
         "ko" : {
@@ -28933,7 +28933,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Retry"
+            "value" : "Riprovare"
           }
         },
         "ko" : {
@@ -29063,7 +29063,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Running"
+            "value" : "In corso"
           }
         },
         "ko" : {
@@ -29193,7 +29193,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Scheduled folder scans"
+            "value" : "Scansioni cartelle pianificati"
           }
         },
         "ko" : {
@@ -29455,7 +29455,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server detection failed because of too many redirects."
+            "value" : "Il rilevamento del server non è riuscito a causa di troppi reindirizzamenti."
           }
         },
         "ko" : {
@@ -29587,7 +29587,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server detection failed, i.e. when the server at a URL is not an ownCloud instance."
+            "value" : "Rilevamento del server non riuscito, cioè quando il server a un URL non è un'istanza ownCloud."
           }
         },
         "ko" : {
@@ -29718,7 +29718,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server doesn't seem to support any authentication method supported by this app."
+            "value" : "Il server non sembra supportare alcun metodo di autenticazione supportato da questa app."
           }
         },
         "ko" : {
@@ -29848,7 +29848,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server down for maintenance"
+            "value" : "Server fuori servizio per manutenzione"
           }
         },
         "ko" : {
@@ -30112,7 +30112,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server redirection to bad/invalid URL."
+            "value" : "Reindirizzamento del server a URL errato/non valido."
           }
         },
         "ko" : {
@@ -30242,7 +30242,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server returns status %ld"
+            "value" : "Il server restituisce lo stato %ld"
           }
         },
         "ko" : {
@@ -30372,7 +30372,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server software %@ not supported."
+            "value" : "Software server %@ non supportato."
           }
         },
         "ko" : {
@@ -30502,7 +30502,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Set detailed permissions"
+            "value" : "Imposta le autorizzazioni dettagliate"
           }
         },
         "ko" : {
@@ -30634,7 +30634,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Share not found."
+            "value" : "Condivisione non trovata."
           }
         },
         "ko" : {
@@ -30764,7 +30764,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shared with me"
+            "value" : "Condiviso con me"
           }
         },
         "ko" : {
@@ -30895,7 +30895,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shares"
+            "value" : "Condivisioni"
           }
         },
         "ko" : {
@@ -31027,7 +31027,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shares are unavailable."
+            "value" : "Le condivisioni non sono disponibili."
           }
         },
         "ko" : {
@@ -31158,7 +31158,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sharing requires an active connection."
+            "value" : "La condivisione richiede una connessione attiva."
           }
         },
         "ko" : {
@@ -31289,7 +31289,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "special characters"
+            "value" : "caratteri speciali"
           }
         },
         "ko" : {
@@ -31420,7 +31420,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Standard error output"
+            "value" : "Errore standard in risposta"
           }
         },
         "ko" : {
@@ -31550,7 +31550,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "State"
+            "value" : "Stato"
           }
         },
         "ko" : {
@@ -31680,7 +31680,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sync Record ID"
+            "value" : "ID di sincronizzazione del record"
           }
         },
         "ko" : {
@@ -31812,7 +31812,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The action couldn't be performed on the targeted item because the client lacks permissions."
+            "value" : "Non è stato possibile eseguire l'azione sull'elemento di destinazione perché il client non ha le autorizzazioni."
           }
         },
         "ko" : {
@@ -31944,7 +31944,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The action couldn't be performed on the targeted item because the client lacks permisssions."
+            "value" : "Non è stato possibile eseguire l'azione sull'oggetto di destinazione perché il cliente non ha autorizzazioni."
           }
         },
         "ko" : {
@@ -32074,7 +32074,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The certificate for %@ has previously been rejected by the user."
+            "value" : "Il certificato per %@ è stato precedentemente rifiutato dall'utente."
           }
         },
         "ko" : {
@@ -32204,7 +32204,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The certificate for %1$@ passes TLS validation but doesn't pass the acceptance rule to replace the certificate for %2$@."
+            "value" : "Il certificato per %1$@ supera la convalida TLS ma non supera la regola di convalida per sostituire il certificato per %2$@."
           }
         },
         "ko" : {
@@ -32336,7 +32336,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The certificate is invalid or contains errors"
+            "value" : "Il certificato non è valido o contiene errori"
           }
         },
         "ko" : {
@@ -32466,7 +32466,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The connection is redirected from %1$@ to %2$@."
+            "value" : "La connessione viene reindirizzata da %1$@ a %2$@."
           }
         },
         "ko" : {
@@ -32596,7 +32596,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The contents of the file on the server has changed since initiating download - or the file is no longer available on the server."
+            "value" : "Il contenuto del file sul server è cambiato dall'inizio del download - o il file non è più disponibile sul server."
           }
         },
         "ko" : {
@@ -32728,7 +32728,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The destination item has not been found."
+            "value" : "L'oggetto di destinazione non è stato trovato."
           }
         },
         "ko" : {
@@ -32858,7 +32858,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The downloaded file's checksum does not match the checksum provided by the server."
+            "value" : "Il checksum del file scaricato non corrisponde al checksum fornito dal server."
           }
         },
         "ko" : {
@@ -32988,7 +32988,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The file no longer exists on the server in this location."
+            "value" : "Il file non esiste più sul server in questa posizione."
           }
         },
         "ko" : {
@@ -33120,7 +33120,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The logged in user is not matching the required user ID."
+            "value" : "L'utente che ha effettuato l'accesso non corrisponde all'ID utente richiesto."
           }
         },
         "ko" : {
@@ -33252,7 +33252,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The operation on the targeted item is not allowed."
+            "value" : "L'operazione sull'oggetto di destinazione non è consentita."
           }
         },
         "ko" : {
@@ -33384,7 +33384,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The operation was cancelled."
+            "value" : "L'operazione è stata annullata."
           }
         },
         "ko" : {
@@ -33516,7 +33516,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The provided path is not normalized."
+            "value" : "Il percorso fornito non è normalizzato."
           }
         },
         "ko" : {
@@ -33646,7 +33646,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The target directory %@ doesn't seem to exist."
+            "value" : "Sembra che la directory di destinazione %@ non esista."
           }
         },
         "ko" : {
@@ -33778,7 +33778,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The target location has not been found."
+            "value" : "La posizione di destinazione non è stata trovata."
           }
         },
         "ko" : {
@@ -33910,7 +33910,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The targeted item has changed."
+            "value" : "L'oggetto di destinazione è cambiato."
           }
         },
         "ko" : {
@@ -34042,7 +34042,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The targeted item has not been found."
+            "value" : "L'oggetto di destinazione non è stato trovato."
           }
         },
         "ko" : {
@@ -34172,7 +34172,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The URL you provided uses the HTTP rather than the HTTPS scheme, so your communication would not be encrypted."
+            "value" : "L'URL che hai fornito utilizza lo schema HTTP piuttosto che HTTPS, quindi la tua comunicazione sarebbe non crittografata."
           }
         },
         "ko" : {
@@ -34302,7 +34302,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The URL you provided uses the HTTP rather than the HTTPS scheme. If you continue, your communication will not be encrypted."
+            "value" : "L'URL che hai fornito utilizza lo schema HTTP piuttosto che lo schema HTTPS. Se continui, la tua comunicazione non sarà crittografata."
           }
         },
         "ko" : {
@@ -34434,7 +34434,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "There already is an item at the destination of this action."
+            "value" : "C'è già un oggetto come destinazione di questa azione."
           }
         },
         "ko" : {
@@ -34566,7 +34566,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This feature is currently not implemented"
+            "value" : "Questa funzione non è attualmente implementata"
           }
         },
         "ko" : {
@@ -34698,7 +34698,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This feature is not supported for this item."
+            "value" : "Questa funzione non è supportata per questo oggetto."
           }
         },
         "ko" : {
@@ -34830,7 +34830,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This feature is not supported for this server (version)."
+            "value" : "Questa funzione non è supportata per questo server (versione)."
           }
         },
         "ko" : {
@@ -34961,7 +34961,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This file is currently being processed and is not yet available for use. Please try again shortly."
+            "value" : "Questo file è attualmente in fase di elaborazione e non è ancora disponibile per l'uso. Si prega di riprovare a breve."
           }
         },
         "ko" : {
@@ -35091,7 +35091,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This server runs an unsupported version (%@). Version %@ or later is required by this app."
+            "value" : "Questo server esegue una versione non supportata (%@). Questa app richiede la versione %@ o successiva."
           }
         },
         "ko" : {
@@ -35223,7 +35223,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This server version is not supported."
+            "value" : "Questa versione del server non è supportata."
           }
         },
         "ko" : {
@@ -35353,7 +35353,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Thumbnail database size"
+            "value" : "Dimensione del database delle miniature"
           }
         },
         "ko" : {
@@ -35483,7 +35483,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Timestamp"
+            "value" : "Data e ora"
           }
         },
         "ko" : {
@@ -35615,7 +35615,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Too few {{localizedName}}"
+            "value" : "Troppo pochi {{localizedName}}"
           }
         },
         "ko" : {
@@ -35747,7 +35747,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Too many {{localizedName}}"
+            "value" : "Troppi {{localizedName}}"
           }
         },
         "ko" : {
@@ -35877,7 +35877,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Total Items"
+            "value" : "Oggetti totali"
           }
         },
         "ko" : {
@@ -36009,7 +36009,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Unknown share type."
+            "value" : "Tipo di condivisione sconosciuto."
           }
         },
         "ko" : {
@@ -36141,7 +36141,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Unknown user"
+            "value" : "Utente sconosciuto"
           }
         },
         "ko" : {
@@ -36271,7 +36271,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Update failed with status code %lu"
+            "value" : "Aggiornamento non riuscito con il codice di stato %lu"
           }
         },
         "ko" : {
@@ -36401,7 +36401,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Updating metadata for '%@'…"
+            "value" : "Aggiornamento dei metadati per '%@'…"
           }
         },
         "ko" : {
@@ -36531,7 +36531,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Updating share…"
+            "value" : "Aggiornamento condivisione..."
           }
         },
         "ko" : {
@@ -36662,7 +36662,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Upgrading database…"
+            "value" : "Aggiornamento del database..."
           }
         },
         "ko" : {
@@ -36792,7 +36792,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Upload only, existing content is not revealed"
+            "value" : "Solo caricamento, il contenuto esistente non viene visualizzato"
           }
         },
         "ko" : {
@@ -36922,7 +36922,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Upload, edit, delete, download and preview"
+            "value" : "Carica, modifica, elimina, scarica e visualizza in anteprima"
           }
         },
         "ko" : {
@@ -37053,7 +37053,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Upload, edit, delete, download, preview and share"
+            "value" : "Carica, modifica, elimina, scarica, visualizza in anteprima e condividi"
           }
         },
         "ko" : {
@@ -37183,7 +37183,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uploader"
+            "value" : "Caricato da "
           }
         },
         "ko" : {
@@ -37313,7 +37313,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uploading %@…"
+            "value" : "Caricamento di %@…"
           }
         },
         "ko" : {
@@ -37443,7 +37443,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uploads to this folder are not allowed."
+            "value" : "I caricamenti in questa cartella non sono consentiti."
           }
         },
         "ko" : {
@@ -37574,7 +37574,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "upper-case characters"
+            "value" : "Caratteri maiuscoli"
           }
         },
         "ko" : {
@@ -37834,7 +37834,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Use Origin URL as URL"
+            "value" : "Usa l'URL di origine come URL"
           }
         },
         "ko" : {
@@ -37964,7 +37964,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "User Name"
+            "value" : "Nome utente"
           }
         },
         "ko" : {
@@ -38354,7 +38354,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vacuum"
+            "value" : "Vuoto"
           }
         },
         "ko" : {
@@ -38484,7 +38484,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "View, download"
+            "value" : "Visualizza, scarica"
           }
         },
         "ko" : {
@@ -38614,7 +38614,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "View, upload, download"
+            "value" : "Visualizza, carica, scarica"
           }
         },
         "ko" : {
@@ -38744,7 +38744,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "View, upload, edit, download, delete"
+            "value" : "Visualizza, carica, modifica, scarica, elimina"
           }
         },
         "ko" : {
@@ -38874,7 +38874,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Viewer"
+            "value" : "Visualizzatore"
           }
         },
         "ko" : {
@@ -39004,7 +39004,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wait Conditions"
+            "value" : "Condizioni di attesa"
           }
         },
         "ko" : {
@@ -39134,7 +39134,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Waiting for metadata refresh"
+            "value" : "In attesa di aggiornamento dei metadati"
           }
         },
         "ko" : {
@@ -39264,7 +39264,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Waiting for user"
+            "value" : "In attesa dell'utente"
           }
         },
         "ko" : {
@@ -39394,7 +39394,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Waiting to retry (%ld of %ld)"
+            "value" : "In attesa di riprovare (%ld of %ld)"
           }
         },
         "ko" : {
@@ -39526,7 +39526,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Web finger response lacks server instance relation."
+            "value" : "La risposta WebFinger manca di relazione dell'istanza del server."
           }
         },
         "ko" : {
@@ -39656,7 +39656,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You logged in as user %@, but must log in as user %@. Please retry."
+            "value" : "Hai effettuato l'accesso come utente %@, ma devi accedere come utente %@. Si prega di riprovare."
           }
         },
         "ko" : {
