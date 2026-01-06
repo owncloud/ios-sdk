@@ -57,6 +57,10 @@
 {
 	switch (_code)
 	{
+		case OCHTTPStatusCodeCONTINUE:
+			return (@"CONTINUE");
+		break;
+
 		case OCHTTPStatusCodeOK:
 			return (@"OK");
 		break;

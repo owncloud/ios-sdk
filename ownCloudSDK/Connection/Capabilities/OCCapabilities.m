@@ -844,7 +844,6 @@ static NSInteger _defaultSharingSearchMinLength = 2;
 - (nullable NSArray<NSString *> *)supportedKeywordsForServerSideSearchProperty:(NSString *)searchPropertyName
 {
 	NSDictionary<NSString *, NSDictionary *> *searchCapabilityDict = OCTypedCast(_capabilities[@"search"], NSDictionary);
-	NSMutableArray<NSString *> *enabledProperties = nil;
 	if (searchCapabilityDict != nil)
 	{
 		NSDictionary<NSString *, NSDictionary *> *propertyListDict = OCTypedCast(searchCapabilityDict[@"property"], NSDictionary);

@@ -44,7 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 // Export OCLocalized* symbols for use in (Swift) app - make sure it doesn't override the SDK-specific OCLocalizedString
-static inline NSString *OCLocalizedString(NSString *key, NSString * _Nullable comment) {
+static inline NSString *OCLocalizedString(NSString *key, NSString * _Nullable _) {
     return [OCLocale localizeString:key];
 }
 
