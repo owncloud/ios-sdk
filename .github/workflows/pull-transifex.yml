@@ -32,7 +32,7 @@ jobs:
           beautifyJSON "ownCloudUI/Resources/Localizable.xcstrings"         
 
       - name: Setup Swift
-        uses: swift-actions/setup-swift@v2.3.0
+        uses: swift-actions/setup-swift@v2.4.0
             
       - name: Build ocstringstool
         run: |
