@@ -86,16 +86,13 @@
 
 - (OCVFSItemID)vfsItemID
 {
-	if (_vfsNodeID != nil)
+	if ((_bookmarkUUID != nil) && (_driveID != nil) && _isVirtual)
 	{
-		if ((_bookmarkUUID != nil) && (_driveID != nil))
-		{
-			return ([[NSString alloc] initWithFormat:@"V\\%@\\%@", _bookmarkUUID, _driveID]);
-		}
-		else
-		{
-			return ([[NSString alloc] initWithFormat:@"V\\%@", _vfsNodeID]);
-		}
+		return ([[NSString alloc] initWithFormat:@"V\\%@\\%@", _bookmarkUUID, _driveID]);
+	}
+	else if (_vfsNodeID != nil)
+	{
+		return ([[NSString alloc] initWithFormat:@"V\\%@", _vfsNodeID]);
 	}
 	else if ((_bookmarkUUID != nil) && (_localID != nil))
 	{
