@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: l10n-format
         shell: bash
@@ -23,7 +23,7 @@ jobs:
           beautifyJSON "ownCloudUI/Resources/Localizable.xcstrings"
 
       - name: l10n-push-source
-        uses: transifex/cli-action@v2
+        uses: transifex/cli-action@584fd205cbe598773b5a81ce711fa44842678189 # v2
         with:
           token: ${{ secrets.TX_TOKEN }}
           args: push -s --skip
