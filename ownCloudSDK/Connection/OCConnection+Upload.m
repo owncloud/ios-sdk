@@ -322,7 +322,7 @@ static OCUploadInfoTask OCUploadInfoTaskUpload = @"upload";
 		}
 
 		tusProgress = [[OCProgress alloc] initWithPath:((self.bookmark.uuid != nil) ?
-								@[ OCProgressPathElementIdentifierCoreRoot, self.bookmark.uuid.UUIDString, OCProgressPathElementIdentifierCoreConnectionPath, tusJob.trackingID ] :
+								@[ OCProgressPathElementIdentifierCoreRoot, self.bookmark.uuidString, OCProgressPathElementIdentifierCoreConnectionPath, tusJob.trackingID ] :
 								@[])
 						      progress:actionProgress];
 	}

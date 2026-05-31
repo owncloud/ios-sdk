@@ -178,6 +178,8 @@
 		return (self.rootNode);
 	}
 
+	// OCLogVerbose(@"Resolving %@: start", identifier);
+
 	if ((location = [[OCVaultLocation alloc] initWithVFSItemID:identifier]) != nil)
 	{
 		if (location.vfsNodeID != nil)
@@ -187,6 +189,8 @@
 			{
 				item = (id<OCVFSItem>)[_nodesByID objectForKey:location.vfsNodeID];
 			}
+
+			// OCLogVerbose(@"Resolving %@: vfs node from _nodesByID: %@ -- location: %@", identifier, item, location);
 		}
 		else if (location.isVirtual)
 		{
@@ -195,6 +199,7 @@
 			{
 				item = (id<OCVFSItem>)[self driveRootNodeForLocation:[[OCLocation alloc] initWithBookmarkUUID:location.bookmarkUUID driveID:location.driveID path:@"/"]];
 			}
+			// OCLogVerbose(@"Resolving %@: virtual node from driveRootNodeForLocation: %@ -- location: %@", identifier, item, location);
 		}
 		else
 		{
@@ -227,7 +232,13 @@
 
 				}
 			}
+
+			// OCLogVerbose(@"Resolving %@: other item, via database: %@ -- location: %@", identifier, item, location);
 		}
+	}
+	else
+	{
+		// OCLogVerbose(@"Resolving %@: parsing as OCVaultLocation failed", identifier);
 	}
 
 	if (outError != NULL)

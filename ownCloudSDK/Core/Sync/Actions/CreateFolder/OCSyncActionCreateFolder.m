@@ -38,6 +38,7 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 		if ((placeholderItem = [OCItem placeholderItemOfType:OCItemTypeCollection]) != nil)
 		{
+			placeholderItem.bookmarkUUID = self.core.bookmark.uuidString;
 			placeholderItem.parentFileID = parentItem.fileID;
 			placeholderItem.parentLocalID = parentItem.localID;
 			placeholderItem.driveID = parentItem.driveID;
@@ -73,7 +74,13 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 		if ((placeholderCompletionHandler = self.ephermalParameters[OCCoreOptionPlaceholderCompletionHandler]) != nil)
 		{
-			placeholderCompletionHandler(nil, _placeholderItem);
+			OCItem *placeholderItem = _placeholderItem;
+
+			// Run completion handler only after database updates have been performed, so the returned item is immediately usable
+			[syncContext addContextActionsCompletionHandler:^{
+				placeholderCompletionHandler(nil, placeholderItem);
+			}];
+
 			self.ephermalParameters = nil;
 		}
 

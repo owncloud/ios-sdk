@@ -18,6 +18,7 @@
 
 #import "OCVaultLocation.h"
 #import "OCVFSCore.h"
+#import "OCMacros.h"
 
 @implementation OCVaultLocation
 
@@ -100,6 +101,18 @@
 	}
 
 	return (nil);
+}
+
+#pragma mark - Description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, isVirtual: %d%@%@%@%@>", NSStringFromClass(self.class), self,
+		_isVirtual,
+		OCExpandVar(bookmarkUUID),
+		OCExpandVar(driveID),
+		OCExpandVar(localID),
+		OCExpandVar(vfsNodeID)
+	]);
 }
 
 @end

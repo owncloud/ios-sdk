@@ -54,17 +54,17 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 #pragma mark - Setup & shutdown
 - (OCIPCNotificationName)notificationNameForProcessSyncRecordsTriggerForProcessSession:(OCProcessSession *)processSession
 {
-	return ([OCIPCNotificationNameProcessSyncRecordsBase stringByAppendingFormat:@":%@;%@", self.bookmark.uuid.UUIDString, processSession.bundleIdentifier]);
+	return ([OCIPCNotificationNameProcessSyncRecordsBase stringByAppendingFormat:@":%@;%@", self.bookmark.uuidString, processSession.bundleIdentifier]);
 }
 
 - (OCIPCNotificationName)notificationNameForProcessSyncRecordsTriggerAcknowledgementForProcessSession:(OCProcessSession *)processSession
 {
-	return ([OCIPCNotificationNameProcessSyncRecordsBase stringByAppendingFormat:@":%@;%@;ack", self.bookmark.uuid.UUIDString, processSession.bundleIdentifier]);
+	return ([OCIPCNotificationNameProcessSyncRecordsBase stringByAppendingFormat:@":%@;%@;ack", self.bookmark.uuidString, processSession.bundleIdentifier]);
 }
 
 - (OCIPCNotificationName)notificationNameForSyncRecordsUpdate
 {
-	return ([OCIPCNotificationNameUpdateSyncRecordsBase stringByAppendingFormat:@":%@", self.bookmark.uuid.UUIDString]);
+	return ([OCIPCNotificationNameUpdateSyncRecordsBase stringByAppendingFormat:@":%@", self.bookmark.uuidString]);
 }
 
 - (void)setupSyncEngine
@@ -363,7 +363,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 		OCLogDebug(@"record %@ added to database with error %@", record, blockError);
 
 		// Set sync record's progress path
-		record.progress.path = @[OCProgressPathElementIdentifierCoreRoot, self.bookmark.uuid.UUIDString, OCProgressPathElementIdentifierCoreSyncRecordPath, [record.recordID stringValue]];
+		record.progress.path = @[OCProgressPathElementIdentifierCoreRoot, self.bookmark.uuidString, OCProgressPathElementIdentifierCoreSyncRecordPath, [record.recordID stringValue]];
 
 		// Pre-flight
 		BOOL recordRemovedSelf = NO;
@@ -1614,6 +1614,8 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 	[self _scheduleNextWaitConditionRunForRecord:syncContext.syncRecord];
 
 	[self performUpdatesForAddedItems:syncContext.addedItems removedItems:syncContext.removedItems updatedItems:syncContext.updatedItems refreshLocations:syncContext.refreshLocations newSyncAnchor:nil beforeQueryUpdates:beforeQueryUpdateAction afterQueryUpdates:nil queryPostProcessor:nil skipDatabase:NO];
+
+	[syncContext runContextCompletionHandlers];
 }
 
 - (void)_scheduleNextWaitConditionRunForRecord:(OCSyncRecord *)syncRecord
@@ -2127,7 +2129,7 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 
 			// Retrieve tracking IDs and total number of requests (incl. without tracking ID) from HTTP pipeline backend
 			OCSyncExec(trackingIDsRetrieved, {
-				[OCHTTPPipelineManager.sharedPipelineManager.backend retrieveActionTrackingIDsForPartition:self.connection.bookmark.uuid.UUIDString resultHandler:^(NSError * _Nullable error, NSSet<OCActionTrackingID> * _Nullable trackingIDs, NSNumber * _Nullable totalNumberOfRequestsInBackend) {
+				[OCHTTPPipelineManager.sharedPipelineManager.backend retrieveActionTrackingIDsForPartition:self.connection.bookmark.uuidString resultHandler:^(NSError * _Nullable error, NSSet<OCActionTrackingID> * _Nullable trackingIDs, NSNumber * _Nullable totalNumberOfRequestsInBackend) {
 					httpActionTrackingIDs = trackingIDs;
 					totalNumberOfRequestsInBackendForPartition = totalNumberOfRequestsInBackend;
 					OCTLogDebug(@[@"Health"], @"Found HTTP requests with trackingIDs=%@ total=%@ error=%@ (1)", trackingIDs, totalNumberOfRequestsInBackend, error);

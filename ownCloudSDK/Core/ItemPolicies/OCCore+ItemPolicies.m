@@ -441,7 +441,7 @@
 #pragma mark - IPC
 - (OCIPCNotificationName)itemPoliciesChangedNotificationName
 {
-	return ([OCIPCNotificationNameItemPoliciesChangedPrefix stringByAppendingFormat:@".%@", self.bookmark.uuid.UUIDString]);
+	return ([OCIPCNotificationNameItemPoliciesChangedPrefix stringByAppendingFormat:@".%@", self.bookmark.uuidString]);
 }
 
 - (void)setupItemPolicies
