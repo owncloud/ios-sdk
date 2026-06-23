@@ -2586,7 +2586,29 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 			@"expectedResult" : @{
 				@"Cookie" : @"test=[redacted]"
 			}
-		}
+		},
+
+		// test Set-Cookie key/value pair
+		@{
+			@"headers" : @{
+				@"Set-Cookie" : @"test=secret"
+			},
+			@"expectedResult" : @{
+				@"Set-Cookie" : @"test=[redacted]"
+			}
+		},
+
+		// test mixed key/value pair
+		@{
+			@"headers" : @{
+				@"Set-Cookie" : @"test=secret",
+				@"Other" : @"header"
+			},
+			@"expectedResult" : @{
+				@"Set-Cookie" : @"test=[redacted]",
+				@"Other" : @"header"
+			}
+		},
 	];
 
 	for (NSDictionary<NSString *, NSDictionary<NSString *, NSString *> *> *testRecord in testRecords) {
