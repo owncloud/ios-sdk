@@ -38,7 +38,6 @@
 		DC0376F2271B1D4600151E8C /* OCLocaleFilterVariables.h in Headers */ = {isa = PBXBuildFile; fileRef = DC0376F0271B1D4600151E8C /* OCLocaleFilterVariables.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC0376F3271B1D4600151E8C /* OCLocaleFilterVariables.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0376F1271B1D4600151E8C /* OCLocaleFilterVariables.m */; };
 		DC03AC472229598E006901DC /* OCConnection+Sharing.m in Sources */ = {isa = PBXBuildFile; fileRef = DC03AC452229598E006901DC /* OCConnection+Sharing.m */; };
-		DC03AC4922295AA6006901DC /* SharingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC03AC4822295AA6006901DC /* SharingTests.m */; };
 		DC04A4942330290A006285AC /* OCCoreProxy.h in Headers */ = {isa = PBXBuildFile; fileRef = DC04A4922330290A006285AC /* OCCoreProxy.h */; };
 		DC04A4952330290A006285AC /* OCCoreProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = DC04A4932330290A006285AC /* OCCoreProxy.m */; };
 		DC07C28E21244FC800B815A4 /* OCExtensionManager.h in Headers */ = {isa = PBXBuildFile; fileRef = DC07C28C21244FC800B815A4 /* OCExtensionManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -191,7 +190,6 @@
 		DC2F636B2239523A0063C2DA /* OCShareQuery.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2F63692239523A0063C2DA /* OCShareQuery.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC2F636C2239523A0063C2DA /* OCShareQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F636A2239523A0063C2DA /* OCShareQuery.m */; };
 		DC2F636F2239557B0063C2DA /* OCShareQuery+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2F636D2239557B0063C2DA /* OCShareQuery+Internal.h */; };
-		DC2F6372223A39A40063C2DA /* CoreSharingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F6371223A39A40063C2DA /* CoreSharingTests.m */; };
 		DC2F6375223A61990063C2DA /* OCCoreQuery.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2F6373223A61990063C2DA /* OCCoreQuery.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC2F6376223A61990063C2DA /* OCCoreQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F6374223A61990063C2DA /* OCCoreQuery.m */; };
 		DC2F668D26035A33001BFDB6 /* OCSQLiteQuery+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = DC2F668B26035A33001BFDB6 /* OCSQLiteQuery+Private.h */; };
@@ -5954,7 +5952,6 @@
 				DC72E4212063BE9400189B9A /* HostSimulatorTests.m in Sources */,
 				DC6F81522684C32600863D8A /* DAVRawResponseTests.m in Sources */,
 				DCB0A45C21B813A000FAC4E9 /* ExtensionTests.m in Sources */,
-				DC03AC4922295AA6006901DC /* SharingTests.m in Sources */,
 				DCC6563D20C979FB00110A97 /* TestTools.m in Sources */,
 				DCEAA0DD25CEDBC40017F99B /* LockTests.m in Sources */,
 				DC812558210B548F00A9C037 /* OCTestTarget.m in Sources */,
@@ -5975,7 +5972,6 @@
 				DC139CD320DBCDCB0090175A /* ChecksumTests.m in Sources */,
 				DC03650620AAEFBD00F62732 /* DatabaseTests.m in Sources */,
 				DCFBACF721BAB35A00943F76 /* PerformanceTests.m in Sources */,
-				DC2F6372223A39A40063C2DA /* CoreSharingTests.m in Sources */,
 				DC0AE4572310793100428681 /* KeyValueStoreTests.m in Sources */,
 				DCEEB2D52042312500189B9A /* ConnectionTests.m in Sources */,
 			);

@@ -504,6 +504,32 @@
 			}
 		}
 
+		if ([headerField isEqualToString:OCHTTPHeaderFieldNameCookie] || [headerField isEqualToString:OCHTTPHeaderFieldNameSetCookie])
+		{
+			// Parse "Cookie" and "Set-Cookie" header and replace values (if any - there are also "value-less", "key-only" flags like "HttpOnly") with "redacted"
+			NSArray<NSString *> *pairStrings = [value componentsSeparatedByString:@";"];
+			NSCharacterSet *whitespaceCharacterSet = NSCharacterSet.whitespaceCharacterSet;
+			NSString *redactedValue = @"";
+
+			for (NSString *pairString in pairStrings)
+			{
+				NSArray<NSString *> *pairComponents = [[pairString stringByTrimmingCharactersInSet:whitespaceCharacterSet] componentsSeparatedByString:@"="];
+				NSString *redactedPairString = nil;
+				if (pairComponents.count == 1) {
+					redactedPairString = pairComponents.firstObject;
+				} else {
+					redactedPairString = [pairComponents.firstObject stringByAppendingString:@"=[redacted]"];
+				}
+				if (redactedValue.length > 0) {
+					redactedValue = [redactedValue stringByAppendingFormat:@"; %@", redactedPairString];
+				} else {
+					redactedValue = redactedPairString;
+				}
+			}
+
+			value = redactedValue;
+		}
+
 		headerConsumer(headerField, value);
 	}];
 }
@@ -756,6 +782,8 @@ OCHTTPHeaderFieldName OCHTTPHeaderFieldNamePrefer = @"Prefer";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameIfMatch = @"If-Match";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameIfNoneMatch = @"If-None-Match";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameUserAgent = @"User-Agent";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameCookie = @"Cookie";
+OCHTTPHeaderFieldName OCHTTPHeaderFieldNameSetCookie = @"Set-Cookie";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameXOCMTime = @"X-OC-MTime";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOCChecksum = @"OC-Checksum";
 OCHTTPHeaderFieldName OCHTTPHeaderFieldNameOCConnectionValidator = @"OC-Connection-Validator";
