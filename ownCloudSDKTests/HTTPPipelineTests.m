@@ -2545,6 +2545,66 @@ typedef void(^PartitionSimulatorHandleResult)(OCHTTPRequest *request, OCHTTPResp
 	progressObserver = nil;
 }
 
+- (void)testSensitiveHeaderRedaction
+{
+	NSArray<NSDictionary<NSString *, NSDictionary<NSString *, NSString *> *> *> *testRecords = @[
+		// test "value-less" key
+		@{
+			@"headers" : @{
+				@"Cookie" : @"test=secret; httpOnly"
+			},
+			@"expectedResult" : @{
+				@"Cookie" : @"test=[redacted]; httpOnly"
+			}
+		},
+
+		// test (invalid) missing space after semicolon
+		@{
+			@"headers" : @{
+				@"Cookie" : @"test=secret;drive=abc"
+			},
+			@"expectedResult" : @{
+				@"Cookie" : @"test=[redacted]; drive=[redacted]"
+			}
+		},
+
+		// test multiple key/value pairs
+		@{
+			@"headers" : @{
+				@"Cookie" : @"test=secret; drive=abc; session=alsosecret"
+			},
+			@"expectedResult" : @{
+				@"Cookie" : @"test=[redacted]; drive=[redacted]; session=[redacted]"
+			}
+		},
+
+		// test single key/value pair
+		@{
+			@"headers" : @{
+				@"Cookie" : @"test=secret"
+			},
+			@"expectedResult" : @{
+				@"Cookie" : @"test=[redacted]"
+			}
+		}
+	];
+
+	for (NSDictionary<NSString *, NSDictionary<NSString *, NSString *> *> *testRecord in testRecords) {
+		NSDictionary<NSString *, NSString *> *inHeaders = testRecord[@"headers"];
+		NSDictionary<NSString *, NSString *> *expectedHeaders = testRecord[@"expectedResult"];
+		NSMutableDictionary<NSString *, NSString *> *outHeaders = [NSMutableDictionary new];
+
+		XCTAssert(inHeaders != nil, @"headers missing for %@", expectedHeaders);
+		XCTAssert(expectedHeaders != nil, @"expectedResult missing for %@", inHeaders);
+
+		[OCHTTPRequest formatHeaders:inHeaders withConsumer:^(NSString *key, NSString *value) {
+			outHeaders[key] = value;
+		}];
+
+		XCTAssert ([outHeaders isEqualToDictionary:expectedHeaders], @"For %@ expected %@, but got %@", inHeaders, expectedHeaders, outHeaders);
+	}
+}
+
 /*
 	Test scenarios currently not covered:
 	- test certificate issue handling (including a non-response to the certificate callback and restart (test for handling of app crashes/terminations))
