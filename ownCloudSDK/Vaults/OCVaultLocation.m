@@ -18,6 +18,7 @@
 
 #import "OCVaultLocation.h"
 #import "OCVFSCore.h"
+#import "OCMacros.h"
 
 @implementation OCVaultLocation
 
@@ -86,16 +87,13 @@
 
 - (OCVFSItemID)vfsItemID
 {
-	if (_vfsNodeID != nil)
+	if ((_bookmarkUUID != nil) && (_driveID != nil) && _isVirtual)
 	{
-		if ((_bookmarkUUID != nil) && (_driveID != nil))
-		{
-			return ([[NSString alloc] initWithFormat:@"V\\%@\\%@", _bookmarkUUID, _driveID]);
-		}
-		else
-		{
-			return ([[NSString alloc] initWithFormat:@"V\\%@", _vfsNodeID]);
-		}
+		return ([[NSString alloc] initWithFormat:@"V\\%@\\%@", _bookmarkUUID, _driveID]);
+	}
+	else if (_vfsNodeID != nil)
+	{
+		return ([[NSString alloc] initWithFormat:@"V\\%@", _vfsNodeID]);
 	}
 	else if ((_bookmarkUUID != nil) && (_localID != nil))
 	{
@@ -103,6 +101,18 @@
 	}
 
 	return (nil);
+}
+
+#pragma mark - Description
+- (NSString *)description
+{
+	return ([NSString stringWithFormat:@"<%@: %p, isVirtual: %d%@%@%@%@>", NSStringFromClass(self.class), self,
+		_isVirtual,
+		OCExpandVar(bookmarkUUID),
+		OCExpandVar(driveID),
+		OCExpandVar(localID),
+		OCExpandVar(vfsNodeID)
+	]);
 }
 
 @end

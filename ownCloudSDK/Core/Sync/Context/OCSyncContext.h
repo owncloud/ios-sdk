@@ -24,6 +24,8 @@
 @class OCSyncIssue;
 @class OCWaitCondition;
 
+typedef dispatch_block_t OCSyncContextActionsCompletionHandler;
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OCSyncContext : NSObject
@@ -58,8 +60,12 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)eventHandlingContextWith:(OCSyncRecord *)syncRecord event:(OCEvent *)event;
 + (instancetype)waitConditionRecoveryContextWith:(OCSyncRecord *)syncRecord;
 
+#pragma mark - Add objects
 - (void)addWaitCondition:(OCWaitCondition *)waitCondition;
 - (void)addSyncIssue:(OCSyncIssue *)syncIssue;
+
+- (void)addContextActionsCompletionHandler:(OCSyncContextActionsCompletionHandler)completionHandler; //!< Adds a block to run after the sync context actions have been completed (f.ex. updates to the database have been completed)
+- (void)runContextCompletionHandlers;
 
 #pragma mark - State
 - (void)transitionToState:(OCSyncRecordState)state withWaitConditions:(nullable NSArray <OCWaitCondition *> *)waitConditions; //!< Convenience method, calling the same method on .syncRecord, but also adding in .queuedWaitConditins and setting updateStoredSyncRecordAfterItemUpdates to YES.

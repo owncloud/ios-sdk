@@ -22,14 +22,11 @@
 #import "OCSyncIssue.h"
 #import "OCWaitConditionIssue.h"
 
-@interface OCSyncContext ()
+@implementation OCSyncContext
 {
 	BOOL _canHandleErrors;
+	NSMutableArray <OCSyncContextActionsCompletionHandler> *_actionsCompletionHandler;
 }
-
-@end
-
-@implementation OCSyncContext
 
 + (instancetype)preflightContextWithSyncRecord:(OCSyncRecord *)syncRecord
 {
@@ -96,6 +93,36 @@
 	if (syncIssue == nil) { return; }
 
 	[self addWaitCondition:[syncIssue makeWaitCondition]];
+}
+
+- (void)addContextActionsCompletionHandler:(OCSyncContextActionsCompletionHandler)completionHandler
+{
+	@synchronized(self)
+	{
+		if (_actionsCompletionHandler == nil) {
+			_actionsCompletionHandler = [NSMutableArray new];
+		}
+
+		[_actionsCompletionHandler addObject:completionHandler];
+	}
+}
+
+- (void)runContextCompletionHandlers
+{
+	NSMutableArray<OCSyncContextActionsCompletionHandler> *completionHandlers;
+
+	@synchronized (self)
+	{
+		completionHandlers = _actionsCompletionHandler;
+		_actionsCompletionHandler = nil;
+	}
+
+	if (completionHandlers == nil) { return; }
+
+	for (OCSyncContextActionsCompletionHandler completionHandler in completionHandlers)
+	{
+		completionHandler();
+	}
 }
 
 #pragma mark - State

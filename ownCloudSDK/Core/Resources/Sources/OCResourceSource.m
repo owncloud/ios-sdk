@@ -29,7 +29,7 @@
 	if ((self = [super init]) != nil)
 	{
 		_core = core;
-		_eventHandlerIdentifier = [NSString stringWithFormat:@"%@-%@-%@", NSStringFromClass(self.class), self.identifier, core.bookmark.uuid.UUIDString];
+		_eventHandlerIdentifier = [NSString stringWithFormat:@"%@-%@-%@", NSStringFromClass(self.class), self.identifier, core.bookmark.uuidString];
 	}
 
 	return (self);

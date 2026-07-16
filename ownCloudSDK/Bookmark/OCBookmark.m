@@ -28,7 +28,7 @@
 #import <UIKit/UIKit.h>
 #endif /* TARGET_OS_IOS */
 
-@interface OCBookmark ()
+@implementation OCBookmark
 {
 	OCIPCNotificationName _coreUpdateNotificationName;
 	OCIPCNotificationName _bookmarkAuthUpdateNotificationName;
@@ -40,10 +40,9 @@
 	NSString *_lastUsername;
 
 	NSString *_lastDescription;
-}
-@end
 
-@implementation OCBookmark
+	OCBookmarkUUIDString _uuidString;
+}
 
 @synthesize uuid = _uuid;
 
@@ -117,6 +116,17 @@
 - (NSData *)bookmarkData
 {
 	return ([NSKeyedArchiver archivedDataWithRootObject:self]);
+}
+
+#pragma mark - UUID string
+- (OCBookmarkUUIDString)uuidString
+{
+	if (_uuidString == nil)
+	{
+		_uuidString = _uuid.UUIDString;
+	}
+
+	return (_uuidString);
 }
 
 #pragma mark - Keychain access
@@ -462,6 +472,7 @@
 	if ((self = [self init]) != nil)
 	{
 		_uuid = [decoder decodeObjectOfClass:NSUUID.class forKey:@"uuid"];
+		_uuidString = nil;
 
 		_name = [decoder decodeObjectOfClass:NSString.class forKey:@"name"];
 		_url = [decoder decodeObjectOfClass:NSURL.class forKey:@"url"];

@@ -253,7 +253,7 @@
 {
 	NSNumber *requestCount = _requestCountByUUID[bookmark.uuid];
 
-	OCLogDebug(@"core returned for bookmark %@ (%@)", bookmark.uuid.UUIDString, bookmark.name);
+	OCLogDebug(@"core returned for bookmark %@ (%@)", bookmark.uuidString, bookmark.name);
 
 	if (requestCount.integerValue > 0)
 	{

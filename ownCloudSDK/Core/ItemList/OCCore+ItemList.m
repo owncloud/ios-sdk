@@ -1957,7 +1957,7 @@ static OCHTTPRequestGroupID OCCoreItemListTaskGroupBackgroundTasks = @"backgroun
 
 				if (_scanForChangesLockRequest == nil) // do not make second request if another one is already in progress - do nothing in that case
 				{
-					_scanForChangesLockRequest = [[OCLockRequest alloc] initWithResourceIdentifier:[OCLockResourceIdentifierCoreUpdateScan stringByAppendingFormat:@":%@",_bookmark.uuid.UUIDString] tryAcquireHandler:^(NSError * _Nullable error, OCLock * _Nullable lock) {
+					_scanForChangesLockRequest = [[OCLockRequest alloc] initWithResourceIdentifier:[OCLockResourceIdentifierCoreUpdateScan stringByAppendingFormat:@":%@",_bookmark.uuidString] tryAcquireHandler:^(NSError * _Nullable error, OCLock * _Nullable lock) {
 						OCCore *core;
 
 						if ((core = weakSelf) != nil)

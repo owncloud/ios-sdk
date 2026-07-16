@@ -42,6 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface OCBookmark : NSObject <NSSecureCoding, NSCopying>
 
 @property(readonly) OCBookmarkUUID uuid; //!< UUID uniquely identifying the bookmark
+@property(readonly,nonatomic) OCBookmarkUUIDString uuidString; //!< String version of .uuid (cached!)
 
 @property(strong,nullable) NSString *name; //!< Name of the server
 @property(strong,nullable) NSURL *url; //!< URL to use to connect to the server
