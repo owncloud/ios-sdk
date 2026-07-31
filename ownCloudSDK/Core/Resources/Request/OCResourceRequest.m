@@ -29,6 +29,7 @@
 	if ((self = [super init]) != nil)
 	{
 		_minimumQuality = OCResourceQualityFallback;
+		_retryIfNotFound = YES;
 	}
 
 	return (self);

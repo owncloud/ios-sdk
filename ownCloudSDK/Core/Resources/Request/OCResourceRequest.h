@@ -70,6 +70,7 @@ typedef NSString* OCResourceRequestGroupIdentifier;
 @property(readonly) CGSize maxPixelSize; //!< Computed from maxPointSize and scale
 
 @property(assign) BOOL waitForConnectivity; //!< Sources that send requests to servers should wait for connectivity
+@property(assign) BOOL retryIfNotFound; //!< Sources that send requests to servers should retry even if the resource has not been found on the server
 
 @property(assign,nonatomic) BOOL cancelled;
 @property(readonly) BOOL ended;

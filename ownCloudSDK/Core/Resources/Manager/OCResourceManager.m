@@ -457,7 +457,7 @@
 	{
 		// Resource is not available yet (f.ex. still processed by the server):
 		// - log, but don't try again because resource could remain in processing for a loooong time
-		// - handle as if resoruce does not exist
+		// - handle as if resource does not exist
 		OCTLogDebug(@[@"ResMan"], @"Handling source %@ returned resource=%@ error=%@ (!! remote resource processing - will not retry !!) as OCErrorResourceDoesNotExist", source.identifier, resource, error);
 
 		error = OCErrorFromError(OCErrorResourceDoesNotExist, error);
@@ -465,7 +465,7 @@
 
 	if ([error isOCErrorWithCode:OCErrorResourceDoesNotExist])
 	{
-		// Resource does not exist anymore: delete from cache + restart job
+		// Resource does not exist anymore: delete from cache + restart job (if .retryOnNotFound is enabled)
 		__weak OCResourceManager *weakSelf = self;
 		[self removeResourceOfType:job.primaryRequest.type identifier:job.primaryRequest.identifier completionHandler:^(NSError * _Nullable error) {
 			OCResourceManager *strongSelf = weakSelf;
@@ -484,10 +484,13 @@
 					}
 
 					// Restart job
-					job.state = OCResourceManagerJobStateNew;
-					job.sourcesCursorPosition = nil;
+					if (job.primaryRequest.retryIfNotFound)
+					{
+						job.state = OCResourceManagerJobStateNew;
+						job.sourcesCursorPosition = nil;
 
-					[strongSelf setNeedsScheduling];
+						[strongSelf setNeedsScheduling];
+					}
 				});
 			}
 		}];
