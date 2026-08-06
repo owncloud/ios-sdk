@@ -33,6 +33,7 @@
 	if ((_iconResourceRequest == nil) && (_iconURL != nil))
 	{
 		_iconResourceRequest = [OCResourceRequestURLItem requestURLItem:_iconURL identifier:nil version:OCResourceRequestURLItem.weekSpecificVersion structureDescription:@"icon" waitForConnectivity:YES changeHandler:nil];
+		_iconResourceRequest.retryIfNotFound = NO;
 	}
 
 	return (_iconResourceRequest);
