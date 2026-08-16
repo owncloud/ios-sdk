@@ -42,6 +42,9 @@
 #import "GADrive.h"
 #import "GADriveItem.h"
 #import "NSURL+OCURLNormalization.h"
+#import "NSData+OCHash.h"
+#import "NSString+OCFilesystemComponent.h"
+#import "OCLogger.h"
 
 @implementation OCVault
 
@@ -1091,6 +1094,8 @@
 #pragma mark - URL and path builders
 - (NSURL *)localDriveRootURLForDriveID:(nullable OCDriveID)driveID
 {
+	NSURL *driveRootURL = nil;
+
 	// Returns the root folder for the drive with ID driveID
 	if (driveID == nil)
 	{
@@ -1098,8 +1103,59 @@
 		return (self.filesRootURL);
 	}
 
-	// Otherwise return
-	return ([self.drivesRootURL URLByAppendingPathComponent:driveID isDirectory:YES]);
+	// Ensure path component-safety
+	BOOL pathComponentIsLossy = NO;
+	NSString *driveIDPathComponent = [driveID encodedFilesystemCompatibleComponentIsLossy:&pathComponentIsLossy];
+	if (driveIDPathComponent == nil)
+	{
+		OCLogError(@"Failed to build driveIDPathComponent from driveID=\"%@\"", driveID);
+		return (nil);
+	}
+
+	// Return composed URL
+	driveRootURL = [self.drivesRootURL URLByAppendingPathComponent:driveIDPathComponent isDirectory:YES];
+	if (pathComponentIsLossy) {
+		// Path component encoding was lossy, so preserve the original ID in the metadata.plist
+		NSError *error = [OCVault _writeDriveMetadata:@{ OCVaultDriveMetadataKeyDriveID : driveID } toDriveRootURL:driveRootURL];
+		if (error != nil) {
+			driveRootURL = nil;
+		}
+	}
+	return (driveRootURL);
+}
+
++ (nullable NSError *)_writeDriveMetadata:(OCVaultDriveMetadata)metadata toDriveRootURL:(NSURL *)driveRootURL
+{
+	NSError *error = nil;
+	NSURL *driveMetadataURL = [driveRootURL URLByAppendingPathComponent:@"metadata.plist" isDirectory:NO];
+	if (![NSFileManager.defaultManager fileExistsAtPath:driveMetadataURL.path]) {
+		if ([NSFileManager.defaultManager createDirectoryAtURL:driveRootURL withIntermediateDirectories:YES attributes:@{ NSFileProtectionKey : NSFileProtectionCompleteUntilFirstUserAuthentication } error:&error]) {
+			[metadata writeToURL:driveMetadataURL error:&error];
+		}
+		if (error != nil) {
+			OCLogError(@"Error saving drive metadata %@ to %@ - returning nil URL for drive root: %@", metadata, driveMetadataURL, error);
+		}
+	}
+	return (error);
+}
+
++ (nullable OCVaultDriveMetadata)_readDriveMetadataFromDriveRootURL:(NSURL *)driveRootURL error:(out NSError * _Nullable * _Nullable)outError
+{
+	NSError *error = nil;
+	OCVaultDriveMetadata metadata = nil;
+	NSURL *driveMetadataURL;
+
+	if ((driveMetadataURL = [driveRootURL URLByAppendingPathComponent:@"metadata.plist" isDirectory:NO]) != nil) {
+		metadata = [NSDictionary dictionaryWithContentsOfURL:driveMetadataURL error:&error];
+	}
+
+	if (error != nil) {
+		OCLogError(@"Error reading drive metadata from %@: %@", driveMetadataURL, error);
+	}
+
+	if (outError != NULL) { *outError = error; }
+
+	return (metadata);
 }
 
 - (NSURL *)localURLForItem:(OCItem *)item
@@ -1150,9 +1206,10 @@
 {
 	OCVaultLocation *location = nil;
 	NSString *urlPath = url.standardizedFileURLPath;
-	NSString *storageRootPath = OCVault.storageRootURL.standardizedFileURLPath.normalizedDirectoryPath;
+	NSURL *storageRootURL = self.storageRootURL;
+	NSString *storageRootPath = storageRootURL.standardizedFileURLPath.normalizedDirectoryPath;
 
-	if (![url isIdenticalOrChildOf:OCVault.storageRootURL])
+	if (![url isIdenticalOrChildOf:storageRootURL])
 	{
 		// URL not in file provider's storage root path
 		return (nil);
@@ -1204,7 +1261,20 @@
 						parsedElements = 2;
 						if (pathComponents.count > 2)
 						{
-							location.driveID = pathComponents[2]; // [Bookmark UUID]/Drives/[Drive ID]/…
+							OCDriveID rawDriveID = pathComponents[2];  // [Bookmark UUID]/Drives/[Drive ID]/…
+							BOOL pathComponentIsLossy = NO;
+							OCDriveID driveID = [rawDriveID decodedFilesystemCompatibleComponentIsLossy:&pathComponentIsLossy];
+							if (pathComponentIsLossy) {
+								// Restore driveID from metadata.plist (since the driveID path component is lossy)
+								NSError *error = nil;
+								NSURL *driveRootURL = [[[self storageRootURLForBookmarkUUID:location.bookmarkUUID] URLByAppendingPathComponent:OCVaultPathDrives isDirectory:YES] URLByAppendingPathComponent:rawDriveID isDirectory:YES];
+								OCVaultDriveMetadata driveMetadata = [OCVault _readDriveMetadataFromDriveRootURL:driveRootURL error:&error];
+								if (error == nil) {
+									driveID = driveMetadata[OCVaultDriveMetadataKeyDriveID];
+								}
+							}
+
+							location.driveID = driveID;
 							parsedElements = 3;
 
 							// if ((pathComponents.count > 3) && (pathComponents[3].length == uuidStringLength)) // [Bookmark UUID]/Drives/[Drive ID]/[Local ID]/…
@@ -1242,6 +1312,21 @@
 {
 	NSURL *returnURL = nil;
 
+	NSURL*(^DriveRootURL)(void) = ^{
+		BOOL pathComponentIsLossy = NO;
+		NSURL *driveRootURL = [[[self storageRootURLForBookmarkUUID:location.bookmarkUUID] URLByAppendingPathComponent:OCVaultPathDrives isDirectory:YES] URLByAppendingPathComponent:[location.driveID encodedFilesystemCompatibleComponentIsLossy:&pathComponentIsLossy] isDirectory:YES];
+
+		if (pathComponentIsLossy) {
+			// Path component encoding was lossy, so preserve the original ID in the metadata.plist
+			NSError *error = [OCVault _writeDriveMetadata:@{ OCVaultDriveMetadataKeyDriveID : location.driveID } toDriveRootURL:driveRootURL];
+			if (error != nil) {
+				driveRootURL = nil;
+			}
+		}
+
+		return (driveRootURL);
+	};
+
 	if (location.isVirtual)
 	{
 		// VFS Node
@@ -1254,7 +1339,7 @@
 		else if ((location.bookmarkUUID != nil) && (location.driveID != nil))
 		{
 			// [Bookmark UUID]/Drives/[Drive ID]
-			returnURL = [[[self storageRootURLForBookmarkUUID:location.bookmarkUUID] URLByAppendingPathComponent:OCVaultPathDrives isDirectory:YES] URLByAppendingPathComponent:location.driveID isDirectory:YES];
+			returnURL = DriveRootURL();
 		}
 	}
 	else if ((location.bookmarkUUID != nil) && (location.localID != nil))
@@ -1263,7 +1348,7 @@
 		if (location.driveID != nil)
 		{
 			// Drive-based: [storageRoot]/Drives/[LocalID]/…
-			returnURL = [[[[self storageRootURLForBookmarkUUID:location.bookmarkUUID] URLByAppendingPathComponent:OCVaultPathDrives isDirectory:YES] URLByAppendingPathComponent:location.driveID isDirectory:YES] URLByAppendingPathComponent:location.localID isDirectory:YES];
+			returnURL = [DriveRootURL() URLByAppendingPathComponent:location.localID isDirectory:YES];
 		}
 		else
 		{
@@ -1289,5 +1374,7 @@ NSString *OCVaultPathDrives = @"Drives";
 NSString *OCVaultPathVFS = @"VFS";
 
 OCKeyValueStoreKey OCKeyValueStoreKeyVaultDriveList = @"vaultDriveList";
+
+OCVaultDriveMetadataKey OCVaultDriveMetadataKeyDriveID = @"driveID";
 
 NSNotificationName OCVaultDriveListChanged = @"OCVaultDriveListChanged";

@@ -384,6 +384,9 @@
 		DC576ECB226484F50087316D /* OCBackgroundTask.m in Sources */ = {isa = PBXBuildFile; fileRef = DC576EC9226484F50087316D /* OCBackgroundTask.m */; };
 		DC576ECE2264894E0087316D /* OCDeallocAction.h in Headers */ = {isa = PBXBuildFile; fileRef = DC576ECC2264894E0087316D /* OCDeallocAction.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC576ECF2264894E0087316D /* OCDeallocAction.m in Sources */ = {isa = PBXBuildFile; fileRef = DC576ECD2264894E0087316D /* OCDeallocAction.m */; };
+		DC5933243030C30600D63835 /* VaultTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5933233030C30600D63835 /* VaultTests.m */; };
+		DC59332B3030C97A00D63835 /* NSString+OCFilesystemComponent.h in Headers */ = {isa = PBXBuildFile; fileRef = DC5933293030C97A00D63835 /* NSString+OCFilesystemComponent.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DC59332C3030C97A00D63835 /* NSString+OCFilesystemComponent.m in Sources */ = {isa = PBXBuildFile; fileRef = DC59332A3030C97A00D63835 /* NSString+OCFilesystemComponent.m */; };
 		DC594B1121EF4B2900B882C4 /* OCAsyncSequentialQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = DC594B0F21EF4B2900B882C4 /* OCAsyncSequentialQueue.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC594B1221EF4B2900B882C4 /* OCAsyncSequentialQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = DC594B1021EF4B2900B882C4 /* OCAsyncSequentialQueue.m */; };
 		DC594B1D21EFD25100B882C4 /* CoreManagerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC594B1C21EFD25000B882C4 /* CoreManagerTests.m */; };
@@ -1484,6 +1487,9 @@
 		DC576EC9226484F50087316D /* OCBackgroundTask.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCBackgroundTask.m; sourceTree = "<group>"; };
 		DC576ECC2264894E0087316D /* OCDeallocAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCDeallocAction.h; sourceTree = "<group>"; };
 		DC576ECD2264894E0087316D /* OCDeallocAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCDeallocAction.m; sourceTree = "<group>"; };
+		DC5933233030C30600D63835 /* VaultTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VaultTests.m; sourceTree = "<group>"; };
+		DC5933293030C97A00D63835 /* NSString+OCFilesystemComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSString+OCFilesystemComponent.h"; sourceTree = "<group>"; };
+		DC59332A3030C97A00D63835 /* NSString+OCFilesystemComponent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+OCFilesystemComponent.m"; sourceTree = "<group>"; };
 		DC594B0F21EF4B2900B882C4 /* OCAsyncSequentialQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCAsyncSequentialQueue.h; sourceTree = "<group>"; };
 		DC594B1021EF4B2900B882C4 /* OCAsyncSequentialQueue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCAsyncSequentialQueue.m; sourceTree = "<group>"; };
 		DC594B1C21EFD25000B882C4 /* CoreManagerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CoreManagerTests.m; sourceTree = "<group>"; };
@@ -3681,6 +3687,8 @@
 				DC2EB43D2D6FBB4400100A67 /* OCVault+TemporaryTools.h */,
 				DC22669922817DC600FB29EE /* OCVault+Internal.m */,
 				DC22669822817DC600FB29EE /* OCVault+Internal.h */,
+				DC59332A3030C97A00D63835 /* NSString+OCFilesystemComponent.m */,
+				DC5933293030C97A00D63835 /* NSString+OCFilesystemComponent.h */,
 				DCCE49312684B0EF005961D8 /* Prepopulation */,
 				DC85570F204FEAFC00189B9A /* Database */,
 			);
@@ -4277,6 +4285,7 @@
 				DC72E4342063DF5C00189B9A /* SettingsTests.m */,
 				DC03AC4822295AA6006901DC /* SharingTests.m */,
 				DC4AFAAC206A7FDB00189B9A /* SQLTests.m */,
+				DC5933233030C30600D63835 /* VaultTests.m */,
 				DC72E4362063DF7700189B9A /* customSettings.plist */,
 				DCFBACF021BAA77F00943F76 /* largePropFindResponse1000.xml */,
 				DCEB94DA21105FDE004EF8D7 /* rainbow.png */,
@@ -4807,6 +4816,7 @@
 				DCC26FB12B718CA200904000 /* OCPasswordPolicyRule.h in Headers */,
 				DCC8FA0F2029C6A400EB6701 /* OCQueryChangeSet.h in Headers */,
 				DC701484220B090B009D4FD9 /* OCHTTPTypes.h in Headers */,
+				DC59332B3030C97A00D63835 /* NSString+OCFilesystemComponent.h in Headers */,
 				DC708CCE2141306100FE43CA /* OCSyncActionCopyMove.h in Headers */,
 				DCF95AEA25666FBB00806D2A /* OCClassSetting.h in Headers */,
 				DC5AD95422665AC800277DB0 /* OCHTTPPipelineTaskMetrics.h in Headers */,
@@ -5851,6 +5861,7 @@
 				DC680586212EC27B006C3B1F /* OCExtension+License.m in Sources */,
 				DCE48DD9220E1C7B00839E97 /* OCHTTPPipelineTaskCache.m in Sources */,
 				DC701480220B0650009D4FD9 /* OCHTTPResponse.m in Sources */,
+				DC59332C3030C97A00D63835 /* NSString+OCFilesystemComponent.m in Sources */,
 				DC6D38802C4E4ED300169BF5 /* OCWaitConditionAvailableOffline.m in Sources */,
 				DCA35D7F24D00EC400DBE2B0 /* OCWaitCondition+Diagnostic.m in Sources */,
 				DC18897A2189AF3B00CFB3F9 /* OCClassSettingsFlatSourceEnvironment.m in Sources */,
@@ -5950,6 +5961,7 @@
 				DC6DB88221C26F4D00189B21 /* XCTestCase+Tagging.m in Sources */,
 				DC594B1D21EFD25100B882C4 /* CoreManagerTests.m in Sources */,
 				DC72E4212063BE9400189B9A /* HostSimulatorTests.m in Sources */,
+				DC5933243030C30600D63835 /* VaultTests.m in Sources */,
 				DC6F81522684C32600863D8A /* DAVRawResponseTests.m in Sources */,
 				DCB0A45C21B813A000FAC4E9 /* ExtensionTests.m in Sources */,
 				DCC6563D20C979FB00110A97 /* TestTools.m in Sources */,

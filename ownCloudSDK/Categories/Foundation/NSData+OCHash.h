@@ -18,16 +18,19 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface NSData (OCHash)
 
 - (NSData *)md5Hash;
 - (NSData *)sha1Hash;
 - (NSData *)sha256Hash;
 
-- (NSString *)asHexStringWithSeparator:(NSString *)separator;
-- (NSString *)asHexStringWithSeparator:(NSString *)separator lowercase:(BOOL)lowercase;
+- (NSString *)asHexStringWithSeparator:(nullable NSString *)separator;
+- (NSString *)asHexStringWithSeparator:(nullable NSString *)separator lowercase:(BOOL)lowercase;
 
 - (NSString *)asFingerPrintString;
 
 @end
 
+NS_ASSUME_NONNULL_END
