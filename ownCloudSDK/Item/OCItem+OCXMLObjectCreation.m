@@ -21,6 +21,7 @@
 #import "OCHTTPStatus.h"
 #import "OCChecksum.h"
 #import "OCDrive.h"
+#import "NSError+OCError.h"
 
 @implementation OCItem (OCXMLObjectCreation)
 
@@ -311,6 +312,13 @@
 			}
 
 			item.path = itemPath;
+
+			// Check for empty name
+			if ([itemPath.lastPathComponent isEqual:@""])
+			{
+				// Item has an empty name => return error
+				return ((OCItem*) OCError(OCErrorResponseWithNamelessItem));
+			}
 
 			// Extract Properties
 			[responseNode enumerateChildNodesWithName:@"d:propstat" usingBlock:^(OCXMLParserNode *propstatNode) {

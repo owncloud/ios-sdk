@@ -30,6 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong,nullable,readonly,nonatomic) NSString *standardizedFileURLPath;
 - (BOOL)isIdenticalOrChildOf:(NSURL *)parentFileURL;
+- (BOOL)isLocatedWithin:(NSURL *)parentFileURL standardizeParent:(BOOL)standardizeParent; //!< Returns YES if the receiver is a file URL located within parentURL
 
 @end
 

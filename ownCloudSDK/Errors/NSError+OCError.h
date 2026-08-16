@@ -138,7 +138,9 @@ typedef NS_ENUM(NSUInteger, OCError)
 	OCErrorItemProcessing, //!< Item is currently processing.
 
 	OCErrorRequestResponseCorruptedOrDropped, //!< Response to request dropped or corrupted.
-	OCErrorRequestDroppedByOriginalProcessTermination //!< Request was dropped by the originally responsible process terminating.
+	OCErrorRequestDroppedByOriginalProcessTermination, //!< Request was dropped by the originally responsible process terminating.
+
+	OCErrorResponseWithNamelessItem //!< Nameless item in WebDAV response rejected.
 };
 
 @class OCIssue;

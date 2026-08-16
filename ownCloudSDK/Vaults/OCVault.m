@@ -211,12 +211,12 @@
 		#if OC_FEATURE_AVAILABLE_FILEPROVIDER
 		if (OCVault.hostHasFileProvider)
 		{
-			_filesRootURL = [OCVault.storageRootURL URLByAppendingPathComponent:_uuid.UUIDString isDirectory:YES];
+			_filesRootURL = [[OCVault.storageRootURL URLByAppendingPathComponent:_uuid.UUIDString isDirectory:YES] URLByStandardizingPath];
 		}
 		else
 		#endif /* OC_FEATURE_AVAILABLE_FILEPROVIDER */
 		{
-			_filesRootURL = [self.rootURL URLByAppendingPathComponent:@"Files" isDirectory:YES];
+			_filesRootURL = [[self.rootURL URLByAppendingPathComponent:@"Files" isDirectory:YES] URLByStandardizingPath];
 		}
 	}
 

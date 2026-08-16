@@ -404,6 +404,10 @@ static NSString *OCErrorIssueKey = @"OCErrorIssue";
 				case OCErrorItemProcessing:
 					unlocalizedString = @"Item is currently processing.";
 				break;
+
+				case OCErrorResponseWithNamelessItem:
+					unlocalizedString = @"Nameless item in WebDAV response rejected.";
+				break;
 			}
 		}
 	}

@@ -62,7 +62,7 @@
 		"postBuildSettings.plist"				- OCClassSettingsFlatSourcePostBuild storage
 
 
-	[NSFileProviderManager documentStorageURL]/
+	[NSFileProviderManager documentStorageURL]/			- OCVault.storageRootURL
 		"VFS"/							- OCVault.vfsStorageRootURLForBookmarkUUID:nil
 			[VFS Node ID]
 			…
