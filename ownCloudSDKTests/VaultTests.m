@@ -144,4 +144,31 @@
 	}
 }
 
+- (void)testFilesystemCompatibleCharactersRegex
+{
+	// Test valid
+	XCTAssert(@"166d1210-cdb9-50ab-9f1e-ecb9ef12a304$2e81b56f-9284-409a-9dd0-364604df62ce".isValidFilesystemCompatibleComponent);
+
+	// Test invalid: newlines and carriage returns
+	XCTAssert(![NSString stringWithFormat:@"166d1210-cdb9-50ab-9f1e-ecb9ef12a304$2e81b56f-9284-409a-9dd0-364604df62ce\n"].isValidFilesystemCompatibleComponent);
+	XCTAssert(![NSString stringWithFormat:@"166d1210-cdb9-50ab-9f1e-ecb9ef12a304$2e81b56f-9284-409a-9dd0-364604df62ce\r"].isValidFilesystemCompatibleComponent);
+	XCTAssert(![NSString stringWithFormat:@"166d1210-cdb9-50ab-9f1e-ecb9ef12a304$2e81b56f-9284-409a-9dd0-364604df62ce\n\r"].isValidFilesystemCompatibleComponent);
+	XCTAssert(![NSString stringWithFormat:@"\n166d1210-cdb9-50ab-9f1e-ecb9ef12a304$2e81b56f-9284-409a-9dd0-364604df62ce"].isValidFilesystemCompatibleComponent);
+	XCTAssert(![NSString stringWithFormat:@"\r166d1210-cdb9-50ab-9f1e-ecb9ef12a304$2e81b56f-9284-409a-9dd0-364604df62ce"].isValidFilesystemCompatibleComponent);
+	XCTAssert(![NSString stringWithFormat:@"\n\r166d1210-cdb9-50ab-9f1e-ecb9ef12a304$2e81b56f-9284-409a-9dd0-364604df62ce"].isValidFilesystemCompatibleComponent);
+	XCTAssert(![NSString stringWithFormat:@"166d1210-cdb9-50ab-9f1e-ecb9ef12a304\n2e81b56f-9284-409a-9dd0-364604df62ce"].isValidFilesystemCompatibleComponent);
+	XCTAssert(![NSString stringWithFormat:@"166d1210-cdb9-50ab-9f1e-ecb9ef12a304\r2e81b56f-9284-409a-9dd0-364604df62ce"].isValidFilesystemCompatibleComponent);
+	XCTAssert(![NSString stringWithFormat:@"166d1210-cdb9-50ab-9f1e-ecb9ef12a304\n\r2e81b56f-9284-409a-9dd0-364604df62ce"].isValidFilesystemCompatibleComponent);
+
+	// Test invalid: umlauts
+	XCTAssert(!@"123-ä123".isValidFilesystemCompatibleComponent);
+	XCTAssert(!@"123-Ä123".isValidFilesystemCompatibleComponent);
+	XCTAssert(!@"123-ß123".isValidFilesystemCompatibleComponent);
+
+	// Test invalid: unincluded characters
+	XCTAssert(!@"123*123".isValidFilesystemCompatibleComponent);
+	XCTAssert(!@"123.123".isValidFilesystemCompatibleComponent);
+	XCTAssert(!@"123/123".isValidFilesystemCompatibleComponent);
+}
+
 @end

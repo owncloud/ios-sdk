@@ -24,6 +24,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(strong,readonly,nonatomic,class) NSRegularExpression *ocFilesystemCompatibleCharactersRegex;
 
+@property(readonly,nonatomic) BOOL isValidFilesystemCompatibleComponent; //!< Returns whether the string consists only of characters allowed by the rules for FilesystemCompatibleComponents as defined by +ocFilesystemCompatibleCharactersRegex.
+
 /// Encodes a string to a filesystem-compatible path component and indicates whether the encoding was lossy.
 /// If it was lossy, the original string must be preserved by another means.
 /// - Parameter outIsLossy: if non-NULL, on return contains information on whether the encoding was lossy.

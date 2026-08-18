@@ -27,7 +27,7 @@
 	static dispatch_once_t onceToken;
 	static NSRegularExpression *_ocFilesystemCompatibleCharactersRegex;
 	dispatch_once(&onceToken, ^{
-		_ocFilesystemCompatibleCharactersRegex = [[NSRegularExpression alloc] initWithPattern:@"^[A-Za-z0-9\\-\\$]{1,}$" options:0 error:NULL];
+		_ocFilesystemCompatibleCharactersRegex = [[NSRegularExpression alloc] initWithPattern:@"\\A[A-Za-z0-9\\-\\$]+\\z" options:0 error:NULL];
 	});
 
 	return(_ocFilesystemCompatibleCharactersRegex);
