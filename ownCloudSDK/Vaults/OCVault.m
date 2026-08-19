@@ -1314,13 +1314,18 @@
 
 	NSURL*(^DriveRootURL)(void) = ^{
 		BOOL pathComponentIsLossy = NO;
-		NSURL *driveRootURL = [[[self storageRootURLForBookmarkUUID:location.bookmarkUUID] URLByAppendingPathComponent:OCVaultPathDrives isDirectory:YES] URLByAppendingPathComponent:[location.driveID encodedFilesystemCompatibleComponentIsLossy:&pathComponentIsLossy] isDirectory:YES];
+		NSURL *driveRootURL = nil;
 
-		if (pathComponentIsLossy) {
-			// Path component encoding was lossy, so preserve the original ID in the metadata.plist
-			NSError *error = [OCVault _writeDriveMetadata:@{ OCVaultDriveMetadataKeyDriveID : location.driveID } toDriveRootURL:driveRootURL];
-			if (error != nil) {
-				driveRootURL = nil;
+		NSString *driveIDPathComponent = [location.driveID encodedFilesystemCompatibleComponentIsLossy:&pathComponentIsLossy];
+		if (driveIDPathComponent != nil) {
+			driveRootURL = [[[self storageRootURLForBookmarkUUID:location.bookmarkUUID] URLByAppendingPathComponent:OCVaultPathDrives isDirectory:YES] URLByAppendingPathComponent:driveIDPathComponent isDirectory:YES];
+
+			if (pathComponentIsLossy) {
+				// Path component encoding was lossy, so preserve the original ID in the metadata.plist
+				NSError *error = [OCVault _writeDriveMetadata:@{ OCVaultDriveMetadataKeyDriveID : location.driveID } toDriveRootURL:driveRootURL];
+				if (error != nil) {
+					driveRootURL = nil;
+				}
 			}
 		}
 

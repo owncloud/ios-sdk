@@ -107,12 +107,8 @@
 
 		if (stringData != nil)
 		{
-			NSData *sha256HashData = [stringData sha256Hash];
-			if (sha256HashData != nil)
-			{
-				encodedPathComponent = [@"s256," stringByAppendingString:[sha256HashData asHexStringWithSeparator:nil lowercase:YES]]; // prepend "sha256," as a differentiator from directly-usable UUIDs and base64 strings
-				if (outIsLossy != NULL) { *outIsLossy = YES; }
-			}
+			encodedPathComponent = [@"s256," stringByAppendingString:[stringData.sha256Hash asHexStringWithSeparator:nil lowercase:YES]]; // prepend "sha256," as a differentiator from directly-usable UUIDs and base64 strings
+			if (outIsLossy != NULL) { *outIsLossy = YES; }
 		}
 	}
 
