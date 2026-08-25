@@ -21,6 +21,7 @@
 #import "OCHTTPStatus.h"
 #import "OCChecksum.h"
 #import "OCDrive.h"
+#import "NSError+OCError.h"
 
 @implementation OCItem (OCXMLObjectCreation)
 
@@ -396,6 +397,16 @@
 					}
 				}
 			}];
+
+			// Check for empty name
+			NSString *itemName = itemPath.lastPathComponent;
+			if ([itemName isEqual:@""] ||
+			    // [@"/" lastPathComponent], [@"//" lastPathComponent], etc. actually return "/" - for the root folder item, however, this is valid & expected, so this should only be considered an empty & erroneous name for files
+			    ([itemName isEqual:@"/"] && (item.type == OCItemTypeFile)))
+			{
+				// Item has an empty name => return error
+				return ((OCItem*) OCError(OCErrorResponseWithNamelessItem));
+			}
 
 			// Clean up quota
 			if (item.quotaBytesRemaining.integerValue < 0)

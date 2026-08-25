@@ -2072,7 +2072,7 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCConnection)
 
 			items = [((OCHTTPDAVRequest *)request) responseItemsForBasePath:endpointURL.path drives:nil reuseUsersByID:_usersByUserID driveID:driveID withErrors:&errors];
 
-			if ((items.count == 0) && (errors.count > 0) && (event.error == nil))
+			if ((errors.count > 0) && (event.error == nil))
 			{
 				event.error = errors.firstObject;
 			}

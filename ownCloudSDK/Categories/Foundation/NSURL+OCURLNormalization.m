@@ -139,4 +139,28 @@
 	return ([path hasPrefix:parentPath]);
 }
 
+- (BOOL)isLocatedWithin:(NSURL *)parentFileURL standardizeParent:(BOOL)standardizeParent
+{
+	if (!self.isFileURL || !parentFileURL.isFileURL)
+	{
+		return (NO);
+	}
+
+	NSString *parentPath = standardizeParent ? parentFileURL.URLByStandardizingPath.path : parentFileURL.path;
+	NSString *path = self.URLByStandardizingPath.path;
+
+	if (parentPath == nil)
+	{
+		return (NO);
+	}
+
+	if (![parentPath hasSuffix:@"/"])
+	{
+		parentPath = [parentPath stringByAppendingString:@"/"];
+	}
+
+	return ([path hasPrefix:parentPath] && // contained in parentPath ..
+	        (path.length > parentPath.length)); // .. but also not identical to parentPath
+}
+
 @end

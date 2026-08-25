@@ -62,7 +62,7 @@
 		"postBuildSettings.plist"				- OCClassSettingsFlatSourcePostBuild storage
 
 
-	[NSFileProviderManager documentStorageURL]/
+	[NSFileProviderManager documentStorageURL]/			- OCVault.storageRootURL
 		"VFS"/							- OCVault.vfsStorageRootURLForBookmarkUUID:nil
 			[VFS Node ID]
 			…
@@ -86,15 +86,19 @@
 
 			*Drive-based*
 			"Drives"/					- OCVault.drivesRootURL
-				[Drive ID]/				- OCVault.localDriveRootURLForDriveID --> !! Virtual !!
+				[Drive ID]/				- OCVault.localDriveRootURLForDriveID --> !! Virtual !! (+ uses NSString+OCFilesystemComponent en-/decoding)
 					[Local ID]/			- OCVault.localFolderURLForItem
 						[filename.xyz]		- OCVault.localURLForItem
+					metadata.plist			- OCVault.localDriveRootURLForDriveID + "metadata.plist"
 
  */
 
 NS_ASSUME_NONNULL_BEGIN
 
 typedef BOOL(^OCVaultCompactSelector)(OCSyncAnchor _Nullable syncAnchor, OCItem *item);
+
+typedef NSString* OCVaultDriveMetadataKey NS_TYPED_ENUM; //!< Metadata key inside `metadata.plist` (in root folder of local drives folder)
+typedef NSDictionary<OCVaultDriveMetadataKey,id>* OCVaultDriveMetadata; //!< Type representing a `metadata.plist` file's contents
 
 @interface OCVault : NSObject
 {
@@ -245,6 +249,8 @@ extern NSString *OCVaultPathDrives;
 extern NSString *OCVaultPathVFS;
 
 extern OCKeyValueStoreKey OCKeyValueStoreKeyVaultDriveList;
+
+extern OCVaultDriveMetadataKey OCVaultDriveMetadataKeyDriveID; //!< Key for the original, full Drive ID of the drive
 
 extern NSNotificationName OCVaultDriveListChanged; //!< Notification sent when an OCVault's drive list has changed. The object is the OCVault.
 

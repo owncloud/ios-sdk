@@ -21163,6 +21163,23 @@
         }
       }
     },
+    "Nameless item in WebDAV response rejected." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nameloses Item in WebDAV-Antwort zurückgewiesen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nameless item in WebDAV response rejected."
+          }
+        }
+      }
+    },
     "Network unavailable" : {
       "localizations" : {
         "ca" : {

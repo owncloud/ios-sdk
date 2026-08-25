@@ -1956,7 +1956,12 @@ INCLUDE_IN_CLASS_SETTINGS_SNAPSHOTS(OCCore)
 	{
 		if ([[NSFileManager defaultManager] fileExistsAtPath:[parentURL path]])
 		{
-			if (![[NSFileManager defaultManager] removeItemAtURL:parentURL error:&error])
+			if (![parentURL isLocatedWithin:self.vault.filesRootURL standardizeParent:NO]) // filesRootURL already has standardized path
+			{
+				OCLogError(@"Item parent directory deletion at %@ rejected because it's not inside the filesRootURL %@", OCLogPrivate(parentURL), OCLogPrivate(self.vault.filesRootURL));
+				error = OCError(OCErrorInternal);
+			}
+			else if (![[NSFileManager defaultManager] removeItemAtURL:parentURL error:&error])
 			{
 				OCLogError(@"Item parent directory deletion at %@ failed with error %@", OCLogPrivate(parentURL), error);
 			}
