@@ -157,6 +157,19 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 	OCItem *parentItem, *uploadItem;
 	NSURL *uploadURL;
 
+	// Loop-breaker: if the item to upload has meanwhile been removed (f.ex. deleted locally while the
+	// upload was still queued or parked on an issue), there is nothing left to upload. Re-uploading it
+	// would recreate a placeholder and - via keep-both issue resolution - spin up an endless sync loop.
+	// Cancel the record instead and move on.
+	if ([self _localItemHasBeenRemoved])
+	{
+		OCLogWarning(@"Cancelling upload of removed item (name=%@, localID=%@): item no longer exists in cache", self.localItem.name, self.localItem.localID);
+
+		[self.core _descheduleSyncRecord:syncContext.syncRecord completeWithError:OCError(OCErrorCancelled) parameter:nil];
+
+		return (OCCoreSyncInstructionProcessNext);
+	}
+
 	if (((remoteFileName = self.filename) != nil) &&
 	    ((parentItem = self.parentItem) != nil) &&
 	    ((uploadItem = self.localItem) != nil) &&
@@ -404,6 +417,25 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 	}
 
 	return (resultInstruction);
+}
+
+#pragma mark - Removal check
+- (BOOL)_localItemHasBeenRemoved
+{
+	// Determine the current state of the item to upload from the database (rather than the archived,
+	// possibly stale self.localItem). retrieveCacheItemForLocalID: only returns non-removed items, so a
+	// nil result means the item has been removed (or hard-deleted) in the meantime.
+	__block BOOL removed = NO;
+	OCLocalID localItemLocalID;
+
+	if ((localItemLocalID = self.localItem.localID) != nil)
+	{
+		[self.core.vault.database retrieveCacheItemForLocalID:localItemLocalID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *item) {
+			removed = ((item == nil) || item.removed);
+		}];
+	}
+
+	return (removed);
 }
 
 #pragma mark - Issue resolution
