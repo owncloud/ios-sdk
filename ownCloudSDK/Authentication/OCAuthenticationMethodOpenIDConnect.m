@@ -144,6 +144,30 @@ static OIDCDictKeyPath OIDCKeyPathClientSecret				= @"clientRegistrationClientSe
 	refreshParameters[@"client_secret"] = [self clientSecretForConnection:connection];
 	refreshParameters[@"scope"] = self.scope;
 
+	if (connection.isKiteworksServer)
+	{
+		// At the time of writing (2026-09-29), Kiteworks IDP will return the following error if "offline_access" is included:
+		//
+		//	# RESPONSE --------------------------------------------------------
+		//	Method:      POST
+		//	URL:         https://content.kiteworks.com/oauth/token
+		//	Error:       -
+		//	Req Signals: networkAvailable
+		//	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		//	422 CLIENT ERROR
+		//	Content-Type: application/json; charset=UTF-8
+		//	Date: Tue, 29 Sep 2026 07:43:04 GMT
+		//	Content-Length: 114
+		//
+		//	{"errors":[{"code":"ERR_INVALID_PARAMETER","field":"scope","message":"String does not match expected pattern."}]}
+		//
+		// To address this, ` offline_access` is removed from the scope parameter for Kiteworks servers. If it becomes necessary to
+		// re-add this, it can still be sent through MDM configuration by putting `offline_access` into the scope string first
+		// (without leading space).
+
+		refreshParameters[@"scope"] = [refreshParameters[@"scope"] stringByReplacingOccurrencesOfString:@" offline_access" withString:@""];
+	}
+
 	return (refreshParameters);
 }
 
