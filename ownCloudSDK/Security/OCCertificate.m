@@ -639,22 +639,8 @@ static NSString *OCCertificateKeychainPath = @"UserAcceptedCertificates";
 #pragma mark - Digests
 - (void)_clearFingerPrints
 {
-	_md5FingerPrint = nil;
 	_sha1FingerPrint = nil;
 	_sha256FingerPrint = nil;
-}
-
-- (NSData *)md5Fingerprint
-{
-	@synchronized(self)
-	{
-		if (_md5FingerPrint==nil)
-		{
-			_md5FingerPrint = [[self certificateData] md5Hash];
-		}
-		
-		return (_md5FingerPrint);
-	}
 }
 
 - (NSData *)sha1Fingerprint
