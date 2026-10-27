@@ -22,9 +22,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NSData (OCHash)
 
-- (NSData *)md5Hash;
-- (NSData *)sha1Hash;
-- (NSData *)sha256Hash;
+@property(retain, nonatomic, readonly) NSData *sha1Hash;
+@property(retain, nonatomic, readonly) NSData *sha256Hash;
 
 - (NSString *)asHexStringWithSeparator:(nullable NSString *)separator;
 - (NSString *)asHexStringWithSeparator:(nullable NSString *)separator lowercase:(BOOL)lowercase;

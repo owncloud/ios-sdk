@@ -314,9 +314,6 @@
 {
 	NSData *data = [@"Hello" dataUsingEncoding:NSUTF8StringEncoding];
 
-	OCLog(@"%@", [[data md5Hash] asHexStringWithSeparator:@" "]);
-	XCTAssert([[[data md5Hash] asHexStringWithSeparator:@" "] isEqual:@"8B 1A 99 53 C4 61 12 96 A8 27 AB F8 C4 78 04 D7"]);
-
 	OCLog(@"%@", [[data sha1Hash] asHexStringWithSeparator:@" "]);
 	XCTAssert([[[data sha1Hash] asHexStringWithSeparator:@" "] isEqual:@"F7 FF 9E 8B 7B B2 E0 9B 70 93 5A 5D 78 5E 0C C5 D9 D0 AB F0"]);
 
