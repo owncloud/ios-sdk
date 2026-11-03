@@ -2077,21 +2077,22 @@ static OCKeyValueStoreKey OCKeyValueStoreKeyActiveProcessCores = @"activeProcess
 					{
 						for (OCItem *item in items)
 						{
-							// Ignore removed items
-							if (!item.removed)
+							// Check if item has any sync record ID of an actually existing sync record
+							if (![syncRecordIDs intersectsSet:[NSSet setWithArray:item.activeSyncRecordIDs]])
 							{
-								// Check if item has any sync record ID of an actually existing sync record
-								if (![syncRecordIDs intersectsSet:[NSSet setWithArray:item.activeSyncRecordIDs]])
-								{
-									// No valid sync record IDs
-									OCLogWarning(@"Resetting sync information for %@ (live sync records: %@)", item, syncRecordIDs);
+								// No valid sync record IDs => the sync records referenced by this item no longer exist.
+								// This also covers removed items that still carry dangling sync record IDs: previously
+								// they were ignored here, so a removed item with active-but-non-existent sync records was
+								// never scrubbed AND never vacuumed (activeSyncRecordIDs.count > 0) - a permanent deadlock
+								// that keeps the sync pipeline busy. Clearing the sync activity here lets the Vacuum item
+								// policy purge such removed items.
+								OCLogWarning(@"Resetting sync information for %@ (removed=%d, live sync records: %@)", item, item.removed, syncRecordIDs);
 
-									item.activeSyncRecordIDs = nil;
-									item.syncActivityCounts = nil;
-									item.syncActivity = OCItemSyncActivityNone;
+								item.activeSyncRecordIDs = nil;
+								item.syncActivityCounts = nil;
+								item.syncActivity = OCItemSyncActivityNone;
 
-									[updateItems addObject:item];
-								}
+								[updateItems addObject:item];
 							}
 						}
 					}
