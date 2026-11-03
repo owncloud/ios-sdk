@@ -26,11 +26,6 @@
 	digestFunction(self.bytes, (CC_LONG)self.length, (unsigned char*)&digest); \
 	return ([NSData dataWithBytes:&digest length:(NSUInteger)digestLength])
 
-- (NSData *)md5Hash
-{
-	CreateAndReturnHashData(CC_MD5, CC_MD5_DIGEST_LENGTH);
-}
-
 - (NSData *)sha1Hash
 {
 	CreateAndReturnHashData(CC_SHA1, CC_SHA1_DIGEST_LENGTH);
