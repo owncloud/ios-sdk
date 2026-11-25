@@ -50,6 +50,7 @@ FOUNDATION_EXPORT const unsigned char ownCloudSDKVersionString[];
 #import <ownCloudSDK/OCAppIdentity.h>
 
 #import <ownCloudSDK/OCKeychain.h>
+#import <ownCloudSDK/OCClientIdentityStore.h>
 #import <ownCloudSDK/OCCertificate.h>
 #import <ownCloudSDK/OCCertificateRuleChecker.h>
 #import <ownCloudSDK/OCCertificateStore.h>
