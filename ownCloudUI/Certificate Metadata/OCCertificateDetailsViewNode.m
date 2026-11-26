@@ -400,7 +400,6 @@
 
 				AddFingerPrint(sha256Fingerprint, @"SHA-256")
 				AddFingerPrint(sha1Fingerprint, @"SHA-1")
-				AddFingerPrint(md5Fingerprint, @"MD5")
 
 				if (sectionNode.children.count > 0)
 				{
