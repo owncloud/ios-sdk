@@ -57,7 +57,6 @@ typedef NSString* OCCertificateAcceptanceReason NS_TYPED_ENUM;
 	OCCertificateAcceptanceReason _userAcceptedReason;
 	NSString *_userAcceptedReasonDescription;
 
-	NSData *_md5FingerPrint;
 	NSData *_sha1FingerPrint;
 	NSData *_sha256FingerPrint;
 
@@ -103,9 +102,8 @@ typedef NSString* OCCertificateAcceptanceReason NS_TYPED_ENUM;
 - (nullable NSData *)publicKeyDataWithError:(NSError **)error; //!< Returns public key embedded in certificate in PKCS#1 format (RSA keys) or ANSI X9.63 format (04 || X || Y [ || K]) (for elliptic curve keys)
 
 #pragma mark - Fingerprints
-- (nullable NSData *)md5Fingerprint;
-- (nullable NSData *)sha1Fingerprint;
-- (nullable NSData *)sha256Fingerprint;
+@property(readonly,retain,nonatomic,nullable) NSData *sha1Fingerprint;
+@property(readonly,retain,nonatomic,nullable) NSData *sha256Fingerprint;
 
 #pragma mark - Chain
 - (OCCertificate *)rootCertificate; //!< Returns the root certificate from the certificate's chain - or, if it has no chain, the instance itself.

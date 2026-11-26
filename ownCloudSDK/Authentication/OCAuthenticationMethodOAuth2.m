@@ -431,6 +431,17 @@ OCAuthenticationMethodAutoRegister
 			@"prompt"		 : (self.prompt != nil) ? self.prompt : ((NSString *)NSNull.null)
 		};
 
+		if (connection.isKiteworksServer)
+		{
+			// At the time of writing (2026-09-29), Kiteworks IDP ignores the select_account prompt parameter,
+			// re-using existing cookies to immediately issue new tokens for an already logged-in account - and
+			// making it impossible to log in with two different accounts. By appending force_login=1, the
+			// KW IDP presents login UI every time.
+			NSMutableDictionary<NSString *,NSString *> *mutableParameters = [parameters mutableCopy];
+			mutableParameters[@"force_login"] = @"1";
+			parameters = mutableParameters;
+		}
+
 		parameters = [self prepareAuthorizationRequestParameters:parameters forConnection:connection options:options];
 
 		// Omit parameters from authorization as per settings (default: none)
@@ -1005,6 +1016,13 @@ OCAuthenticationMethodAutoRegister
 						OCLogError(@"Token response did not contain a new refresh_token! Next token refresh would fail. Returning authorization failed error.");
 
 						error = OCErrorWithDescription(OCErrorAuthorizationFailed, @"The token refresh response did not contain a new refresh_token.");
+					}
+					else if ((jsonResponseDict[@"access_token"] == nil) && (requestType == OCAuthenticationOAuth2TokenRequestTypeRefreshToken))
+					{
+						// Token response did not contain a new access_token (required as per specification: https://www.rfc-editor.org/info/rfc6749/#section-5.1 )
+						OCLogError(@"Token response did not indicate an error (no `error` field) but also not contain a new access_token. Returning authorization failed error.");
+
+						error = OCErrorWithDescription(OCErrorAuthorizationFailed, @"The token refresh response did not contain a new access_token.");
 					}
 					else
 					{
