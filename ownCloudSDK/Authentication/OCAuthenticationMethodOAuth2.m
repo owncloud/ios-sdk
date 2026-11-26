@@ -32,6 +32,7 @@
 #import "OCLockManager.h"
 #import "OCLockRequest.h"
 #import "NSError+OCNetworkFailure.h"
+#import "OCClientIdentityStore.h"
 
 #pragma mark - Internal OA2 keys
 typedef NSString* OA2DictKeyPath;
@@ -588,16 +589,35 @@ OCAuthenticationMethodAutoRegister
 	sBrowserSessionClass = browserSessionClass;
 }
 
+static Class sMutualTLSBrowserSessionClass;
+
++ (Class)mutualTLSBrowserSessionClass
+{
+	return (sMutualTLSBrowserSessionClass);
+}
+
++ (void)setMutualTLSBrowserSessionClass:(Class)mutualTLSBrowserSessionClass
+{
+	sMutualTLSBrowserSessionClass = mutualTLSBrowserSessionClass;
+}
+
 + (BOOL)startAuthenticationSession:(__autoreleasing id *)authenticationSession forURL:(NSURL *)authorizationRequestURL scheme:(NSString *)scheme options:(nullable OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSURL *_Nullable callbackURL, NSError *_Nullable error))oauth2CompletionHandler
 {
 	BOOL authSessionDidStart = NO;
+	Class browserSessionClass = self.browserSessionClass;
 
-	if (self.browserSessionClass != Nil)
+	if ((browserSessionClass == Nil) && (self.mutualTLSBrowserSessionClass != Nil) && [OCClientIdentityStore.sharedStore hasIdentityForHost:authorizationRequestURL.host])
+	{
+		// The server requires a client certificate the system browser doesn't have: use a session that can present it
+		browserSessionClass = self.mutualTLSBrowserSessionClass;
+	}
+
+	if (browserSessionClass != Nil)
 	{
 		OCAuthenticationBrowserSession *browserSession;
 
 		// Create custom browser session class
-		if ((browserSession = [[self.browserSessionClass alloc] initWithURL:authorizationRequestURL callbackURLScheme:scheme options:options completionHandler:oauth2CompletionHandler]) != nil)
+		if ((browserSession = [[browserSessionClass alloc] initWithURL:authorizationRequestURL callbackURLScheme:scheme options:options completionHandler:oauth2CompletionHandler]) != nil)
 		{
 			*authenticationSession = browserSession;
 

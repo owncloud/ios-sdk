@@ -17,6 +17,7 @@
  */
 
 #import "OCHTTPPipeline.h"
+#import "OCClientIdentityStore.h"
 #import "OCHTTPPipelineTask.h"
 #import "OCHTTPResponse.h"
 #import "OCHTTPPipelineBackend.h"
@@ -2429,6 +2430,20 @@
 		else
 		{
 			completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
+		}
+	}
+	else if ([challenge.protectionSpace.authenticationMethod isEqual:NSURLAuthenticationMethodClientCertificate])
+	{
+		// Client certificate (mutual TLS) challenges: present the identity stored for exactly this host, if any
+		NSURLCredential *clientCredential;
+
+		if ((clientCredential = [OCClientIdentityStore.sharedStore credentialForChallenge:challenge]) != nil)
+		{
+			completionHandler(NSURLSessionAuthChallengeUseCredential, clientCredential);
+		}
+		else
+		{
+			completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
 		}
 	}
 	else

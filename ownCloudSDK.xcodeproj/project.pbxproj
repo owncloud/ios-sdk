@@ -17,6 +17,8 @@
 		599A45AB218C566C003CAB00 /* OCConnection+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = 599A45A9218C566C003CAB00 /* OCConnection+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		59F6476D219AD11600C016FD /* OCQuery+OCMocking.h in Headers */ = {isa = PBXBuildFile; fileRef = 59F6476B219AD11600C016FD /* OCQuery+OCMocking.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		59F6476E219AD11600C016FD /* OCQuery+OCMocking.m in Sources */ = {isa = PBXBuildFile; fileRef = 59F6476C219AD11600C016FD /* OCQuery+OCMocking.m */; };
+		8B2CBD667F008BD31B29DDB0 /* OCClientIdentityStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 45A1A79ABB3DDD6C31C0AE93 /* OCClientIdentityStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BF0A749AEF4F822C4EF74A42 /* ClientIdentityStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 760CFC094C8A0E68FB32EAAF /* ClientIdentityStoreTests.m */; };
 		DC00740A2D522BED00C1C6F7 /* OCCore+DriveManagement.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0074092D522BED00C1C6F7 /* OCCore+DriveManagement.m */; };
 		DC00DB1D219B120300C82737 /* OCHTTPDAVMultistatusResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = DC00DB1B219B120300C82737 /* OCHTTPDAVMultistatusResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DC00DB1E219B120300C82737 /* OCHTTPDAVMultistatusResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = DC00DB1C219B120300C82737 /* OCHTTPDAVMultistatusResponse.m */; };
@@ -1006,6 +1008,8 @@
 		DCFF1AB121655C8800ABE40A /* OCItem+OCFileURLMetadata.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFF1AAF21655C8800ABE40A /* OCItem+OCFileURLMetadata.m */; };
 		DCFFF57E20D3A51C0096D2D3 /* OCSyncContext.h in Headers */ = {isa = PBXBuildFile; fileRef = DCFFF57C20D3A51C0096D2D3 /* OCSyncContext.h */; };
 		DCFFF57F20D3A51C0096D2D3 /* OCSyncContext.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFFF57D20D3A51C0096D2D3 /* OCSyncContext.m */; };
+		F63EE74142AC615382A2C72D /* OCClientIdentityStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 20D8D6D3D3C738062452C587 /* OCClientIdentityStore.m */; };
+		FCDA0C15AE38632AA7C8C51C /* client-identity.p12 in Resources */ = {isa = PBXBuildFile; fileRef = 1D4D2EECBBFB15976BC79822 /* client-identity.p12 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1107,8 +1111,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1D4D2EECBBFB15976BC79822 /* client-identity.p12 */ = {isa = PBXFileReference; includeInIndex = 1; path = "client-identity.p12"; sourceTree = "<group>"; };
+		20D8D6D3D3C738062452C587 /* OCClientIdentityStore.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = OCClientIdentityStore.m; sourceTree = "<group>"; };
 		3968663F2DC103D90085760C /* OCChecksumAlgorithmSHA3-256.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCChecksumAlgorithmSHA3-256.h"; sourceTree = "<group>"; };
 		396866402DC103D90085760C /* OCChecksumAlgorithmSHA3-256.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCChecksumAlgorithmSHA3-256.m"; sourceTree = "<group>"; };
+		45A1A79ABB3DDD6C31C0AE93 /* OCClientIdentityStore.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = OCClientIdentityStore.h; sourceTree = "<group>"; };
 		4C7295E7228DAD6200FA4E68 /* OCLogFileRecord.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCLogFileRecord.m; sourceTree = "<group>"; };
 		4C7295E9228DAD8400FA4E68 /* OCLogFileRecord.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCLogFileRecord.h; sourceTree = "<group>"; };
 		5966C8D32195A11600C8875E /* OCCoreManager+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCCoreManager+OCMocking.h"; sourceTree = "<group>"; };
@@ -1117,6 +1124,7 @@
 		599A45A9218C566C003CAB00 /* OCConnection+OCMocking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OCConnection+OCMocking.h"; sourceTree = "<group>"; };
 		59F6476B219AD11600C016FD /* OCQuery+OCMocking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OCQuery+OCMocking.h"; sourceTree = "<group>"; };
 		59F6476C219AD11600C016FD /* OCQuery+OCMocking.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCQuery+OCMocking.m"; sourceTree = "<group>"; };
+		760CFC094C8A0E68FB32EAAF /* ClientIdentityStoreTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = ClientIdentityStoreTests.m; sourceTree = "<group>"; };
 		DC0074092D522BED00C1C6F7 /* OCCore+DriveManagement.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "OCCore+DriveManagement.m"; sourceTree = "<group>"; };
 		DC00DB1B219B120300C82737 /* OCHTTPDAVMultistatusResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OCHTTPDAVMultistatusResponse.h; sourceTree = "<group>"; };
 		DC00DB1C219B120300C82737 /* OCHTTPDAVMultistatusResponse.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OCHTTPDAVMultistatusResponse.m; sourceTree = "<group>"; };
@@ -2671,6 +2679,8 @@
 				DC9B4FCF2941FF540037F8F8 /* OCCertificateStore.h */,
 				DC9B4FD42941FF630037F8F8 /* OCCertificateStoreRecord.m */,
 				DC9B4FD32941FF630037F8F8 /* OCCertificateStoreRecord.h */,
+				45A1A79ABB3DDD6C31C0AE93 /* OCClientIdentityStore.h */,
+				20D8D6D3D3C738062452C587 /* OCClientIdentityStore.m */,
 			);
 			path = Security;
 			sourceTree = "<group>";
@@ -4307,6 +4317,8 @@
 				DC6DB88121C26F4D00189B21 /* XCTestCase+Tagging.m */,
 				DC6DB88021C26F4D00189B21 /* XCTestCase+Tagging.h */,
 				DCD6327A223BE0980090169E /* capabilities.json */,
+				760CFC094C8A0E68FB32EAAF /* ClientIdentityStoreTests.m */,
+				1D4D2EECBBFB15976BC79822 /* client-identity.p12 */,
 			);
 			path = ownCloudSDKTests;
 			sourceTree = "<group>";
@@ -5138,6 +5150,7 @@
 				DC2266A82282BC8100FB29EE /* OCBookmark+IPNotificationNames.h in Headers */,
 				DCF575D1279562DF003BEBBA /* OCViewProvider.h in Headers */,
 				DC708CDC214135C000FE43CA /* OCSyncActionCreateFolder.h in Headers */,
+				8B2CBD667F008BD31B29DDB0 /* OCClientIdentityStore.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5422,6 +5435,7 @@
 				DC1A7E14266ACA1500CAA695 /* letsencrypt-new-parent.cer in Resources */,
 				DC30955F2057D18100189B9A /* fake-demo_owncloud_org.cer in Resources */,
 				DC7185BB216E160500BDEA2A /* rainbow-crystalized.png in Resources */,
+				FCDA0C15AE38632AA7C8C51C /* client-identity.p12 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5950,6 +5964,7 @@
 				DCE2F04427FB928B00E9E136 /* NSArray+OCFiltering.m in Sources */,
 				DC5966A32276DB5D004CB28D /* OCSyncLane.m in Sources */,
 				DCC8FA162029EB9400EB6701 /* OCHTTPRequest.m in Sources */,
+				F63EE74142AC615382A2C72D /* OCClientIdentityStore.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5986,6 +6001,7 @@
 				DCFBACF721BAB35A00943F76 /* PerformanceTests.m in Sources */,
 				DC0AE4572310793100428681 /* KeyValueStoreTests.m in Sources */,
 				DCEEB2D52042312500189B9A /* ConnectionTests.m in Sources */,
+				BF0A749AEF4F822C4EF74A42 /* ClientIdentityStoreTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -32,6 +32,7 @@ typedef NS_ENUM(NSInteger, OCAuthenticationOAuth2TokenRequestType)
 @interface OCAuthenticationMethodOAuth2 : OCAuthenticationMethod <OCClassSettingsSupport>
 
 @property(strong,nullable,class,nonatomic) Class browserSessionClass;
+@property(strong,nullable,class,nonatomic) Class mutualTLSBrowserSessionClass; //!< OCAuthenticationBrowserSession subclass used instead of ASWebAuthenticationSession when a TLS client identity is stored for the authorization URL's host (ASWebAuthenticationSession can't present app-provided client certificates). Set by the app.
 
 + (BOOL)startAuthenticationSession:(__autoreleasing id _Nonnull * _Nullable)authenticationSession forURL:(NSURL *)authorizationRequestURL scheme:(NSString *)scheme options:(nullable OCAuthenticationMethodBookmarkAuthenticationDataGenerationOptions)options completionHandler:(void(^)(NSURL *_Nullable callbackURL, NSError *_Nullable error))oauth2CompletionHandler; //!< Starts a system authentication session for the provided URL, scheme and completionHandler. Used by OCAuthenticationMethodOAuth2 as interface to ASWebAuthenticationSession.
 
