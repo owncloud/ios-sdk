@@ -74,6 +74,11 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 		// Item itself
 		[itemToDelete addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
 
+		// Cancel any pending upload (transfer) sync records for the item being deleted. Otherwise a queued
+		// or issue-parked upload keeps looping and - via keep-both issue resolution - recreates placeholders
+		// after the item is already gone, leaving the sync pipeline stuck forever.
+		[self _cancelPendingUploadsForItem:itemToDelete excludingSyncRecordID:syncContext.syncRecord.recordID];
+
 		syncContext.removedItems = @[ itemToDelete ];
 
 		// Contained (associated) items
@@ -86,6 +91,9 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 				for (OCItem *item in items)
 				{
 					[item addSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
+
+					// Cancel pending uploads for contained items too
+					[self _cancelPendingUploadsForItem:item excludingSyncRecordID:syncContext.syncRecord.recordID];
 
 					OCLogDebug(@"Preflight: delete contained %@", OCLogPrivate(item.path));
 
@@ -104,6 +112,51 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 				self.associatedItemLocalIDs = removedLocalIDs;
 				self.associatedItemLaneTags = [self generateLaneTagsFromItems:removedItems];
 			}
+		}
+	}
+}
+
+- (void)_cancelPendingUploadsForItem:(OCItem *)item excludingSyncRecordID:(OCSyncRecordID)excludedSyncRecordID
+{
+	// Cancels all pending upload (transfer) sync records referencing the given item. Runs inside the
+	// (already protected) preflight sync block, so the internal _descheduleSyncRecord: is used directly.
+
+	// Enumerate the *current* sync record IDs from the database (self.localItem can be stale and miss
+	// records that were added after it was fetched). Falls back to the item's own list if unavailable.
+	__block NSArray<OCSyncRecordID> *activeSyncRecordIDs = item.activeSyncRecordIDs;
+
+	if (item.localID != nil)
+	{
+		[self.core.vault.database retrieveCacheItemForLocalID:item.localID completionHandler:^(OCDatabase *db, NSError *error, OCSyncAnchor syncAnchor, OCItem *currentItem) {
+			if (currentItem.activeSyncRecordIDs != nil)
+			{
+				activeSyncRecordIDs = currentItem.activeSyncRecordIDs;
+			}
+		}];
+	}
+
+	if ((activeSyncRecordIDs = [activeSyncRecordIDs copy]) == nil) { return; }
+
+	for (OCSyncRecordID syncRecordID in activeSyncRecordIDs)
+	{
+		if ((excludedSyncRecordID != nil) && [syncRecordID isEqual:excludedSyncRecordID]) { continue; }
+
+		__block OCSyncRecord *syncRecord = nil;
+
+		[self.core.vault.database retrieveSyncRecordForID:syncRecordID completionHandler:^(OCDatabase *db, NSError *error, OCSyncRecord *record) {
+			syncRecord = record;
+		}];
+
+		if ([syncRecord.actionIdentifier isEqual:OCSyncActionIdentifierUpload])
+		{
+			OCLogWarning(@"Cancelling pending upload (record %@) because item %@ is being deleted", syncRecord.recordID, OCLogPrivate(item.path));
+
+			// Drop the reference from this item instance *before* the delete's own item update is committed,
+			// so no dangling sync record ID for the just-cancelled upload is persisted. (Fix B scrubs any
+			// that might still slip through, e.g. on other item instances.)
+			[item removeSyncRecordID:syncRecordID activity:OCItemSyncActivityUploading];
+
+			[self.core _descheduleSyncRecord:syncRecord completeWithError:OCError(OCErrorCancelled) parameter:nil];
 		}
 	}
 }
@@ -161,6 +214,29 @@ OCSYNCACTION_REGISTER_ISSUETEMPLATES
 
 	if ((item = self.archivedServerItem) != nil)
 	{
+		// Placeholder items exist only locally (they were never uploaded to the server). There is nothing
+		// to delete remotely - and issuing a server DELETE with a synthetic "_placeholder_" fileID would
+		// just fail (and could get stuck on a delete issue). Complete the deletion locally instead.
+		if (item.isPlaceholder)
+		{
+			OCLogDebug(@"Completing deletion of placeholder item %@ locally (never existed on the server)", OCLogPrivate(self.localItem.path));
+
+			// Notify the caller / result handler that the (local) deletion succeeded (mirrors the server-result path)
+			[syncContext completeWithError:nil core:self.core item:self.localItem parameter:self.localItem];
+
+			[self.localItem removeSyncRecordID:syncContext.syncRecord.recordID activity:OCItemSyncActivityDeleting];
+			syncContext.removedItems = @[ self.localItem ];
+
+			// Remove file(s) locally
+			[self.core deleteDirectoryForItem:self.localItem];
+
+			// Action complete and can be removed (any contained/associated items were already soft-removed
+			// during preflight; their dangling delete record references are cleaned up by sync status scrubbing)
+			[syncContext transitionToState:OCSyncRecordStateCompleted withWaitConditions:nil];
+
+			return (OCCoreSyncInstructionDeleteLast);
+		}
+
 		OCProgress *progress;
 
 		if ((progress = [self.core.connection deleteItem:item requireMatch:self.requireMatch resultTarget:[self.core _eventTargetWithSyncRecord:syncContext.syncRecord]]) != nil)
